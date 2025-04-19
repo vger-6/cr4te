@@ -1,0 +1,97 @@
+:root {
+  --bg-color: #88aabb;
+  --box-bg: #3b5e4d;
+  --title-bg: #333;
+  --title-color: #fffdd0;
+  --font-family: sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  margin: 0;
+  padding: 1rem;
+  font-family: var(--font-family);
+}
+
+h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: var(--title-color);
+  background-color: var(--title-bg);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+.top-link {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.section-box {
+  border: 2px solid #333;
+  background-color: var(--box-bg);
+  padding: 0;
+  margin-bottom: 0rem;
+}
+
+.section-title {
+  background-color: var(--title-bg);
+  color: var(--title-color);
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.section-box hr {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 0;
+}
+
+.section-content {
+  padding: 1rem;
+}
+
+.search-bar-wrapper {
+  margin: 1rem 2rem 1rem 0rem;
+}
+
+.search-box {
+  display: block;
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tag-category {
+  margin-bottom: 0.5rem;
+}
+
+.tag {
+  display: inline-block;
+  background-color: #fff2;
+  padding: 0.2rem 0.5rem;
+  margin: 0.2rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.nav-current {
+  font-weight: bold;
+  color: #ccc;
+  cursor: default;
+  text-decoration: none;
+}
+
+.markdown h1, .markdown h2 {
+  margin-top: 1em;
+}
+
+.markdown ul {
+  padding-left: 1.5em;
+  list-style: disc;
+}
