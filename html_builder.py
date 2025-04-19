@@ -180,7 +180,7 @@ def build_overview_pages(creators: List[Dict], output_path: Path, input_path: Pa
         search_text = " ".join(search_terms).lower()
         
         body += f"<div class='creator-entry' data-search='{search_text}'>"
-        body += f"<a href='creators/{slug}.html'>"
+        body += f"<a href='creators/{slug}.html' title='{creator['name']}'>"
         if portrait:
             img_abs = input_path / portrait
             thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(portrait), ThumbType.THUMB)
@@ -325,7 +325,7 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
             else:
                 thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html'>"
+            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
             
             if thumb_rel:
                 body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
@@ -355,7 +355,7 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
             else:
                 thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html'>"
+            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
             
             if thumb_rel:
                 body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
@@ -459,7 +459,7 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
                 thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], out_dir)
 
             body += "<div class='creator-entry'>"
-            body += f"<a href='../creators/{featured_slug}.html'>"
+            body += f"<a href='../creators/{featured_slug}.html' title='{featured['name']}'>"
             body += f"<img src='{thumb_rel}' width='100' alt='{featured['name']} thumbnail'><br>"
             body += f"{featured['name']}</a></div>"
 
@@ -497,7 +497,7 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
             else:
                 thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html'>"
+            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
             body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
             body += f"{project_title}</a></div>"
 

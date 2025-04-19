@@ -16,12 +16,21 @@
 
 .project-entry {
   text-align: center;
+  width: 200px;
 }
 
 .project-entry img {
   height: 120px;
   width: auto;
   object-fit: contain;
+}
+
+.project-entry a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .creator-gallery {
@@ -34,12 +43,21 @@
 
 .creator-entry {
   text-align: center;
+  width: 120px;
 }
 
 .creator-entry img {
   height: 120px;
   width: auto;
   object-fit: contain;
+}
+
+.creator-entry a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .creator-box {
