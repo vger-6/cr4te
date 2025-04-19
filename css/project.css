@@ -35,7 +35,8 @@ video {
 }
 
 .project-info img {
-  max-height: 300px;
+  /*max-height: 300px;*/
+  width: 100%
 }
 
 .creator-info {
@@ -48,10 +49,9 @@ video {
   max-width: 200px;
 }
 
-.fit-box {
+/*.fit-box {
   width: fit-content;
-  /*min-width: 500px;*/
-}
+}*/
 
 .project-layout {
   display: flex;

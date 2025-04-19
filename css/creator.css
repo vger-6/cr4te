@@ -63,10 +63,9 @@
   margin: 0;
 }
 
-.fit-box {
+/*.fit-box {
   width: fit-content;
-  /*min-width: 500px;*/
-}
+}*/
 
 .creator-layout {
   display: flex;

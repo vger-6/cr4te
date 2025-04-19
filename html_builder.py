@@ -636,6 +636,35 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
 
      # Right Side
     body += "<div class='project-right'>"
+    
+    # Videos
+    #poster_attr = ""
+    #if project.get("thumbnail"):
+    #    poster_img = root_input / project['thumbnail']
+    #    poster_thumb = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
+    #    generate_thumbnail(poster_img, poster_thumb, ThumbType.POSTER)
+    #    poster_rel = get_relative_path(poster_thumb, out_dir)
+    #    poster_attr = f" poster='{poster_rel}'"
+    #else:
+    #    poster_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
+    #    poster_attr = f" poster='{poster_rel}'"
+
+    # Optional Video section
+    video_paths = project.get("videos", None)
+    if video_paths:
+        for video_path in video_paths:
+            video_file = Path(video_path)
+            video_title = video_file.stem
+            video_rel = get_relative_path(root_input / video_path, out_dir)
+    
+            #body += "<div class='section-box fit-box'>"
+            body += "<div class='section-box'>"
+            body += f"<div class='section-title'>{video_title}</div>"
+            body += "<hr>"
+            body += "<div class='section-content'>"
+            body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
+            body += "</div>"
+            body += "</div>"  # end video section
 
     # Optional Image Groups section
     image_groups = project.get("image_groups", [])
@@ -663,35 +692,7 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
         body += "</div>"  # image-gallery
         body += "</div>"  # section-content
         body += "</div>"  # section-box
-
-    # Videos
-    #poster_attr = ""
-    #if project.get("thumbnail"):
-    #    poster_img = root_input / project['thumbnail']
-    #    poster_thumb = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
-    #    generate_thumbnail(poster_img, poster_thumb, ThumbType.POSTER)
-    #    poster_rel = get_relative_path(poster_thumb, out_dir)
-    #    poster_attr = f" poster='{poster_rel}'"
-    #else:
-    #    poster_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
-    #    poster_attr = f" poster='{poster_rel}'"
-
-    # Optional Video section
-    video_paths = project.get("videos", None)
-    if video_paths:
-        for video_path in video_paths:
-            video_file = Path(video_path)
-            video_title = video_file.stem
-            video_rel = get_relative_path(root_input / video_path, out_dir)
-    
-            body += "<div class='section-box fit-box'>"
-            body += f"<div class='section-title'>{video_title}</div>"
-            body += "<hr>"
-            body += "<div class='section-content'>"
-            body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
-            body += "</div>"
-            body += "</div>"  # end video section
-            
+        
     body += "</div>"
 
     page_path = out_dir / f"{slug}.html"
