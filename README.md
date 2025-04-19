@@ -20,9 +20,9 @@ Creators/
 ├── Alice/
 │   ├── cr4te.json           # Optional metadata override
 │   ├── README.md            # Optional creator description
+|   ├── Portrait1.jpg
 │   └── Project1/
 │       ├── Landscape1.jpg
-│       ├── Portrait1.jpg
 │       ├── clip.mp4
 │       └── SubGroup/
 │           └── *.jpg
@@ -44,12 +44,12 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Build JSON metadata:
+### Build JSON metadata first:
 ```bash
 python cr4te.py build-json -i /path/to/Creators
 ```
 
-### Generate HTML site:
+### Generate HTML site second:
 ```bash
 python cr4te.py build-html -i /path/to/Creators
 ```
