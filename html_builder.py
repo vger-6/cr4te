@@ -652,22 +652,20 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
     #    poster_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
     #    poster_attr = f" poster='{poster_rel}'"
 
-    # Optional Video section
-    video_paths = project.get("videos", None)
-    if video_paths:
-        for video_path in video_paths:
-            video_file = Path(video_path)
-            video_title = video_file.stem
+    # Optional Video section     
+    videos = project.get("videos", [])
+    if videos:
+        body += "<div class='section-box'>"
+        body += "<div class='section-title'>Videos</div>"
+        body += "<hr>"
+        body += "<div class='section-content video-gallery'>"  # Optional class for styling
+
+        for video_path in videos:
             video_rel = get_relative_path(root_input / video_path, out_dir)
-    
-            #body += "<div class='section-box fit-box'>"
-            body += "<div class='section-box'>"
-            body += f"<div class='section-title'>{video_title}</div>"
-            body += "<hr>"
-            body += "<div class='section-content'>"
             body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
-            body += "</div>"
-            body += "</div>"  # end video section
+
+        body += "</div>"  # end .section-content
+        body += "</div>"  # end .section-box
 
     # Optional Image Groups section
     image_groups = project.get("image_groups", [])

@@ -16,6 +16,20 @@ video {
   display: block;
 }
 
+.video-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+}
+
+.video-gallery video {
+  width: 100%;
+  height: auto;
+  /*flex: 0 0 300px;
+  max-width: 100%;*/
+}
+
 .image-gallery {
   display: flex;
   flex-wrap: wrap;
