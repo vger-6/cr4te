@@ -150,7 +150,7 @@ def build_overview_pages(creators: List[Dict], output_path: Path, input_path: Pa
         ("Tags", "tags.html")
     )
     
-    title = "Creators Overview"
+    title = "Creators"
     
     body += f"<h1>{title}</h1>"
 
@@ -161,7 +161,7 @@ def build_overview_pages(creators: List[Dict], output_path: Path, input_path: Pa
     '''
 
     body += "<div class='creator-box'>"
-    body += "<div class='creator-box-title'>Creators</div>"
+    body += "<div class='creator-box-title'>Index</div>"
     body += "<hr>"
     body += "<div class='creator-gallery'>"
 
@@ -419,7 +419,7 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
     # Members
     members = creator.get("members", [])
     body += "<div>"
-    body += f"<p><strong>Featuring:</strong> {', '.join(members)}</p>"
+    body += f"<p><strong>Members:</strong> {', '.join(members)}</p>"
     body += "</div>"
 
     body += "</div>"
@@ -437,13 +437,13 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
         body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
         body += "</div>"
 
-    # Optional Featuring (solo) creator pages
+    # Optional Members (solo) creator pages
     existing_creator_names = {m["name"]: m for m in creators if not m.get("is_collaboration")}
     featured_members = [m for m in creator.get("members", []) if m in existing_creator_names]
 
     if featured_members:
         body += "<div class='section-box'>"
-        body += "<div class='section-title'>Featuring</div><hr>"
+        body += "<div class='section-title'>Members</div><hr>"
         body += "<div class='section-content creator-gallery'>"
 
         for name in featured_members:
@@ -726,7 +726,7 @@ def build_tags_page(creators: List[Dict], output_path: Path):
         ("Tags", None)
     )
     
-    title = "All Tags"
+    title = "Tags"
 
     body += f"<h1>{title}</h1>"
 
