@@ -22,6 +22,9 @@ def validate_date_string(date_str: str) -> str:
 
 def find_all_images(folder: Path) -> List[Path]:
     return sorted([p for p in folder.glob("*.jpg") if is_valid_entry(p)], key=lambda x: x.name)
+    
+def find_all_videos(folder: Path) -> List[Path]:
+    return sorted([p for p in folder.glob("*.mp4") if is_valid_entry(p)], key=lambda x: x.name)
 
 def load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
@@ -82,10 +85,20 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
 
         thumbnail_path = ""
         image_count = 0
-        image_groups = []
+        video_count = 0
+        videos = []
+        images = []
+        media_groups = []
+        
+        project_level_images = find_all_images(project_dir)
+        project_level_videos = find_all_videos(project_dir)
+
+        images = project_data.get("images") or get_evenly_distributed_images(project_dir, input_path, max_images=10)
+        videos = [str(p.relative_to(input_path)) for p in project_level_videos]
+        image_count += len(images)
+        video_count += len(videos)
         
         # Try to find a suitable thumbnail directly in the project directory
-        project_level_images = find_all_images(project_dir)
         if project_level_images:
             landscape = find_landscape(project_level_images)
             if landscape:
@@ -95,26 +108,34 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         for subfolder in sorted(project_dir.iterdir()):
             if not subfolder.is_dir() or not is_valid_entry(subfolder):
                 continue
-        
-            images = find_all_images(subfolder)
-            if not images:
-                continue
-        
-            label = subfolder.name.replace("_", " ").title()
-            selected = get_evenly_distributed_images(subfolder, input_path)
-        
-            if selected:
-                image_groups.append({
-                    "label": label,
-                    "images": selected
-                })
-                image_count += len(images)
 
-                # If thumbnail is still missing, grab one from the first group
-                if not thumbnail_path:
-                    landscape = find_landscape(images)
-                    if landscape:
-                        thumbnail_path = str(landscape.relative_to(input_path))
+            sub_images = find_all_images(subfolder)
+            sub_videos = find_all_videos(subfolder)
+
+            if not sub_images and not sub_videos:
+                continue
+
+            label = subfolder.name.replace("_", " ").title()
+            
+            existing_groups = project_data.get("media_groups", [])
+            existing_group = next((g for g in existing_groups if g.get("label") == label), {})
+            group_images = existing_group.get("images") or get_evenly_distributed_images(subfolder, input_path, max_images=10)
+            
+            media_group = {
+                "label": label,
+                "images": group_images,
+                "videos": [str(p.relative_to(input_path)) for p in sub_videos]
+            }
+
+            media_groups.append(media_group)
+            image_count += len(sub_images)
+            video_count += len(sub_videos)
+
+            # Try thumbnail from first image group if still missing
+            if not thumbnail_path and sub_images:
+                landscape = find_landscape(sub_images)
+                if landscape:
+                    thumbnail_path = str(landscape.relative_to(input_path))
 
         # Find videos
         video_files = sorted([p for p in project_dir.glob("*.mp4") if is_valid_entry(p)])
@@ -126,11 +147,12 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "release_date": validate_date_string(project_data.get("release_date", "")),
             "thumbnail": thumbnail_path,
             "info": read_readme_text(project_dir) or project_data.get("info", ""),
-            "video_count": video_count,
             "image_count": image_count,
-            "videos": video_paths,
-            "tags": project_data.get("tags", []),
-            "image_groups": image_groups
+            "video_count": video_count,
+            "images": images,
+            "videos": videos,
+            "media_groups": media_groups,
+            "tags": project_data.get("tags", [])
         })
 
     return projects_data
