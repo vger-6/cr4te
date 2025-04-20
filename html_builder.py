@@ -287,7 +287,7 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
     info_text = creator.get("info", "").strip()
     if info_text:
         body += "<div class='section-box'>"
-        body += "<div class='section-title'>Info</div>"
+        body += "<div class='section-title'>About</div>"
         body += "<hr>"
         body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
         body += "</div>"
@@ -339,7 +339,7 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
     for collab in collaborations:
         collab['projects'].sort(key=sort_project)
         body += "<div class='section-box'>"
-        body += f"<div class='section-title'>Collaborations: {collab['name']}</div><hr>"
+        body += f"<div class='section-title'>Collaboration Projects - {collab['name']}</div><hr>"
         body += "<div class='section-content project-gallery'>"
         
         for project in collab['projects']:
@@ -432,7 +432,7 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
     info_text = creator.get("info", "").strip()
     if info_text:
         body += "<div class='section-box'>"
-        body += "<div class='section-title'>Info</div>"
+        body += "<div class='section-title'>About</div>"
         body += "<hr>"
         body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
         body += "</div>"
@@ -548,7 +548,7 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
 
     # Content
     body += "<div class='section-box'>"
-    body += "<div class='section-title'>Preview</div>"
+    body += "<div class='section-title'>Overview</div>"
     body += "<hr>"
     body += "<div class='section-content markdown'>"
 
@@ -573,7 +573,7 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
     info_text = project.get("info", "").strip()
     if info_text:
         body += "<div class='section-box'>"
-        body += "<div class='section-title'>Info</div>"
+        body += "<div class='section-title'>Description</div>"
         body += "<hr>"
         body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
         body += "</div>"  #end info text section
@@ -594,7 +594,7 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
             continue
         
         body += "<div class='section-box'>"
-        body += f"<div class='section-title'>Featuring: {name}</div>"
+        body += f"<div class='section-title'>{name} - Creator Profile</div>"
         body += "<hr>"
         body += "<div class='section-content'>"
         body += "<div class='creator-info'>"
