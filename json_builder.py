@@ -150,6 +150,7 @@ def build_creator_json(creator_path: Path, input_path: Path) -> Dict:
         "is_collaboration": existing_data.get("is_collaboration", is_collab),
         "portrait": portrait_path,
         "info": read_readme_text(creator_path) or existing_data.get("info", ""),
+        "tags": existing_data.get("tags", []),
         "projects": collect_projects_data(creator_path, existing_data, input_path)
     }
 

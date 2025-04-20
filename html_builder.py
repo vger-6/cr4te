@@ -170,6 +170,7 @@ def build_overview_pages(creators: List[Dict], output_path: Path, input_path: Pa
         portrait = creator['portrait']
 
         search_terms = [creator['name']]
+        search_terms.extend(creator.get("tags", []))
         for project in creator.get('projects', []):
             search_terms.append(project.get('title', ''))
             for group in project.get('image_groups', []):
@@ -293,9 +294,10 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
         body += "</div>"
 
     # Optional Tags section
-    all_tags = []
+    all_tags = set(creator.get("tags", []))
     for project in creator.get("projects", []):
-        all_tags.extend(project.get("tags", []))
+        all_tags.update(project.get("tags", []))
+    all_tags = sorted(all_tags)
     
     body += render_tag_section(all_tags)
 
@@ -466,9 +468,10 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
         body += "</div></div>"
 
     # Optional Tags section
-    all_tags = []
+    all_tags = set(creator.get("tags", []))
     for project in creator.get("projects", []):
-        all_tags.extend(project.get("tags", []))
+        all_tags.update(project.get("tags", []))
+    all_tags = sorted(all_tags)
 
     body += render_tag_section(all_tags)
 
@@ -702,6 +705,13 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
 def collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
     tags = defaultdict(set)
     for creator in creators:
+        for tag in creator.get("tags", []):
+            if ":" in tag:
+                category, label = tag.split(":", 1)
+                tags[category.strip()].add(label.strip())
+            else:
+                tags["Tag"].add(tag.strip())
+
         for project in creator.get("projects", []):
             for tag in project.get("tags", []):
                 if ":" in tag:
