@@ -86,17 +86,22 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         thumbnail_path = ""
         image_count = 0
         video_count = 0
-        videos = []
-        images = []
         media_groups = []
         
         project_level_images = find_all_images(project_dir)
         project_level_videos = find_all_videos(project_dir)
 
-        images = project_data.get("images") or get_evenly_distributed_images(project_dir, input_path, max_images=10)
-        videos = [str(p.relative_to(input_path)) for p in project_level_videos]
-        image_count += len(images)
-        video_count += len(videos)
+        if project_level_images or project_level_videos:
+            root_group = {
+                "label": "Main",
+                "images": get_evenly_distributed_images(project_dir, input_path, max_images=10) or [],
+                "videos": [str(p.relative_to(input_path)) for p in project_level_videos]
+            }
+            
+            media_groups.append(root_group)
+            
+            image_count += len(project_level_images)
+            video_count += len(project_level_videos)
         
         # Try to find a suitable thumbnail directly in the project directory
         if project_level_images:
@@ -119,7 +124,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             
             existing_groups = project_data.get("media_groups", [])
             existing_group = next((g for g in existing_groups if g.get("label") == label), {})
-            group_images = existing_group.get("images") or get_evenly_distributed_images(subfolder, input_path, max_images=10)
+            group_images = existing_group.get("images") or get_evenly_distributed_images(subfolder, input_path, max_images=10) or []
             
             media_group = {
                 "label": label,
@@ -149,8 +154,6 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "info": read_readme_text(project_dir) or project_data.get("info", ""),
             "image_count": image_count,
             "video_count": video_count,
-            "images": images,
-            "videos": videos,
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
         })

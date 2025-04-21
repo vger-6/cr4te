@@ -652,40 +652,6 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
     #    poster_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
     #    poster_attr = f" poster='{poster_rel}'"
 
-    # Optional Root-level Videos section    
-    videos = project.get("videos", [])
-    if videos:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Videos</div>"
-        body += "<hr>"
-        body += "<div class='section-content video-gallery'>" 
-
-        for video_path in videos:
-            video_rel = get_relative_path(root_input / video_path, out_dir)
-            body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
-
-        body += "</div>"  # end .section-content
-        body += "</div>"  # end .section-box
-        
-    # Optional Root-level Images section
-    images = project.get("images", [])
-    if images:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Images</div>"
-        body += "<hr>"
-        body += "<div class='section-content image-gallery'>"
-        
-        for img_path in images:
-            img_abs = root_input / img_path
-            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(img_path), ThumbType.THUMB)
-            generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
-            thumb_rel = get_relative_path(thumb_path, out_dir)
-            original_rel = get_relative_path(img_abs, out_dir)
-            body += f"<a href='{original_rel}' target='_blank'><img src='{thumb_rel}' alt='Image'></a>"
-        
-        body += "</div>"  # end .section-content
-        body += "</div>"  # end .section-box
-
     # Optional Media Groups section
     media_groups = project.get("media_groups", [])
     for group in media_groups:
