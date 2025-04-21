@@ -102,25 +102,28 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         for file in project_dir.rglob("*"):
             if not file.is_file():
                 continue
-
+            
             rel_path_posix = file.relative_to(project_dir).as_posix()
             rel_to_input = file.relative_to(input_path)
 
             # 1. Apply global exclusions
             if GLOBAL_EXCLUDE_RE.search(rel_path_posix):
                 continue
+                
+            is_root = file.parent.resolve() == project_dir.resolve()
+            folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
 
             # 2. Match video
             if VIDEO_INCLUDE_RE.match(rel_path_posix) and not VIDEO_EXCLUDE_RE.search(rel_path_posix):
-                folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
                 media_map[folder_key]["videos"].append(str(rel_to_input))
+                media_map[folder_key]["is_root"] = is_root
                 video_count += 1
                 continue
 
             # 3. Match image
             if IMAGE_INCLUDE_RE.match(rel_path_posix) and not IMAGE_EXCLUDE_RE.search(rel_path_posix):
-                folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
                 media_map[folder_key]["images"].append(str(rel_to_input))
+                media_map[folder_key]["is_root"] = is_root
                 image_count += 1
 
                 # Select thumbnail (first landscape)
@@ -137,6 +140,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         for label, group in media_map.items():
             media_groups.append({
                 "label": label,
+                "is_root": group.get("is_root", False),
                 "images": group["images"][:10],
                 "videos": group["videos"]
             })

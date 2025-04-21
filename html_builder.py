@@ -341,7 +341,11 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
     for collab in collaborations:
         collab['projects'].sort(key=sort_project)
         body += "<div class='section-box'>"
-        body += f"<div class='section-title'>Collaboration Projects - {collab['name']}</div><hr>"
+        
+        other_members = [name for name in collab.get("members", []) if name != creator["name"]]
+        collab_label = " & ".join(other_members)
+        body += f"<div class='section-title'>Projects with {collab_label}</div>"
+        
         body += "<div class='section-content project-gallery'>"
         
         for project in collab['projects']:
@@ -655,24 +659,29 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
     # Optional Media Groups section
     media_groups = project.get("media_groups", [])
     for group in media_groups:
-        label = group.get("label", "Unnamed")
         group_videos = group.get("videos", [])
         group_images = group.get("images", [])
+        
+        if group.get("is_root"):
+            video_label = "Project - Videos"
+            image_label = "Project - Images"
+        else:
+            label = group.get("label", "Unnamed")
+            video_label = f"{label} - Videos"
+            image_label = f"{label} - Images"
 
-        # Subfolder videos
         if group_videos:
             body += "<div class='section-box'>"
-            body += f"<div class='section-title'>{label} - Videos</div><hr>"
+            body += f"<div class='section-title'>{video_label}</div><hr>"
             body += "<div class='section-content video-gallery'>"
             for video_path in group_videos:
                 video_rel = get_relative_path(root_input / video_path, out_dir)
                 body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
             body += "</div></div>"
 
-        # Subfolder images
         if group_images:
             body += "<div class='section-box'>"
-            body += f"<div class='section-title'>{label} - Images</div><hr>"
+            body += f"<div class='section-title'>{image_label}</div><hr>"
             body += "<div class='section-content image-gallery'>"
             for img_path in group_images:
                 img_abs = root_input / img_path
