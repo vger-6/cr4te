@@ -9,6 +9,7 @@ A static site generator for organizing and showcasing creative media projects. I
 - **Automatically builds a gallery website** from your folder of creators and projects
 - **Thumbnail generation** for portraits, posters, and images
 - **Tag-based filtering** and search
+- **Flexible media grouping via regex rules**
 - **Fast static HTML output** with no runtime dependencies
 
 ---
@@ -44,12 +45,12 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Build JSON metadata first:
+### Step 1: Build JSON metadata
 ```bash
 python cr4te.py build-json -i /path/to/Creators
 ```
 
-### Generate HTML site second:
+### Step 2: Generate HTML site
 ```bash
 python cr4te.py build-html -i /path/to/Creators
 ```
@@ -58,8 +59,30 @@ python cr4te.py build-html -i /path/to/Creators
 
 ---
 
+## Media Discovery Logic
+
+Media is discovered using regular expressions with full-path awareness:
+
+### Global Exclusions
+- Any file or folder containing segments that start with `_`
+
+### Videos
+- **Included:** `.mp4` files directly in the root of each project folder
+- **Excluded:** (None by default)
+
+### Images
+- **Included:** `.jpg` files located in *immediate subfolders* of the project folder
+- **Excluded:**
+  - Filenames starting with `m` or `M`
+  - Files inside any folder named `test`
+
+> Files are grouped by their relative folder paths into labeled `media_groups` for organized display in the UI.
+
+---
+
 ## Customization
 
+- **Regex patterns** are hardcoded by now, but designed to be externalized to config in future
 - **CSS styles** live in `css/`
 - **Default thumbnails** are in `defaults/`
 - You can override project metadata with `cr4te.json` inside each creator folder
@@ -97,10 +120,8 @@ This project is licensed under the terms of the LICENSE file included.
 
 ## Credits
 
-Created for artists, curators, ...
+Created with love for artists, curators, media historians, and creative developers who want simple but structured control over their digital media archives.
 
 ---
-
-## TODO
 
 
