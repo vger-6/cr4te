@@ -1,14 +1,25 @@
 import json
+import re
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional
 from utils import is_collaboration, is_valid_entry
 from PIL import Image
 from datetime import datetime
+from collections import defaultdict
 
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
+
+# === REGEX CONFIG ===
+GLOBAL_EXCLUDE_RE = re.compile(r"(^|/|\\)_", re.IGNORECASE)
+
+VIDEO_INCLUDE_RE = re.compile(r"^[^/\\]+\.mp4$", re.IGNORECASE)  # root-level only
+VIDEO_EXCLUDE_RE = re.compile(r"$^")  # match nothing (placeholder)
+
+IMAGE_INCLUDE_RE = re.compile(r"^[^/\\]+/[^/\\]+\.jpg$", re.IGNORECASE)  # immediate subfolders only
+IMAGE_EXCLUDE_RE = re.compile(r"$^", re.IGNORECASE)  # match nothing (placeholder)
     
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
@@ -20,11 +31,11 @@ def validate_date_string(date_str: str) -> str:
     except ValueError:
         return ""
 
-def find_all_images(folder: Path) -> List[Path]:
-    return sorted([p for p in folder.glob("*.jpg") if is_valid_entry(p)], key=lambda x: x.name)
+#def find_all_images(folder: Path) -> List[Path]:
+#    return sorted([p for p in folder.glob("*.jpg") if is_valid_entry(p)], key=lambda x: x.name)
     
-def find_all_videos(folder: Path) -> List[Path]:
-    return sorted([p for p in folder.glob("*.mp4") if is_valid_entry(p)], key=lambda x: x.name)
+#def find_all_videos(folder: Path) -> List[Path]:
+#    return sorted([p for p in folder.glob("*.mp4") if is_valid_entry(p)], key=lambda x: x.name)
 
 def load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
@@ -56,21 +67,21 @@ def find_image_by_orientation(images: List[Path], orientation: Orientation = Ori
 def find_portrait(images: List[Path]) -> Optional[Path]:
     return find_image_by_orientation(images, Orientation.PORTRAIT)
 
-def find_landscape(images: List[Path]) -> Optional[Path]:
-    return find_image_by_orientation(images, Orientation.LANDSCAPE)
+#def find_landscape(images: List[Path]) -> Optional[Path]:
+#    return find_image_by_orientation(images, Orientation.LANDSCAPE)
 
-def get_evenly_distributed_images(image_dir: Path, input_path: Path, max_images: int = 10) -> List[str]:
-    all_images = find_all_images(image_dir)
-    relative_paths = [str(p.relative_to(input_path)) for p in all_images]
-    total = len(relative_paths)
-
-    if total <= max_images:
-        return relative_paths
-
-    step = total / max_images
-    indices = [int(i * step) for i in range(max_images)]
-    selected = [relative_paths[i] for i in indices]
-    return selected
+#def get_evenly_distributed_images(image_dir: Path, input_path: Path, max_images: int = 10) -> List[str]:
+#    all_images = find_all_images(image_dir)
+#    relative_paths = [str(p.relative_to(input_path)) for p in all_images]
+#    total = len(relative_paths)
+#
+#    if total <= max_images:
+#        return relative_paths
+#
+#    step = total / max_images
+#    indices = [int(i * step) for i in range(max_images)]
+#    selected = [relative_paths[i] for i in indices]
+#    return selected
 
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path) -> List[Dict]:
     projects_data = []
@@ -83,69 +94,52 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         existing_projects = existing_data.get("projects", [])
         project_data = next((s for s in existing_projects if s.get("title") == project_title), {})
 
-        thumbnail_path = ""
+        media_map = defaultdict(lambda: {"images": [], "videos": []})
         image_count = 0
         video_count = 0
+        thumbnail_path = ""
+
+        for file in project_dir.rglob("*"):
+            if not file.is_file():
+                continue
+
+            rel_path_posix = file.relative_to(project_dir).as_posix()
+            rel_to_input = file.relative_to(input_path)
+
+            # 1. Apply global exclusions
+            if GLOBAL_EXCLUDE_RE.search(rel_path_posix):
+                continue
+
+            # 2. Match video
+            if VIDEO_INCLUDE_RE.match(rel_path_posix) and not VIDEO_EXCLUDE_RE.search(rel_path_posix):
+                folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
+                media_map[folder_key]["videos"].append(str(rel_to_input))
+                video_count += 1
+                continue
+
+            # 3. Match image
+            if IMAGE_INCLUDE_RE.match(rel_path_posix) and not IMAGE_EXCLUDE_RE.search(rel_path_posix):
+                folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
+                media_map[folder_key]["images"].append(str(rel_to_input))
+                image_count += 1
+
+                # Select thumbnail (first landscape)
+                if not thumbnail_path:
+                    try:
+                        with Image.open(file) as img:
+                            if img.width > img.height:
+                                thumbnail_path = str(rel_to_input)
+                    except Exception as e:
+                        print(f"Thumbnail check failed: {e}")
+
+        # Build media_groups list from the grouped map
         media_groups = []
-        
-        project_level_images = find_all_images(project_dir)
-        project_level_videos = find_all_videos(project_dir)
-
-        if project_level_images or project_level_videos:
-            root_group = {
-                "label": "Main",
-                "images": get_evenly_distributed_images(project_dir, input_path, max_images=10) or [],
-                "videos": [str(p.relative_to(input_path)) for p in project_level_videos]
-            }
-            
-            media_groups.append(root_group)
-            
-            image_count += len(project_level_images)
-            video_count += len(project_level_videos)
-        
-        # Try to find a suitable thumbnail directly in the project directory
-        if project_level_images:
-            landscape = find_landscape(project_level_images)
-            if landscape:
-                thumbnail_path = str(landscape.relative_to(input_path))
-        
-        # Scan subfolders for image groups
-        for subfolder in sorted(project_dir.iterdir()):
-            if not subfolder.is_dir() or not is_valid_entry(subfolder):
-                continue
-
-            sub_images = find_all_images(subfolder)
-            sub_videos = find_all_videos(subfolder)
-
-            if not sub_images and not sub_videos:
-                continue
-
-            label = subfolder.name.replace("_", " ").title()
-            
-            existing_groups = project_data.get("media_groups", [])
-            existing_group = next((g for g in existing_groups if g.get("label") == label), {})
-            group_images = existing_group.get("images") or get_evenly_distributed_images(subfolder, input_path, max_images=10) or []
-            
-            media_group = {
+        for label, group in media_map.items():
+            media_groups.append({
                 "label": label,
-                "images": group_images,
-                "videos": [str(p.relative_to(input_path)) for p in sub_videos]
-            }
-
-            media_groups.append(media_group)
-            image_count += len(sub_images)
-            video_count += len(sub_videos)
-
-            # Try thumbnail from first image group if still missing
-            if not thumbnail_path and sub_images:
-                landscape = find_landscape(sub_images)
-                if landscape:
-                    thumbnail_path = str(landscape.relative_to(input_path))
-
-        # Find videos
-        video_files = sorted([p for p in project_dir.glob("*.mp4") if is_valid_entry(p)])
-        video_paths = [str(p.relative_to(input_path)) for p in video_files]
-        video_count = len(video_files)
+                "images": group["images"][:10],
+                "videos": group["videos"]
+            })
 
         projects_data.append({
             "title": project_title,
