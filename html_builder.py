@@ -290,7 +290,7 @@ def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_pa
         body += "<div class='section-box'>"
         body += "<div class='section-title'>About</div>"
         body += "<hr>"
-        body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
+        body += f"<div class='section-content text-content'>{render_markdown(info_text)}</div>"
         body += "</div>"
 
     # Optional Tags section
@@ -440,7 +440,7 @@ def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path,
         body += "<div class='section-box'>"
         body += "<div class='section-title'>About</div>"
         body += "<hr>"
-        body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
+        body += f"<div class='section-content compact-content'>{render_markdown(info_text)}</div>"
         body += "</div>"
 
     # Optional Members (solo) creator pages
@@ -582,7 +582,7 @@ def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_inp
         body += "<div class='section-box'>"
         body += "<div class='section-title'>Description</div>"
         body += "<hr>"
-        body += f"<div class='section-content'>{render_markdown(info_text)}</div>"
+        body += f"<div class='section-content text-content'>{render_markdown(info_text)}</div>"
         body += "</div>"  #end info text section
 
     # Optional Featuring section
