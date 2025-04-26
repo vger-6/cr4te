@@ -1,11 +1,13 @@
 import shutil
-import markdown
+import json
 from pathlib import Path
 from typing import List, Dict, Optional
-from PIL import Image
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
+
+import markdown
+from PIL import Image
 
 from utils import is_collaboration, slugify, get_relative_path
 
@@ -29,6 +31,28 @@ DEFAULT_IMAGES = {
 }
 
 HTML_TEMPLATE = """<!DOCTYPE html><html lang="en"><head><meta charset='utf-8'><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title></head><body>{body}</body></html>"""
+
+# TODO: Move to separate module. E.g. project_structure.py 
+def clear_output_folder(output_path: Path):
+    """Delete all contents of output_path except the 'thumbnails' folder."""
+    for item in output_path.iterdir():
+        if item.name != "thumbnails":
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
+        
+# TODO: Move to separate module. E.g. project_structure.py         
+def collect_creator_data(input_path: Path) -> List[Dict]:
+    creator_data = []
+    for creator in sorted(input_path.iterdir()):
+        if not creator.is_dir():
+            continue
+        json_path = creator / "cr4te.json"
+        if json_path.exists():
+            with open(json_path, 'r', encoding='utf-8') as f:
+                creator_data.append(json.load(f))
+    return creator_data
 
 def get_thumbnail_path(thumbs_dir: Path, slug: str, original_file: Path, thumb_type: ThumbType) -> Path:
     thumb_subdir = thumbs_dir / slug

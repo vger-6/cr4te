@@ -1,9 +1,8 @@
 import argparse
-import json
 import shutil
 
 from pathlib import Path
-from html_builder import build_html_pages
+from html_builder import clear_output_folder, collect_creator_data, build_html_pages
 from json_builder import process_all_creators
 
 def main():
@@ -34,23 +33,11 @@ def main():
             if confirm != 'y':
                 print("Aborting.")
                 return
-            for item in output_path.iterdir():
-                if item.name != "thumbnails":
-                    if item.is_dir():
-                        shutil.rmtree(item)
-                    else:
-                        item.unlink()
+            clear_output_folder(output_path)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
 
-        creator_data = []
-        for creator in sorted(input_path.iterdir()):
-            if not creator.is_dir():
-                continue
-            json_path = creator / "cr4te.json"
-            if json_path.exists():
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    creator_data.append(json.load(f))
+        creator_data = collect_creator_data(input_path)
 
         build_html_pages(creator_data, output_path, input_path)
 
