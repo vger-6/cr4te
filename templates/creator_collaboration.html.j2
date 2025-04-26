@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ creator.name }}</title>
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/creator.css">
+</head>
+<body>
+
+<div class="top-link">
+  <a href="../index.html">Creators</a> &middot;
+  <a href="../tags.html">Tags</a>
+</div>
+
+<h1>{{ creator.name }}</h1>
+
+<div class="creator-layout">
+
+  <div class="creator-left">
+
+    <div class="section-box">
+      <div class="section-title">Profile</div>
+      <hr>
+      <div class="section-content markdown">
+        <div class="creator-info">
+          <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
+          <div>
+            {% if creator.members %}
+            <p><strong>Members:</strong> {{ creator.members | join(', ') }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if info_html %}
+    <div class="section-box">
+      <div class="section-title">About</div>
+      <hr>
+      <div class="section-content text-content">
+        {{ info_html | safe }}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if member_links %}
+    <div class="section-box">
+      <div class="section-title">Members</div>
+      <hr>
+      <div class="section-content creator-gallery">
+        {% for member in member_links %}
+        <div class="creator-entry">
+          <a href="{{ member.url }}" title="{{ member.name }}">
+            <img src="{{ member.thumbnail_url }}" width="100" alt="Portrait of {{ member.name }}"><br>
+            {{ member.name }}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if tag_map %}
+    <div class="section-box">
+      <div class="section-title">Tags</div>
+      <hr>
+      <div class="section-content tag-list">
+        {% for category, tags in tag_map.items() %}
+        <div class="tag-category">
+          <strong>{{ category }}:</strong>
+          {% for tag in tags %}
+            <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="creator-right">
+
+    {% if projects %}
+    <div class="section-box">
+      <div class="section-title">Projects</div>
+      <hr>
+      <div class="section-content project-gallery">
+        {% for project in projects %}
+        <div class="project-entry">
+          <a href="{{ project.url }}" title="{{ project.title }}">
+            <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}"><br>
+            {{ project.title }}
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+</body>
+</html>
+

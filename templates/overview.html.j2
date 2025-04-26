@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Creators</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/creator.css">
+</head>
+<body>
+
+<div class="top-link">
+  <span class="nav-current">Creators</span> &middot;
+  <a href="tags.html">Tags</a>
+</div>
+
+<h1>Creators</h1>
+
+<div class="search-bar-wrapper">
+  <input type="text" id="search-input" placeholder="Search creators, tags, projects..." class="search-box">
+</div>
+
+<div class="creator-box">
+  <div class="creator-box-title">Index</div>
+  <hr>
+  <div class="creator-gallery">
+
+    {% for creator in creator_entries %}
+    <div class="creator-entry" data-search="{{ creator.search_text }}">
+      <a href="{{ creator.url }}" title="{{ creator.name }}">
+        <img src="{{ creator.thumbnail_url }}" width="100" alt="{{ creator.name }} thumbnail"><br>
+        {{ creator.name }}
+      </a>
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+<script src="js/filter.js"></script>
+
+</body>
+</html>
+

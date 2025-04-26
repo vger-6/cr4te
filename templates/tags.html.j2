@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tags</title>
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+
+<div class="top-link">
+  <a href="index.html">Creators</a> &middot;
+  <span class="nav-current">Tags</span>
+</div>
+
+<h1>Tags</h1>
+
+<div class="section-box">
+  <div class="section-content tag-list">
+
+    {% for category, tag_list in tags.items() %}
+    <div class="tag-category" id="{{ category | lower | replace(' ', '-') }}">
+      <strong>{{ category }}:</strong>
+      {% for tag in tag_list %}
+        <a class="tag" href="index.html?tag={{ tag }}">{{ tag }}</a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+  </div>
+</div>
+
+</body>
+</html>
+

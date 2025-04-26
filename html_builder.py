@@ -8,10 +8,18 @@ from collections import defaultdict
 
 import markdown
 from PIL import Image
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from utils import is_collaboration, slugify, get_relative_path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+# Setup Jinja2 environment
+TEMPLATE_DIR = Path(__file__).parent / "templates"
+env = Environment(
+    loader=FileSystemLoader(str(TEMPLATE_DIR)),
+    autoescape=select_autoescape(['html', 'xml'])
+)
 
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
@@ -95,31 +103,6 @@ def build_nav_links(*links: tuple[str, Optional[str]]) -> str:
             parts.append(f"<a href='{href}'>{label}</a>")
     return f"<div class='top-link'>{' &middot; '.join(parts)}</div>"
 
-def render_tag_section(tags: List[str]) -> str:
-    tag_map = defaultdict(set)
-    for tag in tags:
-        if ":" in tag:
-            category, tag_label = tag.split(":", 1)
-            tag_map[category.strip()].add(tag_label.strip())
-        else:
-            tag_map["Tag"].add(tag.strip())
-
-    if not tag_map:
-        return ""
-
-    section_html = "<div class='section-box'>"
-    section_html += "<div class='section-title'>Tags</div><hr>"
-    section_html += "<div class='section-content tag-list'>"
-
-    for category in sorted(tag_map.keys()):
-        section_html += f"<div class='tag-category'><strong>{category}:</strong> "
-        for tag in sorted(tag_map[category]):
-            section_html += f"<a class='tag' href='../index.html?tag={tag}'>{tag}</a>"
-        section_html += "</div>"
-
-    section_html += "</div></div>"
-    return section_html
-
 def build_html_pages(creators: List[Dict], output_path: Path, input_path: Path):
     (output_path / "creators").mkdir(parents=True, exist_ok=True)
     (output_path / "projects").mkdir(parents=True, exist_ok=True)
@@ -159,73 +142,49 @@ def build_html_pages(creators: List[Dict], output_path: Path, input_path: Path):
     build_all_project_pages(creators, output_path / "projects", input_path, thumbs_dir)
     build_tags_page(creators, output_path)
 
-def build_overview_pages(creators: List[Dict], output_path: Path, input_path: Path, thumbs_dir: Path):
+def build_overview_pages(creators: list, output_path: Path, input_path: Path, thumbs_dir: Path):
     print("Generating overview page...")
 
-    css_links = """
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/creator.css">
-    """
+    template = env.get_template("overview.html.j2")
 
-    body = css_links
-
-    body += build_nav_links(
-        ("Creators", None),
-        ("Tags", "tags.html")
-    )
-    
-    title = "Creators"
-    
-    body += f"<h1>{title}</h1>"
-
-    body += '''
-    <div class="search-bar-wrapper">
-        <input type="text" id="search-input" placeholder="Search creators, tags, projects..." class="search-box">
-    </div>
-    '''
-
-    body += "<div class='creator-box'>"
-    body += "<div class='creator-box-title'>Index</div>"
-    body += "<hr>"
-    body += "<div class='creator-gallery'>"
+    creator_entries = []
 
     for creator in creators:
         slug = slugify(creator['name'])
-        portrait = creator['portrait']
+        if creator.get('portrait'):
+            img_abs = input_path / creator['portrait']
+            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.THUMB)
+            generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
+            thumbnail_url = get_relative_path(thumb_path, output_path)
+        else:
+            thumbnail_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
 
+        # Build search text
         search_terms = [creator['name']]
         search_terms.extend(creator.get("tags", []))
         for project in creator.get('projects', []):
             search_terms.append(project.get('title', ''))
-            for group in project.get('image_groups', []):
+            for group in project.get('media_groups', []):
                 search_terms.append(group.get('label', ''))
             for tag in project.get('tags', []):
                 search_terms.append(tag)
-        
+
         search_text = " ".join(search_terms).lower()
-        
-        body += f"<div class='creator-entry' data-search='{search_text}'>"
-        body += f"<a href='creators/{slug}.html' title='{creator['name']}'>"
-        if portrait:
-            img_abs = input_path / portrait
-            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(portrait), ThumbType.THUMB)
-            generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
-            thumb_rel = get_relative_path(thumb_path, output_path)
-        else:
-            thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
 
-        body += f"<img src='{thumb_rel}' width='100' alt='{creator['name']} thumbnail'><br>"
-        body += f"{creator['name']}</a>"
-        body += "</div>"
+        creator_entries.append({
+            "name": creator['name'],
+            "url": f"creators/{slug}.html",
+            "thumbnail_url": thumbnail_url,
+            "search_text": search_text
+        })
 
-    body += "</div>"  # creator-gallery
-    body += "</div>"  # creator-box
+    output_html = template.render(
+        creator_entries=creator_entries,
+    )
 
-    body += '<script src="js/filter.js"></script>'
-    
     page_file = output_path / "index.html"
     with open(page_file, 'w', encoding='utf-8') as f:
-        f.write(HTML_TEMPLATE.format(title=title, body=body))
+        f.write(output_html)
 
 def build_all_creator_pages(creators: List[Dict], out_dir: Path, input_path: Path, thumbs_dir: Path):
     print("Generating creator pages...")
@@ -236,310 +195,186 @@ def build_all_creator_pages(creators: List[Dict], out_dir: Path, input_path: Pat
         else:
             build_collaboration_page(creator, creators, out_dir, input_path, thumbs_dir)
 
-def build_solo_page(creator: Dict, creators: List[Dict], out_dir: Path, input_path: Path, thumbs_dir: Path):
+def build_solo_page(creator: dict, creators: list, out_dir: Path, input_path: Path, thumbs_dir: Path):
     slug = slugify(creator['name'])
     print(f"Building creator page: {slug}.html")
-    
-    # Link external CSS
-    css_links = """
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/creator.css">
-    """
 
-    body = css_links
-    body += build_nav_links(
-        ("Creators", "../index.html"),
-        ("Tags", "../tags.html")
-    )
+    template = env.get_template("creator_solo.html.j2")
 
-    title = creator['name']
-    body += f"<h1>{title}</h1>"
-
-    body += "<div class='creator-layout'>"
-
-    # Left Side
-    body += "<div class='creator-left'>"
-
-    # Creator section
-    #body += "<div class='section-box fit-box'>"
-    body += "<div class='section-box'>"
-    body += "<div class='section-title'>Profile</div><hr>"
-    body += "<div class='section-content markdown'>"
-
-    # Portrait + DOB + ...
-    body += "<div class='creator-info'>"
-
-    portrait = creator['portrait']
-    if portrait:
-        img_abs = input_path / portrait
-        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(portrait), ThumbType.PORTRAIT)
+    # Process portrait thumbnail
+    if creator.get('portrait'):
+        img_abs = input_path / creator['portrait']
+        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.PORTRAIT)
         generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
-        thumb_rel = get_relative_path(thumb_path, out_dir)
+        portrait_url = get_relative_path(thumb_path, out_dir)
     else:
-        thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+        portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
 
-    body += f"<img src='{thumb_rel}' alt='Portrait of {creator['name']}'>"
-    body += "<div>"
-
-    body += f"<p><strong>Name:</strong> {creator['name']}</p>"
-    
-    if 'date_of_birth' in creator:
-        body += f"<p><strong>Date of Birth:</strong> {creator['date_of_birth']}</p>"
-
-    # Debut Age
-    dob = creator.get("date_of_birth", "")
-    release_dates = [project.get("release_date") for project in creator.get("projects", []) if project.get("release_date")]
-
-    age_years = ""
+    # Compute debut age
+    dob = creator.get("date_of_birth")
+    release_dates = [p.get("release_date") for p in creator.get("projects", []) if p.get("release_date")]
+    debut_age = ""
     if dob and release_dates:
         try:
+            from datetime import datetime
             dob_dt = datetime.strptime(dob, "%Y-%m-%d")
-            first_release = min([datetime.strptime(sd, "%Y-%m-%d") for sd in release_dates])
-            age_years = calculate_age(dob_dt, first_release)
+            first_release = min(datetime.strptime(d, "%Y-%m-%d") for d in release_dates)
+            debut_age = calculate_age(dob_dt, first_release)
         except Exception as e:
-            print(f"Could not compute debut age: {e}")
+            print(f"Error computing debut age: {e}")
 
-    body += f"<p><strong>Debut Age:</strong> {age_years}</p>"
-        
-    # Placeholder for future description, tags, etc.
-    
-    body += "</div>"  
-    body += "</div>"  # Close .creator-info
-    body += "</div>"  # Close section-content 
-    body += "</div>"  # section-box
-
-    # Optional Info Text section
-    info_text = creator.get("info", "").strip()
-    if info_text:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>About</div>"
-        body += "<hr>"
-        body += f"<div class='section-content text-content'>{render_markdown(info_text)}</div>"
-        body += "</div>"
-
-    # Optional Tags section
+    # Prepare tags
     all_tags = set(creator.get("tags", []))
     for project in creator.get("projects", []):
         all_tags.update(project.get("tags", []))
-    all_tags = sorted(all_tags)
-    
-    body += render_tag_section(all_tags)
 
-    body += "</div>"  # close creator-left
+    tag_map = {}
+    for tag in sorted(all_tags):
+        if ":" in tag:
+            category, label = tag.split(":", 1)
+            tag_map.setdefault(category.strip(), []).append(label.strip())
+        else:
+            tag_map.setdefault("Tag", []).append(tag.strip())
 
-    # Right Side
-    body += "<div class='creator-right'>"
+    # Prepare projects
+    projects = []
+    for project in sorted(creator.get("projects", []), key=sort_project):
+        project_slug = slugify(f"{creator['name']}_{project['title']}")
+        if project.get('thumbnail'):
+            img_abs = input_path / project['thumbnail']
+            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
+            thumb_url = get_relative_path(thumb_path, out_dir)
+        else:
+            thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-    # Optional Projects section
-    if creator['projects']:
-        creator['projects'].sort(key=sort_project)
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Projects</div>"
-        body += "<hr>"
-        body += "<div class='section-content project-gallery'>"
-        
-        for project in creator['projects']:
-            project_title = project["title"]
-            project_slug = slugify(f"{creator['name']}_{project_title}")
-            thumb_rel = ""
-            
-            if project['thumbnail']:
-                img_abs = input_path / project['thumbnail']
-                thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
-                generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
-                thumb_rel = get_relative_path(thumb_path, out_dir)
-            else:
-                thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+        projects.append({
+            "title": project['title'],
+            "url": f"../projects/{project_slug}.html",
+            "thumbnail_url": thumb_url,
+        })
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
-            
-            if thumb_rel:
-                body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
-                
-            body += f"{project_title}</a></div>"
-        body += "</div>"
-        body += "</div>"
-
-    # Optional Collaboration projects section
-    collaborations = [m for m in creators if m.get("is_collaboration") and creator["name"] in m.get("members", [])]
-    for collab in collaborations:
-        collab['projects'].sort(key=sort_project)
-        body += "<div class='section-box'>"
-        
+    # Prepare collaborations
+    collaborations = []
+    for collab in (m for m in creators if m.get("is_collaboration") and creator["name"] in m.get("members", [])):
         other_members = [name for name in collab.get("members", []) if name != creator["name"]]
         collab_label = " & ".join(other_members)
-        body += f"<div class='section-title'>Projects with {collab_label}</div>"
-        
-        body += "<div class='section-content project-gallery'>"
-        
-        for project in collab['projects']:
-            project_title = project["title"]
-            project_slug = slugify(f"{collab['name']}_{project_title}")
-            thumb_rel = ""
-            
-            if project['thumbnail']:
+        collab_projects = []
+
+        for project in sorted(collab.get("projects", []), key=sort_project):
+            project_slug = slugify(f"{collab['name']}_{project['title']}")
+            if project.get('thumbnail'):
                 img_abs = input_path / project['thumbnail']
                 thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
                 generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
-                thumb_rel = get_relative_path(thumb_path, out_dir)
+                thumb_url = get_relative_path(thumb_path, out_dir)
             else:
-                thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+                thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
-            
-            if thumb_rel:
-                body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
-                
-            body += f"{project_title}</a></div>"
-        body += "</div>"
-        body += "</div>"
+            collab_projects.append({
+                "title": project['title'],
+                "url": f"../projects/{project_slug}.html",
+                "thumbnail_url": thumb_url,
+            })
 
-    body += "</div>"  # close creator-right
-    body += "</div>"  # close creator-layout
+        collaborations.append({
+            "label": collab_label,
+            "projects": collab_projects
+        })
 
-     # Write file
+    output_html = template.render(
+        creator=creator,
+        portrait_url=portrait_url,
+        debut_age=debut_age,
+        info_html=render_markdown(creator.get("info", "")),
+        tag_map=tag_map,
+        projects=projects,
+        collaborations=collaborations,
+    )
+
     page_path = out_dir / f"{slug}.html"
-    with open(page_path, 'w', encoding='utf-8') as f:
-        f.write(HTML_TEMPLATE.format(title=title, body=body))
+    with open(page_path, "w", encoding="utf-8") as f:
+        f.write(output_html)
 
-def build_collaboration_page(creator: Dict, creators: List[Dict], out_dir: Path, input_path: Path, thumbs_dir: Path):
+def build_collaboration_page(creator: dict, creators: list, out_dir: Path, input_path: Path, thumbs_dir: Path):
     slug = slugify(creator['name'])
     print(f"Building collaboration page: {slug}.html")
 
-    css_links = """
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/creator.css">
-    """
+    template = env.get_template("creator_collaboration.html.j2")
 
-    body = css_links
-    body += build_nav_links(
-        ("Creators", "../index.html"),
-        ("Tags", "../tags.html")
-    )
-
-    title = creator['name']
-    body += f"<h1>{title}</h1>"
-
-    body += "<div class='creator-layout'>"
-
-    # Left Side
-    body += "<div class='creator-left'>"
-
-    # Profile section
-    #body += "<div class='section-box fit-box'>"
-    body += "<div class='section-box'>"
-    body += "<div class='section-title'>Profile</div><hr>"
-    body += "<div class='section-content markdown'>"
-
-    body += "<div class='creator-info'>"
-
-    portrait = creator.get('portrait')
-    if portrait:
-        img_abs = input_path / portrait
-        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(portrait), ThumbType.PORTRAIT)
+    # Process portrait thumbnail
+    if creator.get('portrait'):
+        img_abs = input_path / creator['portrait']
+        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.PORTRAIT)
         generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
-        thumb_rel = get_relative_path(thumb_path, out_dir)
+        portrait_url = get_relative_path(thumb_path, out_dir)
     else:
-        thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+        portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
 
-    body += f"<img src='{thumb_rel}' alt='Portrait of {creator['name']}'>"
-
-    body += "<div>"
-
-    # Members
-    members = creator.get("members", [])
-    body += "<div>"
-    body += f"<p><strong>Members:</strong> {', '.join(members)}</p>"
-    body += "</div>"
-
-    body += "</div>"
-    
-    body += "</div>"  # Close .creator-info
-    body += "</div>"  # Close section-content 
-    body += "</div>"  # section-box
-
-    # Optional Info section
-    info_text = creator.get("info", "").strip()
-    if info_text:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>About</div>"
-        body += "<hr>"
-        body += f"<div class='section-content compact-content'>{render_markdown(info_text)}</div>"
-        body += "</div>"
-
-    # Optional Members (solo) creator pages
-    existing_creator_names = {m["name"]: m for m in creators if not m.get("is_collaboration")}
-    featured_members = [m for m in creator.get("members", []) if m in existing_creator_names]
-
-    if featured_members:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Members</div><hr>"
-        body += "<div class='section-content creator-gallery'>"
-
-        for name in featured_members:
-            featured = existing_creator_names[name]
-            featured_slug = slugify(featured["name"])
-            portrait = featured.get("portrait")
-            if portrait:
-                img_abs = input_path / portrait
-                thumb_path = get_thumbnail_path(thumbs_dir, featured_slug, Path(portrait), ThumbType.THUMB)
-                generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
-                thumb_rel = get_relative_path(thumb_path, out_dir)
-            else:
-                thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], out_dir)
-
-            body += "<div class='creator-entry'>"
-            body += f"<a href='../creators/{featured_slug}.html' title='{featured['name']}'>"
-            body += f"<img src='{thumb_rel}' width='100' alt='{featured['name']} thumbnail'><br>"
-            body += f"{featured['name']}</a></div>"
-
-        body += "</div></div>"
-
-    # Optional Tags section
+    # Prepare tags
     all_tags = set(creator.get("tags", []))
     for project in creator.get("projects", []):
         all_tags.update(project.get("tags", []))
-    all_tags = sorted(all_tags)
 
-    body += render_tag_section(all_tags)
+    tag_map = {}
+    for tag in sorted(all_tags):
+        if ":" in tag:
+            category, label = tag.split(":", 1)
+            tag_map.setdefault(category.strip(), []).append(label.strip())
+        else:
+            tag_map.setdefault("Tag", []).append(tag.strip())
 
-    body += "</div>" # close Left Side
-
-    # Right Side
-    body += "<div class='creator-right'>"
-
-    # Optional Projects section
-    if creator['projects']:
-        creator['projects'].sort(key=sort_project)
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Projects</div><hr>"
-        body += "<div class='section-content project-gallery'>"
-
-        for project in creator['projects']:
-            project_title = project["title"]
-            project_slug = slugify(f"{creator['name']}_{project_title}")
-            thumb_rel = ""
-
-            if project['thumbnail']:
-                img_abs = input_path / project['thumbnail']
-                thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
-                generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
-                thumb_rel = get_relative_path(thumb_path, out_dir)
+    # Prepare member links
+    member_links = []
+    existing_creator_names = {m["name"]: m for m in creators if not m.get("is_collaboration")}
+    for member in creator.get("members", []):
+        if member in existing_creator_names:
+            member_slug = slugify(member)
+            member_portrait = existing_creator_names[member].get("portrait")
+            if member_portrait:
+                img_abs = input_path / member_portrait
+                thumb_path = get_thumbnail_path(thumbs_dir, member_slug, Path(member_portrait), ThumbType.THUMB)
+                generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
+                thumb_url = get_relative_path(thumb_path, out_dir)
             else:
-                thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+                thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], out_dir)
 
-            body += f"<div class='project-entry'><a href='../projects/{project_slug}.html' title='{project_title}'>"
-            body += f"<img src='{thumb_rel}' alt='Thumbnail for {project_title}'><br>"
-            body += f"{project_title}</a></div>"
+            member_links.append({
+                "name": member,
+                "url": f"../creators/{member_slug}.html",
+                "thumbnail_url": thumb_url
+            })
 
-        body += "</div></div>"
+    # Prepare projects
+    projects = []
+    for project in sorted(creator.get("projects", []), key=sort_project):
+        project_slug = slugify(f"{creator['name']}_{project['title']}")
+        if project.get('thumbnail'):
+            img_abs = input_path / project['thumbnail']
+            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
+            thumb_url = get_relative_path(thumb_path, out_dir)
+        else:
+            thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-    body += "</div>" # close Right Side
-    
-    # Write file
+        projects.append({
+            "title": project['title'],
+            "url": f"../projects/{project_slug}.html",
+            "thumbnail_url": thumb_url,
+        })
+
+    output_html = template.render(
+        creator=creator,
+        portrait_url=portrait_url,
+        info_html=render_markdown(creator.get("info", "")),
+        tag_map=tag_map,
+        member_links=member_links,
+        projects=projects,
+    )
+
     page_path = out_dir / f"{slug}.html"
-    with open(page_path, 'w', encoding='utf-8') as f:
-        f.write(HTML_TEMPLATE.format(title=title, body=body))
+    with open(page_path, "w", encoding="utf-8") as f:
+        f.write(output_html)
 
 def build_all_project_pages(creators: List[Dict], out_dir: Path, root_input: Path, thumbs_dir: Path):
     print("Generating project pages...")
@@ -548,179 +383,80 @@ def build_all_project_pages(creators: List[Dict], out_dir: Path, root_input: Pat
         for project in creator['projects']:
             build_project_page(creator['name'], project, out_dir, root_input, thumbs_dir, creators)
             
-def build_project_page(creator_name: str, project: Dict, out_dir: Path, root_input: Path, thumbs_dir: Path, creators: List[Dict]):
-    project_title = project['title']
-    slug = slugify(f"{creator_name}_{project_title}")
-    print(f"Building project page: {slug}.html") 
-    
-    thumb_subdir = thumbs_dir / slug
-    thumb_subdir.mkdir(parents=True, exist_ok=True)
+def build_project_page(creator_name: str, project: dict, out_dir: Path, root_input: Path, thumbs_dir: Path, creators: list):
+    slug = slugify(f"{creator_name}_{project['title']}")
+    print(f"Building project page: {slug}.html")
 
-    # Link external CSS
-    css_links = """
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/project.css">
-    """
+    template = env.get_template("project_page.html.j2")
 
-    body = css_links
-    body += build_nav_links(
-        ("Creators", "../index.html"),
-        ("Tags", "../tags.html"),
-        (creator_name, f"../creators/{slugify(creator_name)}.html")
+    # Thumbnail
+    if project.get('thumbnail'):
+        img_abs = root_input / project['thumbnail']
+        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
+        generate_thumbnail(img_abs, thumb_path, ThumbType.POSTER)
+        thumbnail_url = get_relative_path(thumb_path, out_dir)
+    else:
+        thumbnail_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
+
+    # Tags
+    tag_map = {}
+    for tag in sorted(project.get("tags", [])):
+        if ":" in tag:
+            category, label = tag.split(":", 1)
+            tag_map.setdefault(category.strip(), []).append(label.strip())
+        else:
+            tag_map.setdefault("Tag", []).append(tag.strip())
+
+    # Participants (creators)
+    participants = []
+    for name in ([creator_name] if " & " not in creator_name else creator_name.split(" & ")):
+        name = name.strip()
+        creator = next((c for c in creators if c["name"] == name), None)
+        if creator:
+            if creator.get('portrait'):
+                img_abs = root_input / creator['portrait']
+                thumb_path = get_thumbnail_path(thumbs_dir, slugify(name), Path(creator['portrait']), ThumbType.PORTRAIT)
+                generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
+                portrait_url = get_relative_path(thumb_path, out_dir)
+            else:
+                portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+
+            age_at_release = ""
+            if creator.get("date_of_birth") and project.get("release_date"):
+                from datetime import datetime
+                try:
+                    dob_dt = datetime.strptime(creator['date_of_birth'], "%Y-%m-%d")
+                    release_dt = datetime.strptime(project['release_date'], "%Y-%m-%d")
+                    age_at_release = calculate_age(dob_dt, release_dt)
+                except Exception as e:
+                    print(f"Error calculating age: {e}")
+
+            participants.append({
+                "name": name,
+                "url": f"../creators/{slugify(name)}.html",
+                "portrait_url": portrait_url,
+                "age_at_release": age_at_release
+            })
+
+    # Media groups
+    media_groups = project.get("media_groups", [])
+
+    output_html = template.render(
+        creator_name=creator_name,
+        project_title=project['title'],
+        thumbnail_url=thumbnail_url,
+        info_html=render_markdown(project.get("info", "")),
+        tag_map=tag_map,
+        participants=participants,
+        media_groups=media_groups,
+        root_input=root_input,
+        out_dir=out_dir,
+        get_relative_path=get_relative_path,
     )
 
-    title = f"{creator_name} - {project_title}"
-    body += f"<h1>{title}</h1>"
-
-    body += "<div class='project-layout'>"
-
-    # Left Side
-    body += "<div class='project-left'>"
-
-    # Content
-    body += "<div class='section-box'>"
-    body += "<div class='section-title'>Overview</div>"
-    body += "<hr>"
-    body += "<div class='section-content markdown'>"
-
-    body += "<div class='project-info'>"
-
-    if project.get("thumbnail"):
-        poster_path = root_input / project['thumbnail']
-        thumbnail_path = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
-        generate_thumbnail(poster_path, thumbnail_path, ThumbType.POSTER)
-        thumbnail_rel_path = get_relative_path(thumbnail_path, out_dir)
-    else:
-        thumbnail_rel_path = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
-
-    body += f"<img src='{thumbnail_rel_path}' alt='Preview of {project['title']}'>"
-
-    body += "</div>"
-    
-    body += "</div>"  # section-content
-    body += "</div>"  # section-box
-
-    # Optional Info Text section
-    info_text = project.get("info", "").strip()
-    if info_text:
-        body += "<div class='section-box'>"
-        body += "<div class='section-title'>Description</div>"
-        body += "<hr>"
-        body += f"<div class='section-content text-content'>{render_markdown(info_text)}</div>"
-        body += "</div>"  #end info text section
-
-    # Optional Featuring section
-    def get_creator_info(name: str):
-        for m in creators:
-            if m["name"] == name:
-                return m
-        return None
-        
-    release_date = project.get("release_date", "")
-    
-    participants = [creator_name] if not is_collaboration(creator_name) else [name.strip() for name in creator_name.split(" & ")]
-    for name in participants:
-        creator = get_creator_info(name)
-        if not creator:
-            continue
-        
-        body += "<div class='section-box'>"
-        body += f"<div class='section-title'>{name} - Creator Profile</div>"
-        body += "<hr>"
-        body += "<div class='section-content'>"
-        body += "<div class='creator-info'>"
-
-        portrait = creator.get("portrait")
-        
-        dob = creator.get("date_of_birth", "")
-        age_text = ""
-        if dob and release_date:
-            try:
-                dob_dt = datetime.strptime(dob, "%Y-%m-%d")
-                release_dt = datetime.strptime(release_date, "%Y-%m-%d")
-                age_text = calculate_age(dob_dt, release_dt)
-            except Exception as e:
-                print(f"Could not calculate age: {e}")
-                age_text = ""
-        
-        if portrait:
-            img_abs = root_input / portrait
-            thumb_path = get_thumbnail_path(thumbs_dir, slugify(name), Path(portrait), ThumbType.PORTRAIT)
-            generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
-            thumb_rel = get_relative_path(thumb_path, out_dir)
-        else:
-            thumb_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
-        
-        body += f"<img src='{thumb_rel}' alt='Portrait of {creator['name']}'>"
-        body += "<div>"
-        body += f"<p><strong>Name:</strong> <a href='../creators/{slugify(name)}.html'>{name}</a></p>"
-        body += f"<p><strong>At Age:</strong> {age_text}</p>"
-        
-        body += "</div>"
-        body += "</div>"
-        body += "</div>"
-        body += "</div>"  # end featuring section
-
-    body += render_tag_section(project.get("tags", []))
-    
-    body += "</div>"
-
-     # Right Side
-    body += "<div class='project-right'>"
-    
-    # Videos
-    #poster_attr = ""
-    #if project.get("thumbnail"):
-    #    poster_img = root_input / project['thumbnail']
-    #    poster_thumb = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
-    #    generate_thumbnail(poster_img, poster_thumb, ThumbType.POSTER)
-    #    poster_rel = get_relative_path(poster_thumb, out_dir)
-    #    poster_attr = f" poster='{poster_rel}'"
-    #else:
-    #    poster_rel = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
-    #    poster_attr = f" poster='{poster_rel}'"
-
-    # Optional Media Groups section
-    media_groups = project.get("media_groups", [])
-    for group in media_groups:
-        group_videos = group.get("videos", [])
-        group_images = group.get("images", [])
-        
-        if group.get("is_root"):
-            video_label = "Project - Videos"
-            image_label = "Project - Images"
-        else:
-            label = group.get("label", "Unnamed")
-            video_label = f"{label} - Videos"
-            image_label = f"{label} - Images"
-
-        if group_videos:
-            body += "<div class='section-box'>"
-            body += f"<div class='section-title'>{video_label}</div><hr>"
-            body += "<div class='section-content video-gallery'>"
-            for video_path in group_videos:
-                video_rel = get_relative_path(root_input / video_path, out_dir)
-                body += f"<video controls><source src='{video_rel}' type='video/mp4'></video>"
-            body += "</div></div>"
-
-        if group_images:
-            body += "<div class='section-box'>"
-            body += f"<div class='section-title'>{image_label}</div><hr>"
-            body += "<div class='section-content image-gallery'>"
-            for img_path in group_images:
-                img_abs = root_input / img_path
-                thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(img_path), ThumbType.THUMB)
-                generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
-                thumb_rel = get_relative_path(thumb_path, out_dir)
-                original_rel = get_relative_path(img_abs, out_dir)
-                body += f"<a href='{original_rel}' target='_blank'><img src='{thumb_rel}' alt='{label} image'></a>"
-            body += "</div></div>"
-
-    body += "</div>"
-
     page_path = out_dir / f"{slug}.html"
-    with open(page_path, 'w', encoding='utf-8') as f:
-        f.write(HTML_TEMPLATE.format(title=title, body=body))
+    with open(page_path, "w", encoding="utf-8") as f:
+        f.write(output_html)
 
 def collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
     tags = defaultdict(set)
@@ -741,37 +477,17 @@ def collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
                     tags["Tag"].add(tag.strip())
     return tags
 
-def build_tags_page(creators: List[Dict], output_path: Path):
+def build_tags_page(creators: list, output_path: Path):
+    print("Generating tags page...")
+
+    template = env.get_template("tags.html.j2")
+
     tags = collect_all_tags(creators)
-                    
-    # Link external CSS
-    css_links = """
-    <link rel="stylesheet" href="css/base.css">
-    """
 
-    body = css_links
-    
-    body += build_nav_links(
-        ("Creators", "index.html"),
-        ("Tags", None)
+    output_html = template.render(
+        tags=tags
     )
-    
-    title = "Tags"
-
-    body += f"<h1>{title}</h1>"
-
-    body += "<div class='section-box'>"
-    body += "<div class='section-content tag-list'>"
-
-    for category in sorted(tags.keys()):
-        anchor = category.lower().replace(" ", "-")
-        body += f"<div class='tag-category' id='{anchor}'><strong>{category}:</strong> "
-        for tag in sorted(tags[category]):
-            body += f"<a class='tag' href='index.html?tag={tag}'>{tag}</a>"
-        body += "</div>"
-
-    body += "</div></div>"
 
     tag_file = output_path / "tags.html"
     with open(tag_file, "w", encoding="utf-8") as f:
-        f.write(HTML_TEMPLATE.format(title=title, body=body))
+        f.write(output_html)
