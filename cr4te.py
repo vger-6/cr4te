@@ -5,7 +5,6 @@ import shutil
 from pathlib import Path
 from html_builder import build_html_pages
 from json_builder import process_all_creators
-from utils import is_valid_entry
 
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
@@ -46,7 +45,7 @@ def main():
 
         creator_data = []
         for creator in sorted(input_path.iterdir()):
-            if not creator.is_dir() or not is_valid_entry(creator):
+            if not creator.is_dir():
                 continue
             json_path = creator / "cr4te.json"
             if json_path.exists():

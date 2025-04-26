@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional
-from utils import is_collaboration, is_valid_entry
+from utils import is_collaboration
 from PIL import Image
 from datetime import datetime
 from collections import defaultdict
@@ -20,6 +20,10 @@ VIDEO_EXCLUDE_RE = re.compile(r"$^")  # match nothing (placeholder)
 
 IMAGE_INCLUDE_RE = re.compile(r"^[^/\\]+/[^/\\]+\.jpg$", re.IGNORECASE)  # immediate subfolders only
 IMAGE_EXCLUDE_RE = re.compile(r"$^", re.IGNORECASE)  # match nothing (placeholder)
+
+# TODO: USE GLOBAL_EXCLUDE_RE instead
+def is_valid_entry(entry: Path) -> bool:
+    return not entry.name.startswith('_')
     
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
