@@ -87,6 +87,32 @@ def find_portrait(images: List[Path]) -> Optional[Path]:
 #    selected = [relative_paths[i] for i in indices]
 #    return selected
 
+def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> dict:
+    if is_root:
+        video_label = "Videos"
+        image_label = "Images"
+    else:
+        has_videos = bool(videos)
+        has_images = bool(images)
+
+        if has_videos and not has_images:
+            video_label = folder_name
+            image_label = ""
+        elif has_images and not has_videos:
+            video_label = ""
+            image_label = folder_name
+        else:
+            video_label = f"{folder_name} - Videos"
+            image_label = f"{folder_name} - Images"
+
+    return {
+        "is_root": is_root,
+        "videos": videos,
+        "images": images,
+        "video_label": video_label,
+        "image_label": image_label,
+    }
+
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path) -> List[Dict]:
     projects_data = []
 
@@ -138,16 +164,11 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                                 thumbnail_path = str(rel_to_input)
                     except Exception as e:
                         print(f"Thumbnail check failed: {e}")
-
+                        
         # Build media_groups list from the grouped map
         media_groups = []
-        for label, group in media_map.items():
-            media_groups.append({
-                "label": label,
-                "is_root": group.get("is_root", False),
-                "images": group["images"][:10],
-                "videos": group["videos"]
-            })
+        for folder_name, group in media_map.items():
+            media_groups.append(create_media_group(folder_name, group["is_root"], group["videos"], group["images"][:10]))
 
         projects_data.append({
             "title": project_title,

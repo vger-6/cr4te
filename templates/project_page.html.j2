@@ -85,7 +85,7 @@
     {% for group in media_groups %}
       {% if group.videos %}
       <div class="section-box">
-        <div class="section-title">{{ group.label }} - Videos</div>
+        <div class="section-title">{{ group.video_label }}</div>
         <hr>
         <div class="section-content video-gallery">
           {% for video in group.videos %}
@@ -99,12 +99,12 @@
 
       {% if group.images %}
       <div class="section-box">
-        <div class="section-title">{{ group.label }} - Images</div>
+        <div class="section-title">{{ group.image_label }}</div>
         <hr>
         <div class="section-content image-gallery">
           {% for image in group.images %}
           <a href="{{ get_relative_path(root_input / image, out_dir) }}" target="_blank">
-            <img src="{{ get_relative_path(root_input / image, out_dir) }}" alt="Image for {{ group.label }}">
+            <img src="{{ get_relative_path(root_input / image, out_dir) }}" alt="Image for {{ group.image_label }}">
           </a>
           {% endfor %}
         </div>
