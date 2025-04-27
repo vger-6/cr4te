@@ -1,25 +1,63 @@
 import argparse
+import json
 import shutil
-
 from pathlib import Path
 from html_builder import clear_output_folder, collect_creator_data, build_html_pages
 from json_builder import process_all_creators
 
+# Default internal config
+DEFAULT_CONFIG = {
+    "html_settings": {
+        "creator_label": "Creator",
+        "project_label": "Project"
+    },
+    "media_rules": {
+        "GLOBAL_EXCLUDE_RE": r"(^|/|\\)_",
+        "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$", # root-level only
+        "VIDEO_EXCLUDE_RE": r"$^", # match nothing (placeholder)
+        "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$", # immediate subfolders only
+        "IMAGE_EXCLUDE_RE": r"$^" # match nothing (placeholder)
+    }
+}
+
+def load_config(config_path: Path = None) -> dict:
+    config = DEFAULT_CONFIG.copy()
+    if config_path:
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                user_config = json.load(f)
+            # Deep merge
+            config["html_settings"].update(user_config.get("html_settings", {}))
+            config["media_rules"].update(user_config.get("media_rules", {}))
+        except Exception as e:
+            print(f"Warning: Could not load config file {config_path}: {e}")
+            print("Proceeding with default configuration.")
+    return config
+
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
     subparsers = parser.add_subparsers(dest="command")
+
+    # build-json
     json_parser = subparsers.add_parser("build-json", help="Generate JSON metadata from media folders")
     json_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
+    json_parser.add_argument("--config", help="Path to configuration file (optional)")
+
+    # build-html
     html_parser = subparsers.add_parser("build-html", help="Generate HTML site from JSON metadata")
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
+    html_parser.add_argument("--config", help="Path to configuration file (optional)")
+
     args = parser.parse_args()
+
+    config = load_config(Path(args.config).resolve()) if args.config else DEFAULT_CONFIG
 
     if args.command == "build-json":
         input_path = Path(args.input).resolve()
         if not input_path.exists() or not input_path.is_dir():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
-        process_all_creators(input_path)
+        process_all_creators(input_path, config["media_rules"])
 
     elif args.command == "build-html":
         input_path = Path(args.input).resolve()
@@ -39,7 +77,7 @@ def main():
 
         creator_data = collect_creator_data(input_path)
 
-        build_html_pages(creator_data, output_path, input_path)
+        build_html_pages(creator_data, output_path, input_path, config["html_settings"])
 
 if __name__ == "__main__":
     main()

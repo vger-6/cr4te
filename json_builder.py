@@ -12,15 +12,6 @@ class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
 
-# === REGEX CONFIG ===
-GLOBAL_EXCLUDE_RE = re.compile(r"(^|/|\\)_", re.IGNORECASE)
-
-VIDEO_INCLUDE_RE = re.compile(r"^[^/\\]+\.mp4$", re.IGNORECASE)  # root-level only
-VIDEO_EXCLUDE_RE = re.compile(r"$^")  # match nothing (placeholder)
-
-IMAGE_INCLUDE_RE = re.compile(r"^[^/\\]+/[^/\\]+\.jpg$", re.IGNORECASE)  # immediate subfolders only
-IMAGE_EXCLUDE_RE = re.compile(r"$^", re.IGNORECASE)  # match nothing (placeholder)
-
 # TODO: USE GLOBAL_EXCLUDE_RE instead
 def is_valid_entry(entry: Path) -> bool:
     return not entry.name.startswith('_')
@@ -113,7 +104,15 @@ def create_media_group(folder_name: str, is_root: bool, videos: list, images: li
         "image_label": image_label,
     }
 
-def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path) -> List[Dict]:
+def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, media_rules: Dict) -> List[Dict]:
+    GLOBAL_EXCLUDE_RE = re.compile(media_rules["GLOBAL_EXCLUDE_RE"])
+
+    VIDEO_INCLUDE_RE = re.compile(media_rules["VIDEO_INCLUDE_RE"])  
+    VIDEO_EXCLUDE_RE = re.compile(media_rules["VIDEO_EXCLUDE_RE"])  
+
+    IMAGE_INCLUDE_RE = re.compile(media_rules["IMAGE_INCLUDE_RE"])  
+    IMAGE_EXCLUDE_RE = re.compile(media_rules["IMAGE_EXCLUDE_RE"])  
+    
     projects_data = []
 
     for project_dir in sorted(creator_path.iterdir()):
@@ -183,7 +182,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
 
     return projects_data
 
-def build_creator_json(creator_path: Path, input_path: Path) -> Dict:
+def build_creator_json(creator_path: Path, input_path: Path, media_rules: Dict) -> Dict:
     creator_name = creator_path.name
     existing_data = load_existing_json(creator_path / "cr4te.json")
     all_images = [p for p in creator_path.rglob("*.jpg") if is_valid_entry(p)]
@@ -199,7 +198,7 @@ def build_creator_json(creator_path: Path, input_path: Path) -> Dict:
         "portrait": portrait_path,
         "info": read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
-        "projects": collect_projects_data(creator_path, existing_data, input_path)
+        "projects": collect_projects_data(creator_path, existing_data, input_path, media_rules)
     }
 
     if is_collab:
@@ -211,13 +210,13 @@ def build_creator_json(creator_path: Path, input_path: Path) -> Dict:
     
     return creator_json
 
-def process_all_creators(input_path: Path):
+def process_all_creators(input_path: Path, media_rules: dict):
     creator_list = []
     for creator in sorted(input_path.iterdir()):
         if not creator.is_dir() or not is_valid_entry(creator):
             continue
         print(f"Processing creator: {creator.name}")
-        creator_json = build_creator_json(creator, input_path)
+        creator_json = build_creator_json(creator, input_path, media_rules)
         json_path = creator / "cr4te.json"
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator_json, f, indent=2)

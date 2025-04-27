@@ -10,7 +10,7 @@
 <body>
 
 <div class="top-link">
-  <a href="../index.html">Creators</a> &middot;
+  <a href="../index.html">{{ html_settings.creator_label }}s</a> &middot;
   <a href="../tags.html">Tags</a>
 </div>
 
@@ -85,7 +85,7 @@
 
     {% if projects %}
     <div class="section-box">
-      <div class="section-title">Projects</div>
+      <div class="section-title">{{ html_settings.project_label }}s</div>
       <hr>
       <div class="section-content project-gallery">
         {% for project in projects %}

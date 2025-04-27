@@ -1,0 +1,14 @@
+{
+  "html_settings": {
+    "creator_label": "Creator",
+    "project_label": "Project"
+  },
+  "media_rules": {
+    "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
+    "VIDEO_INCLUDE_RE": "^[^/\\\\]+\\.mp4$",
+    "VIDEO_EXCLUDE_RE": "$^",
+    "IMAGE_INCLUDE_RE": "^[^/\\\\]+/[^/\\\\]+\\.jpg$",
+    "IMAGE_EXCLUDE_RE": "$^"
+  }
+}
+

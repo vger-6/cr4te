@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Creators</title>
+  <title>{{ html_settings.creator_label }}s</title>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/creator.css">
 </head>
 <body>
 
 <div class="top-link">
-  <span class="nav-current">Creators</span> &middot;
+  <span class="nav-current">{{ html_settings.creator_label }}s</span> &middot;
   <a href="tags.html">Tags</a>
 </div>
 
-<h1>Creators</h1>
+<h1>{{ html_settings.creator_label }}s</h1>
 
 <div class="search-bar-wrapper">
-  <input type="text" id="search-input" placeholder="Search creators, tags, projects..." class="search-box">
+  <input type="text" id="search-input" placeholder="Search {{ html_settings.creator_label.lower() }}s, {{ html_settings.project_label.lower() }}s, tags, ..." class="search-box">
 </div>
 
 <div class="creator-box">
