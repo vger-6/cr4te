@@ -88,7 +88,7 @@ def main():
             output_path.mkdir(parents=True, exist_ok=True)
 
         creator_data = collect_creator_data(input_path)
-        build_html_pages(creator_data, output_path, input_path, config["html_settings"])
+        build_html_pages(creator_data, input_path, output_path, config["html_settings"])
 
 if __name__ == "__main__":
     main()

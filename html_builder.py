@@ -94,17 +94,7 @@ def sort_project(project: Dict) -> tuple:
     title = project.get("title", "").lower()
     return (not has_date, date_value, title)
 
-# TODO: remove obsolete code
-def build_nav_links(*links: tuple[str, Optional[str]]) -> str:
-    parts = []
-    for label, href in links:
-        if href is None:
-            parts.append(f"<span class='nav-current'>{label}</span>")
-        else:
-            parts.append(f"<a href='{href}'>{label}</a>")
-    return f"<div class='top-link'>{' &middot; '.join(parts)}</div>"
-
-def build_html_pages(creators: list, output_path: Path, input_path: Path, html_settings: dict):
+def build_html_pages(creators: list, input_path: Path, output_path: Path, html_settings: dict):
     (output_path / "creators").mkdir(parents=True, exist_ok=True)
     (output_path / "projects").mkdir(parents=True, exist_ok=True)
     (output_path / "thumbnails").mkdir(parents=True, exist_ok=True)
@@ -138,12 +128,12 @@ def build_html_pages(creators: list, output_path: Path, input_path: Path, html_s
         print(f"Warning: Defaults folder not found at {defaults_source}")
 
     thumbs_dir = output_path / "thumbnails"
-    build_overview_pages( creators, output_path,            input_path, thumbs_dir, html_settings)
-    build_all_creator_pages(creators, output_path / "creators", input_path, thumbs_dir, html_settings)
-    build_all_project_pages(creators, output_path / "projects", input_path, thumbs_dir, html_settings)
-    build_tags_page(creators, output_path, html_settings)
+    build_overview_pages(   creators, input_path, output_path,              thumbs_dir, html_settings)
+    build_all_creator_pages(creators, input_path, output_path / "creators", thumbs_dir, html_settings)
+    build_all_project_pages(creators, input_path, output_path / "projects", thumbs_dir, html_settings)
+    build_tags_page(        creators,             output_path,                          html_settings)
 
-def build_overview_pages(creators: list, output_path: Path, input_path: Path, thumbs_dir: Path, html_settings: dict):
+def build_overview_pages(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating overview page...")
 
     template = env.get_template("overview.html.j2")
@@ -188,16 +178,16 @@ def build_overview_pages(creators: list, output_path: Path, input_path: Path, th
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
 
-def build_all_creator_pages(creators: List[Dict], out_dir: Path, input_path: Path, thumbs_dir: Path, html_settings: dict):
+def build_all_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating creator pages...")
     
     for creator in creators:
         if not creator["is_collaboration"]:
-            build_solo_page(creator, creators, out_dir, input_path, thumbs_dir, html_settings)
+            build_solo_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
         else:
-            build_collaboration_page(creator, creators, out_dir, input_path, thumbs_dir, html_settings)
+            build_collaboration_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
 
-def build_solo_page(creator: dict, creators: list, out_dir: Path, input_path: Path, thumbs_dir: Path, html_settings: dict):
+def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = slugify(creator['name'])
     print(f"Building creator page: {slug}.html")
 
@@ -299,7 +289,7 @@ def build_solo_page(creator: dict, creators: list, out_dir: Path, input_path: Pa
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
-def build_collaboration_page(creator: dict, creators: list, out_dir: Path, input_path: Path, thumbs_dir: Path, html_settings: dict):
+def build_collaboration_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = slugify(creator['name'])
     print(f"Building collaboration page: {slug}.html")
 
@@ -380,14 +370,14 @@ def build_collaboration_page(creator: dict, creators: list, out_dir: Path, input
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
-def build_all_project_pages(creators: List[Dict], out_dir: Path, root_input: Path, thumbs_dir: Path, html_settings: dict):
+def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating project pages...")
     
     for creator in creators:
         for project in creator['projects']:
-            build_project_page(creator['name'], project, out_dir, root_input, thumbs_dir, creators, html_settings)
+            build_project_page(creator['name'], project, root_input, out_dir, thumbs_dir, creators, html_settings)
             
-def build_project_page(creator_name: str, project: dict, out_dir: Path, root_input: Path, thumbs_dir: Path, creators: list, html_settings: dict):
+def build_project_page(creator_name: str, project: dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: dict):
     slug = slugify(f"{creator_name}_{project['title']}")
     print(f"Building project page: {slug}.html")
 
