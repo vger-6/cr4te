@@ -12,6 +12,7 @@ A static site generator for organizing and showcasing creative media projects. I
 - **Flexible media grouping via regex rules**
 - **Video and image organization with dynamic labels**
 - **Jinja2 templating for fast, maintainable static HTML**
+- **User-customizable labels and media rules** via optional config file
 - **Fast static HTML output** with no runtime dependencies during browsing
 
 ---
@@ -27,9 +28,10 @@ Creators/
 │   └── Project1/
 │       ├── Landscape1.jpg
 │       ├── clip.mp4
+│       ├── README.md        # Optional creator description
 │       └── SubGroup/
 │           └── *.jpg
-└── Bob & Charlie/             # Collaboration folder
+└── Bob & Charlie/           # Collaboration folder
     └── ProjectZ/
 ```
 
@@ -56,52 +58,77 @@ python cr4te.py build-json -i /path/to/Creators
 ### Step 2: Generate HTML site
 
 ```bash
-python cr4te.py build-html -i /path/to/Creators
+python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder
 ```
 
-> Output will be saved to `site_output/`.
+### Optional: Custom Configuration
+
+```bash
+python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder --config config/cr4te_config.json
+```
 
 ---
 
 ## Media Discovery Logic
 
-Media is discovered using regular expressions with full-path awareness:
+Media is discovered using regular expressions defined in the config:
 
 ### Global Exclusions
 
-- Any file or folder containing segments that start with `_`
+- Any file or folder whose name starts with `_`
 
 ### Videos
 
-- **Included:** `.mp4` files directly in the root of each project folder
-- **Excluded:** (None by default)
+- **Included:** `.mp4` files directly in the project root
+- **Excluded:** (none by default)
 
 ### Images
 
-- **Included:** `.jpg` files located in *immediate subfolders* of the project folder
-- **Excluded:** (None by default)
+- **Included:** `.jpg` files located inside immediate subfolders of the project
+- **Excluded:** (none by default)
 
-> Files are grouped by their relative folder paths into labeled `media_groups` with dynamic "Video" or "Image" titles based on folder structure.
+> Files are grouped into `media_groups` with intelligent dynamic labels based on structure and content type.
 
 ---
 
-## Customization
+## Configuration
 
-- **Regex patterns** are hardcoded for now, but designed for external config in the future
-- **CSS styles** live in `css/`
-- **Default thumbnails** are in `defaults/`
-- **HTML templates** live in `templates/` and use Jinja2
-- Override project metadata using `cr4te.json` inside each creator folder
-- Add creator/project descriptions using `README.md`
+You can optionally supply a JSON configuration file to customize:
+
+- **Creator and Project labels**
+- **Regex patterns for media grouping and exclusion**
+
+Example `cr4te_config.json`:
+
+```json
+{
+  "html_settings": {
+    "creator_label": "Director",
+    "project_label": "Movie"
+  },
+  "media_rules": {
+    "GLOBAL_EXCLUDE_RE": "(^|/|\\\")_",
+    "VIDEO_INCLUDE_RE": "^[^/\\\\]+\\\.mp4$",
+    "VIDEO_EXCLUDE_RE": "$^",
+    "IMAGE_INCLUDE_RE": "^[^/\\\\]+/[^/\\\\]+\\\.jpg$",
+    "IMAGE_EXCLUDE_RE": "$^"
+  }
+}
+```
+
+If no `--config` is specified, a default internal configuration is used.
+If `config/cr4te_config.json` exists, it will be auto-loaded.
 
 ---
 
 ## Output Example
 
-- `index.html` — Creator overview
-- `creators/<creator>.html` — Creator profile
-- `projects/<project>.html` — Individual project page
-- `tags.html` — Browse all tags
+- `index.html` — Creator overview page
+- `creators/<creator>.html` — Individual creator profiles
+- `projects/<project>.html` — Individual project pages
+- `tags.html` — Browse by tags
+
+Thumbnails are automatically generated into `/thumbnails/`.
 
 ---
 
@@ -129,7 +156,5 @@ This project is licensed under the terms of the LICENSE file included.
 ## Credits
 
 Created for artists, curators, media historians, and creative developers who want simple but structured control over their digital media archives.
-
----
 
 
