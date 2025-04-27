@@ -11,6 +11,7 @@ A static site generator for organizing and showcasing creative media projects. I
 - **Tag-based filtering** and search
 - **Flexible media grouping via regex rules**
 - **Video and image organization with dynamic labels**
+- **Build modes (flat, hybrid, deep) for customizable media discovery**
 - **Jinja2 templating for fast, maintainable static HTML**
 - **User-customizable labels and media rules** via optional config file
 - **Fast static HTML output** with no runtime dependencies during browsing
@@ -28,7 +29,7 @@ Creators/
 │   └── Project1/
 │       ├── Landscape1.jpg
 │       ├── clip.mp4
-│       ├── README.md        # Optional creator description
+│       ├── README.md        # Optional project description
 │       └── SubGroup/
 │           └── *.jpg
 └── Bob & Charlie/           # Collaboration folder
@@ -52,8 +53,13 @@ pip install -r requirements.txt
 ### Step 1: Build JSON metadata
 
 ```bash
-python cr4te.py build-json -i /path/to/Creators
+python cr4te.py build-json -i /path/to/Creators --mode hybrid
 ```
+
+Modes available:
+- `flat` — Only media directly under the project root
+- `hybrid` (default) — Flat .mp4 + first-level .jpg grouping
+- `deep` — Find .mp4 and .jpg recursively
 
 ### Step 2: Generate HTML site
 
@@ -79,12 +85,12 @@ Media is discovered using regular expressions defined in the config:
 
 ### Videos
 
-- **Included:** `.mp4` files directly in the project root
+- **Included:** `.mp4` files (based on selected mode)
 - **Excluded:** (none by default)
 
 ### Images
 
-- **Included:** `.jpg` files located inside immediate subfolders of the project
+- **Included:** `.jpg` files (based on selected mode)
 - **Excluded:** (none by default)
 
 > Files are grouped into `media_groups` with intelligent dynamic labels based on structure and content type.
@@ -107,17 +113,16 @@ Example `cr4te_config.json`:
     "project_label": "Movie"
   },
   "media_rules": {
-    "GLOBAL_EXCLUDE_RE": "(^|/|\\\")_",
-    "VIDEO_INCLUDE_RE": "^[^/\\\\]+\\\.mp4$",
+    "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
+    "VIDEO_INCLUDE_RE": ".*\\.mp4$",
     "VIDEO_EXCLUDE_RE": "$^",
-    "IMAGE_INCLUDE_RE": "^[^/\\\\]+/[^/\\\\]+\\\.jpg$",
+    "IMAGE_INCLUDE_RE": ".*\\.jpg$",
     "IMAGE_EXCLUDE_RE": "$^"
   }
 }
 ```
 
-If no `--config` is specified, a default internal configuration is used.
-If `config/cr4te_config.json` exists, it will be auto-loaded.
+If no `--config` is specified, cr4te uses internal defaults. If `config/cr4te_config.json` exists, it will be auto-loaded.
 
 ---
 
