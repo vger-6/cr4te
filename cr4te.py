@@ -1,6 +1,7 @@
 import argparse
 import json
 import shutil
+import copy
 from pathlib import Path
 from html_builder import clear_output_folder, collect_creator_data, build_html_pages
 from json_builder import process_all_creators
@@ -13,15 +14,15 @@ DEFAULT_CONFIG = {
     },
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"(^|/|\\)_",
-        "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$", # root-level only
-        "VIDEO_EXCLUDE_RE": r"$^", # match nothing (placeholder)
-        "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$", # immediate subfolders only
-        "IMAGE_EXCLUDE_RE": r"$^" # match nothing (placeholder)
+        "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",  # root-level only
+        "VIDEO_EXCLUDE_RE": r"$^",  # match nothing (placeholder)
+        "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",  # immediate subfolders only
+        "IMAGE_EXCLUDE_RE": r"$^"  # match nothing (placeholder)
     }
 }
 
 def load_config(config_path: Path = None) -> dict:
-    config = DEFAULT_CONFIG.deepcopy()
+    config = copy.deepcopy(DEFAULT_CONFIG)
 
     # If no path explicitly given, check if config/cr4te_config.json exists
     if config_path is None:
@@ -43,10 +44,9 @@ def load_config(config_path: Path = None) -> dict:
 
     return config
 
-
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
-    subparsers = parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command", required=True)
 
     # build-json
     json_parser = subparsers.add_parser("build-json", help="Generate JSON metadata from media folders")
@@ -56,6 +56,7 @@ def main():
     # build-html
     html_parser = subparsers.add_parser("build-html", help="Generate HTML site from JSON metadata")
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
+    html_parser.add_argument("-o", "--output", required=True, help="Path to output HTML site folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
 
     args = parser.parse_args()
@@ -71,11 +72,12 @@ def main():
 
     elif args.command == "build-html":
         input_path = Path(args.input).resolve()
+        output_path = Path(args.output).resolve()
+
         if not input_path.exists() or not input_path.is_dir():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
 
-        output_path = Path.cwd() / "site_output"
         if output_path.exists():
             confirm = input(f"Output folder '{output_path}' already exists. Delete everything except thumbnails and rebuild? [y/N]: ").strip().lower()
             if confirm != 'y':
@@ -86,7 +88,6 @@ def main():
             output_path.mkdir(parents=True, exist_ok=True)
 
         creator_data = collect_creator_data(input_path)
-
         build_html_pages(creator_data, output_path, input_path, config["html_settings"])
 
 if __name__ == "__main__":
