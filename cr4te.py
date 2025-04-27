@@ -21,7 +21,14 @@ DEFAULT_CONFIG = {
 }
 
 def load_config(config_path: Path = None) -> dict:
-    config = DEFAULT_CONFIG.copy()
+    config = DEFAULT_CONFIG.deepcopy()
+
+    # If no path explicitly given, check if config/cr4te_config.json exists
+    if config_path is None:
+        default_config_path = Path(__file__).parent / "config" / "cr4te_config.json"
+        if default_config_path.exists():
+            config_path = default_config_path
+
     if config_path:
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -29,10 +36,13 @@ def load_config(config_path: Path = None) -> dict:
             # Deep merge
             config["html_settings"].update(user_config.get("html_settings", {}))
             config["media_rules"].update(user_config.get("media_rules", {}))
+            print(f"Loaded configuration from {config_path}")
         except Exception as e:
             print(f"Warning: Could not load config file {config_path}: {e}")
-            print("Proceeding with default configuration.")
+            print("Proceeding with default internal configuration.")
+
     return config
+
 
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
