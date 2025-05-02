@@ -450,13 +450,15 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
                 "thumb_url": thumb_url,
                 "full_url": full_url
             })
+            
+        videos = [get_relative_path(root_input / video_path, out_dir) for video_path in media_group.get("videos", [])]
 
         media_groups.append({
             "image_label": media_group.get("image_label"),
             "video_label": media_group.get("video_label"),
             "is_root": media_group.get("is_root", False),
             "images": images,
-            "videos": media_group.get("videos", [])
+            "videos": videos
         })
 
     output_html = template.render(

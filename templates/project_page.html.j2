@@ -90,7 +90,7 @@
         <div class="section-content video-gallery">
           {% for video in group.videos %}
           <video controls>
-            <source src="{{ get_relative_path(root_input / video, out_dir) }}" type="video/mp4">
+            <source src="{{ video }}" type="video/mp4">
           </video>
           {% endfor %}
         </div>
