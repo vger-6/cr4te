@@ -14,7 +14,9 @@ DEFAULT_CONFIG = {
         "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
         "VIDEO_EXCLUDE_RE": r"$^",
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
-        "IMAGE_EXCLUDE_RE": r"$^"
+        "IMAGE_EXCLUDE_RE": r"$^",
+        "MAX_IMAGES": 20,
+        "IMAGE_SAMPLE_STRATEGY": "spread"
     }
 }
 
@@ -32,7 +34,9 @@ def get_media_rules(mode: BuildMode) -> dict:
                 "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r"^[^/\\]+\.jpg$",
-                "IMAGE_EXCLUDE_RE": r"$^"
+                "IMAGE_EXCLUDE_RE": r"$^",
+                "MAX_IMAGES": 20,
+                "IMAGE_SAMPLE_STRATEGY": "spread"
             }
         case BuildMode.HYBRID:
             return copy.deepcopy(DEFAULT_CONFIG["media_rules"])
@@ -42,7 +46,9 @@ def get_media_rules(mode: BuildMode) -> dict:
                 "VIDEO_INCLUDE_RE": r".*\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r".*\.jpg$",
-                "IMAGE_EXCLUDE_RE": r"$^"
+                "IMAGE_EXCLUDE_RE": r"$^",
+                "MAX_IMAGES": 20,
+                "IMAGE_SAMPLE_STRATEGY": "spread"
             }
         case _:
             raise ValueError(f"Unknown build mode: {mode}")

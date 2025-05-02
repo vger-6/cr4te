@@ -8,7 +8,9 @@
     "VIDEO_INCLUDE_RE": "^[^/\\\\]+\\.mp4$",
     "VIDEO_EXCLUDE_RE": "$^",
     "IMAGE_INCLUDE_RE": "^[^/\\\\]+/[^/\\\\]+\\.jpg$",
-    "IMAGE_EXCLUDE_RE": "$^"
+    "IMAGE_EXCLUDE_RE": "$^",
+    "MAX_IMAGES": 20,
+    "IMAGE_SAMPLE_STRATEGY": "spread"
   }
 }
 

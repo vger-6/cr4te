@@ -12,6 +12,10 @@ from PIL import Image
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
+    
+class ImageSampleStrategy(Enum):
+    SPREAD = "spread"
+    HEAD = "head"
 
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
@@ -56,18 +60,19 @@ def find_portrait(images: List[Path]) -> Optional[Path]:
 #def find_landscape(images: List[Path]) -> Optional[Path]:
 #    return find_image_by_orientation(images, Orientation.LANDSCAPE)
 
-#def get_evenly_distributed_images(image_dir: Path, input_path: Path, max_images: int = 10) -> List[str]:
-#    all_images = find_all_images(image_dir)
-#    relative_paths = [str(p.relative_to(input_path)) for p in all_images]
-#    total = len(relative_paths)
-#
-#    if total <= max_images:
-#        return relative_paths
-#
-#    step = total / max_images
-#    indices = [int(i * step) for i in range(max_images)]
-#    selected = [relative_paths[i] for i in indices]
-#    return selected
+def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
+    if len(images) <= max_images:
+        return images
+
+    if strategy == ImageSampleStrategy.HEAD:
+        return sorted(images)[:max_images]
+
+    elif strategy == ImageSampleStrategy.SPREAD:
+        sorted_images = sorted(images)
+        step = len(sorted_images) / max_images
+        return [sorted_images[int(i * step)] for i in range(max_images)]
+
+    return images  # fallback
 
 def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> dict:
     if is_root:
@@ -101,10 +106,17 @@ def compile_media_rules(media_rules: dict) -> dict:
     Other values (e.g., integers) are preserved as-is.
     """
     regex_keys = {"GLOBAL_EXCLUDE_RE", "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE"}
-    return {
-        key: re.compile(val) if key in regex_keys else val
-        for key, val in media_rules.items()
-    }
+    enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
+    
+    compiled = {}
+    for key, val in media_rules.items():
+        if key in regex_keys:
+            compiled[key] = re.compile(val)
+        elif key in enum_keys:
+            compiled[key] = enum_keys[key](val)
+        else:
+            compiled[key] = val
+    return compiled
 
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     projects_data = []
@@ -161,7 +173,13 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         # Build media_groups list from the grouped map
         media_groups = []
         for folder_name, group in media_map.items():
-            media_groups.append(create_media_group(folder_name, group["is_root"], group["videos"], group["images"][:10]))
+            sampled_images = sample_images(
+                group["images"],
+                compiled_media_rules.get("MAX_IMAGES", 20),
+                compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
+            )
+            media_group = create_media_group(folder_name, group["is_root"], group["videos"], sampled_images)
+            media_groups.append(media_group)
 
         projects_data.append({
             "title": project_title,
