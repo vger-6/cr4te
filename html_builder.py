@@ -70,6 +70,9 @@ def get_thumbnail_path(thumbs_dir: Path, slug: str, original_file: Path, thumb_t
     return thumb_subdir / (original_file.stem + thumb_type.suffix)
 
 def generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType):
+    if dest_path.exists():
+        return
+        
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with Image.open(source_path) as img:
