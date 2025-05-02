@@ -26,6 +26,7 @@ class ThumbType(Enum):
     PORTRAIT = ("_portrait.jpg", 600)
     POSTER = ("_poster.jpg", 800)
     PROJECT = ("_project.jpg", 800)
+    GALLERY = ("_gallery.jpg", 400)
 
     def __init__(self, suffix: str, width: int):
         self.suffix = suffix
@@ -36,6 +37,7 @@ DEFAULT_IMAGES = {
     ThumbType.PORTRAIT: "default_portrait.jpg",
     ThumbType.POSTER: "default_poster.jpg",
     ThumbType.PROJECT: "default_poster.jpg",  # Reuse poster fallback
+    ThumbType.GALLERY: "default_thumb.jpg"  # Reuse thumb fallback
 }
 
 HTML_TEMPLATE = """<!DOCTYPE html><html lang="en"><head><meta charset='utf-8'><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title></head><body>{body}</body></html>"""
@@ -433,7 +435,29 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
             })
 
     # Media groups
-    media_groups = project.get("media_groups", [])
+    slug = slugify(f"{creator_name}_{project['title']}")
+    media_groups = []
+    for media_group in project.get("media_groups", []):
+        images = []
+        for image_rel_path in media_group.get("images", []):
+            image_abs = root_input / image_rel_path
+            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(image_rel_path), ThumbType.GALLERY)
+            generate_thumbnail(image_abs, thumb_path, ThumbType.GALLERY)
+            thumb_url = get_relative_path(thumb_path, out_dir)
+            full_url = get_relative_path(image_abs, out_dir)
+
+            images.append({
+                "thumb_url": thumb_url,
+                "full_url": full_url
+            })
+
+        media_groups.append({
+            "image_label": media_group.get("image_label"),
+            "video_label": media_group.get("video_label"),
+            "is_root": media_group.get("is_root", False),
+            "images": images,
+            "videos": media_group.get("videos", [])
+        })
 
     output_html = template.render(
         html_settings=html_settings,
