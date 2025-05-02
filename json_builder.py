@@ -4,18 +4,15 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional
 from utils import is_collaboration
-from PIL import Image
 from datetime import datetime
 from collections import defaultdict
+
+from PIL import Image
 
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
 
-# TODO: USE GLOBAL_EXCLUDE_RE instead
-def is_valid_entry(entry: Path) -> bool:
-    return not entry.name.startswith('_')
-    
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
     if not date_str or not isinstance(date_str, str):
@@ -25,12 +22,6 @@ def validate_date_string(date_str: str) -> str:
         return parsed_date.strftime("%Y-%m-%d")  # Normalize
     except ValueError:
         return ""
-
-#def find_all_images(folder: Path) -> List[Path]:
-#    return sorted([p for p in folder.glob("*.jpg") if is_valid_entry(p)], key=lambda x: x.name)
-    
-#def find_all_videos(folder: Path) -> List[Path]:
-#    return sorted([p for p in folder.glob("*.mp4") if is_valid_entry(p)], key=lambda x: x.name)
 
 def load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
@@ -103,20 +94,23 @@ def create_media_group(folder_name: str, is_root: bool, videos: list, images: li
         "video_label": video_label,
         "image_label": image_label,
     }
-
-def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, media_rules: Dict) -> List[Dict]:
-    GLOBAL_EXCLUDE_RE = re.compile(media_rules["GLOBAL_EXCLUDE_RE"])
-
-    VIDEO_INCLUDE_RE = re.compile(media_rules["VIDEO_INCLUDE_RE"])  
-    VIDEO_EXCLUDE_RE = re.compile(media_rules["VIDEO_EXCLUDE_RE"])  
-
-    IMAGE_INCLUDE_RE = re.compile(media_rules["IMAGE_INCLUDE_RE"])  
-    IMAGE_EXCLUDE_RE = re.compile(media_rules["IMAGE_EXCLUDE_RE"])  
     
+def compile_media_rules(media_rules: dict) -> dict:
+    """
+    Compiles all known regex patterns in media_rules into regular expressions.
+    Other values (e.g., integers) are preserved as-is.
+    """
+    regex_keys = {"GLOBAL_EXCLUDE_RE", "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE"}
+    return {
+        key: re.compile(val) if key in regex_keys else val
+        for key, val in media_rules.items()
+    }
+
+def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     projects_data = []
 
     for project_dir in sorted(creator_path.iterdir()):
-        if not project_dir.is_dir() or not is_valid_entry(project_dir):
+        if not project_dir.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(project_dir.name):
             continue
 
         project_title = project_dir.name.strip()
@@ -136,21 +130,21 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             rel_to_input = file.relative_to(input_path)
 
             # 1. Apply global exclusions
-            if GLOBAL_EXCLUDE_RE.search(rel_path_posix):
+            if compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(rel_path_posix):
                 continue
                 
             is_root = file.parent.resolve() == project_dir.resolve()
             folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
 
             # 2. Match video
-            if VIDEO_INCLUDE_RE.match(rel_path_posix) and not VIDEO_EXCLUDE_RE.search(rel_path_posix):
+            if compiled_media_rules["VIDEO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["VIDEO_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["videos"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                 video_count += 1
                 continue
 
             # 3. Match image
-            if IMAGE_INCLUDE_RE.match(rel_path_posix) and not IMAGE_EXCLUDE_RE.search(rel_path_posix):
+            if compiled_media_rules["IMAGE_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["IMAGE_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["images"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                 image_count += 1
@@ -182,10 +176,10 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
 
     return projects_data
 
-def build_creator_json(creator_path: Path, input_path: Path, media_rules: Dict) -> Dict:
+def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict:
     creator_name = creator_path.name
     existing_data = load_existing_json(creator_path / "cr4te.json")
-    all_images = [p for p in creator_path.rglob("*.jpg") if is_valid_entry(p)]
+    all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
     portrait_path = ""
     if all_images:
         portrait = find_portrait(all_images)
@@ -198,7 +192,7 @@ def build_creator_json(creator_path: Path, input_path: Path, media_rules: Dict) 
         "portrait": portrait_path,
         "info": read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
-        "projects": collect_projects_data(creator_path, existing_data, input_path, media_rules)
+        "projects": collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
     }
 
     if is_collab:
@@ -211,12 +205,13 @@ def build_creator_json(creator_path: Path, input_path: Path, media_rules: Dict) 
     return creator_json
 
 def process_all_creators(input_path: Path, media_rules: dict):
+    compiled_media_rules = compile_media_rules(media_rules)
     creator_list = []
     for creator in sorted(input_path.iterdir()):
-        if not creator.is_dir() or not is_valid_entry(creator):
+        if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
             continue
         print(f"Processing creator: {creator.name}")
-        creator_json = build_creator_json(creator, input_path, media_rules)
+        creator_json = build_creator_json(creator, input_path, compiled_media_rules)
         json_path = creator / "cr4te.json"
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator_json, f, indent=2)

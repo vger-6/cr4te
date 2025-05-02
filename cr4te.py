@@ -1,8 +1,7 @@
 import argparse
 import shutil
-from pathlib import Path
-
 import json
+from pathlib import Path
 
 import config as cfg
 from html_builder import clear_output_folder, collect_creator_data, build_html_pages
@@ -33,7 +32,7 @@ def main():
             return
 
         if args.config:
-            config = load_config(Path(args.config).resolve())
+            config = cfg.load_config(Path(args.config).resolve())
         else:
             config = {
                 "html_settings": cfg.DEFAULT_CONFIG["html_settings"],

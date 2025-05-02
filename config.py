@@ -10,7 +10,7 @@ DEFAULT_CONFIG = {
         "project_label": "Project"
     },
     "media_rules": {
-        "GLOBAL_EXCLUDE_RE": r"(^|/|\\)_",
+        "GLOBAL_EXCLUDE_RE": r"^_",
         "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
         "VIDEO_EXCLUDE_RE": r"$^",
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
@@ -28,7 +28,7 @@ def get_media_rules(mode: BuildMode) -> dict:
     match mode:
         case BuildMode.FLAT:
             return {
-                "GLOBAL_EXCLUDE_RE": r"(^|/|\\)_",
+                "GLOBAL_EXCLUDE_RE": r"^_",
                 "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r"^[^/\\]+\.jpg$",
@@ -38,7 +38,7 @@ def get_media_rules(mode: BuildMode) -> dict:
             return copy.deepcopy(DEFAULT_CONFIG["media_rules"])
         case BuildMode.DEEP:
             return {
-                "GLOBAL_EXCLUDE_RE": r"(^|/|\\)_",
+                "GLOBAL_EXCLUDE_RE": r"^_",
                 "VIDEO_INCLUDE_RE": r".*\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r".*\.jpg$",
