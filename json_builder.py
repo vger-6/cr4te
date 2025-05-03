@@ -71,32 +71,6 @@ def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrat
 
     return images  # fallback
 
-def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> Dict:
-    if is_root:
-        video_label = "Videos"
-        image_label = "Images"
-    else:
-        has_videos = bool(videos)
-        has_images = bool(images)
-
-        if has_videos and not has_images:
-            video_label = folder_name
-            image_label = ""
-        elif has_images and not has_videos:
-            video_label = ""
-            image_label = folder_name
-        else:
-            video_label = f"{folder_name} - Videos"
-            image_label = f"{folder_name} - Images"
-
-    return {
-        "is_root": is_root,
-        "videos": videos,
-        "images": images,
-        "video_label": video_label,
-        "image_label": image_label,
-    }
-
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     projects_data = []
 
@@ -125,7 +99,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 continue
                 
             is_root = file.parent.resolve() == project_dir.resolve()
-            folder_key = str(file.parent.relative_to(project_dir)).replace("/", " - ") or project_title
+            folder_key = str(file.parent.relative_to(project_dir)) or project_title
 
             # 2. Match video
             if compiled_media_rules["VIDEO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["VIDEO_EXCLUDE_RE"].search(rel_path_posix):
@@ -160,7 +134,14 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 compiled_media_rules.get("MAX_IMAGES", 20),
                 compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
             )
-            media_group = create_media_group(folder_name, group["is_root"], group["videos"], sampled_images)
+            
+            media_group = {
+                "is_root": group["is_root"],
+                "videos": group["videos"],
+                "images": sampled_images,
+                "folder_name": folder_name
+            }
+            
             media_groups.append(media_group)
 
         projects_data.append({

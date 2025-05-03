@@ -31,6 +31,8 @@ DEFAULT_CONFIG = {
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
         "project_page_creator_profile": "Creator Profile",
+        "project_page_videos_label": "Videos",
+        "project_page_images_label": "Images",
         
         "tags_page_title": "Tags"
     },

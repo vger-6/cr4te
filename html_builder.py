@@ -441,6 +441,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     slug = slugify(f"{creator_name}_{project['title']}")
     media_groups = []
     for media_group in project.get("media_groups", []):
+        # TODO: Add method: def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> Dict
         images = []
         for image_rel_path in media_group.get("images", []):
             image_abs = root_input / image_rel_path
@@ -455,11 +456,28 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
             })
             
         videos = [get_relative_path(root_input / video_path, out_dir) for video_path in media_group.get("videos", [])]
+        
+        image_label = html_settings.get("project_page_images_label", "Images")
+        video_label = html_settings.get("project_page_videos_label", "Videos")
+        is_root = media_group.get("is_root", False)
+        if not is_root:
+            has_images = bool(images)
+            has_videos = bool(videos)
+            
+            folder_name = media_group.get("folder_name", "").replace("/", " - ")
+            if has_videos and not has_images:
+                image_label = ""
+                video_label = folder_name
+            elif has_images and not has_videos:
+                image_label = folder_name
+                video_label = ""
+            else:
+                image_label = f"{folder_name} - {image_label}"
+                video_label = f"{folder_name} - {video_label}"
 
         media_groups.append({
-            "image_label": media_group.get("image_label"),
-            "video_label": media_group.get("video_label"),
-            "is_root": media_group.get("is_root", False),
+            "image_label": image_label,
+            "video_label": video_label,
             "images": images,
             "videos": videos
         })
