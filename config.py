@@ -17,6 +17,8 @@ DEFAULT_CONFIG = {
         "VIDEO_EXCLUDE_RE": r"$^",
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
         "IMAGE_EXCLUDE_RE": r"$^",
+        "PORTRAIT_RE": r"^profile\.jpg$",
+        "POSTER_RE": r"^cover\.jpg$",
         "MAX_IMAGES": 20,
         "IMAGE_SAMPLE_STRATEGY": "spread"
     }
@@ -89,7 +91,12 @@ def compile_media_rules(media_rules: Dict) -> Dict:
     Compiles all known regex patterns in media_rules into regular expressions.
     Other values (e.g., integers) are preserved as-is.
     """
-    regex_keys = {"GLOBAL_EXCLUDE_RE", "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE"}
+    regex_keys = {
+        "GLOBAL_EXCLUDE_RE", 
+        "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", 
+        "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE", 
+        "PORTRAIT_RE", "POSTER_RE"
+    }
     enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
     
     compiled = {}

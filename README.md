@@ -25,8 +25,9 @@ Creators/
 ├── Alice/
 │   ├── cr4te.json           # Optional metadata override
 │   ├── README.md            # Optional creator description
-|   ├── Portrait1.jpg
+|   ├── profile.jpg          # Detected portrait (via PORTRAIT_RE)
 │   └── Project1/
+│       ├── cover.jpg        # Detected poster (via POSTER_RE)
 │       ├── Landscape1.jpg
 │       ├── clip.mp4
 │       ├── README.md        # Optional project description
@@ -94,16 +95,22 @@ Your configuration file should be in JSON format and can override labels and med
     "VIDEO_EXCLUDE_RE": "$^",
     "IMAGE_INCLUDE_RE": ".*\\.jpg$",
     "IMAGE_EXCLUDE_RE": "$^",
+    "PORTRAIT_RE": "^profile\\.jpg$",
+    "POSTER_RE": "^cover\\.jpg$",
     "MAX_IMAGES": 20,
     "IMAGE_SAMPLE_STRATEGY": "spread"
   }
 }
 ```
 
-The `IMAGE_SAMPLE_STRATEGY` can be one of:
+### Special Rules
 
-* `spread`: even sampling throughout the list
-* `head`: take the first N images
+* `PORTRAIT_RE`: Regex used to identify a creator's portrait image (default: `^profile\.jpg$`)
+* `POSTER_RE`: Regex used to identify a project's poster image (default: `^cover\.jpg$`)
+* `IMAGE_SAMPLE_STRATEGY`: Sampling strategy for gallery thumbnails
+
+  * `spread`: even sampling throughout the list
+  * `head`: take the first N images
 
 Regex patterns are compiled automatically using the `config.compile_media_rules` utility.
 

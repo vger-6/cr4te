@@ -9,6 +9,8 @@
     "VIDEO_EXCLUDE_RE": "$^",
     "IMAGE_INCLUDE_RE": "^[^/\\\\]+/[^/\\\\]+\\.jpg$",
     "IMAGE_EXCLUDE_RE": "$^",
+    "PORTRAIT_RE": "^profile\\.jpg$",
+    "POSTER_RE": "^cover\\.jpg$",
     "MAX_IMAGES": 20,
     "IMAGE_SAMPLE_STRATEGY": "spread"
   }

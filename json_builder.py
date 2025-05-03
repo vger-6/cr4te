@@ -140,8 +140,11 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 media_map[folder_key]["is_root"] = is_root
                 image_count += 1
 
-                # Select thumbnail (first landscape)
-                if not thumbnail_path:
+                # Select thumbnail
+                poster_re = compiled_media_rules.get("POSTER_RE")
+                if not thumbnail_path and poster_re and poster_re.match(file.name):
+                    thumbnail_path = str(rel_to_input)
+                elif not thumbnail_path: # first landscape
                     try:
                         with Image.open(file) as img:
                             if img.width > img.height:
@@ -176,11 +179,18 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
 def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict:
     creator_name = creator_path.name
     existing_data = load_existing_json(creator_path / "cr4te.json")
+    
     all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
+    portrait_re = compiled_media_rules.get("PORTRAIT_RE")
+    portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]
+
     portrait_path = ""
-    if all_images:
-        portrait = find_portrait(all_images)
-        portrait_path = str(portrait.relative_to(input_path)) if portrait else ""
+    if portrait_candidates:
+        portrait_path = str(portrait_candidates[0].relative_to(input_path))
+    else:
+        portrait = find_portrait(all_images)  # Fallback: heuristic
+        if portrait:
+            portrait_path = str(portrait.relative_to(input_path))
 
     is_collab = is_collaboration(creator_name)
     creator_json = {
