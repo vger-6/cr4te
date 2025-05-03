@@ -22,8 +22,12 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
-
+    
     args = parser.parse_args()
+    
+    # load config
+    config_path = Path(args.config).resolve() if args.config else None
+    config = cfg.load_config(config_path)
 
     if args.command == "build-json":
         input_path = Path(args.input).resolve()
@@ -31,10 +35,6 @@ def main():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
 
-        # Step 1: Load base config (either from file or default)
-        config = cfg.load_config(Path(args.config).resolve()) if args.config else cfg.load_config()
-        
-        # Step 2: Apply regex overrides based on selected build mode
         config = cfg.update_build_rules(config, args.mode)
 
         process_all_creators(input_path, config["media_rules"])
@@ -55,8 +55,6 @@ def main():
             clear_output_folder(output_path)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
-            
-        config = cfg.load_config(Path(args.config).resolve()) if args.config else cfg.load_config()
 
         creator_data = collect_creator_data(input_path)
 
