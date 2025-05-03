@@ -31,13 +31,11 @@ def main():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
 
-        if args.config:
-            config = cfg.load_config(Path(args.config).resolve())
-        else:
-            config = {
-                "html_settings": cfg.DEFAULT_CONFIG["html_settings"],
-                "media_rules": cfg.get_media_rules(cfg.BuildMode(args.mode))
-            }
+        # Step 1: Load base config (either from file or default)
+        config = cfg.load_config(Path(args.config).resolve()) if args.config else cfg.load_config()
+        
+        # Step 2: Apply regex overrides based on selected build mode
+        config = cfg.update_build_rules(config, args.mode)
 
         process_all_creators(input_path, config["media_rules"])
 
@@ -57,11 +55,8 @@ def main():
             clear_output_folder(output_path)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
-
-        if args.config:
-            config = cfg.load_config(Path(args.config).resolve())
-        else:
-            config = cfg.load_config()
+            
+        config = cfg.load_config(Path(args.config).resolve()) if args.config else cfg.load_config()
 
         creator_data = collect_creator_data(input_path)
 
