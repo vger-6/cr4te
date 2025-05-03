@@ -36,8 +36,8 @@ def main():
             return
 
         config = cfg.update_build_rules(config, args.mode)
-
-        process_all_creators(input_path, config["media_rules"])
+        compiled_media_rules = cfg.compile_media_rules(config["media_rules"])
+        process_all_creators(input_path, compiled_media_rules)
 
     elif args.command == "build-html":
         input_path = Path(args.input).resolve()

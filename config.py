@@ -1,7 +1,9 @@
 import json
 import copy
+import re
 from enum import Enum
 from pathlib import Path
+from typing import Dict
 
 # === Default internal config ===
 DEFAULT_CONFIG = {
@@ -20,13 +22,16 @@ DEFAULT_CONFIG = {
     }
 }
 
-# === Build modes ===
 class BuildMode(str, Enum):
     FLAT = "flat"
     HYBRID = "hybrid"
     DEEP = "deep"
+    
+class ImageSampleStrategy(Enum):
+    SPREAD = "spread"
+    HEAD = "head"
 
-def get_build_rules(mode: BuildMode) -> dict:
+def get_build_rules(mode: BuildMode) -> Dict:
     """
     Returns only the regex-related media_rules fields that are overridden
     by the selected build mode. Other configuration fields remain untouched.
@@ -53,7 +58,7 @@ def get_build_rules(mode: BuildMode) -> dict:
         case _:
             raise ValueError(f"Unknown build mode: {mode}")
 
-def load_config(config_path: Path = None) -> dict:
+def load_config(config_path: Path = None) -> Dict:
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     if config_path:
@@ -69,7 +74,7 @@ def load_config(config_path: Path = None) -> dict:
 
     return config
 
-def update_build_rules(config: dict, mode_str: str) -> dict:
+def update_build_rules(config: Dict, mode_str: str) -> Dict:
     """
     Given a mode string and an existing config dict, apply build-mode-specific
     regex overrides to the media_rules section and return the updated config.
@@ -78,4 +83,22 @@ def update_build_rules(config: dict, mode_str: str) -> dict:
     overrides = get_build_rules(mode)
     config["media_rules"].update(overrides)
     return config
+    
+def compile_media_rules(media_rules: Dict) -> Dict:
+    """
+    Compiles all known regex patterns in media_rules into regular expressions.
+    Other values (e.g., integers) are preserved as-is.
+    """
+    regex_keys = {"GLOBAL_EXCLUDE_RE", "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE"}
+    enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
+    
+    compiled = {}
+    for key, val in media_rules.items():
+        if key in regex_keys:
+            compiled[key] = re.compile(val)
+        elif key in enum_keys:
+            compiled[key] = enum_keys[key](val)
+        else:
+            compiled[key] = val
+    return compiled
 

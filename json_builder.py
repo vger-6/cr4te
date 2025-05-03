@@ -1,5 +1,4 @@
 import json
-import re
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -9,13 +8,11 @@ from collections import defaultdict
 
 from PIL import Image
 
+from config import ImageSampleStrategy
+
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
-    
-class ImageSampleStrategy(Enum):
-    SPREAD = "spread"
-    HEAD = "head"
 
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
@@ -99,24 +96,6 @@ def create_media_group(folder_name: str, is_root: bool, videos: list, images: li
         "video_label": video_label,
         "image_label": image_label,
     }
-    
-def compile_media_rules(media_rules: dict) -> dict:
-    """
-    Compiles all known regex patterns in media_rules into regular expressions.
-    Other values (e.g., integers) are preserved as-is.
-    """
-    regex_keys = {"GLOBAL_EXCLUDE_RE", "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE"}
-    enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
-    
-    compiled = {}
-    for key, val in media_rules.items():
-        if key in regex_keys:
-            compiled[key] = re.compile(val)
-        elif key in enum_keys:
-            compiled[key] = enum_keys[key](val)
-        else:
-            compiled[key] = val
-    return compiled
 
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     projects_data = []
@@ -222,8 +201,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     
     return creator_json
 
-def process_all_creators(input_path: Path, media_rules: dict):
-    compiled_media_rules = compile_media_rules(media_rules)
+def process_all_creators(input_path: Path, compiled_media_rules: dict):
     creator_list = []
     for creator in sorted(input_path.iterdir()):
         if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
