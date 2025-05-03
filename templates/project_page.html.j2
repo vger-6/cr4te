@@ -10,8 +10,8 @@
 <body>
 
 <div class="top-link">
-  <a href="../index.html">{{ html_settings.creator_label }}s</a> &middot;
-  <a href="../tags.html">Tags</a> &middot;
+  <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+  <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
   <a href="../creators/{{ creator_name | replace(' ', '_') | lower }}.html">{{ creator_name }}</a>
 </div>
 
@@ -22,7 +22,7 @@
   <div class="project-left">
 
     <div class="section-box">
-      <div class="section-title">Overview</div>
+      <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
       <hr>
       <div class="section-content markdown">
         <div class="project-info">
@@ -33,7 +33,7 @@
 
     {% if info_html %}
     <div class="section-box">
-      <div class="section-title">Description</div>
+      <div class="section-title">{{ html_settings.project_page_description_title }}</div>
       <hr>
       <div class="section-content text-content">
         {{ info_html | safe }}
@@ -44,7 +44,7 @@
     {% if participants %}
     {% for participant in participants %}
     <div class="section-box">
-      <div class="section-title">{{ participant.name }} - {{ html_settings.creator_label }} Profile</div>
+      <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile }}</div>
       <hr>
       <div class="section-content">
         <div class="creator-info">
@@ -63,7 +63,7 @@
 
     {% if tag_map %}
     <div class="section-box">
-      <div class="section-title">Tags</div>
+      <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
       <hr>
       <div class="section-content tag-list">
         {% for category, tags in tag_map.items() %}

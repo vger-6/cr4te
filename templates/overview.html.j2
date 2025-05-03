@@ -3,25 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ html_settings.creator_label }}s</title>
+  <title>{{ html_settings.overview_page_title }}</title>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/creator.css">
 </head>
 <body>
 
 <div class="top-link">
-  <span class="nav-current">{{ html_settings.creator_label }}s</span> &middot;
-  <a href="tags.html">Tags</a>
+  <span class="nav-current">{{ html_settings.nav_creators_label }}</span> &middot;
+  <a href="tags.html">{{ html_settings.nav_tags_label }}</a>
 </div>
 
-<h1>{{ html_settings.creator_label }}s</h1>
+<h1>{{ html_settings.overview_page_title }}</h1>
 
 <div class="search-bar-wrapper">
-  <input type="text" id="search-input" placeholder="Search {{ html_settings.creator_label.lower() }}s, {{ html_settings.project_label.lower() }}s, tags, ..." class="search-box">
+  <input type="text" id="search-input" placeholder="{{ html_settings.overview_page_search_placeholder }}" class="search-box">
 </div>
 
 <div class="creator-box">
-  <div class="creator-box-title">Index</div>
+  <div class="creator-box-title">{{ html_settings.overview_page_section_title }}</div>
   <hr>
   <div class="creator-gallery">
 

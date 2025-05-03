@@ -8,17 +8,43 @@ from typing import Dict
 # === Default internal config ===
 DEFAULT_CONFIG = {
     "html_settings": {
-        "creator_label": "Creator",
-        "project_label": "Project"
+        "nav_creators_label": "Creators",
+        "nav_tags_label": "Tags",
+        
+        "overview_page_title": "Creators",
+        "overview_page_search_placeholder": "Search creators, projects, tags...",
+        "overview_page_section_title": "Index",
+        
+        "creator_page_profile_title": "Profile",
+        "creator_page_about_title": "About",
+        "creator_page_tags_title": "Tags",
+        "creator_page_projects_title": "Projects",
+        "creator_page_collabs_title_prefix": "Projects with",
+        
+        "collaboration_page_profile_title": "Profile",
+        "collaboration_page_about_title": "About",
+        "collaboration_page_tags_title": "Tags",
+        "collaboration_page_members_title": "Members",
+        "collaboration_page_projects_title": "Projects",
+        
+        "project_page_overview_title": "Overview",
+        "project_page_description_title": "Description",
+        "project_page_tags_title": "Tags",
+        "project_page_creator_profile": "Creator Profile",
+        
+        "tags_page_title": "Tags"
     },
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"^_",
+        
         "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
         "VIDEO_EXCLUDE_RE": r"$^",
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
         "IMAGE_EXCLUDE_RE": r"$^",
+        
         "PORTRAIT_RE": r"^profile\.jpg$",
         "POSTER_RE": r"^cover\.jpg$",
+        
         "MAX_IMAGES": 20,
         "IMAGE_SAMPLE_STRATEGY": "spread"
     }

@@ -71,7 +71,7 @@ def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrat
 
     return images  # fallback
 
-def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> dict:
+def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> Dict:
     if is_root:
         video_label = "Videos"
         image_label = "Images"
@@ -211,7 +211,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     
     return creator_json
 
-def process_all_creators(input_path: Path, compiled_media_rules: dict):
+def process_all_creators(input_path: Path, compiled_media_rules: Dict):
     creator_list = []
     for creator in sorted(input_path.iterdir()):
         if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
