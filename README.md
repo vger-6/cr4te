@@ -12,6 +12,7 @@ A static site generator for organizing and showcasing creative media projects. I
 * **Flexible media grouping via regex rules**
 * **Video and image organization with dynamic labels**
 * **Build modes (flat, hybrid, deep) for customizable media discovery**
+* **HTML label presets for different domains** (directors, artists, ...)
 * **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
@@ -75,6 +76,19 @@ python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder
 python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder --config config/cr4te_config.json
 ```
 
+### Optional: Apply a Label Preset
+
+```bash
+python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder --html-preset director
+```
+
+Available presets:
+
+* `creator` (default)
+* `director`
+* `artist`
+* `model`
+
 If `--config` is not specified, cr4te uses internal defaults.
 
 ---
@@ -86,8 +100,30 @@ Your configuration file should be in JSON format and can override labels and med
 ```json
 {
   "html_settings": {
-    "creator_label": "Director",
-    "project_label": "Movie"
+    "nav_creators_label": "Creators",
+    "nav_tags_label": "Tags",
+    
+    "overview_page_title": "Creators",
+    "overview_page_search_placeholder": "Search creators, projects, tags...",
+    
+    "creator_page_profile_title": "Profile",
+    "creator_page_about_title": "About",
+    "creator_page_tags_title": "Tags",
+    "creator_page_projects_title": "Projects",
+    "creator_page_collabs_title_prefix": "Projects with",
+    
+    "collaboration_page_profile_title": "Profile",
+    "collaboration_page_about_title": "About",
+    "collaboration_page_tags_title": "Tags",
+    "collaboration_page_members_title": "Members",
+    "collaboration_page_projects_title": "Projects",
+    
+    "project_page_overview_title": "Overview",
+    "project_page_description_title": "Description",
+    "project_page_tags_title": "Tags",
+    "project_page_creator_profile": "Creator Profile",
+    "project_page_videos_label": "Videos",
+    "project_page_images_label": "Images"
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
