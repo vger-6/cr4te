@@ -67,14 +67,6 @@
   margin-bottom: 2rem;
 }
 
-.creator-box-title {
-  background-color: var(--title-bg);
-  color: var(--title-color);
-  padding: 0.5rem 1rem;
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-
 .creator-box hr {
   border: none;
   border-top: 1px solid var(--hr-color);

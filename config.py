@@ -13,7 +13,6 @@ DEFAULT_CONFIG = {
         
         "overview_page_title": "Creators",
         "overview_page_search_placeholder": "Search creators, projects, tags...",
-        "overview_page_section_title": "Index",
         
         "creator_page_profile_title": "Profile",
         "creator_page_about_title": "About",
