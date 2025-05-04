@@ -51,6 +51,12 @@ DEFAULT_CONFIG = {
     }
 }
 
+class HtmlPreset(str, Enum):
+    CREATOR = "creator"
+    DIRECTOR = "director"
+    ARTIST = "artist"
+    MODEL = "model"
+
 class BuildMode(str, Enum):
     FLAT = "flat"
     HYBRID = "hybrid"
@@ -59,6 +65,49 @@ class BuildMode(str, Enum):
 class ImageSampleStrategy(Enum):
     SPREAD = "spread"
     HEAD = "head"
+    
+def get_html_label_presets(preset: HtmlPreset) -> Dict:
+    """
+    Returns only the labels that are overridden by the selected preset. 
+    Other configuration fields remain untouched.
+    """
+    match preset:
+        case HtmlPreset.DIRECTOR:
+            return {
+                "nav_creators_label": "Directors",
+                "overview_page_title": "Directors",
+                "overview_page_search_placeholder": "Search directors, movies, tags...",
+                "creator_page_projects_title": "Movies",
+                "creator_page_collabs_title_prefix": "Codirected with",
+                "collaboration_page_projects_title": "Movies",
+                "project_page_creator_profile": "Profile",
+                "project_page_videos_label": "Movie"
+            }
+        case HtmlPreset.ARTIST:
+            return {
+                "nav_creators_label": "Artists",
+                "overview_page_title": "Artists",
+                "overview_page_search_placeholder": "Search artists, works, tags...",
+                "creator_page_projects_title": "Works",
+                "creator_page_collabs_title_prefix": "With",
+                "collaboration_page_projects_title": "Works",
+                "project_page_creator_profile": "Profile"
+            }
+        case HtmlPreset.MODEL:
+            return {
+                "nav_creators_label": "Models",
+                "overview_page_title": "Models",
+                "overview_page_search_placeholder": "Search models, scenes, tags...",
+                "creator_page_projects_title": "Scenes",
+                "creator_page_collabs_title_prefix": "Scenes with",
+                "collaboration_page_members_title": "Featuring",
+                "collaboration_page_projects_title": "Scenes",
+                "project_page_creator_profile": "Model Profile"
+            }
+        case HtmlPreset.CREATOR:
+            return {}  # Use the default preset
+        case _:
+            raise ValueError(f"Unknown preset: {preset}")
 
 def get_build_rules(mode: BuildMode) -> Dict:
     """
@@ -101,6 +150,12 @@ def load_config(config_path: Path = None) -> Dict:
             print(f"Warning: Could not load config file {config_path}: {e}")
             print("Proceeding with default internal configuration.")
 
+    return config
+    
+def update_html_labels(config: Dict, preset_str: str) -> Dict:
+    preset = HtmlPreset(preset_str)
+    overrides = get_html_label_presets(preset) 
+    config["html_settings"].update(overrides)
     return config
 
 def update_build_rules(config: Dict, mode_str: str) -> Dict:

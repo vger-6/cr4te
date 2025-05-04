@@ -22,6 +22,7 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
+    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.CREATOR, help="Apply a preset label scheme for HTML (creator, director, artist, model)")
     
     args = parser.parse_args()
     
@@ -57,7 +58,9 @@ def main():
             output_path.mkdir(parents=True, exist_ok=True)
 
         creator_data = collect_creator_data(input_path)
-
+        
+        config = cfg.update_html_labels(config, args.html_preset)
+        
         build_html_pages(creator_data, input_path, output_path, config["html_settings"])
 
 if __name__ == "__main__":
