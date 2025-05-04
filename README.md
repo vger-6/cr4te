@@ -2,6 +2,10 @@
 
 A static site generator for organizing and showcasing creative media projects. It scans your folder structure, extracts metadata and media, and builds a clean, searchable HTML gallery using Jinja2 templates.
 
+## 🙏 Support This Project
+
+If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/donate/?hosted_button_id=XERA3ZMTLZC2N) to help support continued development.
+
 ---
 
 ## Features
