@@ -1,7 +1,7 @@
 import shutil
 import json
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
@@ -10,7 +10,7 @@ import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from utils import is_collaboration, slugify, get_relative_path
+from utils import slugify, get_relative_path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
