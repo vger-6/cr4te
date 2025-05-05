@@ -10,7 +10,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 
 ## Features
 
-* **Automatically builds a gallery website** from your folder of creators and projects
+* **Automatically builds a gallery website** from your folder structure
 * **Thumbnail generation** for portraits, posters, and images
 * **Tag-based filtering** and search
 * **Flexible media grouping via regex rules**
@@ -26,10 +26,10 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 ## Folder Structure
 
 ```
-Creators/
+Artists/
 ├── Alice/
 │   ├── cr4te.json           # Optional metadata override
-│   ├── README.md            # Optional creator description
+│   ├── README.md            # Optional description
 |   ├── profile.jpg          # Detected portrait (via PORTRAIT_RE)
 │   └── Project1/
 │       ├── cover.jpg        # Detected poster (via POSTER_RE)
@@ -47,7 +47,7 @@ Creators/
 ## Installation
 
 ```bash
-git clone https://github.com/yourname/cr4te.git
+git clone https://github.com/vger-6/cr4te.git
 cd cr4te
 pip install -r requirements.txt
 ```
@@ -104,17 +104,17 @@ Your configuration file should be in JSON format and can override labels and med
 ```json
 {
   "html_settings": {
-    "nav_creators_label": "Creators",
+    "nav_creators_label": "Directors",
     "nav_tags_label": "Tags",
     
-    "overview_page_title": "Creators",
-    "overview_page_search_placeholder": "Search creators, projects, tags...",
+    "overview_page_title": "Directors",
+    "overview_page_search_placeholder": "Search directors, movies, tags...",
     
     "creator_page_profile_title": "Profile",
     "creator_page_about_title": "About",
     "creator_page_tags_title": "Tags",
     "creator_page_projects_title": "Projects",
-    "creator_page_collabs_title_prefix": "Projects with",
+    "creator_page_collabs_title_prefix": "With",
     
     "collaboration_page_profile_title": "Profile",
     "collaboration_page_about_title": "About",
@@ -125,18 +125,21 @@ Your configuration file should be in JSON format and can override labels and med
     "project_page_overview_title": "Overview",
     "project_page_description_title": "Description",
     "project_page_tags_title": "Tags",
-    "project_page_creator_profile": "Creator Profile",
+    "project_page_creator_profile": "Profile",
     "project_page_videos_label": "Videos",
     "project_page_images_label": "Images"
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
+    
     "VIDEO_INCLUDE_RE": ".*\\.mp4$",
     "VIDEO_EXCLUDE_RE": "$^",
     "IMAGE_INCLUDE_RE": ".*\\.jpg$",
     "IMAGE_EXCLUDE_RE": "$^",
+    
     "PORTRAIT_RE": "^profile\\.jpg$",
     "POSTER_RE": "^cover\\.jpg$",
+    
     "MAX_IMAGES": 20,
     "IMAGE_SAMPLE_STRATEGY": "spread"
   }
@@ -151,8 +154,6 @@ Your configuration file should be in JSON format and can override labels and med
 
   * `spread`: even sampling throughout the list
   * `head`: take the first N images
-
-Regex patterns are compiled automatically using the `config.compile_media_rules` utility.
 
 ---
 
