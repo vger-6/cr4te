@@ -160,6 +160,25 @@ a:focus {
   font-weight: bold;
 }
 
+.az-tabs {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.az-tab {
+  display: inline-block;
+  margin: 0 0.4rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--link-color);
+}
+
+.az-tab.active {
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
 .section-box {
   border: 2px solid var(--border-color);
   background-color: var(--box-bg);

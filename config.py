@@ -9,10 +9,14 @@ from typing import Dict
 DEFAULT_CONFIG = {
     "html_settings": {
         "nav_creators_label": "Creators",
+        "nav_projects_label": "Projects",
         "nav_tags_label": "Tags",
         
         "overview_page_title": "Creators",
         "overview_page_search_placeholder": "Search creators, projects, tags...",
+        
+        "project_overview_page_title": "Projects",
+        "project_overview_page_search_placeholder": "Search projects, tags...",
         
         "creator_page_profile_title": "Profile",
         "creator_page_about_title": "About",
@@ -75,8 +79,11 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
         case HtmlPreset.DIRECTOR:
             return {
                 "nav_creators_label": "Directors",
+                "nav_projects_label": "Movies",
                 "overview_page_title": "Directors",
                 "overview_page_search_placeholder": "Search directors, movies, tags...",
+                "project_overview_page_title": "Movies",
+                "project_overview_page_search_placeholder": "Search movies, tags...",
                 "creator_page_projects_title": "Movies",
                 "creator_page_collabs_title_prefix": "Codirected with",
                 "collaboration_page_projects_title": "Movies",
@@ -86,8 +93,11 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
         case HtmlPreset.ARTIST:
             return {
                 "nav_creators_label": "Artists",
+                "nav_projects_label": "Works",
                 "overview_page_title": "Artists",
                 "overview_page_search_placeholder": "Search artists, works, tags...",
+                "project_overview_page_title": "Works",
+                "project_overview_page_search_placeholder": "Search works, tags...",
                 "creator_page_projects_title": "Works",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Works",
@@ -96,8 +106,11 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
         case HtmlPreset.MODEL:
             return {
                 "nav_creators_label": "Models",
+                "nav_projects_label": "Scenes",
                 "overview_page_title": "Models",
                 "overview_page_search_placeholder": "Search models, scenes, tags...",
+                "project_overview_page_title": "Scenes",
+                "project_overview_page_search_placeholder": "Search scenes, tags...",
                 "creator_page_projects_title": "Scenes",
                 "creator_page_collabs_title_prefix": "Scenes with",
                 "collaboration_page_members_title": "Featuring",

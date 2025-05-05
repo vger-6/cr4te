@@ -15,7 +15,7 @@
 }
 
 .project-entry {
-  text-align: center;
+  text-align: left;
   width: 400px;
 }
 
@@ -42,12 +42,12 @@
 }
 
 .creator-entry {
-  text-align: center;
-  width: 120px;
+  text-align: left;
+  width: 180px;
 }
 
 .creator-entry img {
-  height: 120px;
+  height: 240px;
   width: auto;
   object-fit: contain;
 }

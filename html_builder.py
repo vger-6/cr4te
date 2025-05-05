@@ -28,9 +28,9 @@ class ThumbType(Enum):
     PROJECT = ("_project.jpg", 800)
     GALLERY = ("_gallery.jpg", 400)
 
-    def __init__(self, suffix: str, width: int):
+    def __init__(self, suffix: str, height: int):
         self.suffix = suffix
-        self.width = width
+        self.height = height
 
 DEFAULT_IMAGES = {
     ThumbType.THUMB: "default_thumb.jpg",
@@ -76,7 +76,7 @@ def generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         with Image.open(source_path) as img:
-            img.thumbnail((thumb_type.width, thumb_type.width))
+            img.thumbnail((thumb_type.height, thumb_type.height))
             img.save(dest_path, format='JPEG')
     except Exception as e:
         print(f"Error creating thumbnail for {source_path}: {e}")
@@ -137,6 +137,29 @@ def build_html_pages(creators: list, input_path: Path, output_path: Path, html_s
     build_all_creator_pages(creators, input_path, output_path / "creators", thumbs_dir, html_settings)
     build_all_project_pages(creators, input_path, output_path / "projects", thumbs_dir, html_settings)
     build_tags_page(        creators,             output_path,                          html_settings)
+    
+    # Collect all projects
+    # Note: assumes that all thumbs have already been generated
+    all_projects = []
+    for creator in creators:
+        for project in creator.get("projects", []):
+            #print(project)
+            project_slug = slugify(f"{creator['name']}_{project['title']}")
+            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            thumb_url = get_relative_path(thumb_path, output_path)
+            
+            search_terms = project.get("tags", [])
+            search_text = " ".join(search_terms).lower()
+            all_projects.append({
+                "title": project["title"],
+                "url": f"projects/{project_slug}.html",
+                "thumbnail_url": thumb_url,
+                "creator": creator["name"],
+                "search_text": search_text
+            })
+
+    # Build project overview page
+    build_project_overview_page(all_projects, input_path, output_path, html_settings)
 
 def build_overview_pages(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating overview page...")
@@ -182,6 +205,21 @@ def build_overview_pages(creators: list, input_path: Path, output_path: Path, th
     page_file = output_path / "index.html"
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
+        
+def build_project_overview_page(projects: List[dict], input_path: Path, output_path: Path, html_settings: Dict):
+    template = env.get_template("project_overview.html.j2")
+
+    sorted_projects = sorted(projects, key=lambda p: p["title"].lower())
+
+    rendered = template.render(
+        projects=sorted_projects,
+        html_settings=html_settings
+    )
+
+    output_path.mkdir(parents=True, exist_ok=True)
+    with open(output_path / "projects.html", "w", encoding="utf-8") as f:
+        f.write(rendered)
+
 
 def build_all_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating creator pages...")

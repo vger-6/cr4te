@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ html_settings.project_overview_page_title }}</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/creator.css">
+</head>
+<body>
+
+<div class="top-link">
+  <a href="index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+  <span class="nav-current">{{ html_settings.nav_projects_label }}</span> &middot;
+  <a href="tags.html">{{ html_settings.nav_tags_label }}</a>
+</div>
+
+<h1>{{ html_settings.project_overview_page_title }}</h1>
+
+<div class="search-bar-wrapper">
+  <input type="text" id="search-input" placeholder="{{ html_settings.project_overview_page_search_placeholder }}" class="search-box">
+</div>
+
+<div class="az-tabs">
+  {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+    <span class="az-tab" data-letter="{{ letter }}">{{ letter }}</span>
+  {% endfor %}
+</div>
+
+<div class="creator-box">
+  <hr>
+  <div class="creator-gallery">
+    {% for project in projects %}
+    <div class="project-entry" data-title="{{ project.title }}" data-text="{{ project.search_text | default('') }}">
+      <a href="{{ project.url }}" title="{{ project.title }}">
+        <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}"><br>
+        {{ project.title }}<br>
+        <small>{{ project.creator }}</small>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script src="js/filter_projects.js"></script>
+
+</body>
+</html>
+
