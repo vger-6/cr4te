@@ -124,10 +124,11 @@
 }
 
 body {
+  color: var(--text-color);
+  font-family: var(--font-family);
   background-color: var(--bg-color);
   margin: 0;
   padding: 1rem;
-  font-family: var(--font-family);
 }
 
 h1 {
@@ -202,7 +203,6 @@ a:focus {
 
 .section-content {
   padding: 1rem;
-  color: var(--text-color);
   background-color: var(--section-content-bg);
 }
 
