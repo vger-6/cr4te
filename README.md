@@ -16,6 +16,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Flexible media grouping via regex rules**
 * **Video and image organization with dynamic labels**
 * **Build modes (flat, hybrid, deep) for customizable media discovery**
+* **Dedicated overview page for all projects with A-Z filter and tag-aware search**
 * **HTML label presets for different domains** (directors, artists, ...)
 * **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
@@ -105,23 +106,26 @@ Your configuration file should be in JSON format and can override labels and med
 {
   "html_settings": {
     "nav_creators_label": "Directors",
+    "nav_projects_label": "Movies",
     "nav_tags_label": "Tags",
-    
+
     "overview_page_title": "Directors",
     "overview_page_search_placeholder": "Search directors, movies, tags...",
-    
+    "project_overview_page_title": "Movies",
+    "project_overview_page_search_placeholder": "Search movies, tags...",
+
     "creator_page_profile_title": "Profile",
     "creator_page_about_title": "About",
     "creator_page_tags_title": "Tags",
-    "creator_page_projects_title": "Projects",
-    "creator_page_collabs_title_prefix": "With",
-    
+    "creator_page_projects_title": "Movies",
+    "creator_page_collabs_title_prefix": "Codirected with",
+
     "collaboration_page_profile_title": "Profile",
     "collaboration_page_about_title": "About",
     "collaboration_page_tags_title": "Tags",
     "collaboration_page_members_title": "Members",
-    "collaboration_page_projects_title": "Projects",
-    
+    "collaboration_page_projects_title": "Movies",
+
     "project_page_overview_title": "Overview",
     "project_page_description_title": "Description",
     "project_page_tags_title": "Tags",
@@ -131,15 +135,15 @@ Your configuration file should be in JSON format and can override labels and med
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
-    
+
     "VIDEO_INCLUDE_RE": ".*\\.mp4$",
     "VIDEO_EXCLUDE_RE": "$^",
     "IMAGE_INCLUDE_RE": ".*\\.jpg$",
     "IMAGE_EXCLUDE_RE": "$^",
-    
+
     "PORTRAIT_RE": "^profile\\.jpg$",
     "POSTER_RE": "^cover\\.jpg$",
-    
+
     "MAX_IMAGES": 20,
     "IMAGE_SAMPLE_STRATEGY": "spread"
   }
@@ -160,6 +164,7 @@ Your configuration file should be in JSON format and can override labels and med
 ## Output Example
 
 * `index.html` — Creator overview page
+* `projects.html` — All projects overview page
 * `creators/<creator>.html` — Individual creator profiles
 * `projects/<project>.html` — Individual project pages
 * `tags.html` — Browse by tags
