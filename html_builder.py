@@ -99,7 +99,9 @@ def sort_project(project: Dict) -> tuple:
     title = project.get("title", "").lower()
     return (not has_date, date_value, title)
 
-def build_html_pages(creators: list, input_path: Path, output_path: Path, html_settings: dict):
+def build_html_pages(input_path: Path, output_path: Path, html_settings: dict):
+    creators = collect_creator_data(input_path)
+    
     (output_path / "creators").mkdir(parents=True, exist_ok=True)
     (output_path / "projects").mkdir(parents=True, exist_ok=True)
     (output_path / "thumbnails").mkdir(parents=True, exist_ok=True)

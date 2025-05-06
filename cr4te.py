@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import config as cfg
-from html_builder import clear_output_folder, collect_creator_data, build_html_pages
+from html_builder import clear_output_folder, build_html_pages
 from json_builder import process_all_creators
 
 def main():
@@ -57,11 +57,9 @@ def main():
         else:
             output_path.mkdir(parents=True, exist_ok=True)
 
-        creator_data = collect_creator_data(input_path)
-        
         config = cfg.update_html_labels(config, args.html_preset)
         
-        build_html_pages(creator_data, input_path, output_path, config["html_settings"])
+        build_html_pages(input_path, output_path, config["html_settings"])
 
 if __name__ == "__main__":
     main()
