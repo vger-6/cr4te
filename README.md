@@ -1,8 +1,11 @@
 # cr4te
 
+> **⚠️ Under Construction**
+> This project is still in development. Features, structure, and configuration may change without notice.
+
 A static site generator for organizing and showcasing creative media projects. It scans your folder structure, extracts metadata and media, and builds a clean, searchable HTML gallery using Jinja2 templates.
 
-## 🙏 Support This Project
+## Support This Project 🙏
 
 If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/donate/?hosted_button_id=XERA3ZMTLZC2N) to help support continued development.
 
@@ -21,6 +24,8 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
+
+> This tool is an ongoing work-in-progress. Expect improvements, breaking changes, and new features.
 
 ---
 
@@ -197,4 +202,6 @@ This project is licensed under the terms of the LICENSE file included.
 ## Credits
 
 Created for artists, curators, media historians, and creative developers who want simple but structured control over their digital media archives.
+
+> Development is ongoing. Feedback, ideas, and contributions are very welcome!
 
