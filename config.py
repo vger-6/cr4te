@@ -51,7 +51,9 @@ DEFAULT_CONFIG = {
         "POSTER_RE": r"^cover\.jpg$",
         
         "MAX_IMAGES": 20,
-        "IMAGE_SAMPLE_STRATEGY": "spread"
+        "IMAGE_SAMPLE_STRATEGY": "spread",
+        
+        "COLLABORATION_SEPARATOR": " & "
     }
 }
 

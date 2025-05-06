@@ -149,7 +149,9 @@ Your configuration file should be in JSON format and can override labels and med
     "POSTER_RE": "^cover\\.jpg$",
 
     "MAX_IMAGES": 20,
-    "IMAGE_SAMPLE_STRATEGY": "spread"
+    "IMAGE_SAMPLE_STRATEGY": "spread",
+    
+    "COLLABORATION_SEPARATOR": " & "
   }
 }
 ```

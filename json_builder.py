@@ -2,7 +2,6 @@ import json
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional
-from utils import is_collaboration
 from datetime import datetime
 from collections import defaultdict
 
@@ -13,6 +12,11 @@ from config import ImageSampleStrategy
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
+    
+def is_collaboration(name: str, separator: Optional[str]) -> bool:
+    if not separator:
+        return False
+    return separator in name
 
 def validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
@@ -173,7 +177,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
-    is_collab = is_collaboration(creator_name)
+    is_collab = is_collaboration(creator_name, compiled_media_rules.get("COLLABORATION_SEPARATOR", None))
     creator_json = {
         "name": creator_name,
         "is_collaboration": existing_data.get("is_collaboration", is_collab),

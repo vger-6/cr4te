@@ -1,9 +1,6 @@
 import re
 import os
 from pathlib import Path
-
-def is_collaboration(name: str) -> bool:
-    return ' & ' in name
     
 def slugify(text: str) -> str:
     if not isinstance(text, str):
