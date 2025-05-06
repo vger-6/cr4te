@@ -56,9 +56,8 @@ DEFAULT_CONFIG = {
 }
 
 class HtmlPreset(str, Enum):
-    CREATOR = "creator"
-    DIRECTOR = "director"
     ARTIST = "artist"
+    DIRECTOR = "director"
     MODEL = "model"
 
 class BuildMode(str, Enum):
@@ -117,8 +116,6 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Scenes",
                 "project_page_creator_profile": "Model Profile"
             }
-        case HtmlPreset.CREATOR:
-            return {}  # Use the default preset
         case _:
             raise ValueError(f"Unknown preset: {preset}")
 

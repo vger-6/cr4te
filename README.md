@@ -20,7 +20,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Video and image organization with dynamic labels**
 * **Build modes (flat, hybrid, deep) for customizable media discovery**
 * **Dedicated overview page for all projects with A-Z filter and tag-aware search**
-* **HTML label presets for different domains** (directors, artists, ...)
+* **HTML label presets for different domains** (artists, directors, ...)
 * **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
@@ -65,7 +65,7 @@ pip install -r requirements.txt
 ### Step 1: Build JSON metadata
 
 ```bash
-python cr4te.py build-json -i /path/to/Creators --mode hybrid
+python cr4te.py build-json -i /path/to/Artists --mode hybrid
 ```
 
 Modes available:
@@ -77,26 +77,25 @@ Modes available:
 ### Step 2: Generate HTML site
 
 ```bash
-python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder
+python cr4te.py build-html -i /path/to/InputFolder -o /path/to/OutputFolder
 ```
 
 ### Optional: Custom Configuration
 
 ```bash
-python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder --config config/cr4te_config.json
+python cr4te.py build-html -i /path/to/InputFolder -o /path/to/OutputFolder --config config/cr4te_config.json
 ```
 
 ### Optional: Apply a Label Preset
 
 ```bash
-python cr4te.py build-html -i /path/to/Creators -o /path/to/OutputFolder --html-preset director
+python cr4te.py build-html -i /path/to/InputFolder -o /path/to/OutputFolder --html-preset director
 ```
 
 Available presets:
 
-* `creator` (default)
+* `artist` (default)
 * `director`
-* `artist`
 * `model`
 
 If `--config` is not specified, cr4te uses internal defaults.
@@ -157,7 +156,7 @@ Your configuration file should be in JSON format and can override labels and med
 
 ### Special Rules
 
-* `PORTRAIT_RE`: Regex used to identify a creator's portrait image (default: `^profile\.jpg$`)
+* `PORTRAIT_RE`: Regex used to identify a portrait image (default: `^profile\.jpg$`)
 * `POSTER_RE`: Regex used to identify a project's poster image (default: `^cover\.jpg$`)
 * `IMAGE_SAMPLE_STRATEGY`: Sampling strategy for gallery thumbnails
 
@@ -168,9 +167,9 @@ Your configuration file should be in JSON format and can override labels and med
 
 ## Output Example
 
-* `index.html` — Creator overview page
-* `projects.html` — All projects overview page
-* `creators/<creator>.html` — Individual creator profiles
+* `index.html` — Overview page
+* `projects.html` — Projects overview page
+* `creators/<creator>.html` — Individual profile pages
 * `projects/<project>.html` — Individual project pages
 * `tags.html` — Browse by tags
 

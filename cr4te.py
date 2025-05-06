@@ -22,7 +22,7 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
-    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.CREATOR, help="Apply a preset label scheme for HTML (creator, director, artist, model)")
+    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML (artist [default], director, model)")
     
     args = parser.parse_args()
     
