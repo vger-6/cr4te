@@ -1,6 +1,8 @@
-/*Forest Night*/
-/*
 :root {
+  --font-family: sans-serif;
+}
+
+.theme-forest-night {
   --bg-color: #0d1b1e;
   
   --box-bg: #1c3a3e;
@@ -19,13 +21,9 @@
   --link-visited-color: #f4a261;
   --link-hover-color: #ffffff;
   --link-disabled-color: #44615d;
-  
-  --font-family: sans-serif;
-}*/
+}
 
-/*Midnight Monochrome*/
-/*
-:root {
+.theme-midnight-monochrome {
   --bg-color: #0f0f0f;
   
   --box-bg: #1a1a1a;
@@ -44,13 +42,9 @@
   --link-visited-color: #b38df8;
   --link-hover-color: #ffffff;
   --link-disabled-color: #555;
-  
-  --font-family: sans-serif;
-}*/
+}
 
-/*Warm Linen*/
-/*
-:root {
+.theme-warm-linen {
   --bg-color: #faf4ed;
   
   --box-bg: #fefcf9;
@@ -69,13 +63,9 @@
   --link-visited-color: #a65b84;
   --link-hover-color: #ce5a57;
   --link-disabled-color: #aaa;
-  
-  --font-family: sans-serif;
-}*/
+}
 
-/*Sunset Neon*/
-/*
-:root {
+.theme-sunset-neon {
   --bg-color: #2a0c1f;
   
   --box-bg: #3c1028;
@@ -94,13 +84,9 @@
   --link-visited-color: #ff9a8b;
   --link-hover-color: #ffcba4;
   --link-disabled-color: #b04a4a;
-  
-  --font-family: sans-serif;
-}*/
+}
 
-/*Frozen Aurora*/
-
-:root {
+.theme-frozen-aurora {
   --bg-color: #0e1b2a;
   
   --box-bg: #162d42;
@@ -119,8 +105,6 @@
   --link-visited-color: #aad8ef;
   --link-hover-color: #ffffff;
   --link-disabled-color: #669ea6;
-  
-  --font-family: sans-serif;
 }
 
 body {
@@ -159,6 +143,57 @@ a:focus {
 .top-link {
   margin-bottom: 1rem;
   font-weight: bold;
+}
+
+.theme-dropdown {
+  position: relative;
+  display: inline-block;
+  float: right;
+  margin-left: 1rem;
+}
+
+.theme-button {
+  background: none;
+  border: none;
+  color: var(--link-color);
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.theme-button:hover,
+.theme-button:focus {
+  color: var(--link-hover-color);
+  text-decoration: underline;
+}
+
+.theme-panel {
+  display: none;
+  position: absolute;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: var(--box-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.theme-panel .theme-option {
+  padding: 0.4rem 1rem;
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.theme-panel .theme-option:hover {
+  background-color: var(--border-color);
+}
+
+.theme-panel .theme-option.selected {
+  font-weight: bold;
+  background-color: var(--border-color);
 }
 
 .az-tabs {

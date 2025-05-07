@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ html_settings.project_overview_page_title }}</title>
@@ -13,6 +14,18 @@
   <a href="index.html">{{ html_settings.nav_creators_label }}</a> &middot;
   <span class="nav-current">{{ html_settings.nav_projects_label }}</span> &middot;
   <a href="tags.html">{{ html_settings.nav_tags_label }}</a>
+  <div style="float: right;">
+    <div class="theme-dropdown">
+      <button class="theme-button" id="theme-toggle">Themes ▾</button>
+      <div class="theme-panel" id="theme-panel">
+        <div class="theme-option" data-theme="theme-frozen-aurora">Frozen Aurora</div>
+        <div class="theme-option" data-theme="theme-forest-night">Forest Night</div>
+        <div class="theme-option" data-theme="theme-midnight-monochrome">Midnight Mono</div>
+        <div class="theme-option" data-theme="theme-warm-linen">Warm Linen</div>
+        <div class="theme-option" data-theme="theme-sunset-neon">Sunset Neon</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <h1>{{ html_settings.project_overview_page_title }}</h1>
@@ -43,6 +56,7 @@
 </div>
 
 <script src="js/filter_projects.js"></script>
+<script src="js/theme.js" defer></script>
 
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ project_title }}</title>
@@ -14,6 +15,18 @@
   <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
   <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
   <a href="../creators/{{ creator_name | replace(' ', '_') | lower }}.html">{{ creator_name }}</a>
+  <div style="float: right;">
+    <div class="theme-dropdown">
+      <button class="theme-button" id="theme-toggle">Themes ▾</button>
+      <div class="theme-panel" id="theme-panel">
+        <div class="theme-option" data-theme="theme-frozen-aurora">Frozen Aurora</div>
+        <div class="theme-option" data-theme="theme-forest-night">Forest Night</div>
+        <div class="theme-option" data-theme="theme-midnight-monochrome">Midnight Mono</div>
+        <div class="theme-option" data-theme="theme-warm-linen">Warm Linen</div>
+        <div class="theme-option" data-theme="theme-sunset-neon">Sunset Neon</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <h1>{{ project_title }}</h1>
@@ -120,6 +133,8 @@
   </div>
 
 </div>
+
+<script src="../js/theme.js" defer></script>
 
 </body>
 </html>
