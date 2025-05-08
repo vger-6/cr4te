@@ -25,6 +25,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
 * **Theme switcher with persistent selection** using localStorage
+* **Configurable visibility for creator and project metadata fields**
 
 > This tool is an ongoing work-in-progress. Expect improvements, breaking changes, and new features.
 
@@ -136,7 +137,10 @@ Your configuration file should be in JSON format and can override labels and med
     "project_page_tags_title": "Tags",
     "project_page_creator_profile": "Profile",
     "project_page_videos_label": "Videos",
-    "project_page_images_label": "Images"
+    "project_page_images_label": "Images",
+
+    "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
+    "visible_project_fields": ["release_date"]
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
@@ -151,7 +155,7 @@ Your configuration file should be in JSON format and can override labels and med
 
     "MAX_IMAGES": 20,
     "IMAGE_SAMPLE_STRATEGY": "spread",
-    
+
     "COLLABORATION_SEPARATOR": " & "
   }
 }
@@ -165,6 +169,8 @@ Your configuration file should be in JSON format and can override labels and med
 
   * `spread`: even sampling throughout the list
   * `head`: take the first N images
+* `visible_creator_fields`: Controls which creator attributes (e.g., `aliases`, `nationality`) are shown
+* `visible_project_fields`: Controls which project attributes (e.g., `release_date`) are shown
 
 ---
 
