@@ -181,6 +181,9 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     creator_json = {
         "name": creator_name,
         "is_collaboration": existing_data.get("is_collaboration", is_collab),
+        "date_of_birth": validate_date_string(existing_data.get("date_of_birth", "")),
+        "nationality": existing_data.get("nationality", ""),
+        "aliases": existing_data.get("aliases", []),
         "portrait": portrait_path,
         "info": read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
@@ -191,8 +194,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         members = [name.strip() for name in creator_name.split("&")]
         creator_json["members"] = existing_data.get("members", members)
     else:
-        dob = existing_data.get("date_of_birth", "")
-        creator_json["date_of_birth"] = validate_date_string(dob)
+        creator_json["members"] = []
     
     return creator_json
 

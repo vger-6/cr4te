@@ -42,8 +42,14 @@
           <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
             <p><strong>Name:</strong> {{ creator.name }}</p>
+            {% if creator.aliases %}
+            <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
+            {% endif %}
             {% if creator.date_of_birth %}
             <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
+            {% endif %}
+            {% if creator.nationality %}
+            <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
             {% endif %}
             {% if debut_age %}
             <p><strong>Debut Age:</strong> {{ debut_age }}</p>

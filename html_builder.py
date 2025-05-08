@@ -541,7 +541,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     output_html = template.render(
         html_settings=html_settings,
         creator_name=creator_name,
-        project_title=project['title'],
+        project=project,
         thumbnail_url=thumbnail_url,
         info_html=render_markdown(project.get("info", "")),
         tag_map=tag_map,

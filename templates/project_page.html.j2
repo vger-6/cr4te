@@ -4,7 +4,7 @@
   <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ project_title }}</title>
+  <title>{{ project.title }}</title>
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/project.css">
 </head>
@@ -29,7 +29,7 @@
   </div>
 </div>
 
-<h1>{{ project_title }}</h1>
+<h1>{{ project.title }}</h1>
 
 <div class="project-layout">
 
@@ -40,7 +40,12 @@
       <hr>
       <div class="section-content markdown">
         <div class="project-info">
-          <img src="{{ thumbnail_url }}" alt="Preview of {{ project_title }}">
+          <img src="{{ thumbnail_url }}" alt="Preview of {{ project.title }}">
+          <div>
+            {% if project.release_date %}
+            <p><strong>Release Date:</strong> {{ project.release_date }}</p>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
