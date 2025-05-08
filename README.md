@@ -13,7 +13,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 
 ## Features
 
-* **Automatically builds a gallery website** from your folder structure
+* **Automatically builds a gallery website** from your folder structure (e.g. directors and movies)
 * **Thumbnail generation** for portraits, posters, and images
 * **Tag-based filtering** and search
 * **Flexible media grouping via regex rules**
@@ -24,6 +24,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
+* **Theme switcher with persistent selection** using localStorage
 
 > This tool is an ongoing work-in-progress. Expect improvements, breaking changes, and new features.
 
@@ -191,6 +192,25 @@ Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
+
+---
+
+## Troubleshooting
+
+### LocalStorage not working under `file://`
+
+Some browsers (notably Firefox with strict settings) block `localStorage` access across pages loaded with the `file://` protocol.
+
+**Solution:** run a lightweight local server from your output folder:
+
+```bash
+cd /path/to/OutputFolder
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/` in your browser.
+
+This will fix localStorage issues and better match how your site behaves when deployed online.
 
 ---
 
