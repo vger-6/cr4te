@@ -37,7 +37,10 @@ DEFAULT_CONFIG = {
         "project_page_videos_label": "Videos",
         "project_page_images_label": "Images",
         
-        "tags_page_title": "Tags"
+        "tags_page_title": "Tags",
+        
+        "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
+        "visible_project_fields": ["release_date"]
     },
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"^_",

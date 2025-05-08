@@ -42,7 +42,7 @@
         <div class="project-info">
           <img src="{{ thumbnail_url }}" alt="Preview of {{ project.title }}">
           <div>
-            {% if project.release_date %}
+            {% if 'release_date' in html_settings.visible_project_fields and project.release_date %}
             <p><strong>Release Date:</strong> {{ project.release_date }}</p>
             {% endif %}
           </div>

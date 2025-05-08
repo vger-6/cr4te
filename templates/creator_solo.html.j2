@@ -42,16 +42,16 @@
           <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
             <p><strong>Name:</strong> {{ creator.name }}</p>
-            {% if creator.aliases %}
+            {% if 'aliases' in html_settings.visible_creator_fields and creator.aliases %}
             <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
             {% endif %}
-            {% if creator.date_of_birth %}
+            {% if 'date_of_birth' in html_settings.visible_creator_fields and creator.date_of_birth %}
             <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
             {% endif %}
-            {% if creator.nationality %}
+            {% if 'nationality' in html_settings.visible_creator_fields and creator.nationality %}
             <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
             {% endif %}
-            {% if debut_age %}
+            {% if 'debut_age' in html_settings.visible_creator_fields and debut_age %}
             <p><strong>Debut Age:</strong> {{ debut_age }}</p>
             {% endif %}
           </div>
