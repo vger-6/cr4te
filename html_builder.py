@@ -1,5 +1,6 @@
 import shutil
 import json
+import os
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
@@ -80,6 +81,17 @@ def generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType
             img.save(dest_path, format='JPEG')
     except Exception as e:
         print(f"Error creating thumbnail for {source_path}: {e}")
+        
+def create_symlink(src: Path, dest_dir: Path, creator: str, project: str) -> str:
+    ext = src.suffix.lower()
+    base = slugify(f"{creator}_{project}_{src.stem}")
+    dest_file = dest_dir / f"{base}{ext}"
+
+    dest_file.parent.mkdir(parents=True, exist_ok=True)
+    if not dest_file.exists():
+        os.symlink(src.resolve(), dest_file)
+
+    return dest_file.name  # return just the filename for use in relative URLs
 
 def calculate_age(dob: datetime, date: datetime) -> str:
     try:
@@ -481,22 +493,26 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     slug = slugify(f"{creator_name}_{project['title']}")
     media_groups = []
     for media_group in project.get("media_groups", []):
-        # TODO: Add method: def create_media_group(folder_name: str, is_root: bool, videos: list, images: list) -> Dict
         images = []
         for image_rel_path in media_group.get("images", []):
             image_abs = root_input / image_rel_path
             thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(image_rel_path), ThumbType.GALLERY)
             generate_thumbnail(image_abs, thumb_path, ThumbType.GALLERY)
             thumb_url = get_relative_path(thumb_path, out_dir)
-            full_url = get_relative_path(image_abs, out_dir)
+            image_name = create_symlink(image_abs, out_dir / "images", creator_name, project["title"])
+            full_url = f"images/{image_name}"
 
             images.append({
                 "thumb_url": thumb_url,
                 "full_url": full_url
             })
-            
-        videos = [get_relative_path(root_input / video_path, out_dir) for video_path in media_group.get("videos", [])]
-        
+
+        videos = []
+        for video_path in media_group.get("videos", []):
+            video_abs = root_input / video_path
+            video_name = create_symlink(video_abs, out_dir / "videos", creator_name, project["title"])
+            videos.append(f"videos/{video_name}")
+
         image_label = html_settings.get("project_page_images_label", "Images")
         video_label = html_settings.get("project_page_videos_label", "Videos")
         is_root = media_group.get("is_root", False)
