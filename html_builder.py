@@ -295,13 +295,14 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
             "thumbnail_url": thumb_url,
         })
 
-    # Prepare collaborations
+    # Prepare collaborations (from creator["collaborations"])
     collaborations = []
-    for collab in (m for m in creators if m.get("is_collaboration") and creator["name"] in m.get("members", [])):
-        other_members = [name for name in collab.get("members", []) if name != creator["name"]]
-        collab_label = " & ".join(other_members)
-        collab_projects = []
+    for collab_name in creator.get("collaborations", []):
+        collab = next((c for c in creators if c["name"] == collab_name), None)
+        if not collab:
+            continue
 
+        collab_projects = []
         for project in sorted(collab.get("projects", []), key=sort_project):
             if project.get('thumbnail'):
                 thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
@@ -315,9 +316,16 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
                 "url": f"../projects/{project_slug}.html",
                 "thumbnail_url": thumb_url,
             })
+            
+        # Determine label
+        if creator["name"] in collab.get("members", []):
+            others = [n for n in collab["members"] if n != creator["name"]]
+            label = " & ".join(others)
+        else:
+            label = collab_name
 
         collaborations.append({
-            "label": collab_label,
+            "label": label,
             "projects": collab_projects
         })
 

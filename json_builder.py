@@ -177,7 +177,8 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
-    is_collab = is_collaboration(creator_name, compiled_media_rules.get("COLLABORATION_SEPARATOR", None))
+    separator = compiled_media_rules.get("COLLABORATION_SEPARATOR", None)
+    is_collab = is_collaboration(creator_name, separator)
     creator_json = {
         "name": creator_name,
         "is_collaboration": existing_data.get("is_collaboration", is_collab),
@@ -190,7 +191,6 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         "projects": collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
     }
     
-    separator = compiled_media_rules.get("COLLABORATION_SEPARATOR", None)
     if is_collab:
         members = [name.strip() for name in creator_name.split(separator)]
         creator_json["members"] = existing_data.get("members", members)
@@ -198,13 +198,39 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         creator_json["members"] = []
     
     return creator_json
-
+            
 def process_all_creators(input_path: Path, compiled_media_rules: Dict):
+    all_creators = []
+
     for creator in sorted(input_path.iterdir()):
         if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
             continue
         print(f"Processing creator: {creator.name}")
         creator_json = build_creator_json(creator, input_path, compiled_media_rules)
-        json_path = creator / "cr4te.json"
+        all_creators.append(creator_json)
+
+    # Build collaboration map (name -> members)
+    collaboration_map = {
+        creator["name"]: creator["members"]
+        for creator in all_creators
+        if creator.get("is_collaboration") and creator.get("members")
+    }
+            
+    # Add reverse links to solo creators
+    for creator in all_creators:
+        if not creator.get("is_collaboration"):
+            auto_collabs = [
+                name for name, members in collaboration_map.items()
+                if creator["name"] in members
+            ]
+            manual_collabs = creator.get("collaborations", [])
+            creator["collaborations"] = sorted(set(auto_collabs + manual_collabs))
+        else:
+            creator["collaborations"] = []
+
+    # Write JSON files
+    for creator in all_creators:
+        json_path = input_path / creator["name"] / "cr4te.json"
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(creator_json, f, indent=2)
+            json.dump(creator, f, indent=2)
+
