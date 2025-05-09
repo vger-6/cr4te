@@ -189,9 +189,10 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         "tags": existing_data.get("tags", []),
         "projects": collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
     }
-
+    
+    separator = compiled_media_rules.get("COLLABORATION_SEPARATOR", None)
     if is_collab:
-        members = [name.strip() for name in creator_name.split("&")]
+        members = [name.strip() for name in creator_name.split(separator)]
         creator_json["members"] = existing_data.get("members", members)
     else:
         creator_json["members"] = []
@@ -199,7 +200,6 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     return creator_json
 
 def process_all_creators(input_path: Path, compiled_media_rules: Dict):
-    creator_list = []
     for creator in sorted(input_path.iterdir()):
         if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
             continue
@@ -208,5 +208,3 @@ def process_all_creators(input_path: Path, compiled_media_rules: Dict):
         json_path = creator / "cr4te.json"
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator_json, f, indent=2)
-        creator_list.append(creator_json)
-    return creator_list
