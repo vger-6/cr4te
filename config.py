@@ -5,6 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
+from enums.image_sample_strategy import ImageSampleStrategy
+
 # === Default internal config ===
 DEFAULT_CONFIG = {
     "html_settings": {
@@ -69,10 +71,6 @@ class BuildMode(str, Enum):
     FLAT = "flat"
     HYBRID = "hybrid"
     DEEP = "deep"
-    
-class ImageSampleStrategy(Enum):
-    SPREAD = "spread"
-    HEAD = "head"
     
 def get_html_label_presets(preset: HtmlPreset) -> Dict:
     """

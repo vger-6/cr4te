@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from PIL import Image
 
-from config import ImageSampleStrategy
+from enums.image_sample_strategy import ImageSampleStrategy
 
 class Orientation(Enum):
     PORTRAIT = "portrait"
