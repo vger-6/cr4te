@@ -41,8 +41,6 @@ DEFAULT_IMAGES = {
     ThumbType.GALLERY: "default_thumb.jpg"  # Reuse thumb fallback
 }
 
-HTML_TEMPLATE = """<!DOCTYPE html><html lang="en"><head><meta charset='utf-8'><meta name="viewport" content="width=device-width, initial-scale=1"><title>{title}</title></head><body>{body}</body></html>"""
-
 # TODO: Move to separate module. E.g. project_structure.py 
 def clear_output_folder(output_path: Path):
     """Delete all contents of output_path except the 'thumbnails' folder."""
@@ -64,10 +62,11 @@ def collect_creator_data(input_path: Path) -> List[Dict]:
             with open(json_path, 'r', encoding='utf-8') as f:
                 creator_data.append(json.load(f))
     return creator_data
-
-def get_thumbnail_path(thumbs_dir: Path, slug: str, original_file: Path, thumb_type: ThumbType) -> Path:
+    
+def get_thumbnail_path(thumbs_dir: Path, original_file: Path, thumb_type: ThumbType) -> Path:
+    relative_parts = original_file.parent.parts
+    slug = slugify('_'.join(relative_parts))
     thumb_subdir = thumbs_dir / slug
-    thumb_subdir.mkdir(parents=True, exist_ok=True)
     return thumb_subdir / (original_file.stem + thumb_type.suffix)
 
 def generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType):
@@ -157,10 +156,10 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: dict):
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []):
-            #print(project)
-            project_slug = slugify(f"{creator['name']}_{project['title']}")
-            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            thumb_path = get_thumbnail_path(thumbs_dir, Path(project['thumbnail']), ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, output_path)
+            
+            project_slug = slugify(f"{creator['name']}_{project['title']}")
             
             search_terms = project.get("tags", [])
             search_text = " ".join(search_terms).lower()
@@ -183,10 +182,9 @@ def build_overview_pages(creators: list, input_path: Path, output_path: Path, th
     creator_entries = []
 
     for creator in creators:
-        slug = slugify(creator['name'])
         if creator.get('portrait'):
             img_abs = input_path / creator['portrait']
-            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.THUMB)
+            thumb_path = get_thumbnail_path(thumbs_dir, Path(creator['portrait']), ThumbType.THUMB)
             generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
             thumbnail_url = get_relative_path(thumb_path, output_path)
         else:
@@ -204,6 +202,7 @@ def build_overview_pages(creators: list, input_path: Path, output_path: Path, th
 
         search_text = " ".join(search_terms).lower()
 
+        slug = slugify(creator['name'])
         creator_entries.append({
             "name": creator['name'],
             "url": f"creators/{slug}.html",
@@ -253,7 +252,7 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
     # Process portrait thumbnail
     if creator.get('portrait'):
         img_abs = input_path / creator['portrait']
-        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.PORTRAIT)
+        thumb_path = get_thumbnail_path(thumbs_dir, Path(creator['portrait']), ThumbType.PORTRAIT)
         generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
         portrait_url = get_relative_path(thumb_path, out_dir)
     else:
@@ -288,15 +287,15 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
     # Prepare projects
     projects = []
     for project in sorted(creator.get("projects", []), key=sort_project):
-        project_slug = slugify(f"{creator['name']}_{project['title']}")
         if project.get('thumbnail'):
             img_abs = input_path / project['thumbnail']
-            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            thumb_path = get_thumbnail_path(thumbs_dir, Path(project['thumbnail']), ThumbType.PROJECT)
             generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, out_dir)
         else:
             thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
+        project_slug = slugify(f"{creator['name']}_{project['title']}")
         projects.append({
             "title": project['title'],
             "url": f"../projects/{project_slug}.html",
@@ -311,15 +310,15 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
         collab_projects = []
 
         for project in sorted(collab.get("projects", []), key=sort_project):
-            project_slug = slugify(f"{collab['name']}_{project['title']}")
             if project.get('thumbnail'):
                 img_abs = input_path / project['thumbnail']
-                thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+                thumb_path = get_thumbnail_path(thumbs_dir, Path(project['thumbnail']), ThumbType.PROJECT)
                 generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
                 thumb_url = get_relative_path(thumb_path, out_dir)
             else:
                 thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
+            project_slug = slugify(f"{collab['name']}_{project['title']}")
             collab_projects.append({
                 "title": project['title'],
                 "url": f"../projects/{project_slug}.html",
@@ -355,7 +354,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     # Process portrait thumbnail
     if creator.get('portrait'):
         img_abs = input_path / creator['portrait']
-        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(creator['portrait']), ThumbType.PORTRAIT)
+        thumb_path = get_thumbnail_path(thumbs_dir, Path(creator['portrait']), ThumbType.PORTRAIT)
         generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
         portrait_url = get_relative_path(thumb_path, out_dir)
     else:
@@ -383,7 +382,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
             member_portrait = existing_creator_names[member].get("portrait")
             if member_portrait:
                 img_abs = input_path / member_portrait
-                thumb_path = get_thumbnail_path(thumbs_dir, member_slug, Path(member_portrait), ThumbType.THUMB)
+                thumb_path = get_thumbnail_path(thumbs_dir, Path(member_portrait), ThumbType.THUMB)
                 generate_thumbnail(img_abs, thumb_path, ThumbType.THUMB)
                 thumb_url = get_relative_path(thumb_path, out_dir)
             else:
@@ -398,15 +397,15 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     # Prepare projects
     projects = []
     for project in sorted(creator.get("projects", []), key=sort_project):
-        project_slug = slugify(f"{creator['name']}_{project['title']}")
         if project.get('thumbnail'):
             img_abs = input_path / project['thumbnail']
-            thumb_path = get_thumbnail_path(thumbs_dir, project_slug, Path(project['thumbnail']), ThumbType.PROJECT)
+            thumb_path = get_thumbnail_path(thumbs_dir, Path(project['thumbnail']), ThumbType.PROJECT)
             generate_thumbnail(img_abs, thumb_path, ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, out_dir)
         else:
             thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
+        project_slug = slugify(f"{creator['name']}_{project['title']}")
         projects.append({
             "title": project['title'],
             "url": f"../projects/{project_slug}.html",
@@ -443,7 +442,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     # Thumbnail
     if project.get('thumbnail'):
         img_abs = root_input / project['thumbnail']
-        thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(project['thumbnail']), ThumbType.POSTER)
+        thumb_path = get_thumbnail_path(thumbs_dir, Path(project['thumbnail']), ThumbType.POSTER)
         generate_thumbnail(img_abs, thumb_path, ThumbType.POSTER)
         thumbnail_url = get_relative_path(thumb_path, out_dir)
     else:
@@ -466,7 +465,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
         if creator:
             if creator.get('portrait'):
                 img_abs = root_input / creator['portrait']
-                thumb_path = get_thumbnail_path(thumbs_dir, slugify(name), Path(creator['portrait']), ThumbType.PORTRAIT)
+                thumb_path = get_thumbnail_path(thumbs_dir, Path(creator['portrait']), ThumbType.PORTRAIT)
                 generate_thumbnail(img_abs, thumb_path, ThumbType.PORTRAIT)
                 portrait_url = get_relative_path(thumb_path, out_dir)
             else:
@@ -496,7 +495,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
         images = []
         for image_rel_path in media_group.get("images", []):
             image_abs = root_input / image_rel_path
-            thumb_path = get_thumbnail_path(thumbs_dir, slug, Path(image_rel_path), ThumbType.GALLERY)
+            thumb_path = get_thumbnail_path(thumbs_dir, Path(image_rel_path), ThumbType.GALLERY)
             generate_thumbnail(image_abs, thumb_path, ThumbType.GALLERY)
             thumb_url = get_relative_path(thumb_path, out_dir)
             image_name = create_symlink(image_abs, out_dir / "images", creator_name, project["title"])
