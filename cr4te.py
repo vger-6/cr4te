@@ -7,8 +7,13 @@ import config as cfg
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import process_all_creators
 
+__version__ = "0.0.1"
+
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
+    
+    parser.add_argument("-v","--version", action="version", version=f"cr4te v{__version__}")
+    
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # build-json
