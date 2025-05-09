@@ -108,8 +108,14 @@ def sort_project(project: Dict) -> tuple:
     date_value = datetime.strptime(release_date, "%Y-%m-%d") if has_date else datetime.max
     title = project.get("title", "").lower()
     return (not has_date, date_value, title)
+    
+def get_creator_slug(creator: Dict) -> str:
+    return slugify(creator['name'])
+    
+def get_project_slug(creator: Dict, project: Dict) -> str:
+    return slugify(f"{creator['name']}_{project['title']}")
 
-def build_html_pages(input_path: Path, output_path: Path, html_settings: dict):
+def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     creators = collect_creator_data(input_path)
     
     (output_path / "creators").mkdir(parents=True, exist_ok=True)
@@ -158,7 +164,7 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: dict):
             thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, output_path)
             
-            project_slug = slugify(f"{creator['name']}_{project['title']}")
+            project_slug = get_project_slug(creator, project)
             
             search_terms = project.get("tags", [])
             search_text = " ".join(search_terms).lower()
@@ -199,10 +205,10 @@ def build_overview_pages(creators: list, input_path: Path, output_path: Path, th
 
         search_text = " ".join(search_terms).lower()
 
-        slug = slugify(creator['name'])
+        creator_slug = get_creator_slug(creator)
         creator_entries.append({
             "name": creator['name'],
-            "url": f"creators/{slug}.html",
+            "url": f"creators/{creator_slug}.html",
             "thumbnail_url": thumbnail_url,
             "search_text": search_text
         })
@@ -241,7 +247,7 @@ def build_all_creator_pages(creators: List[Dict], input_path: Path, out_dir: Pat
             build_collaboration_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
 
 def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
-    slug = slugify(creator['name'])
+    slug = get_creator_slug(creator)
     print(f"Building creator page: {slug}.html")
 
     template = env.get_template("creator_solo.html.j2")
@@ -288,7 +294,7 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
         else:
             thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-        project_slug = slugify(f"{creator['name']}_{project['title']}")
+        project_slug = get_project_slug(creator, project)
         projects.append({
             "title": project['title'],
             "url": f"../projects/{project_slug}.html",
@@ -310,7 +316,7 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
             else:
                 thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-            project_slug = slugify(f"{collab['name']}_{project['title']}")
+            project_slug = get_project_slug(collab, project)
             collab_projects.append({
                 "title": project['title'],
                 "url": f"../projects/{project_slug}.html",
@@ -345,7 +351,7 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
         f.write(output_html)
 
 def build_collaboration_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
-    slug = slugify(creator['name'])
+    slug = get_creator_slug(creator)
     print(f"Building collaboration page: {slug}.html")
 
     template = env.get_template("creator_collaboration.html.j2")
@@ -375,7 +381,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     existing_creator_names = {m["name"]: m for m in creators if not m.get("is_collaboration")}
     for member in creator.get("members", []):
         if member in existing_creator_names:
-            member_slug = slugify(member)
+            member_slug = get_creator_slug(existing_creator_names[member])
             member_portrait = existing_creator_names[member].get("portrait")
             if member_portrait:
                 thumb_path = create_thumbnail(input_path, Path(member_portrait), thumbs_dir, ThumbType.THUMB)
@@ -398,7 +404,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
         else:
             thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
 
-        project_slug = slugify(f"{creator['name']}_{project['title']}")
+        project_slug = get_project_slug(creator, project)
         projects.append({
             "title": project['title'],
             "url": f"../projects/{project_slug}.html",
@@ -419,15 +425,16 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
-def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: Dict):
     print("Generating project pages...")
     
     for creator in creators:
         for project in creator['projects']:
-            build_project_page(creator['name'], project, root_input, out_dir, thumbs_dir, creators, html_settings)
+            build_project_page(creator, project, root_input, out_dir, thumbs_dir, creators, html_settings)
             
-def build_project_page(creator_name: str, project: dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: dict):
-    slug = slugify(f"{creator_name}_{project['title']}")
+def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: Dict):
+    slug = get_project_slug(creator, project)
+    creator_name = creator["name"]
     print(f"Building project page: {slug}.html")
 
     template = env.get_template("project_page.html.j2")
@@ -452,19 +459,19 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     participants = []
     for name in ([creator_name] if " & " not in creator_name else creator_name.split(" & ")):
         name = name.strip()
-        creator = next((c for c in creators if c["name"] == name), None)
-        if creator:
-            if creator.get('portrait'):
-                thumb_path = create_thumbnail(root_input, Path(creator['portrait']), thumbs_dir, ThumbType.PORTRAIT)
+        participant = next((p for p in creators if p["name"] == name), None)
+        if participant:
+            if participant.get('portrait'):
+                thumb_path = create_thumbnail(root_input, Path(participant['portrait']), thumbs_dir, ThumbType.PORTRAIT)
                 portrait_url = get_relative_path(thumb_path, out_dir)
             else:
                 portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
 
             age_at_release = ""
-            if creator.get("date_of_birth") and project.get("release_date"):
+            if participant.get("date_of_birth") and project.get("release_date"):
                 from datetime import datetime
                 try:
-                    dob_dt = datetime.strptime(creator['date_of_birth'], "%Y-%m-%d")
+                    dob_dt = datetime.strptime(participant['date_of_birth'], "%Y-%m-%d")
                     release_dt = datetime.strptime(project['release_date'], "%Y-%m-%d")
                     age_at_release = calculate_age(dob_dt, release_dt)
                 except Exception as e:
@@ -472,13 +479,12 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
 
             participants.append({
                 "name": name,
-                "url": f"../creators/{slugify(name)}.html",
+                "url": f"../creators/{get_creator_slug(participant)}.html",
                 "portrait_url": portrait_url,
                 "age_at_release": age_at_release
             })
 
     # Media groups
-    slug = slugify(f"{creator_name}_{project['title']}")
     media_groups = []
     for media_group in project.get("media_groups", []):
         images = []
@@ -526,7 +532,7 @@ def build_project_page(creator_name: str, project: dict, root_input: Path, out_d
     output_html = template.render(
         html_settings=html_settings,
         creator_name=creator_name,
-        creator_slug=slugify(creator_name),
+        creator_slug=get_creator_slug(creator),
         project=project,
         thumbnail_url=thumbnail_url,
         info_html=render_markdown(project.get("info", "")),
