@@ -157,7 +157,6 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     build_tags_page(        creators,             output_path,                          html_settings)
     
     # Collect all projects
-    # Note: assumes that all thumbs have already been generated
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []):
@@ -434,7 +433,6 @@ def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Pat
             
 def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: Dict):
     slug = get_project_slug(creator, project)
-    creator_name = creator["name"]
     print(f"Building project page: {slug}.html")
 
     template = env.get_template("project_page.html.j2")
@@ -457,8 +455,7 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
 
     # Participants (creators)
     participants = []
-    for name in ([creator_name] if " & " not in creator_name else creator_name.split(" & ")):
-        name = name.strip()
+    for name in creator.get("members") if creator.get("is_collaboration") else [creator["name"]]:
         participant = next((p for p in creators if p["name"] == name), None)
         if participant:
             if participant.get('portrait'):
@@ -531,7 +528,7 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
 
     output_html = template.render(
         html_settings=html_settings,
-        creator_name=creator_name,
+        creator_name=creator["name"],
         creator_slug=get_creator_slug(creator),
         project=project,
         thumbnail_url=thumbnail_url,
