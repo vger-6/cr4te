@@ -62,18 +62,20 @@ def find_portrait(images: List[Path]) -> Optional[Path]:
 #    return find_image_by_orientation(images, Orientation.LANDSCAPE)
 
 def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
-    if len(images) <= max_images:
-        return images
+    sorted_images = sorted(images)
 
-    if strategy == ImageSampleStrategy.HEAD:
-        return sorted(images)[:max_images]
-
-    elif strategy == ImageSampleStrategy.SPREAD:
-        sorted_images = sorted(images)
-        step = len(sorted_images) / max_images
-        return [sorted_images[int(i * step)] for i in range(max_images)]
-
-    return images  # fallback
+    match strategy:
+        case ImageSampleStrategy.ALL:
+            return sorted_images
+        case _ if len(sorted_images) <= max_images:
+            return sorted_images
+        case ImageSampleStrategy.HEAD:
+            return sorted_images[:max_images]
+        case ImageSampleStrategy.SPREAD:
+            step = len(sorted_images) / max_images
+            return [sorted_images[int(i * step)] for i in range(max_images)]
+        case _:
+            return sorted_images  # fallback
 
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     projects_data = []

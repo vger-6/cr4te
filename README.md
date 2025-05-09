@@ -16,16 +16,16 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Automatically builds a gallery website** from your folder structure (e.g. directors and movies)
 * **Thumbnail generation** for portraits, posters, and images
 * **Tag-based filtering** and search
+* **Dedicated overview page for all projects with A-Z filter and tag-aware search**
 * **Flexible media grouping via regex rules**
 * **Video and image organization with dynamic labels**
 * **Build modes (flat, hybrid, deep) for customizable media discovery**
-* **Dedicated overview page for all projects with A-Z filter and tag-aware search**
 * **HTML label presets for different domains** (artists, directors, ...)
-* **Jinja2 templating for fast, maintainable static HTML**
 * **User-customizable labels and media rules** via optional config file
+* **Configurable visibility for creator and project metadata fields**
+* **Jinja2 templating for fast, maintainable static HTML**
 * **Fast static HTML output** with no runtime dependencies during browsing
 * **Theme switcher with persistent selection** using localStorage
-* **Configurable visibility for creator and project metadata fields**
 
 > This tool is an ongoing work-in-progress. Expect improvements, breaking changes, and new features.
 
@@ -169,6 +169,7 @@ Your configuration file should be in JSON format and can override labels and med
 
   * `spread`: even sampling throughout the list
   * `head`: take the first N images
+  * `all`: take all images
 * `visible_creator_fields`: Controls which creator attributes (e.g., `aliases`, `nationality`) are shown
 * `visible_project_fields`: Controls which project attributes (e.g., `release_date`) are shown
 
@@ -188,7 +189,7 @@ Thumbnails are automatically generated into `/thumbnails/`.
 
 ## Requirements
 
-* Python 3.8+
+* Python 3.10+
 * Pillow
 * Markdown
 * Jinja2
