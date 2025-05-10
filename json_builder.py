@@ -55,12 +55,6 @@ def find_image_by_orientation(images: List[Path], orientation: Orientation = Ori
             print(f"Error checking image orientation for {img_path}: {e}")
     return None
 
-def find_portrait(images: List[Path]) -> Optional[Path]:
-    return find_image_by_orientation(images, Orientation.PORTRAIT)
-
-#def find_landscape(images: List[Path]) -> Optional[Path]:
-#    return find_image_by_orientation(images, Orientation.LANDSCAPE)
-
 def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
     sorted_images = sorted(images)
 
@@ -91,7 +85,6 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         media_map = defaultdict(lambda: {"images": [], "videos": []})
         image_count = 0
         video_count = 0
-        thumbnail_path = ""
 
         for file in project_dir.rglob("*"):
             if not file.is_file():
@@ -120,17 +113,18 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 media_map[folder_key]["is_root"] = is_root
                 image_count += 1
 
-                # Select thumbnail
-                poster_re = compiled_media_rules.get("POSTER_RE")
-                if not thumbnail_path and poster_re and poster_re.match(file.name):
-                    thumbnail_path = str(rel_to_input)
-                elif not thumbnail_path: # first landscape
-                    try:
-                        with Image.open(file) as img:
-                            if img.width > img.height:
-                                thumbnail_path = str(rel_to_input)
-                    except Exception as e:
-                        print(f"Thumbnail check failed: {e}")
+        # Find thumbnail
+        all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
+        poster_re = compiled_media_rules.get("POSTER_RE")
+        poster_candidates = [p for p in all_images if poster_re and poster_re.match(p.name)]
+
+        thumbnail_path = ""
+        if poster_candidates:
+            thumbnail_path = str(poster_candidates[0].relative_to(input_path))
+        else:
+            poster = find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
+            if poster:
+                thumbnail_path = str(poster.relative_to(input_path))
                         
         # Build media_groups list from the grouped map
         media_groups = []
@@ -167,6 +161,8 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     creator_name = creator_path.name
     existing_data = load_existing_json(creator_path / "cr4te.json")
     
+    # Find portrait
+    # TODO: DRY out code duplication. See: collect_projects_data
     all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
     portrait_re = compiled_media_rules.get("PORTRAIT_RE")
     portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]
@@ -175,7 +171,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     if portrait_candidates:
         portrait_path = str(portrait_candidates[0].relative_to(input_path))
     else:
-        portrait = find_portrait(all_images)  # Fallback: heuristic
+        portrait = find_image_by_orientation(all_images, Orientation.PORTRAIT)  # Fallback: heuristic
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
