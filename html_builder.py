@@ -112,41 +112,29 @@ def get_creator_slug(creator: Dict) -> str:
     
 def get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}_{project['title']}")
+    
+def copy_asset_folder(src_root: Path, folder_name: str, output_root: Path):
+    src = src_root / folder_name
+    dst = output_root / folder_name
+
+    if src.exists() and src.is_dir():
+        shutil.copytree(src, dst, dirs_exist_ok=True)
+        print(f"Copied {folder_name} to {dst}")
+    else:
+        print(f"Warning: Folder '{folder_name}' not found at {src}")
 
 def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     creators = collect_creator_data(input_path)
     
+    # Prepare output folders
     (output_path / "creators").mkdir(parents=True, exist_ok=True)
     (output_path / "projects").mkdir(parents=True, exist_ok=True)
     (output_path / "thumbnails").mkdir(parents=True, exist_ok=True)
     
-    # copy css files
-    css_source = SCRIPT_DIR / "css"
-    css_dest = output_path / "css"
-    if css_source.exists() and css_source.is_dir():
-        shutil.copytree(css_source, css_dest, dirs_exist_ok=True)
-        print(f"Copied CSS to {css_dest}")
-    else:
-        print(f"Warning: CSS folder not found at {css_source}")
-
-    # copy js files
-    js_source = SCRIPT_DIR / "js"
-    js_dest = output_path / "js"
-    if js_source.exists() and js_source.is_dir():
-        shutil.copytree(js_source, js_dest, dirs_exist_ok=True)
-        print(f"Copied JS to {js_dest}")
-    else:
-        print(f"Warning: JS folder not found at {js_source}")
+    copy_asset_folder(SCRIPT_DIR, "css", output_path)
+    copy_asset_folder(SCRIPT_DIR, "js", output_path)
+    copy_asset_folder(SCRIPT_DIR, "defaults", output_path)
     
-    # Copy default files
-    defaults_source = SCRIPT_DIR / "defaults"
-    defaults_dest = output_path / "defaults"
-    if defaults_source.exists() and defaults_source.is_dir():
-        shutil.copytree(defaults_source, defaults_dest, dirs_exist_ok=True)
-        print(f"Copied defaults to {defaults_dest}")
-    else:
-        print(f"Warning: Defaults folder not found at {defaults_source}")
-
     thumbs_dir = output_path / "thumbnails"
     build_overview_pages(   creators, input_path, output_path, thumbs_dir, html_settings)
     build_all_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
