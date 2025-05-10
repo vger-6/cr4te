@@ -181,6 +181,16 @@ def update_build_rules(config: Dict, mode_str: str) -> Dict:
     config["media_rules"].update(overrides)
     return config
     
+def apply_cli_media_overrides(config: Dict, max_images: int = None, image_strategy: str = None) -> Dict:
+    """
+    Applies CLI overrides for media_rules such as max_images and image_sample_strategy.
+    """
+    if max_images is not None :
+        config["media_rules"]["MAX_IMAGES"] = max_images
+    if image_strategy:
+        config["media_rules"]["IMAGE_SAMPLE_STRATEGY"] = image_strategy
+    return config
+    
 def compile_media_rules(media_rules: Dict) -> Dict:
     """
     Compiles all known regex patterns in media_rules into regular expressions.

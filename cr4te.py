@@ -21,6 +21,8 @@ def main():
     json_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     json_parser.add_argument("--config", help="Path to configuration file (optional)")
     json_parser.add_argument("--mode", choices=[m.value for m in cfg.BuildMode], default=cfg.BuildMode.HYBRID.value, help="Media discovery mode: flat, hybrid (default), deep")
+    json_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
+    json_parser.add_argument("--image-sample-strategy", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images: spread (default), head, all")
 
     # build-html
     html_parser = subparsers.add_parser("build-html", help="Generate HTML site from JSON metadata")
@@ -42,6 +44,13 @@ def main():
             return
 
         config = cfg.update_build_rules(config, args.mode)
+        
+        config = cfg.apply_cli_media_overrides(
+            config,
+            max_images=args.max_images,
+            image_strategy=args.image_sample_strategy
+        )
+        
         compiled_media_rules = cfg.compile_media_rules(config["media_rules"])
         process_all_creators(input_path, compiled_media_rules)
 

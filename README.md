@@ -76,6 +76,11 @@ Modes available:
 * `hybrid` (default) — Flat .mp4 + first-level .jpg grouping
 * `deep` — Find .mp4 and .jpg recursively
 
+Additional options:
+
+* `--max-images` — Set maximum images per media group (overrides config)
+* `--image-sample-strategy` — Image selection strategy: `spread` (default), `head`, `all`
+
 ### Step 2: Generate HTML site
 
 ```bash
