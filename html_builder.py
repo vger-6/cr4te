@@ -34,14 +34,13 @@ class ThumbType(Enum):
         self.height = height
 
 DEFAULT_IMAGES = {
-    ThumbType.THUMB: "default_thumb.jpg",
-    ThumbType.PORTRAIT: "default_portrait.jpg",
-    ThumbType.POSTER: "default_poster.jpg",
-    ThumbType.PROJECT: "default_poster.jpg",  # Reuse poster fallback
-    ThumbType.GALLERY: "default_thumb.jpg"  # Reuse thumb fallback
+    ThumbType.THUMB: "defaults/default_thumb.jpg",
+    ThumbType.PORTRAIT: "defaults/default_portrait.jpg",
+    ThumbType.POSTER: "defaults/default_poster.jpg",
+    ThumbType.PROJECT: "defaults/default_poster.jpg",  # Reuse poster fallback
+    ThumbType.GALLERY: "defaults/default_thumb.jpg"  # Reuse thumb fallback
 }
 
-# TODO: Move to separate module. E.g. project_structure.py 
 def clear_output_folder(output_path: Path):
     """Delete all contents of output_path except the 'thumbnails' folder."""
     for item in output_path.iterdir():
@@ -50,8 +49,7 @@ def clear_output_folder(output_path: Path):
                 shutil.rmtree(item)
             else:
                 item.unlink()
-        
-# TODO: Move to separate module. E.g. project_structure.py         
+               
 def collect_creator_data(input_path: Path) -> List[Dict]:
     creator_data = []
     for creator in sorted(input_path.iterdir()):
@@ -139,22 +137,21 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
         print(f"Copied JS to {js_dest}")
     else:
         print(f"Warning: JS folder not found at {js_source}")
-
-    # Copy default images into thumbnails
+    
+    # Copy default files
     defaults_source = SCRIPT_DIR / "defaults"
-    defaults_dest = output_path / "thumbnails"
-    if defaults_source.exists():
-        for img_file in defaults_source.glob("*.jpg"):
-            shutil.copy(img_file, defaults_dest / img_file.name)
-        print(f"Copied default images to {defaults_dest}")
+    defaults_dest = output_path / "defaults"
+    if defaults_source.exists() and defaults_source.is_dir():
+        shutil.copytree(defaults_source, defaults_dest, dirs_exist_ok=True)
+        print(f"Copied defaults to {defaults_dest}")
     else:
         print(f"Warning: Defaults folder not found at {defaults_source}")
 
     thumbs_dir = output_path / "thumbnails"
-    build_overview_pages(   creators, input_path, output_path,              thumbs_dir, html_settings)
-    build_all_creator_pages(creators, input_path, output_path / "creators", thumbs_dir, html_settings)
-    build_all_project_pages(creators, input_path, output_path / "projects", thumbs_dir, html_settings)
-    build_tags_page(        creators,             output_path,                          html_settings)
+    build_overview_pages(   creators, input_path, output_path, thumbs_dir, html_settings)
+    build_all_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
+    build_all_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
+    build_tags_page(        creators,             output_path,             html_settings)
     
     # Collect all projects
     all_projects = []
@@ -190,7 +187,7 @@ def build_overview_pages(creators: list, input_path: Path, output_path: Path, th
             thumb_path = create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.THUMB)
             thumbnail_url = get_relative_path(thumb_path, output_path)
         else:
-            thumbnail_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
+            thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
 
         # Build search text
         search_terms = [creator['name']]
@@ -248,15 +245,17 @@ def build_all_creator_pages(creators: List[Dict], input_path: Path, out_dir: Pat
 def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = get_creator_slug(creator)
     print(f"Building creator page: {slug}.html")
+    
+    creators_dir = out_dir / "creators"
 
     template = env.get_template("creator_solo.html.j2")
 
     # Process portrait thumbnail
     if creator.get('portrait'):
         thumb_path = create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, out_dir)
+        portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
-        portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
 
     # Compute debut age
     dob = creator.get("date_of_birth")
@@ -289,9 +288,9 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
     for project in sorted(creator.get("projects", []), key=sort_project):
         if project.get('thumbnail'):
             thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, out_dir)
+            thumb_url = get_relative_path(thumb_path, creators_dir)
         else:
-            thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
 
         project_slug = get_project_slug(creator, project)
         projects.append({
@@ -311,9 +310,9 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
         for project in sorted(collab.get("projects", []), key=sort_project):
             if project.get('thumbnail'):
                 thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-                thumb_url = get_relative_path(thumb_path, out_dir)
+                thumb_url = get_relative_path(thumb_path, creators_dir)
             else:
-                thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+                thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
 
             project_slug = get_project_slug(collab, project)
             collab_projects.append({
@@ -345,22 +344,24 @@ def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Pa
         collaborations=collaborations,
     )
 
-    page_path = out_dir / f"{slug}.html"
+    page_path = creators_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
 def build_collaboration_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = get_creator_slug(creator)
     print(f"Building collaboration page: {slug}.html")
+    
+    creators_dir = out_dir / "creators"
 
     template = env.get_template("creator_collaboration.html.j2")
 
     # Process portrait thumbnail
     if creator.get('portrait'):
         thumb_path = create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, out_dir)
+        portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
-        portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
 
     # Prepare tags
     all_tags = set(creator.get("tags", []))
@@ -384,9 +385,9 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
             member_portrait = existing_creator_names[member].get("portrait")
             if member_portrait:
                 thumb_path = create_thumbnail(input_path, Path(member_portrait), thumbs_dir, ThumbType.THUMB)
-                thumb_url = get_relative_path(thumb_path, out_dir)
+                thumb_url = get_relative_path(thumb_path, creators_dir)
             else:
-                thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.THUMB], out_dir)
+                thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.THUMB], creators_dir)
 
             member_links.append({
                 "name": member,
@@ -399,9 +400,9 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     for project in sorted(creator.get("projects", []), key=sort_project):
         if project.get('thumbnail'):
             thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, out_dir)
+            thumb_url = get_relative_path(thumb_path, creators_dir)
         else:
-            thumb_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PROJECT], out_dir)
+            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
 
         project_slug = get_project_slug(creator, project)
         projects.append({
@@ -420,7 +421,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
         projects=projects,
     )
 
-    page_path = out_dir / f"{slug}.html"
+    page_path = creators_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
@@ -434,15 +435,17 @@ def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Pat
 def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: Dict):
     slug = get_project_slug(creator, project)
     print(f"Building project page: {slug}.html")
+    
+    projects_dir = out_dir / "projects"
 
     template = env.get_template("project_page.html.j2")
 
     # Thumbnail
     if project.get('thumbnail'):
         thumb_path = create_thumbnail(root_input, Path(project['thumbnail']), thumbs_dir, ThumbType.POSTER)
-        thumbnail_url = get_relative_path(thumb_path, out_dir)
+        thumbnail_url = get_relative_path(thumb_path, projects_dir)
     else:
-        thumbnail_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.POSTER], out_dir)
+        thumbnail_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.POSTER], projects_dir)
 
     # Tags
     tag_map = {}
@@ -460,9 +463,9 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         if participant:
             if participant.get('portrait'):
                 thumb_path = create_thumbnail(root_input, Path(participant['portrait']), thumbs_dir, ThumbType.PORTRAIT)
-                portrait_url = get_relative_path(thumb_path, out_dir)
+                portrait_url = get_relative_path(thumb_path, projects_dir)
             else:
-                portrait_url = get_relative_path(thumbs_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], out_dir)
+                portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
 
             age_at_release = ""
             if participant.get("date_of_birth") and project.get("release_date"):
@@ -487,8 +490,8 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         images = []
         for image_rel_path in media_group.get("images", []):
             thumb_path = create_thumbnail(root_input, Path(image_rel_path), thumbs_dir, ThumbType.GALLERY)
-            thumb_url = get_relative_path(thumb_path, out_dir)
-            image_name = create_symlink(root_input, Path(image_rel_path), out_dir / "images")
+            thumb_url = get_relative_path(thumb_path, projects_dir)
+            image_name = create_symlink(root_input, Path(image_rel_path), projects_dir / "images")
             full_url = f"images/{image_name}"
 
             images.append({
@@ -498,7 +501,7 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
 
         videos = []
         for video_path in media_group.get("videos", []):
-            video_name = create_symlink(root_input, Path(video_path), out_dir / "videos")
+            video_name = create_symlink(root_input, Path(video_path), projects_dir / "videos")
             videos.append(f"videos/{video_name}")
 
         image_label = html_settings.get("project_page_images_label", "Images")
@@ -537,11 +540,11 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         participants=participants,
         media_groups=media_groups,
         root_input=root_input,
-        out_dir=out_dir,
+        out_dir=projects_dir,
         get_relative_path=get_relative_path,
     )
 
-    page_path = out_dir / f"{slug}.html"
+    page_path = projects_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
