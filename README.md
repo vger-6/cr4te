@@ -143,9 +143,13 @@ Your configuration file should be in JSON format and can override labels and med
     "project_page_creator_profile": "Profile",
     "project_page_videos_label": "Videos",
     "project_page_images_label": "Images",
-
+    
+    "tags_page_title": "Tags",
+    
     "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
-    "visible_project_fields": ["release_date"]
+    "visible_project_fields": ["title", "release_date"],
+    
+    "project_info_layout": "column"
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
@@ -177,6 +181,7 @@ Your configuration file should be in JSON format and can override labels and med
   * `all`: take all images
 * `visible_creator_fields`: Controls which creator attributes (e.g., `aliases`, `nationality`) are shown
 * `visible_project_fields`: Controls which project attributes (e.g., `release_date`) are shown
+* `project_info_layout`: Controls layout of the project overview section. `column` (default) stacks image above text; `row` places them side by side
 
 ---
 

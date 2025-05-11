@@ -145,8 +145,11 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []):
-            thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, output_path)
+            if project.get('thumbnail'):
+                thumb_path = create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
+                thumbnail_url = get_relative_path(thumb_path, output_path)
+            else:
+                thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
             
             project_slug = get_project_slug(creator, project)
             
@@ -155,7 +158,7 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
             all_projects.append({
                 "title": project["title"],
                 "url": f"projects/{project_slug}.html",
-                "thumbnail_url": thumb_url,
+                "thumbnail_url": thumbnail_url,
                 "creator": creator["name"],
                 "search_text": search_text
             })
@@ -516,7 +519,7 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             "images": images,
             "videos": videos
         })
-
+        
     output_html = template.render(
         html_settings=html_settings,
         creator_name=creator["name"],

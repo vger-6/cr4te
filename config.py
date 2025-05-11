@@ -42,7 +42,9 @@ DEFAULT_CONFIG = {
         "tags_page_title": "Tags",
         
         "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
-        "visible_project_fields": ["release_date"]
+        "visible_project_fields": ["title", "release_date"],
+        
+        "project_info_layout": "column"
     },
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"^_",
