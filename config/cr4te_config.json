@@ -23,6 +23,7 @@
     "project_page_creator_profile": "Profile",
     "project_page_videos_label": "Videos",
     "project_page_images_label": "Images",
+    "project_page_documents_label": "Documents",
     "tags_page_title": "Tags",
     "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
     "visible_project_fields": ["title", "release_date"]
