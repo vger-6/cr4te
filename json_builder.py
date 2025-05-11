@@ -114,7 +114,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 image_count += 1
                
             # 3. Match PDF 
-            if compiled_media_rules["PDF_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["PDF_EXCLUDE_RE"].search(rel_path_posix):
+            if compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["documents"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
 

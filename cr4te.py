@@ -20,7 +20,7 @@ def main():
     json_parser = subparsers.add_parser("build-json", help="Generate JSON metadata from media folders")
     json_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     json_parser.add_argument("--config", help="Path to configuration file (optional)")
-    json_parser.add_argument("--mode", choices=[m.value for m in cfg.BuildMode], default=cfg.BuildMode.HYBRID.value, help="Media discovery mode: flat, hybrid (default), deep")
+    json_parser.add_argument("--mode", choices=[m.value for m in cfg.BuildMode], default=cfg.BuildMode.HYBRID.value, help="Media discovery mode: hybrid (default), flat, deep")
     json_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
     json_parser.add_argument("--image-sample-strategy", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images: spread (default), head, all")
 
@@ -29,7 +29,7 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
-    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML (artist [default], director, model)")
+    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML: artist [default], director, author, model")
     
     args = parser.parse_args()
     

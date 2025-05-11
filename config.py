@@ -56,8 +56,8 @@ DEFAULT_CONFIG = {
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
         "IMAGE_EXCLUDE_RE": r"$^",
         
-        "PDF_INCLUDE_RE": r"^[^/\\]+\.pdf$",
-        "PDF_EXCLUDE_RE": r"$^",
+        "DOCUMENT_INCLUDE_RE": r"^[^/\\]+\.pdf$",
+        "DOCUMENT_EXCLUDE_RE": r"$^",
         
         "PORTRAIT_RE": r"^profile\.jpg$",
         "POSTER_RE": r"^cover\.jpg$",
@@ -72,6 +72,7 @@ DEFAULT_CONFIG = {
 class HtmlPreset(str, Enum):
     ARTIST = "artist"
     DIRECTOR = "director"
+    AUTHOR = "author"
     MODEL = "model"
 
 class BuildMode(str, Enum):
@@ -112,6 +113,19 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Works",
                 "project_page_creator_profile": "Profile"
             }
+        case HtmlPreset.AUTHOR:
+            return {
+                "nav_creators_label": "Author",
+                "nav_projects_label": "Books",
+                "overview_page_title": "Author",
+                "overview_page_search_placeholder": "Search author, books, tags...",
+                "project_overview_page_title": "Books",
+                "project_overview_page_search_placeholder": "Search books, tags...",
+                "creator_page_projects_title": "Books",
+                "creator_page_collabs_title_prefix": "With",
+                "collaboration_page_projects_title": "Books",
+                "project_page_creator_profile": "Profile"
+            }
         case HtmlPreset.MODEL:
             return {
                 "nav_creators_label": "Models",
@@ -141,7 +155,9 @@ def get_build_rules(mode: BuildMode) -> Dict:
                 "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r"^[^/\\]+\.jpg$",
-                "IMAGE_EXCLUDE_RE": r"$^"
+                "IMAGE_EXCLUDE_RE": r"$^",
+                "DOCUMENT_INCLUDE_RE": r"^[^/\\]+\.pdf$",
+                "DOCUMENT_EXCLUDE_RE": r"$^"
             }
         case BuildMode.DEEP:
             return {
@@ -149,7 +165,9 @@ def get_build_rules(mode: BuildMode) -> Dict:
                 "VIDEO_INCLUDE_RE": r".*\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r".*\.jpg$",
-                "IMAGE_EXCLUDE_RE": r"$^"
+                "IMAGE_EXCLUDE_RE": r"$^",
+                "DOCUMENT_INCLUDE_RE": r".*\.pdf$",
+                "DOCUMENT_EXCLUDE_RE": r"$^"
             }
         case BuildMode.HYBRID:
             return {}  # Use the base/default media_rules
@@ -207,7 +225,7 @@ def compile_media_rules(media_rules: Dict) -> Dict:
         "GLOBAL_EXCLUDE_RE", 
         "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", 
         "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE", 
-        "PDF_INCLUDE_RE", "PDF_EXCLUDE_RE",
+        "DOCUMENT_INCLUDE_RE", "DOCUMENT_EXCLUDE_RE",
         "PORTRAIT_RE", "POSTER_RE"
     }
     enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
