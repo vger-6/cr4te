@@ -75,6 +75,7 @@ DEFAULT_CONFIG = {
 
 class HtmlPreset(str, Enum):
     ARTIST = "artist"
+    MUSICIAN = "musician"
     DIRECTOR = "director"
     AUTHOR = "author"
     MODEL = "model"
@@ -103,6 +104,20 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile": "Profile",
                 "project_page_videos_label": "Movie"
+            }
+        case HtmlPreset.MUSICIAN:
+            return {
+                "nav_creators_label": "Musicians",
+                "nav_projects_label": "Albums",
+                "overview_page_title": "Musicians",
+                "overview_page_search_placeholder": "Search musicians, albums, tags...",
+                "project_overview_page_title": "Albums",
+                "project_overview_page_search_placeholder": "Search albums, tags...",
+                "creator_page_projects_title": "Albums",
+                "creator_page_collabs_title_prefix": "With",
+                "collaboration_page_projects_title": "Albums",
+                "project_page_audio_label": "Tracks",
+                "project_page_creator_profile": "Profile",
             }
         case HtmlPreset.ARTIST:
             return {
