@@ -494,6 +494,11 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         for video_path in media_group.get("videos", []):
             video_name = create_symlink(root_input, Path(video_path), projects_dir / "videos")
             videos.append(f"videos/{video_name}")
+            
+        documents = []
+        for documents_path in media_group.get("documents", []):
+            documents_name = create_symlink(root_input, Path(documents_path), projects_dir / "documents")
+            documents.append(f"documents/{documents_name}")
 
         image_label = html_settings.get("project_page_images_label", "Images")
         video_label = html_settings.get("project_page_videos_label", "Videos")
@@ -512,12 +517,14 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             else:
                 image_label = f"{folder_name} - {image_label}"
                 video_label = f"{folder_name} - {video_label}"
-
+                        
         media_groups.append({
             "image_label": image_label,
             "video_label": video_label,
+            "document_label": html_settings.get("project_page_documents_label", "Documents"),
             "images": images,
-            "videos": videos
+            "videos": videos,
+            "documents": documents
         })
         
     output_html = template.render(

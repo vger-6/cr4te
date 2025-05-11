@@ -38,6 +38,7 @@ DEFAULT_CONFIG = {
         "project_page_creator_profile": "Creator Profile",
         "project_page_videos_label": "Videos",
         "project_page_images_label": "Images",
+        "project_page_documents_label": "Documents",
         
         "tags_page_title": "Tags",
         
@@ -51,8 +52,12 @@ DEFAULT_CONFIG = {
         
         "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
         "VIDEO_EXCLUDE_RE": r"$^",
+        
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
         "IMAGE_EXCLUDE_RE": r"$^",
+        
+        "PDF_INCLUDE_RE": r"^[^/\\]+\.pdf$",
+        "PDF_EXCLUDE_RE": r"$^",
         
         "PORTRAIT_RE": r"^profile\.jpg$",
         "POSTER_RE": r"^cover\.jpg$",
@@ -202,6 +207,7 @@ def compile_media_rules(media_rules: Dict) -> Dict:
         "GLOBAL_EXCLUDE_RE", 
         "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", 
         "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE", 
+        "PDF_INCLUDE_RE", "PDF_EXCLUDE_RE",
         "PORTRAIT_RE", "POSTER_RE"
     }
     enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}

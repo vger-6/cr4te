@@ -82,7 +82,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         existing_projects = existing_data.get("projects", [])
         project_data = next((s for s in existing_projects if s.get("title") == project_title), {})
 
-        media_map = defaultdict(lambda: {"images": [], "videos": []})
+        media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": []})
         image_count = 0
         video_count = 0
 
@@ -112,6 +112,11 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 media_map[folder_key]["images"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                 image_count += 1
+               
+            # 3. Match PDF 
+            if compiled_media_rules["PDF_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["PDF_EXCLUDE_RE"].search(rel_path_posix):
+                media_map[folder_key]["documents"].append(str(rel_to_input))
+                media_map[folder_key]["is_root"] = is_root
 
         # Find thumbnail
         all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
@@ -139,6 +144,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 "is_root": group["is_root"],
                 "videos": group["videos"],
                 "images": sampled_images,
+                "documents": group["documents"],
                 "folder_name": folder_name
             }
             

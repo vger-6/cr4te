@@ -125,6 +125,17 @@
         </div>
       </div>
       {% endif %}
+      
+      {% if group.documents %}
+      <div class="section-box">
+        <div class="section-title">{{ group.document_label }}</div>
+        <div class="document-gallery">
+          {% for document in group.documents %}
+            <iframe src="{{ document }}" width="100%" height="500px" style="border: none;"></iframe>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
     {% endfor %}
 
   </div>
