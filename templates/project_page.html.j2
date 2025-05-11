@@ -107,6 +107,27 @@
         </div>
       </div>
       {% endif %}
+      
+      {% if group.audio %}
+      <div class="section-box">
+        <div class="section-title">{{ group.audio_label }}</div>
+        <div class="audio-gallery">
+          <ul id="track-list-{{ loop.index }}">
+            {% for track in group.audio %}
+              <li 
+                data-src="{{ track.full_url }}" 
+                onclick="playSelectedTrack(this)"
+                class="track-title">
+                {{ track.name }}
+              </li>
+            {% endfor %}
+          </ul>
+          <audio id="audio-player-{{ loop.index }}" controls onended="playNextTrack(this)">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+      </div>
+      {% endif %}
 
       {% if group.images %}
       <div class="section-box">
@@ -143,6 +164,7 @@
 </div>
 
 <script src="../js/theme.js" defer></script>
+<script src="../js/audio_player.js" defer></script>
 
 </body>
 </html>

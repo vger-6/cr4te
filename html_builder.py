@@ -483,17 +483,25 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             thumb_path = create_thumbnail(root_input, Path(image_rel_path), thumbs_dir, ThumbType.GALLERY)
             thumb_url = get_relative_path(thumb_path, projects_dir)
             image_name = create_symlink(root_input, Path(image_rel_path), projects_dir / "images")
-            full_url = f"images/{image_name}"
-
+            
             images.append({
                 "thumb_url": thumb_url,
-                "full_url": full_url
+                "full_url": f"images/{image_name}"
             })
 
         videos = []
         for video_path in media_group.get("videos", []):
             video_name = create_symlink(root_input, Path(video_path), projects_dir / "videos")
             videos.append(f"videos/{video_name}")
+            
+        audio = []
+        for audio_path in media_group.get("audio", []):
+            audio_name = create_symlink(root_input, Path(audio_path), projects_dir / "audio")
+            
+            audio.append({
+                "full_url": f"audio/{audio_name}",
+                "name": Path(audio_path).stem
+            })
             
         documents = []
         for documents_path in media_group.get("documents", []):
@@ -502,6 +510,10 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
 
         image_label = html_settings.get("project_page_images_label", "Images")
         video_label = html_settings.get("project_page_videos_label", "Videos")
+        audio_label = html_settings.get("project_page_audio_label", "Audios")
+        document_label = html_settings.get("project_page_documents_label", "Documents")
+        
+        # TODO: audio and documents should be part of this logic too
         is_root = media_group.get("is_root", False)
         if not is_root:
             has_images = bool(images)
@@ -521,9 +533,11 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         media_groups.append({
             "image_label": image_label,
             "video_label": video_label,
-            "document_label": html_settings.get("project_page_documents_label", "Documents"),
+            "audio_label": audio_label,
+            "document_label": document_label,
             "images": images,
             "videos": videos,
+            "audio": audio,
             "documents": documents
         })
         

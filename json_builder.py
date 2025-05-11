@@ -82,9 +82,10 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         existing_projects = existing_data.get("projects", [])
         project_data = next((s for s in existing_projects if s.get("title") == project_title), {})
 
-        media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": []})
+        media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": []})
         image_count = 0
         video_count = 0
+        audio_count = 0
 
         for file in project_dir.rglob("*"):
             if not file.is_file():
@@ -105,16 +106,21 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 media_map[folder_key]["videos"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                 video_count += 1
-                continue
+            
+            # 2. Match audio
+            elif compiled_media_rules["AUDIO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["AUDIO_EXCLUDE_RE"].search(rel_path_posix):
+                media_map[folder_key]["audio"].append(str(rel_to_input))
+                media_map[folder_key]["is_root"] = is_root
+                audio_count += 1
 
-            # 3. Match image
-            if compiled_media_rules["IMAGE_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["IMAGE_EXCLUDE_RE"].search(rel_path_posix):
+            # 4. Match image
+            elif compiled_media_rules["IMAGE_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["IMAGE_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["images"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                 image_count += 1
                
             # 3. Match PDF 
-            if compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
+            elif compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["documents"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
 
@@ -142,7 +148,8 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             
             media_group = {
                 "is_root": group["is_root"],
-                "videos": group["videos"],
+                "videos": sorted(group["videos"]),
+                "audio": sorted(group["audio"]),
                 "images": sampled_images,
                 "documents": group["documents"],
                 "folder_name": folder_name
@@ -157,6 +164,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "info": read_readme_text(project_dir) or project_data.get("info", ""),
             "image_count": image_count,
             "video_count": video_count,
+            "audio_count": audio_count,
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
         })

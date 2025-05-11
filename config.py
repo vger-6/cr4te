@@ -37,6 +37,7 @@ DEFAULT_CONFIG = {
         "project_page_tags_title": "Tags",
         "project_page_creator_profile": "Creator Profile",
         "project_page_videos_label": "Videos",
+        "project_page_audio_label": "Audio",
         "project_page_images_label": "Images",
         "project_page_documents_label": "Documents",
         
@@ -52,6 +53,9 @@ DEFAULT_CONFIG = {
         
         "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
         "VIDEO_EXCLUDE_RE": r"$^",
+        
+        "AUDIO_INCLUDE_RE": r"^[^/\\]+\.m4a$",
+        "AUDIO_EXCLUDE_RE": r"$^",
         
         "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
         "IMAGE_EXCLUDE_RE": r"$^",
@@ -154,6 +158,8 @@ def get_build_rules(mode: BuildMode) -> Dict:
                 "GLOBAL_EXCLUDE_RE": r"^_",
                 "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
+                "AUDIO_INCLUDE_RE": r"^[^/\\]+\.m4a$",
+                "AUDIO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r"^[^/\\]+\.jpg$",
                 "IMAGE_EXCLUDE_RE": r"$^",
                 "DOCUMENT_INCLUDE_RE": r"^[^/\\]+\.pdf$",
@@ -164,6 +170,8 @@ def get_build_rules(mode: BuildMode) -> Dict:
                 "GLOBAL_EXCLUDE_RE": r"^_",
                 "VIDEO_INCLUDE_RE": r".*\.mp4$",
                 "VIDEO_EXCLUDE_RE": r"$^",
+                "AUDIO_INCLUDE_RE": r".*\.m4a$",
+                "AUDIO_EXCLUDE_RE": r"$^",
                 "IMAGE_INCLUDE_RE": r".*\.jpg$",
                 "IMAGE_EXCLUDE_RE": r"$^",
                 "DOCUMENT_INCLUDE_RE": r".*\.pdf$",
@@ -224,6 +232,7 @@ def compile_media_rules(media_rules: Dict) -> Dict:
     regex_keys = {
         "GLOBAL_EXCLUDE_RE", 
         "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", 
+        "AUDIO_INCLUDE_RE", "AUDIO_EXCLUDE_RE",
         "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE", 
         "DOCUMENT_INCLUDE_RE", "DOCUMENT_EXCLUDE_RE",
         "PORTRAIT_RE", "POSTER_RE"
