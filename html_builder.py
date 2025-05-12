@@ -478,8 +478,12 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
     # Media groups
     media_groups = []
     for media_group in project.get("media_groups", []):
+        featured = media_group.get("featured_images", [])
+        sampled = media_group.get("images", [])
+        image_rel_paths = featured + [img for img in sampled if img not in featured]
+    
         images = []
-        for image_rel_path in media_group.get("images", []):
+        for image_rel_path in image_rel_paths:
             thumb_path = create_thumbnail(root_input, Path(image_rel_path), thumbs_dir, ThumbType.GALLERY)
             thumb_url = get_relative_path(thumb_path, projects_dir)
             image_name = create_symlink(root_input, Path(image_rel_path), projects_dir / "images")

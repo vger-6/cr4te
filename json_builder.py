@@ -56,6 +56,9 @@ def find_image_by_orientation(images: List[Path], orientation: Orientation = Ori
     return None
 
 def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
+    if max_images <= 0:
+        return []
+
     sorted_images = sorted(images)
 
     match strategy:
@@ -72,15 +75,16 @@ def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrat
             return sorted_images  # fallback
 
 def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
+    existing_projects = {p["title"]: p for p in existing_data.get("projects", []) if "title" in p}
+    
     projects_data = []
-
     for project_dir in sorted(creator_path.iterdir()):
         if not project_dir.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(project_dir.name):
             continue
 
         project_title = project_dir.name.strip()
-        existing_projects = existing_data.get("projects", [])
-        project_data = next((s for s in existing_projects if s.get("title") == project_title), {})
+        project_data = existing_projects.get(project_title, {})
+        existing_media_groups = {g.get("folder_name"): g for g in project_data.get("media_groups", []) if "folder_name" in g}
 
         media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": []})
         image_count = 0
@@ -123,7 +127,30 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             elif compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["documents"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
-
+            
+        # Build media_groups list from the grouped map
+        media_groups = []
+        for folder_name, group in media_map.items():
+            existing_media_group = existing_media_groups.get(folder_name, {})
+            
+            sampled_images = sample_images(
+                group["images"],
+                compiled_media_rules.get("MAX_IMAGES", 20),
+                compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
+            )
+            
+            media_group = {
+                "is_root": group["is_root"],
+                "videos": sorted(group["videos"]),
+                "audio": sorted(group["audio"]),
+                "images": sampled_images,
+                "featured_images": existing_media_group.get("featured_images", []),
+                "documents": group["documents"],
+                "folder_name": folder_name
+            }
+            
+            media_groups.append(media_group)
+            
         # Find thumbnail
         all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
         poster_re = compiled_media_rules.get("POSTER_RE")
@@ -136,28 +163,8 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             poster = find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
             if poster:
                 thumbnail_path = str(poster.relative_to(input_path))
-                        
-        # Build media_groups list from the grouped map
-        media_groups = []
-        for folder_name, group in media_map.items():
-            sampled_images = sample_images(
-                group["images"],
-                compiled_media_rules.get("MAX_IMAGES", 20),
-                compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
-            )
-            
-            media_group = {
-                "is_root": group["is_root"],
-                "videos": sorted(group["videos"]),
-                "audio": sorted(group["audio"]),
-                "images": sampled_images,
-                "documents": group["documents"],
-                "folder_name": folder_name
-            }
-            
-            media_groups.append(media_group)
 
-        projects_data.append({
+        project_data = {
             "title": project_title,
             "release_date": validate_date_string(project_data.get("release_date", "")),
             "thumbnail": thumbnail_path,
@@ -167,7 +174,9 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "audio_count": audio_count,
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
-        })
+        }
+        
+        projects_data.append(project_data)
 
     return projects_data
 
