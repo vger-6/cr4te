@@ -87,10 +87,6 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         existing_media_groups = {g.get("folder_name"): g for g in project_data.get("media_groups", []) if "folder_name" in g}
 
         media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": []})
-        image_count = 0
-        video_count = 0
-        audio_count = 0
-
         for file in project_dir.rglob("*"):
             if not file.is_file():
                 continue
@@ -109,19 +105,16 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             if compiled_media_rules["VIDEO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["VIDEO_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["videos"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
-                video_count += 1
             
             # 2. Match audio
             elif compiled_media_rules["AUDIO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["AUDIO_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["audio"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
-                audio_count += 1
 
             # 4. Match image
             elif compiled_media_rules["IMAGE_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["IMAGE_EXCLUDE_RE"].search(rel_path_posix):
                 media_map[folder_key]["images"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
-                image_count += 1
                
             # 3. Match PDF 
             elif compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
@@ -142,10 +135,13 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             media_group = {
                 "is_root": group["is_root"],
                 "videos": sorted(group["videos"]),
+                "featured_videos": existing_media_group.get("featured_videos", None),
                 "audio": sorted(group["audio"]),
+                "featured_audio": existing_media_group.get("featured_audio", None),
                 "images": sampled_images,
-                "featured_images": existing_media_group.get("featured_images", []),
+                "featured_images": existing_media_group.get("featured_images", None),
                 "documents": group["documents"],
+                "featured_documents": existing_media_group.get("featured_documents", None),
                 "folder_name": folder_name
             }
             
@@ -169,9 +165,6 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "release_date": validate_date_string(project_data.get("release_date", "")),
             "thumbnail": thumbnail_path,
             "info": read_readme_text(project_dir) or project_data.get("info", ""),
-            "image_count": image_count,
-            "video_count": video_count,
-            "audio_count": audio_count,
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
         }

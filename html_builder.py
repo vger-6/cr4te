@@ -478,11 +478,8 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
     # Media groups
     media_groups = []
     for media_group in project.get("media_groups", []):
-        featured = media_group.get("featured_images", [])
-        sampled = media_group.get("images", [])
-        image_rel_paths = featured + [img for img in sampled if img not in featured]
-    
         images = []
+        image_rel_paths =  media_group["featured_images"] if media_group.get("featured_images") is not None else media_group.get("images", [])
         for image_rel_path in image_rel_paths:
             thumb_path = create_thumbnail(root_input, Path(image_rel_path), thumbs_dir, ThumbType.GALLERY)
             thumb_url = get_relative_path(thumb_path, projects_dir)
@@ -494,12 +491,14 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             })
 
         videos = []
-        for video_path in media_group.get("videos", []):
+        video_rel_paths =  media_group["featured_videos"] if media_group.get("featured_videos") is not None else media_group.get("videos", [])
+        for video_path in video_rel_paths:
             video_name = create_symlink(root_input, Path(video_path), projects_dir / "videos")
             videos.append(f"videos/{video_name}")
             
         audio = []
-        for audio_path in media_group.get("audio", []):
+        audio_rel_paths =  media_group["featured_audio"] if media_group.get("featured_audio") is not None else media_group.get("audio", [])
+        for audio_path in audio_rel_paths:
             audio_name = create_symlink(root_input, Path(audio_path), projects_dir / "audio")
             
             audio.append({
@@ -508,7 +507,8 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             })
             
         documents = []
-        for documents_path in media_group.get("documents", []):
+        document_rel_paths =  media_group["featured_documents"] if media_group.get("featured_documents") is not None else media_group.get("documents", [])
+        for documents_path in document_rel_paths:
             documents_name = create_symlink(root_input, Path(documents_path), projects_dir / "documents")
             documents.append(f"documents/{documents_name}")
 
