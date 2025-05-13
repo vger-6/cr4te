@@ -416,6 +416,18 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
 
+def label_for_type(folder_name: str, label: str, active_types: list[str], current_type: str) -> str:
+    """
+    Returns a label for the media section based on what types are present.
+
+    - If only one type is active, return folder_name only.
+    - If multiple types, return "folder_name - label".
+    """
+    folder_name = folder_name.replace("/", " - ").strip()
+    if len(active_types) == 1 and current_type in active_types:
+        return folder_name
+    return f"{folder_name} - {label}"
+
 def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: Dict):
     print("Generating project pages...")
     
@@ -517,22 +529,30 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
         audio_label = html_settings.get("project_page_audio_label", "Audios")
         document_label = html_settings.get("project_page_documents_label", "Documents")
         
-        # TODO: audio and documents should be part of this logic too
         is_root = media_group.get("is_root", False)
+        folder_name = media_group.get("folder_name", "")
+
         if not is_root:
-            has_images = bool(images)
-            has_videos = bool(videos)
-            
-            folder_name = media_group.get("folder_name", "").replace("/", " - ")
-            if has_videos and not has_images:
-                image_label = ""
-                video_label = folder_name
-            elif has_images and not has_videos:
-                image_label = folder_name
-                video_label = ""
-            else:
-                image_label = f"{folder_name} - {image_label}"
-                video_label = f"{folder_name} - {video_label}"
+            active_types = []
+            if images:
+                active_types.append("images")
+            if videos:
+                active_types.append("videos")
+            if audio:
+                active_types.append("audio")
+            if documents:
+                active_types.append("documents")
+
+            image_label = label_for_type(folder_name, html_settings["project_page_images_label"], active_types, "images")
+            video_label = label_for_type(folder_name, html_settings["project_page_videos_label"], active_types, "videos")
+            audio_label = label_for_type(folder_name, html_settings["project_page_audio_label"], active_types, "audio")
+            document_label = label_for_type(folder_name, html_settings["project_page_documents_label"], active_types, "documents")
+        else:
+            # For root folders, use plain labels
+            image_label = html_settings["project_page_images_label"]
+            video_label = html_settings["project_page_videos_label"]
+            audio_label = html_settings["project_page_audio_label"]
+            document_label = html_settings["project_page_documents_label"]
                         
         media_groups.append({
             "image_label": image_label,
