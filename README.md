@@ -157,7 +157,9 @@ Your configuration file should be in JSON format and can override labels and med
     "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
     "visible_project_fields": ["title", "release_date"],
     
-    "project_info_layout": "column"
+    "project_info_layout": "column",
+    
+    "project_page_image_pagination_limit" : 20
   },
   "media_rules": {
     "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",

@@ -77,6 +77,28 @@ video {
   object-fit: contain;
 }
 
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.pagination-controls button {
+  background: var(--box-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+.pagination-controls button.active {
+  font-weight: bold;
+  background: var(--highlight-color);
+  color: white;
+  cursor: default;
+}
+
 .document-gallery {
   display: flex;
   flex-direction: column;

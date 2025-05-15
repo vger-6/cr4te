@@ -130,21 +130,20 @@
       {% endif %}
 
       {% if group.images %}
-      <div class="section-box">
-        <div class="section-title">{{ group.image_label }}</div>
-        <hr>
-        <div class="section-content">
-          <div class="image-gallery">
-          {% for row in group.images | batch(4, fill_with=None) %}
-            {% for image in row if image %}
-                  <a href="{{ image.full_url }}" target="_blank" class="image-wrapper">
-                    <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}" loading="lazy">
-                  </a>
-            {% endfor %}
-          {% endfor %}
+        <div class="section-box">
+          <div class="section-title">{{ group.image_label }}</div>
+          <hr>
+          <div class="section-content">
+            <div class="image-gallery paginated-gallery" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
+              {% for image in group.images %}
+                <a href="{{ image.full_url }}" target="_blank" class="image-wrapper">
+                  <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}" loading="lazy">
+                </a>
+              {% endfor %}
+            </div>
+            <div class="pagination-controls"></div>
           </div>
         </div>
-      </div>
       {% endif %}
       
       {% if group.documents %}
