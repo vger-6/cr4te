@@ -4,7 +4,7 @@
   <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ html_settings.overview_page_title }}</title>
+  <title>{{ html_settings.creator_overview_page_title }}</title>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/creator.css">
 </head>
@@ -17,14 +17,13 @@
   {% include "_theme_dropdown.html.j2" %}
 </div>
 
-<h1>{{ html_settings.overview_page_title }}</h1>
+<h1>{{ html_settings.creator_overview_page_title }}</h1>
 
 <div class="search-bar-wrapper">
-  <input type="text" id="search-input" placeholder="{{ html_settings.overview_page_search_placeholder }}" class="search-box">
+  <input type="text" id="search-input" placeholder="{{ html_settings.creator_overview_page_search_placeholder }}" class="search-box">
 </div>
 
 <div class="creator-box">
-  <hr>
   <div class="creator-gallery">
 
     {% for creator in creator_entries %}
@@ -39,8 +38,8 @@
   </div>
 </div>
 
-<script src="js/filter.js"></script>
-<script src="js/theme.js" defer></script>
+<script src="js/filter_creators.js"></script>
+<script src="js/theme_selector.js" defer></script>
 
 </body>
 </html>

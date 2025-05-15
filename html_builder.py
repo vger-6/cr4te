@@ -136,10 +136,10 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     copy_asset_folder(SCRIPT_DIR, "defaults", output_path)
     
     thumbs_dir = output_path / "thumbnails"
-    build_overview_pages(   creators, input_path, output_path, thumbs_dir, html_settings)
-    build_all_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
-    build_all_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
-    build_tags_page(        creators,             output_path,             html_settings)
+    build_creator_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
+    build_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
+    build_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
+    build_tags_page(creators, output_path, html_settings)
     
     # Collect all projects
     all_projects = []
@@ -166,10 +166,10 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     # Build project overview page
     build_project_overview_page(all_projects, input_path, output_path, html_settings)
 
-def build_overview_pages(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
+def build_creator_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating overview page...")
 
-    template = env.get_template("overview.html.j2")
+    template = env.get_template("creator_overview.html.j2")
 
     creator_entries = []
 
@@ -224,22 +224,22 @@ def build_project_overview_page(projects: List[dict], input_path: Path, output_p
         f.write(rendered)
 
 
-def build_all_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def build_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     print("Generating creator pages...")
     
     for creator in creators:
         if not creator["is_collaboration"]:
-            build_solo_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
+            build_creator_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
         else:
             build_collaboration_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
 
-def build_solo_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def build_creator_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = get_creator_slug(creator)
     print(f"Building creator page: {slug}.html")
     
     creators_dir = out_dir / "creators"
 
-    template = env.get_template("creator_solo.html.j2")
+    template = env.get_template("creator.html.j2")
 
     # Process portrait thumbnail
     if creator.get('portrait'):
@@ -345,7 +345,7 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     
     creators_dir = out_dir / "creators"
 
-    template = env.get_template("creator_collaboration.html.j2")
+    template = env.get_template("collaboration.html.j2")
 
     # Process portrait thumbnail
     if creator.get('portrait'):
@@ -428,7 +428,7 @@ def label_for_type(folder_name: str, label: str, active_types: list[str], curren
         return folder_name
     return f"{folder_name} - {label}"
 
-def build_all_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: Dict):
+def build_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: Dict):
     print("Generating project pages...")
     
     for creator in creators:
@@ -441,7 +441,7 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
     
     projects_dir = out_dir / "projects"
 
-    template = env.get_template("project_page.html.j2")
+    template = env.get_template("project.html.j2")
 
     # Thumbnail
     if project.get('thumbnail'):

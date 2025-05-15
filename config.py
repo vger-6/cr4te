@@ -14,8 +14,8 @@ DEFAULT_CONFIG = {
         "nav_projects_label": "Projects",
         "nav_tags_label": "Tags",
         
-        "overview_page_title": "Creators",
-        "overview_page_search_placeholder": "Search creators, projects, tags...",
+        "creator_overview_page_title": "Creators",
+        "creator_overview_page_search_placeholder": "Search creators, projects, tags...",
         
         "project_overview_page_title": "Projects",
         "project_overview_page_search_placeholder": "Search projects, tags...",
@@ -95,8 +95,8 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
             return {
                 "nav_creators_label": "Directors",
                 "nav_projects_label": "Movies",
-                "overview_page_title": "Directors",
-                "overview_page_search_placeholder": "Search directors, movies, tags...",
+                "creator_overview_page_title": "Directors",
+                "creator_overview_page_search_placeholder": "Search directors, movies, tags...",
                 "project_overview_page_title": "Movies",
                 "project_overview_page_search_placeholder": "Search movies, tags...",
                 "creator_page_projects_title": "Movies",
@@ -109,8 +109,8 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
             return {
                 "nav_creators_label": "Musicians",
                 "nav_projects_label": "Albums",
-                "overview_page_title": "Musicians",
-                "overview_page_search_placeholder": "Search musicians, albums, tags...",
+                "creator_overview_page_title": "Musicians",
+                "creator_overview_page_search_placeholder": "Search musicians, albums, tags...",
                 "project_overview_page_title": "Albums",
                 "project_overview_page_search_placeholder": "Search albums, tags...",
                 "creator_page_projects_title": "Albums",
@@ -123,8 +123,8 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
             return {
                 "nav_creators_label": "Artists",
                 "nav_projects_label": "Works",
-                "overview_page_title": "Artists",
-                "overview_page_search_placeholder": "Search artists, works, tags...",
+                "creator_overview_page_title": "Artists",
+                "creator_overview_page_search_placeholder": "Search artists, works, tags...",
                 "project_overview_page_title": "Works",
                 "project_overview_page_search_placeholder": "Search works, tags...",
                 "creator_page_projects_title": "Works",
@@ -136,8 +136,8 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
             return {
                 "nav_creators_label": "Author",
                 "nav_projects_label": "Books",
-                "overview_page_title": "Author",
-                "overview_page_search_placeholder": "Search author, books, tags...",
+                "creator_overview_page_title": "Author",
+                "creator_overview_page_search_placeholder": "Search author, books, tags...",
                 "project_overview_page_title": "Books",
                 "project_overview_page_search_placeholder": "Search books, tags...",
                 "creator_page_projects_title": "Books",
@@ -149,8 +149,8 @@ def get_html_label_presets(preset: HtmlPreset) -> Dict:
             return {
                 "nav_creators_label": "Models",
                 "nav_projects_label": "Scenes",
-                "overview_page_title": "Models",
-                "overview_page_search_placeholder": "Search models, scenes, tags...",
+                "creator_overview_page_title": "Models",
+                "creator_overview_page_search_placeholder": "Search models, scenes, tags...",
                 "project_overview_page_title": "Scenes",
                 "project_overview_page_search_placeholder": "Search scenes, tags...",
                 "creator_page_projects_title": "Scenes",

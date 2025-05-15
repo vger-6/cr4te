@@ -126,8 +126,8 @@ Your configuration file should be in JSON format and can override labels and med
     "nav_projects_label": "Movies",
     "nav_tags_label": "Tags",
 
-    "overview_page_title": "Directors",
-    "overview_page_search_placeholder": "Search directors, movies, tags...",
+    "creator_overview_page_title": "Directors",
+    "creator_overview_page_search_placeholder": "Search directors, movies, tags...",
     "project_overview_page_title": "Movies",
     "project_overview_page_search_placeholder": "Search movies, tags...",
 

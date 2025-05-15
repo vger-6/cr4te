@@ -30,7 +30,6 @@
 </div>
 
 <div class="creator-box">
-  <hr>
   <div class="creator-gallery">
     {% for project in projects %}
     <div class="project-entry" data-title="{{ project.title }}" data-text="{{ project.search_text | default('') }}">
@@ -45,7 +44,7 @@
 </div>
 
 <script src="js/filter_projects.js"></script>
-<script src="js/theme.js" defer></script>
+<script src="js/theme_selector.js" defer></script>
 
 </body>
 </html>
