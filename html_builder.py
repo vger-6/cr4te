@@ -63,7 +63,7 @@ def collect_creator_data(input_path: Path) -> List[Dict]:
         
 def create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thumb_type: ThumbType) -> Path:
     ext = thumb_type.suffix
-    slug = slugify('_'.join(relative_path.parent.parts))
+    slug = slugify('__'.join(relative_path.parent.parts))
     thumb_path = dest_dir / slug / (relative_path.stem + ext)
 
     if not thumb_path.exists():
@@ -80,7 +80,7 @@ def create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thum
 def create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> str:
     ext = relative_path.suffix.lower()
     slug_parts = relative_path.parent.parts + (relative_path.stem,) 
-    base = slugify('_'.join(slug_parts))
+    base = slugify('__'.join(slug_parts))
     dest_file = dest_dir / f"{base}{ext}"
 
     dest_file.parent.mkdir(parents=True, exist_ok=True)
@@ -111,7 +111,7 @@ def get_creator_slug(creator: Dict) -> str:
     return slugify(creator['name'])
     
 def get_project_slug(creator: Dict, project: Dict) -> str:
-    return slugify(f"{creator['name']}_{project['title']}")
+    return slugify(f"{creator['name']}__{project['title']}")
     
 def copy_asset_folder(src_root: Path, folder_name: str, output_root: Path):
     src = src_root / folder_name
