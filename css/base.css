@@ -219,7 +219,7 @@ a:focus {
   border: 2px solid var(--border-color);
   background-color: var(--box-bg);
   padding: 0;
-  margin-bottom: 0rem;
+  margin-bottom: 1rem;
 }
 
 .section-title {
