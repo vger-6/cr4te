@@ -24,21 +24,18 @@ video {
 .audio-gallery ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
-
-/*.audio-gallery li:nth-child(odd) {
-  background-color: var(--box-bg); 
-}
-
-.audio-gallery li:nth-child(even) {
-  background-color: var(--border-color)
-}*/
 
 .audio-gallery li {
   cursor: pointer;
   padding: 0.5rem 1rem;
-  background-color: var(--box-bg); 
+  background-color: var(--track-odd);
   color: var(--text-color);
+}
+
+.audio-gallery li:nth-child(even) {
+  background-color: var(--track-even);
 }
 
 .audio-gallery li:hover {
