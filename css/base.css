@@ -140,6 +140,20 @@ h1 {
   border-radius: 0.5rem;
 }
 
+.markdown h1, .markdown h2 {
+  margin-top: 1rem;
+  color: var(--text-color);
+  background-color: initial;
+  padding: initial;
+  margin-bottom: initial;
+  border-radius: initial;
+}
+
+.markdown ul {
+  padding-left: 1.5em;
+  list-style: disc;
+}
+
 a {
   color: var(--link-color);
   text-decoration: none;
@@ -298,13 +312,4 @@ a:focus {
   color: var(--link-disabled-color);
   cursor: default;
   text-decoration: none;
-}
-
-.markdown h1, .markdown h2 {
-  margin-top: 1em;
-}
-
-.markdown ul {
-  padding-left: 1.5em;
-  list-style: disc;
 }
