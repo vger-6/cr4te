@@ -27,7 +27,7 @@ class ThumbType(Enum):
     PORTRAIT = ("_portrait.jpg", 600)
     POSTER = ("_poster.jpg", 800)
     PROJECT = ("_project.jpg", 800)
-    GALLERY = ("_gallery.jpg", 400)
+    GALLERY = ("_gallery.jpg", 600)
 
     def __init__(self, suffix: str, height: int):
         self.suffix = suffix

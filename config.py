@@ -53,16 +53,16 @@ DEFAULT_CONFIG = {
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"^_",
         
-        "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
+        "VIDEO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp4|m4v)$",
         "VIDEO_EXCLUDE_RE": r"$^",
         
-        "AUDIO_INCLUDE_RE": r"^[^/\\]+\.m4a$",
+        "AUDIO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp3|m4a)$",
         "AUDIO_EXCLUDE_RE": r"$^",
         
-        "IMAGE_INCLUDE_RE": r"^[^/\\]+/[^/\\]+\.jpg$",
+        "IMAGE_INCLUDE_RE": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",
         "IMAGE_EXCLUDE_RE": r"$^",
         
-        "DOCUMENT_INCLUDE_RE": r"^[^/\\]+\.pdf$",
+        "DOCUMENT_INCLUDE_RE": r"(?i)^[^/\\]+\.pdf$",
         "DOCUMENT_EXCLUDE_RE": r"$^",
         
         "PORTRAIT_RE": r"^profile\.jpg$",
@@ -173,25 +173,25 @@ def get_build_rules(mode: BuildMode) -> Dict:
         case BuildMode.FLAT:
             return {
                 "GLOBAL_EXCLUDE_RE": r"^_",
-                "VIDEO_INCLUDE_RE": r"^[^/\\]+\.mp4$",
+                "VIDEO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp4|m4v)$",
                 "VIDEO_EXCLUDE_RE": r"$^",
-                "AUDIO_INCLUDE_RE": r"^[^/\\]+\.m4a$",
+                "AUDIO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp3|m4a)$",
                 "AUDIO_EXCLUDE_RE": r"$^",
-                "IMAGE_INCLUDE_RE": r"^[^/\\]+\.jpg$",
+                "IMAGE_INCLUDE_RE": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
                 "IMAGE_EXCLUDE_RE": r"$^",
-                "DOCUMENT_INCLUDE_RE": r"^[^/\\]+\.pdf$",
+                "DOCUMENT_INCLUDE_RE": r"(?i)^[^/\\]+\.pdf$",
                 "DOCUMENT_EXCLUDE_RE": r"$^"
             }
         case BuildMode.DEEP:
             return {
                 "GLOBAL_EXCLUDE_RE": r"^_",
-                "VIDEO_INCLUDE_RE": r".*\.mp4$",
+                "VIDEO_INCLUDE_RE": r"(?i).*\.(mp4|m4v)$",
                 "VIDEO_EXCLUDE_RE": r"$^",
-                "AUDIO_INCLUDE_RE": r".*\.m4a$",
+                "AUDIO_INCLUDE_RE": r"(?i).*\.(mp3|m4a)$",
                 "AUDIO_EXCLUDE_RE": r"$^",
-                "IMAGE_INCLUDE_RE": r".*\.jpg$",
+                "IMAGE_INCLUDE_RE": r"(?i).*\.(jpg|jpeg|png)$",
                 "IMAGE_EXCLUDE_RE": r"$^",
-                "DOCUMENT_INCLUDE_RE": r".*\.pdf$",
+                "DOCUMENT_INCLUDE_RE": r"(?i).*\.pdf$",
                 "DOCUMENT_EXCLUDE_RE": r"$^"
             }
         case BuildMode.HYBRID:
