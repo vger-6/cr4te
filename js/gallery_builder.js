@@ -65,6 +65,15 @@ function rebuildPaginatedGallery(gallery, pageSize = 20) {
 
     if (controls) {
       controls.innerHTML = '';
+
+      // Hide pagination if only one page
+      if (totalPages <= 1) {
+        controls.style.display = 'none';
+        return;
+      } else {
+        controls.style.display = '';
+      }
+
       for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.textContent = i;
