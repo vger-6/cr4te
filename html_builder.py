@@ -242,8 +242,9 @@ def build_creator_page(creator: dict, creators: list, input_path: Path, out_dir:
     template = env.get_template("creator.html.j2")
 
     # Process portrait thumbnail
-    if creator.get('portrait'):
-        thumb_path = create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.PORTRAIT)
+    portrait = creator.get("featured_portrait") or creator.get("portrait")
+    if portrait:
+        thumb_path = create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
         portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
@@ -348,8 +349,9 @@ def build_collaboration_page(creator: dict, creators: list, input_path: Path, ou
     template = env.get_template("collaboration.html.j2")
 
     # Process portrait thumbnail
-    if creator.get('portrait'):
-        thumb_path = create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.PORTRAIT)
+    portrait = creator.get("featured_portrait") or creator.get("portrait")
+    if portrait:
+        thumb_path = create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
         portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
@@ -444,8 +446,9 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
     template = env.get_template("project.html.j2")
 
     # Thumbnail
-    if project.get('thumbnail'):
-        thumb_path = create_thumbnail(root_input, Path(project['thumbnail']), thumbs_dir, ThumbType.POSTER)
+    thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
+    if thumbnail:
+        thumb_path = create_thumbnail(root_input, Path(thumbnail), thumbs_dir, ThumbType.POSTER)
         thumbnail_url = get_relative_path(thumb_path, projects_dir)
     else:
         thumbnail_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.POSTER], projects_dir)

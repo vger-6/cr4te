@@ -27,7 +27,7 @@
     "project_page_documents_label": "Documents",
     "tags_page_title": "Tags",
     "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
-    "visible_project_fields": ["title", "release_date"]
+    "visible_project_fields": ["title", "release_date"],
     "project_info_layout": "column",
     "project_page_image_pagination_limit" : 20
   },

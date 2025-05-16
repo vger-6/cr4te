@@ -164,6 +164,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
             "title": project_title,
             "release_date": validate_date_string(project_data.get("release_date", "")),
             "thumbnail": thumbnail_path,
+            "featured_thumbnail": project_data.get("featured_thumbnail", None),
             "info": read_readme_text(project_dir) or project_data.get("info", ""),
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
@@ -200,6 +201,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
         "nationality": existing_data.get("nationality", ""),
         "aliases": existing_data.get("aliases", []),
         "portrait": portrait_path,
+        "featured_portrait": existing_data.get("featured_portrait", None),
         "info": read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
         "projects": collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
