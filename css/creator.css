@@ -8,6 +8,14 @@
   max-width: 200px;
 }
 
+.creator-info > div > *:first-child {
+  margin-top: 0;
+}
+
+.creator-info > div > *:last-child {
+  margin-bottom: 0;
+}
+
 .project-gallery {
   display: flex;
   flex-wrap: wrap;
@@ -72,10 +80,6 @@
   border-top: 1px solid var(--hr-color);
   margin: 0;
 }
-
-/*.fit-box {
-  width: fit-content;
-}*/
 
 .creator-layout {
   display: flex;
