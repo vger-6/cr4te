@@ -1,9 +1,13 @@
-// lightbox.js
-
 (function () {
   let currentIndex = 0;
   let currentGroup = [];
   let elements = {};
+  let allImageLinks = [];
+  let lastBoundLinks = [];
+  
+  function arraysEqual(arr1, arr2) {
+    return arr1.length === arr2.length && arr1.every((v, i) => v === arr2[i]);
+  }
 
   function createLightboxElements() {
     const overlay = document.createElement('div');
@@ -136,18 +140,26 @@
     }
   }
 
-  function attachLightbox() {
+  // Expose this globally so gallery pagination can rebind image click handlers
+  window.rebindLightbox = function () {
     const wrappers = document.querySelectorAll('.image-wrapper');
-    const imageLinks = Array.from(wrappers).map(w => w.href);
+    const newImageLinks = Array.from(wrappers).map(w => w.href).filter(Boolean);
+
+    // Avoid unnecessary rebinding
+    if (arraysEqual(newImageLinks, lastBoundLinks)) return;
+    lastBoundLinks = newImageLinks;
+    allImageLinks = newImageLinks;
 
     wrappers.forEach((wrapper, index) => {
-      wrapper.addEventListener('click', (e) => {
+      wrapper.onclick = (e) => {
         e.preventDefault();
-        openLightbox(imageLinks, index);
-      });
+        openLightbox(allImageLinks, index);
+      };
     });
-  }
+  };
 
-  window.addEventListener('DOMContentLoaded', attachLightbox);
+  window.addEventListener('DOMContentLoaded', () => {
+    rebindLightbox(); // Initial bind
+  });
 })();
 

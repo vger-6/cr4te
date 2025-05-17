@@ -71,6 +71,9 @@ function rebuildPaginatedGallery(gallery, pageSize = 20) {
     const end = start + pageSize;
     const visibleWrappers = allWrappers.slice(start, end);
     layoutVisibleImages(visibleWrappers);
+    
+    // Ensure lightbox bindings update on new pagination page
+    rebindLightbox?.();
 
     if (controls) {
       controls.innerHTML = '';
