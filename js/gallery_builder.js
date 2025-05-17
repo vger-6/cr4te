@@ -18,8 +18,17 @@ function rebuildPaginatedGallery(gallery, pageSize = 20) {
 
     gallery.appendChild(galleryBody);
 
-    const imagesPerRow = 5;
+    const galleryWidth = gallery.clientWidth;
+
+    // Compute how many images can reasonably fit per row based on ideal image width
+    const idealImageWidth = 180; // px
     const gap = 16;
+    const maxPerRow = 5;
+
+    let imagesPerRow = Math.floor((galleryWidth + gap) / (idealImageWidth + gap));
+
+    // Clamp the result between 1 and maxPerRow
+    imagesPerRow = Math.max(1, Math.min(imagesPerRow, maxPerRow));
 
     for (let i = 0; i < visibleWrappers.length; i += imagesPerRow) {
       const row = document.createElement('div');
