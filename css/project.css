@@ -124,7 +124,8 @@ video {
 }
 
 .project-info--row img {
-  width: 200px;
+  width: 100%;
+  max-width: 200px;
 }
 
 .creator-info {
@@ -138,6 +139,7 @@ video {
 }
 
 .creator-info img {
+  width: 100%;
   max-width: 200px;
 }
 
