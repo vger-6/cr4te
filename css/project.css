@@ -167,3 +167,14 @@ video {
   flex: 7;
   min-width: 0;
 }
+
+@media (max-width: 768px) {
+  .project-layout {
+    flex-direction: column;
+  }
+
+  .project-left,
+  .project-right {
+    width: 100%;
+  }
+}

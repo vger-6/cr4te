@@ -97,3 +97,14 @@
   flex: 7;
   min-width: 0;
 }
+
+@media (max-width: 768px) {
+  .creator-layout {
+    flex-direction: column;
+  }
+
+  .creator-left,
+  .creator-right {
+    width: 100%;
+  }
+}
