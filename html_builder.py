@@ -558,10 +558,10 @@ def build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: 
             document_label = html_settings["project_page_documents_label"]
                         
         media_groups.append({
-            "image_label": image_label,
-            "video_label": video_label,
-            "audio_label": audio_label,
-            "document_label": document_label,
+            "image_label": media_group.get("image_label") or image_label,
+            "video_label": media_group.get("video_label") or video_label,
+            "audio_label": media_group.get("audio_label") or audio_label,
+            "document_label": media_group.get("document_label") or document_label,
             "images": images,
             "videos": videos,
             "audio": audio,

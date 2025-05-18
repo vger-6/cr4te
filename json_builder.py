@@ -136,12 +136,16 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
                 "is_root": group["is_root"],
                 "videos": sorted(group["videos"]),
                 "featured_videos": existing_media_group.get("featured_videos", None),
+                "video_label": existing_media_group.get("video_label", None),
                 "audio": sorted(group["audio"]),
                 "featured_audio": existing_media_group.get("featured_audio", None),
+                "audio_label": existing_media_group.get("audio_label", None),
                 "images": sampled_images,
                 "featured_images": existing_media_group.get("featured_images", None),
+                "image_label": existing_media_group.get("image_label", None),
                 "documents": group["documents"],
                 "featured_documents": existing_media_group.get("featured_documents", None),
+                "document_label": existing_media_group.get("document_label", None),
                 "folder_name": folder_name
             }
             
