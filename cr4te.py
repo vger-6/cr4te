@@ -2,12 +2,17 @@ import argparse
 import shutil
 import json
 from pathlib import Path
+from typing import Dict
 
 import config as cfg
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import process_all_creators
 
 __version__ = "0.0.1"
+
+def _load_config(config_path_arg: str) -> Dict[str, any]:
+    config_path = Path(config_path_arg).resolve() if config_path_arg else None
+    return cfg.load_config(config_path)
 
 def main():
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
@@ -35,15 +40,14 @@ def main():
     
     args = parser.parse_args()
     
-    # load config
-    config_path = Path(args.config).resolve() if args.config else None
-    config = cfg.load_config(config_path)
-
     if args.command == "build-json":
         input_path = Path(args.input).resolve()
         if not input_path.exists() or not input_path.is_dir():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
+            
+        # load config
+        config = _load_config(args.config)
 
         config = cfg.update_build_rules(config, args.mode)
         
@@ -75,6 +79,9 @@ def main():
             clear_output_folder(output_path, args.clean)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
+            
+        # load config
+        config = _load_config(args.config)
 
         config = cfg.update_html_labels(config, args.html_preset)
         
