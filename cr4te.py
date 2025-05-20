@@ -30,6 +30,8 @@ def main():
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
     html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML: artist (default), musician, director, author, model")
+    html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
+    html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
     
     args = parser.parse_args()
     
@@ -55,6 +57,9 @@ def main():
         process_all_creators(input_path, compiled_media_rules)
 
     elif args.command == "build-html":
+        if not args.force and args.clean:
+            parser.error("--clean must be used together with --force")
+        
         input_path = Path(args.input).resolve()
         output_path = Path(args.output).resolve()
 
@@ -63,11 +68,11 @@ def main():
             return
 
         if output_path.exists():
-            confirm = input(f"Output folder '{output_path}' already exists. Delete everything except thumbnails and rebuild? [y/N]: ").strip().lower()
+            confirm = 'y' if args.force else input(f"Output folder '{output_path}' already exists. Delete everything except thumbnails and rebuild? [y/N]: ").strip().lower()
             if confirm != 'y':
                 print("Aborting.")
                 return
-            clear_output_folder(output_path)
+            clear_output_folder(output_path, args.clean)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
 

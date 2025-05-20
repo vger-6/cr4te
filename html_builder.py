@@ -41,10 +41,10 @@ DEFAULT_IMAGES = {
     ThumbType.GALLERY: "defaults/default_thumb.jpg"  # Reuse thumb fallback
 }
 
-def clear_output_folder(output_path: Path):
+def clear_output_folder(output_path: Path, clear_thumbnails: bool):
     """Delete all contents of output_path except the 'thumbnails' folder."""
     for item in output_path.iterdir():
-        if item.name != "thumbnails":
+        if clear_thumbnails or item.name != "thumbnails":
             if item.is_dir():
                 shutil.rmtree(item)
             else:
