@@ -9,16 +9,13 @@ from PIL import Image
 
 from enums.image_sample_strategy import ImageSampleStrategy
 
+__all__ = ["process_all_creators"]
+
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
     
-def is_collaboration(name: str, separator: Optional[str]) -> bool:
-    if not separator:
-        return False
-    return separator in name
-
-def validate_date_string(date_str: str) -> str:
+def _validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
     if not date_str or not isinstance(date_str, str):
         return ""
@@ -28,19 +25,13 @@ def validate_date_string(date_str: str) -> str:
     except ValueError:
         return ""
 
-def load_existing_json(json_path: Path) -> Dict:
-    if json_path.exists():
-        with open(json_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
-
-def read_readme_text(folder: Path) -> str:
+def _read_readme_text(folder: Path) -> str:
     readme_file = folder / "README.md"
     if readme_file.exists() and readme_file.is_file():
         return readme_file.read_text(encoding='utf-8').strip()
     return ""
 
-def find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
+def _find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
     for img_path in sorted(images, key=lambda x: x.name):
         try:
             with Image.open(img_path) as img:
@@ -55,7 +46,7 @@ def find_image_by_orientation(images: List[Path], orientation: Orientation = Ori
             print(f"Error checking image orientation for {img_path}: {e}")
     return None
 
-def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
+def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
     if max_images <= 0:
         return []
 
@@ -74,7 +65,7 @@ def sample_images(images: List[str], max_images: int, strategy: ImageSampleStrat
         case _:
             return sorted_images  # fallback
 
-def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
+def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in existing_data.get("projects", []) if "title" in p}
     
     projects_data = []
@@ -126,7 +117,7 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         for folder_name, group in media_map.items():
             existing_media_group = existing_media_groups.get(folder_name, {})
             
-            sampled_images = sample_images(
+            sampled_images = _sample_images(
                 group["images"],
                 compiled_media_rules.get("MAX_IMAGES", 20),
                 compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
@@ -160,16 +151,16 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         if poster_candidates:
             thumbnail_path = str(poster_candidates[0].relative_to(input_path))
         else:
-            poster = find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
+            poster = _find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
             if poster:
                 thumbnail_path = str(poster.relative_to(input_path))
 
         project_data = {
             "title": project_title,
-            "release_date": validate_date_string(project_data.get("release_date", "")),
+            "release_date": _validate_date_string(project_data.get("release_date", "")),
             "thumbnail": thumbnail_path,
             "featured_thumbnail": project_data.get("featured_thumbnail", None),
-            "info": read_readme_text(project_dir) or project_data.get("info", ""),
+            "info": _read_readme_text(project_dir) or project_data.get("info", ""),
             "media_groups": media_groups,
             "tags": project_data.get("tags", [])
         }
@@ -177,10 +168,21 @@ def collect_projects_data(creator_path: Path, existing_data: Dict, input_path: P
         projects_data.append(project_data)
 
     return projects_data
+        
+def _is_collaboration(name: str, separator: Optional[str]) -> bool:
+    if not separator:
+        return False
+    return separator in name
+    
+def _load_existing_json(json_path: Path) -> Dict:
+    if json_path.exists():
+        with open(json_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return {}
 
-def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict:
+def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict:
     creator_name = creator_path.name
-    existing_data = load_existing_json(creator_path / "cr4te.json")
+    existing_data = _load_existing_json(creator_path / "cr4te.json")
     
     # Find portrait
     # TODO: DRY out code duplication. See: collect_projects_data
@@ -192,23 +194,23 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     if portrait_candidates:
         portrait_path = str(portrait_candidates[0].relative_to(input_path))
     else:
-        portrait = find_image_by_orientation(all_images, Orientation.PORTRAIT)  # Fallback: heuristic
+        portrait = _find_image_by_orientation(all_images, Orientation.PORTRAIT)  # Fallback: heuristic
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
     separator = compiled_media_rules.get("COLLABORATION_SEPARATOR", None)
-    is_collab = is_collaboration(creator_name, separator)
+    is_collab = _is_collaboration(creator_name, separator)
     creator_json = {
         "name": creator_name,
         "is_collaboration": existing_data.get("is_collaboration", is_collab),
-        "date_of_birth": validate_date_string(existing_data.get("date_of_birth", "")),
+        "date_of_birth": _validate_date_string(existing_data.get("date_of_birth", "")),
         "nationality": existing_data.get("nationality", ""),
         "aliases": existing_data.get("aliases", []),
         "portrait": portrait_path,
         "featured_portrait": existing_data.get("featured_portrait", None),
-        "info": read_readme_text(creator_path) or existing_data.get("info", ""),
+        "info": _read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
-        "projects": collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
+        "projects": _collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
     }
     
     if is_collab:
@@ -219,7 +221,7 @@ def build_creator_json(creator_path: Path, input_path: Path, compiled_media_rule
     
     return creator_json
     
-def resolve_creator_collaborations(creators: List[Dict]) -> None:
+def _resolve_creator_collaborations(creators: List[Dict]) -> None:
     # Build collaboration map (name -> members)
     collaboration_map = {
         creator["name"]: creator["members"]
@@ -239,7 +241,7 @@ def resolve_creator_collaborations(creators: List[Dict]) -> None:
         else:
             creator["collaborations"] = []
             
-def write_json_files(creators: List[Dict], base_path: Path) -> None:
+def _write_json_files(creators: List[Dict], base_path: Path) -> None:
     """
     Writes each creator's JSON data to <base_path>/<creator_name>/cr4te.json.
     """
@@ -255,10 +257,10 @@ def process_all_creators(input_path: Path, compiled_media_rules: Dict):
         if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
             continue
         print(f"Processing creator: {creator.name}")
-        creator_json = build_creator_json(creator, input_path, compiled_media_rules)
+        creator_json = _build_creator_json(creator, input_path, compiled_media_rules)
         all_creators.append(creator_json)
 
-    resolve_creator_collaborations(all_creators)
+    _resolve_creator_collaborations(all_creators)
 
-    write_json_files(all_creators, input_path)
+    _write_json_files(all_creators, input_path)
 
