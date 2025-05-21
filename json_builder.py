@@ -9,7 +9,7 @@ from PIL import Image
 
 from enums.image_sample_strategy import ImageSampleStrategy
 
-__all__ = ["process_all_creators"]
+__all__ = ["process_all_creators", "clean_creator_json_files"]
 
 class Orientation(Enum):
     PORTRAIT = "portrait"
@@ -263,4 +263,34 @@ def process_all_creators(input_path: Path, compiled_media_rules: Dict):
     _resolve_creator_collaborations(all_creators)
 
     _write_json_files(all_creators, input_path)
+    
+def clean_creator_json_files(input_path: Path, dry_run: bool = False) -> None:
+    total = 0
+    deleted = 0
+    skipped = 0
+
+    for creator in input_path.iterdir():
+        if not creator.is_dir():
+            continue
+
+        json_path = creator / "cr4te.json"
+        if json_path.exists():
+            total += 1
+            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
+            if not dry_run:
+                try:
+                    json_path.unlink()
+                    deleted += 1
+                except Exception as e:
+                    print(f"Error deleting {json_path}: {e}")
+                    skipped += 1
+        else:
+            continue
+
+    print("\nSummary:")
+    print(f"\tTotal cr4te.json files found: {total}")
+    print(f"\tDeleted: {deleted}")
+    print(f"\tSkipped/errors: {skipped}")
+    if dry_run:
+        print("\t(Dry-run mode: no files were deleted)")
 

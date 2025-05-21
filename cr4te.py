@@ -6,7 +6,7 @@ from typing import Dict
 
 import config as cfg
 from html_builder import clear_output_folder, build_html_pages
-from json_builder import process_all_creators
+from json_builder import process_all_creators, clean_creator_json_files
 
 __version__ = "0.0.1"
 
@@ -28,6 +28,12 @@ def main():
     json_parser.add_argument("--mode", choices=[m.value for m in cfg.BuildMode], default=cfg.BuildMode.HYBRID.value, help="Media discovery mode: hybrid (default), flat, deep")
     json_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
     json_parser.add_argument("--image-sample-strategy", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images: spread (default), head, all")
+    
+    # clean-json
+    clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
+    clean_parser.add_argument("-i", "--input", required=True, help="Path to input folder containing creators")
+    clean_parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without removing anything")
+    clean_parser.add_argument("--force", action="store_true", help="Actually delete files instead of showing a preview")
 
     # build-html
     html_parser = subparsers.add_parser("build-html", help="Generate HTML site from JSON metadata")
@@ -86,6 +92,20 @@ def main():
         config = cfg.update_html_labels(config, args.html_preset)
         
         build_html_pages(input_path, output_path, config["html_settings"])
+        
+    elif args.command == "clean-json":
+        input_path = Path(args.input).resolve()
+        if not input_path.exists() or not input_path.is_dir():
+            print(f"Input path does not exist or is not a directory: {input_path}")
+            return
+
+        if not args.force and not args.dry_run:
+            confirm = input(f"Delete all cr4te.json files in '{input_path}'? [y/N]: ").strip().lower()
+            if confirm != 'y':
+                print("Aborting.")
+                return
+
+        clean_creator_json_files(input_path, dry_run=args.dry_run)
 
 if __name__ == "__main__":
     main()
