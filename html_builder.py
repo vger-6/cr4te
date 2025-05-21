@@ -221,7 +221,8 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
             
             images.append({
                 "thumb_url": thumb_url,
-                "full_url": f"images/{image_name}"
+                "full_url": f"images/{image_name}",
+                "caption": Path(image_rel_path).stem
             })
 
         videos = []

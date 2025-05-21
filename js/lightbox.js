@@ -142,16 +142,31 @@
 
   // Expose this globally so gallery pagination can rebind image click handlers
   window.rebindLightbox = function () {
-    const wrappers = document.querySelectorAll('.image-wrapper');
-    const newImageLinks = Array.from(wrappers).map(w => w.href).filter(Boolean);
+    const gallery = document.getElementById('imageGallery');
+    const lightboxEnabled = gallery?.dataset.lightbox !== "false";
 
-    // Avoid unnecessary rebinding
+    const wrappers = document.querySelectorAll('.image-wrapper');
+    const links = Array.from(wrappers)
+      .map(w => w.querySelector('a'))
+      .filter(a => a && a.href);
+
+    const newImageLinks = links.map(a => a.href);
+
+    if (!lightboxEnabled) {
+      // Remove existing lightbox bindings if disabled
+      links.forEach(link => {
+        link.onclick = null;
+      });
+      return;
+    }
+
     if (arraysEqual(newImageLinks, lastBoundLinks)) return;
+
     lastBoundLinks = newImageLinks;
     allImageLinks = newImageLinks;
 
-    wrappers.forEach((wrapper, index) => {
-      wrapper.onclick = (e) => {
+    links.forEach((link, index) => {
+      link.onclick = (e) => {
         e.preventDefault();
         openLightbox(allImageLinks, index);
       };

@@ -61,16 +61,32 @@ video {
 
 .image-wrapper {
   overflow: hidden;
-  display: block;
-  position: relative;
-  max-height:400px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .image-wrapper img {
   display: block;
-  height: 100%;
   width: auto;
   object-fit: contain;
+}
+
+.image-caption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-color);
+  text-align: right;
+}
+
+.image-caption a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.image-caption a:hover {
+  text-decoration: underline;
 }
 
 .pagination-controls {
@@ -157,7 +173,7 @@ video {
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  flex-wrap: nowrap; /*wrap on narrow screens to preserve responsiveness*/
+  flex-wrap: nowrap;
 }
 
 .project-left {

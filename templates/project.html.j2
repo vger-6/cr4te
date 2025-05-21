@@ -134,14 +134,18 @@
           <div class="section-title">{{ group.image_label }}</div>
           <hr>
           <div class="section-content">
-            <div class="image-gallery paginated-gallery" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
+            <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
               {% for image in group.images %}
-                <a href="{{ image.full_url }}" target="_blank" class="image-wrapper">
+              <div class="image-wrapper">
+                <a href="{{ image.full_url }}" target="_blank">
                   <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}" loading="lazy">
+                  {% if html_settings.project_page_show_image_captions %}
+                  {{ image.caption }}
+                  {% endif %}
                 </a>
+              </div>
               {% endfor %}
             </div>
-            <div class="pagination-controls"></div>
           </div>
         </div>
       {% endif %}
@@ -163,6 +167,7 @@
 
 <script src="../js/theme_selector.js" defer></script>
 <script src="../js/gallery_builder.js" defer></script>
+<script src="../js/pagination.js" defer></script>
 <script src="../js/audio_player.js" defer></script>
 <script src="../js/lightbox.js" defer></script>
 

@@ -50,7 +50,8 @@ DEFAULT_CONFIG = {
         
         "project_info_layout": "column",
         
-        "project_page_image_pagination_limit" : 20
+        "project_page_image_pagination_limit" : 15,
+        "project_page_show_image_captions": False
     },
     "media_rules": {
         "GLOBAL_EXCLUDE_RE": r"^_",
