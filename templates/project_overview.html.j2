@@ -29,21 +29,24 @@
   {% endfor %}
 </div>
 
-<div class="creator-box">
-  <div class="creator-gallery">
+<div class="section-box">
+  <div class="section-content">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}">
     {% for project in projects %}
-    <div class="project-entry" data-title="{{ project.title }}" data-text="{{ project.search_text | default('') }}">
-      <a href="{{ project.url }}" title="{{ project.title }}">
-        <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}"><br>
-        {{ project.title }}<br>
-        <small>{{ project.creator }}</small>
-      </a>
-    </div>
+      <div class="image-wrapper" data-title="{{ project.title }}" data-text="{{ project.search_text | default('') }}">
+        <a href="{{ project.url }}" title="{{ project.title }}">
+          <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}">
+          <span>{{ project.title }}</span><br>
+          <span><small>{{ project.creator }}</small></span>
+        </a>
+      </div>
     {% endfor %}
+    </div>
   </div>
 </div>
 
 <script src="js/filter_projects.js"></script>
+<script src="js/gallery_builder.js" defer></script>
 <script src="js/theme_selector.js" defer></script>
 
 </body>

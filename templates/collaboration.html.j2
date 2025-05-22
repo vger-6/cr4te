@@ -52,15 +52,17 @@
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
       <hr>
-      <div class="section-content creator-gallery">
-        {% for member in member_links %}
-        <div class="creator-entry">
-          <a href="{{ member.url }}" title="{{ member.name }}">
-            <img src="{{ member.thumbnail_url }}" width="100" alt="Portrait of {{ member.name }}"><br>
-            {{ member.name }}
-          </a>
+      <div class="section-content">
+        <div class="image-gallery" id="imageGallery" data-image-max-height="{{ member_thumb_max_height }}">
+          {% for member in member_links %}
+          <div class="image-wrapper">
+            <a href="{{ member.url }}" title="{{ member.name }}">
+              <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}" loading="lazy">
+              <span>{{ member.name }}</span>
+            </a>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
     </div>
     {% endif %}
@@ -90,15 +92,17 @@
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_projects_title }}</div>
       <hr>
-      <div class="section-content project-gallery">
-        {% for project in projects %}
-        <div class="project-entry">
-          <a href="{{ project.url }}" title="{{ project.title }}">
-            <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}"><br>
-            {{ project.title }}
-          </a>
+      <div class="section-content">
+        <div class="image-gallery" id="imageGallery" data-image-max-height="{{ project_thumb_max_height }}">
+          {% for project in projects %}
+          <div class="image-wrapper">
+            <a href="{{ project.url }}" title="{{ project.title }}">
+              <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+              <span>{{ project.title }}</span>
+            </a>
+          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
     </div>
     {% endif %}
@@ -108,6 +112,7 @@
 </div>
 
 <script src="../js/theme_selector.js" defer></script>
+<script src="../js/gallery_builder.js" defer></script>
 
 </body>
 </html>

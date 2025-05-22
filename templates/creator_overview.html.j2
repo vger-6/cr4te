@@ -23,22 +23,23 @@
   <input type="text" id="search-input" placeholder="{{ html_settings.creator_overview_page_search_placeholder }}" class="search-box">
 </div>
 
-<div class="creator-box">
-  <div class="creator-gallery">
-
+<div class="section-box">
+  <div class="section-content">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}">
     {% for creator in creator_entries %}
-    <div class="creator-entry" data-search="{{ creator.search_text }}">
-      <a href="{{ creator.url }}" title="{{ creator.name }}">
-        <img src="{{ creator.thumbnail_url }}" width="100" alt="{{ creator.name }} thumbnail"><br>
-        {{ creator.name }}
-      </a>
-    </div>
+      <div class="image-wrapper" data-search="{{ creator.search_text }}">
+        <a href="{{ creator.url }}" title="{{ creator.name }}">
+          <img src="{{ creator.thumbnail_url }}" alt="{{ creator.name }} thumbnail">
+          <span>{{ creator.name }}</span>
+        </a>
+      </div>
     {% endfor %}
-
+    </div>
   </div>
 </div>
 
 <script src="js/filter_creators.js"></script>
+<script src="js/gallery_builder.js" defer></script>
 <script src="js/theme_selector.js" defer></script>
 
 </body>

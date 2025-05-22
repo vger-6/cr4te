@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("search-input");
   const tabs = document.querySelectorAll(".az-tab");
-  const projects = document.querySelectorAll(".project-entry");
+  const projects = document.querySelectorAll(".image-wrapper");
 
   function filterProjects() {
     const query = searchInput.value.trim().toLowerCase();

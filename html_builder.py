@@ -90,7 +90,8 @@ def _build_project_overview_page(projects: List[dict], input_path: Path, output_
 
     rendered = template.render(
         projects=sorted_projects,
-        html_settings=html_settings
+        html_settings=html_settings,
+        poster_max_height=ThumbType.PROJECT.height,
     )
 
     output_path.mkdir(parents=True, exist_ok=True)
@@ -298,6 +299,7 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
         tag_map=tag_map,
         participants=participants,
         media_groups=media_groups,
+        gallery_image_max_height=ThumbType.GALLERY.height,
         root_input=root_input,
         out_dir=projects_dir,
         get_relative_path=get_relative_path,
@@ -415,6 +417,7 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         tag_map=tag_map,
         projects=projects,
         collaborations=collaborations,
+        project_thumb_max_height=ThumbType.POSTER.height,
     )
 
     page_path = creators_dir / f"{slug}.html"
@@ -493,6 +496,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
         tag_map=tag_map,
         member_links=member_links,
         projects=projects,
+        member_thumb_max_height=ThumbType.THUMB.height,
     )
 
     page_path = creators_dir / f"{slug}.html"
@@ -545,6 +549,7 @@ def _build_creator_overview_page(creators: list, input_path: Path, output_path: 
     output_html = template.render(
         html_settings=html_settings,
         creator_entries=creator_entries,
+        creator_thumb_max_height=ThumbType.PORTRAIT.height,
     )
 
     page_file = output_path / "index.html"

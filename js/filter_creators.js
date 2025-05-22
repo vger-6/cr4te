@@ -14,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("search-input");
-  const entries = document.querySelectorAll(".creator-entry");
+  const entries = document.querySelectorAll(".image-wrapper");
 
   input.addEventListener("input", () => {
     const terms = input.value.toLowerCase().match(/"[^"]+"|\S+/g) || [];
