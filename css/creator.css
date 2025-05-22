@@ -58,7 +58,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
-  flex-wrap: nowrap; /*wrap on narrow screens to preserve responsiveness*/
+  flex-wrap: nowrap;
 }
 
 .creator-left {

@@ -31,7 +31,7 @@
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}" data-images-per-row="6">
     {% for project in projects %}
       <div class="image-wrapper" data-title="{{ project.title }}" data-text="{{ project.search_text | default('') }}">
         <a href="{{ project.url }}" title="{{ project.title }}">

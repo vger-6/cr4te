@@ -1,6 +1,8 @@
 function rebuildImageGallery() {
   document.querySelectorAll('.image-gallery').forEach(gallery => {
     const maxHeight = gallery.dataset.imageMaxHeight;
+    const imagesPerRow = parseInt(gallery.dataset.imagesPerRow, 10) || 5;
+    const gap = 16; // 1rem
 
     if (maxHeight) {
       gallery.querySelectorAll('.image-wrapper img').forEach(img => {
@@ -12,9 +14,6 @@ function rebuildImageGallery() {
 
     // Remove all children
     gallery.innerHTML = '';
-
-    const imagesPerRow = 5;
-    const gap = 16; // 1rem
 
     function createRow() {
       const row = document.createElement('div');
