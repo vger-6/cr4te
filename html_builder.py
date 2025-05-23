@@ -549,7 +549,7 @@ def _build_creator_overview_page(creators: list, input_path: Path, output_path: 
     output_html = template.render(
         html_settings=html_settings,
         creator_entries=creator_entries,
-        creator_thumb_max_height=ThumbType.PORTRAIT.height,
+        creator_thumb_max_height=ThumbType.THUMB.height,
     )
 
     page_file = output_path / "index.html"
