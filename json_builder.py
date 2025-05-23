@@ -203,7 +203,8 @@ def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rul
     creator_json = {
         "name": creator_name,
         "is_collaboration": existing_data.get("is_collaboration", is_collab),
-        "date_of_birth": _validate_date_string(existing_data.get("date_of_birth", "")),
+        "born_or_founded": _validate_date_string(existing_data.get("born_or_founded", "")),
+        "active_since": _validate_date_string(existing_data.get("active_since", "")),
         "nationality": existing_data.get("nationality", ""),
         "aliases": existing_data.get("aliases", []),
         "portrait": portrait_path,

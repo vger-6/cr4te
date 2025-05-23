@@ -22,7 +22,7 @@
 <div class="creator-layout">
 
   <div class="creator-left">
-
+  
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_profile_title }}</div>
       <hr>
@@ -30,8 +30,20 @@
         <div class="creator-info">
           <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
-            {% if creator.members %}
+            {% if 'name' in html_settings.collaboration_page_visible_collaboration_fields and creator.name %}
+            <p><strong>Name:</strong> {{ creator.name }}</p>
+            {% endif %}
+            {% if 'members' in html_settings.collaboration_page_visible_collaboration_fields and creator.members %}
             <p><strong>{{ html_settings.collaboration_page_members_title }}:</strong> {{ creator.members | join(', ') }}</p>
+            {% endif %}
+            {% if 'founded' in html_settings.collaboration_page_visible_collaboration_fields and creator.born_or_founded %}
+            <p><strong>Founded:</strong> {{ creator.born_or_founded }}</p>
+            {% endif %}
+            {% if 'nationality' in html_settings.collaboration_page_visible_collaboration_fields and creator.nationality %}
+            <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
+            {% endif %}
+            {% if 'active_since' in html_settings.collaboration_page_visible_collaboration_fields and creator.active_since %}
+            <p><strong>Active Since:</strong> {{ creator.active_since }}</p>
             {% endif %}
           </div>
         </div>

@@ -194,12 +194,11 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
                 portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
 
             age_at_release = ""
-            if participant.get("date_of_birth") and project.get("release_date"):
-                from datetime import datetime
+            if participant.get("born_or_founded") and project.get("release_date"):
                 try:
-                    dob_dt = datetime.strptime(participant['date_of_birth'], "%Y-%m-%d")
+                    date_of_birth_dt = datetime.strptime(participant['born_or_founded'], "%Y-%m-%d")
                     release_dt = datetime.strptime(project['release_date'], "%Y-%m-%d")
-                    age_at_release = _calculate_age(dob_dt, release_dt)
+                    age_at_release = _calculate_age(date_of_birth_dt, release_dt)
                 except Exception as e:
                     print(f"Error calculating age: {e}")
 
@@ -333,15 +332,19 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
 
     # Compute debut age
-    dob = creator.get("date_of_birth")
+    date_of_birth = creator.get("born_or_founded")
+    active_since = creator.get("active_since")
     release_dates = [p.get("release_date") for p in creator.get("projects", []) if p.get("release_date")]
     debut_age = ""
-    if dob and release_dates:
+    if date_of_birth and (active_since or release_dates):
         try:
-            from datetime import datetime
-            dob_dt = datetime.strptime(dob, "%Y-%m-%d")
-            first_release = min(datetime.strptime(d, "%Y-%m-%d") for d in release_dates)
-            debut_age = _calculate_age(dob_dt, first_release)
+            date_of_birth_dt = datetime.strptime(date_of_birth, "%Y-%m-%d")
+            if active_since:
+                active_since_dt = datetime.strptime(active_since, "%Y-%m-%d")
+                debut_age =  _calculate_age(date_of_birth_dt, active_since_dt)
+            else:
+                first_release_dt = min(datetime.strptime(d, "%Y-%m-%d") for d in release_dates)
+                debut_age = _calculate_age(date_of_birth_dt, first_release_dt)
         except Exception as e:
             print(f"Error computing debut age: {e}")
 
@@ -497,6 +500,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
         member_links=member_links,
         projects=projects,
         member_thumb_max_height=ThumbType.THUMB.height,
+        project_thumb_max_height=ThumbType.POSTER.height,
     )
 
     page_path = creators_dir / f"{slug}.html"

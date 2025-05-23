@@ -28,13 +28,13 @@
       <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
       <hr>
       <div class="section-content markdown">
-        <div class="project-info project-info--{{ html_settings.project_info_layout }}">
+        <div class="project-info project-info--{{ html_settings.project_page_project_info_layout }}">
           <img src="{{ thumbnail_url }}" alt="Preview of {{ project.title }}">
           <div>
-            {% if 'title' in html_settings.visible_project_fields %}
+            {% if 'title' in html_settings.project_page_visible_project_fields %}
             <p><strong>Title:</strong> {{ project.title }}</p>
             {% endif %}
-            {% if 'release_date' in html_settings.visible_project_fields and project.release_date %}
+            {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
             <p><strong>Release Date:</strong> {{ project.release_date }}</p>
             {% endif %}
           </div>

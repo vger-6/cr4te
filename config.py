@@ -45,10 +45,11 @@ DEFAULT_CONFIG = {
         
         "tags_page_title": "Tags",
         
-        "visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
-        "visible_project_fields": ["title", "release_date"],
+        "creator_page_visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
+        "collaboration_page_visible_collaboration_fields": ["name", "members", "founded", "nationality", "active_since"],
+        "project_page_visible_project_fields": ["title", "release_date"],
         
-        "project_info_layout": "column",
+        "project_page_project_info_layout": "column",
         
         "project_page_image_pagination_limit" : 15,
         "project_page_show_image_captions": False
