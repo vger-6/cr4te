@@ -25,7 +25,7 @@
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}" data-images-per-row="6">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}">
     {% for creator in creator_entries %}
       <div class="image-wrapper" data-search="{{ creator.search_text }}">
         <a href="{{ creator.url }}" title="{{ creator.name }}">

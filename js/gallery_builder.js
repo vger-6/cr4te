@@ -1,58 +1,101 @@
 function rebuildImageGallery() {
   document.querySelectorAll('.image-gallery').forEach(gallery => {
-    const maxHeight = gallery.dataset.imageMaxHeight;
-    const imagesPerRow = parseInt(gallery.dataset.imagesPerRow, 10) || 5;
-    const gap = 16; // 1rem
-
-    if (maxHeight) {
-      gallery.querySelectorAll('.image-wrapper img').forEach(img => {
-        img.style.maxHeight = `${maxHeight}px`;
-      });
-    }
+    const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
+    const gap = 16;
+    const galleryWidth = gallery.clientWidth;
 
     const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
 
-    // Remove all children
-    gallery.innerHTML = '';
-
-    function createRow() {
-      const row = document.createElement('div');
-      row.classList.add('image-row');
-      return row;
-    }
-
-    const rows = [];
-    for (let i = 0; i < allWrappers.length; i += imagesPerRow) {
-      const rowWrappers = allWrappers.slice(i, i + imagesPerRow);
-      const row = createRow();
-      rowWrappers.forEach(w => row.appendChild(w));
-      rows.push(row);
-      gallery.appendChild(row);
-    }
-
+    // Load all images and collect aspect ratios
     const loadPromises = allWrappers.map(wrapper => {
       const img = wrapper.querySelector('img');
-      return img.complete ? Promise.resolve() : new Promise(res => img.onload = res);
+      return new Promise(resolve => {
+        if (img.complete) {
+          resolve({ wrapper, img, ratio: img.naturalWidth / img.naturalHeight });
+        } else {
+          img.onload = () => resolve({ wrapper, img, ratio: img.naturalWidth / img.naturalHeight });
+        }
+      });
     });
 
-    Promise.all(loadPromises).then(() => {
+    Promise.all(loadPromises).then(items => {
+      // Remove all children before layout
+      gallery.innerHTML = '';
+
+      const rows = [];
+      let row = [];
+      let totalRatio = 0;
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        row.push(item);
+        totalRatio += item.ratio;
+
+        const totalGap = gap * (row.length - 1);
+        const rowHeight = (galleryWidth - totalGap) / totalRatio;
+
+        if (rowHeight <= maxHeight) {
+          rows.push([...row]);
+          row = [];
+          totalRatio = 0;
+        }
+      }
+
+      // Handle remaining images in the last row
+      if (row.length > 0) {
+        let paddedRow = [...row];
+        let ratioSum = totalRatio;
+
+        const lastItem = row[row.length - 1];
+        while (true) {
+          const totalGap = gap * (paddedRow.length - 1);
+          const rowHeight = (galleryWidth - totalGap) / ratioSum;
+
+          if (rowHeight <= maxHeight) break;
+
+          const clone = lastItem.wrapper.cloneNode(true);
+
+          // Make the clone invisible and non-interactive
+          clone.style.opacity = '0';
+          clone.style.pointerEvents = 'none';
+          clone.style.userSelect = 'none';
+
+          const link = clone.querySelector('a');
+          if (link) {
+            link.removeAttribute('href');
+            link.style.pointerEvents = 'none';
+          }
+          
+          paddedRow.push({
+            wrapper: null,       // no DOM element
+            img: null,
+            ratio: lastItem.ratio,
+            isVirtual: true      // mark as virtual
+          });
+          ratioSum += lastItem.ratio;
+        }
+
+        rows.push(paddedRow);
+      }
+
+      // Render rows
       rows.forEach(row => {
-        const wrappers = Array.from(row.querySelectorAll('.image-wrapper'));
-        const ratios = wrappers.map(w => {
-          const img = w.querySelector('img');
-          return img.naturalWidth / img.naturalHeight;
-        });
+        const rowEl = document.createElement('div');
+        rowEl.classList.add('image-row');
+        gallery.appendChild(rowEl);
 
-        const totalRatio = ratios.reduce((a, b) => a + b, 0);
-        const totalGap = gap * (wrappers.length - 1);
-        const rowWidth = row.clientWidth - totalGap;
-        const commonHeight = rowWidth / totalRatio;
+        const totalRatio = row.reduce((sum, item) => sum + item.ratio, 0);
+        const totalGap = gap * (row.length - 1);
+        const rowHeight = (galleryWidth - totalGap) / totalRatio;
 
-        wrappers.forEach((wrapper, idx) => {
-          const width = commonHeight * ratios[idx];
-          wrapper.style.width = `${width}px`;
-          const img = wrapper.querySelector('img');
-          img.style.height = `${commonHeight}px`;
+        row.forEach(item => {
+          const width = item.ratio * rowHeight;
+
+          if (item.wrapper && !item.isVirtual) {
+            item.wrapper.style.width = `${width}px`;
+            item.img.style.height = `${rowHeight}px`;
+            rowEl.appendChild(item.wrapper);
+          }
         });
       });
     });
