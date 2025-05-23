@@ -1,3 +1,6 @@
+//TODO: DRY up code duplication in filter_projects.js and filter_creators.js
+//TODO: Debounce input events for large galleries
+
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const tag = params.get('tag');
@@ -11,22 +14,40 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const input = document.getElementById("search-input");
-  const entries = document.querySelectorAll(".image-wrapper");
+  const gallery = document.getElementById("imageGallery");
 
-  input.addEventListener("input", () => {
+  // Cache all original entries
+  let allWrappers = Array.from(gallery.querySelectorAll(".image-wrapper"));
+
+  // Clear and re-insert once to reset layout
+  gallery.innerHTML = '';
+  allWrappers.forEach(w => gallery.appendChild(w));
+
+  function filterCreators() {
     const terms = input.value.toLowerCase().match(/"[^"]+"|\S+/g) || [];
 
-    entries.forEach(entry => {
+    const visibleWrappers = allWrappers.filter(entry => {
       const haystack = entry.dataset.search || "";
-      const matches = terms.every(term =>
+      return terms.every(term =>
         haystack.includes(term.replace(/"/g, ""))
       );
-      entry.style.display = matches ? "" : "none";
     });
-  });
 
-  console.log("Filter initialized");
+    // Update DOM with filtered results
+    gallery.innerHTML = '';
+    visibleWrappers.forEach(w => gallery.appendChild(w));
+
+    // Recalculate layout
+    if (typeof rebuildImageGallery === 'function') {
+      rebuildImageGallery();
+    }
+  }
+
+  input.addEventListener("input", filterCreators);
+
+  // Initial layout render
+  filterCreators();
 });
+

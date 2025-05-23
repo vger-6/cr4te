@@ -30,7 +30,6 @@ function rebuildImageGallery() {
       gallery.appendChild(row);
     }
 
-    // Wait for all images to load
     const loadPromises = allWrappers.map(wrapper => {
       const img = wrapper.querySelector('img');
       return img.complete ? Promise.resolve() : new Promise(res => img.onload = res);
