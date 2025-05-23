@@ -324,6 +324,46 @@ This project is licensed under the terms of the LICENSE file included.
 
 ---
 
+## TODO
+
+This section outlines planned improvements, refactors, and feature ideas for `cr4te`.
+
+### 🔧 Functionality
+
+- [ ] Add `debut_age` key to creator JSON (default: `None`) and use it
+- [ ] Support project-only mode (without requiring associated creators)
+- [ ] Add JSON validation schema
+- [ ] Add `--dry-run` flag to `build-json` and `build-html` commands
+- [ ] Add optional progress bar (e.g., using `tqdm`) for large folder trees
+- [ ] Enable post-processing via custom hooks (e.g., metadata or templating)
+
+### 🔍 Filtering and Selection
+
+- [ ] Allow multiple exclusions/inclusions (e.g., exclude all but include `folder1`, `folderZ`)
+- [ ] Use `POSTER_RE`, `PORTRAIT_RE`, etc., as a list to define custom fallback logic
+
+### 📄 Output & Layout
+
+- [ ] Use pagination on overview pages
+- [ ] Sort projects on overview pages (e.g., by project title, then creator name)
+- [ ] Extract and reuse button styles (e.g., for a "view PDF" button)
+- [ ] Extract shared CSS styles for customization (or theme overrides)
+- [ ] Split CSS files into modular components (e.g., layout, buttons, gallery)
+
+### 🧹 Refactoring
+
+- [ ] DRY up code duplication, especially in `html_builder.py` and `json_builder.py`
+- [ ] Normalize config file keys to lowercase
+- [ ] Consider internal mapping for config fields (e.g., `"visible_creator_fields"`)
+
+### 🧪 Testing & Docs
+
+- [ ] Add unit tests
+- [ ] Add more professional logging (with support for `--verbose`)
+- [ ] Update README files and documentation
+
+---
+
 ## Credits
 
 Created for artists, curators, media historians, and creative developers who want simple but structured control over their digital media archives.
