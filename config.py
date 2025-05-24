@@ -55,27 +55,27 @@ DEFAULT_CONFIG = {
         "project_page_show_image_captions": False
     },
     "media_rules": {
-        "GLOBAL_EXCLUDE_RE": r"^_",
+        "global_exclude_re": r"^_",
         
-        "VIDEO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-        "VIDEO_EXCLUDE_RE": r"$^",
+        "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
+        "video_exclude_re": r"$^",
         
-        "AUDIO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-        "AUDIO_EXCLUDE_RE": r"$^",
+        "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
+        "audio_exclude_re": r"$^",
         
-        "IMAGE_INCLUDE_RE": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",
-        "IMAGE_EXCLUDE_RE": r"$^",
+        "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",
+        "image_exclude_re": r"$^",
         
-        "DOCUMENT_INCLUDE_RE": r"(?i)^[^/\\]+\.pdf$",
-        "DOCUMENT_EXCLUDE_RE": r"$^",
+        "document_include_re": r"(?i)^[^/\\]+\.pdf$",
+        "document_exclude_re": r"$^",
         
-        "PORTRAIT_RE": r"^profile\.jpg$",
-        "POSTER_RE": r"^cover\.jpg$",
+        "creator_profile_image_re": r"^profile\.jpg$",
+        "project_cover_image_re": r"^cover\.jpg$",
         
-        "MAX_IMAGES": 20,
-        "IMAGE_SAMPLE_STRATEGY": "spread",
+        "image_gallery_max": 20,
+        "image_gallery_sample_strategy": "spread",
         
-        "COLLABORATION_SEPARATOR": " & "
+        "collaboration_separator": " & "
     }
 }
 
@@ -121,27 +121,27 @@ def _get_build_rules(mode: BuildMode) -> Dict:
     match mode:
         case BuildMode.FLAT:
             return {
-                "GLOBAL_EXCLUDE_RE": r"^_",
-                "VIDEO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-                "VIDEO_EXCLUDE_RE": r"$^",
-                "AUDIO_INCLUDE_RE": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-                "AUDIO_EXCLUDE_RE": r"$^",
-                "IMAGE_INCLUDE_RE": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
-                "IMAGE_EXCLUDE_RE": r"$^",
-                "DOCUMENT_INCLUDE_RE": r"(?i)^[^/\\]+\.pdf$",
-                "DOCUMENT_EXCLUDE_RE": r"$^"
+                "global_exclude_re": r"^_",
+                "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
+                "video_exclude_re": r"$^",
+                "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
+                "audio_exclude_re": r"$^",
+                "image_include_re": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
+                "image_exclude_re": r"$^",
+                "document_include_re": r"(?i)^[^/\\]+\.pdf$",
+                "document_exclude_re": r"$^"
             }
         case BuildMode.DEEP:
             return {
-                "GLOBAL_EXCLUDE_RE": r"^_",
-                "VIDEO_INCLUDE_RE": r"(?i).*\.(mp4|m4v)$",
-                "VIDEO_EXCLUDE_RE": r"$^",
-                "AUDIO_INCLUDE_RE": r"(?i).*\.(mp3|m4a)$",
-                "AUDIO_EXCLUDE_RE": r"$^",
-                "IMAGE_INCLUDE_RE": r"(?i).*\.(jpg|jpeg|png)$",
-                "IMAGE_EXCLUDE_RE": r"$^",
-                "DOCUMENT_INCLUDE_RE": r"(?i).*\.pdf$",
-                "DOCUMENT_EXCLUDE_RE": r"$^"
+                "global_exclude_re": r"^_",
+                "video_include_re": r"(?i).*\.(mp4|m4v)$",
+                "video_exclude_re": r"$^",
+                "audio_include_re": r"(?i).*\.(mp3|m4a)$",
+                "audio_exclude_re": r"$^",
+                "image_include_re": r"(?i).*\.(jpg|jpeg|png)$",
+                "image_exclude_re": r"$^",
+                "document_include_re": r"(?i).*\.pdf$",
+                "document_exclude_re": r"$^"
             }
         case BuildMode.HYBRID:
             return {}  # Use the base/default media_rules
@@ -158,14 +158,14 @@ def update_build_rules(config: Dict, mode_str: str) -> Dict:
     config["media_rules"].update(overrides)
     return config
     
-def apply_cli_media_overrides(config: Dict, max_images: int = None, image_strategy: str = None) -> Dict:
+def apply_cli_media_overrides(config: Dict, image_gallery_max: int = None, image_sample_strategy: str = None) -> Dict:
     """
-    Applies CLI overrides for media_rules such as max_images and image_sample_strategy.
+    Applies CLI overrides for media_rules such as image_gallery_max and image_sample_strategy.
     """
-    if max_images is not None :
-        config["media_rules"]["MAX_IMAGES"] = max_images
-    if image_strategy:
-        config["media_rules"]["IMAGE_SAMPLE_STRATEGY"] = image_strategy
+    if image_gallery_max is not None :
+        config["media_rules"]["image_gallery_max"] = image_gallery_max
+    if image_sample_strategy:
+        config["media_rules"]["image_gallery_sample_strategy"] = image_sample_strategy
     return config
     
 def compile_media_rules(media_rules: Dict) -> Dict:
@@ -174,14 +174,14 @@ def compile_media_rules(media_rules: Dict) -> Dict:
     Other values (e.g., integers) are preserved as-is.
     """
     regex_keys = {
-        "GLOBAL_EXCLUDE_RE", 
-        "VIDEO_INCLUDE_RE", "VIDEO_EXCLUDE_RE", 
-        "AUDIO_INCLUDE_RE", "AUDIO_EXCLUDE_RE",
-        "IMAGE_INCLUDE_RE", "IMAGE_EXCLUDE_RE", 
-        "DOCUMENT_INCLUDE_RE", "DOCUMENT_EXCLUDE_RE",
-        "PORTRAIT_RE", "POSTER_RE"
+        "global_exclude_re", 
+        "video_include_re", "video_exclude_re", 
+        "audio_include_re", "audio_exclude_re",
+        "image_include_re", "image_exclude_re", 
+        "document_include_re", "document_exclude_re",
+        "creator_profile_image_re", "project_cover_image_re"
     }
-    enum_keys = {"IMAGE_SAMPLE_STRATEGY": ImageSampleStrategy}
+    enum_keys = {"image_gallery_sample_strategy": ImageSampleStrategy}
     
     compiled = {}
     for key, val in media_rules.items():

@@ -34,20 +34,20 @@
     "project_page_show_image_captions": false
   },
   "media_rules": {
-    "GLOBAL_EXCLUDE_RE": "^_",
-    "VIDEO_INCLUDE_RE": "(?i)^[^/\\\\]+\\.(mp4|m4v)$",
-    "VIDEO_EXCLUDE_RE": "$^",
-    "AUDIO_INCLUDE_RE": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
-    "AUDIO_EXCLUDE_RE": "$^",
-    "IMAGE_INCLUDE_RE": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
-    "IMAGE_EXCLUDE_RE": "$^",
-    "DOCUMENT_INCLUDE_RE": "(?i)^[^/\\\\]+\\.pdf$",
-    "DOCUMENT_EXCLUDE_RE": "$^",
-    "PORTRAIT_RE": "^profile\\.jpg$",
-    "POSTER_RE": "^cover\\.jpg$",
-    "MAX_IMAGES": 20,
-    "IMAGE_SAMPLE_STRATEGY": "spread",
-    "COLLABORATION_SEPARATOR": " & "
+    "global_exclude_re": "^_",
+    "video_include_re": "(?i)^[^/\\\\]+\\.(mp4|m4v)$",
+    "video_exclude_re": "$^",
+    "audio_include_re": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
+    "audio_exclude_re": "$^",
+    "image_include_re": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
+    "image_exclude_re": "$^",
+    "document_include_re": "(?i)^[^/\\\\]+\\.pdf$",
+    "document_exclude_re": "$^",
+    "creator_profile_image_re": "^profile\\.jpg$",
+    "project_cover_image_re": "^cover\\.jpg$",
+    "image_gallery_max": 20,
+    "image_gallery_sample_strategy": "spread",
+    "collaboration_separator": " & "
   }
 }
 

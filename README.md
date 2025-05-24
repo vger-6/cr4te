@@ -38,9 +38,9 @@ Artists/
 ├── Alice/
 │   ├── cr4te.json           # Optional metadata override
 │   ├── README.md            # Optional description
-|   ├── profile.jpg          # Detected portrait (via PORTRAIT_RE)
+|   ├── profile.jpg          # Detected portrait (via creator_profile_image_re)
 │   └── Project1/
-│       ├── cover.jpg        # Detected poster (via POSTER_RE)
+│       ├── cover.jpg        # Detected poster (via project_cover_image_re)
 │       ├── Landscape1.jpg
 │       ├── clip.mp4
 │       ├── document.pdf
@@ -163,33 +163,33 @@ Your configuration file should be in JSON format and can override labels and med
     "project_page_image_pagination_limit" : 20
   },
   "media_rules": {
-    "GLOBAL_EXCLUDE_RE": "(^|/|\\\\)_",
+    "global_exclude_re": "(^|/|\\\\)_",
 
-    "VIDEO_INCLUDE_RE": ".*\\.mp4$",
-    "VIDEO_EXCLUDE_RE": "$^",
-    "AUDIO_INCLUDE_RE": ".*\\.m4a$",
-    "AUDIO_EXCLUDE_RE": "$^",
-    "IMAGE_INCLUDE_RE": ".*\\.jpg$",
-    "IMAGE_EXCLUDE_RE": "$^",
-    "DOCUMENT_INCLUDE_RE": ".*\\.pdf$",
-    "DOCUMENT_EXCLUDE_RE": "$^",
+    "video_include_re": ".*\\.mp4$",
+    "video_exclude_re": "$^",
+    "audio_include_re": ".*\\.m4a$",
+    "audio_exclude_re": "$^",
+    "image_include_re": ".*\\.jpg$",
+    "image_exclude_re": "$^",
+    "document_include_re": ".*\\.pdf$",
+    "document_exclude_re": "$^",
 
-    "PORTRAIT_RE": "^profile\\.jpg$",
-    "POSTER_RE": "^cover\\.jpg$",
+    "creator_profile_image_re": "^profile\\.jpg$",
+    "project_cover_image_re": "^cover\\.jpg$",
 
-    "MAX_IMAGES": 20,
-    "IMAGE_SAMPLE_STRATEGY": "spread",
+    "image_gallery_max": 20,
+    "image_gallery_sample_strategy": "spread",
 
-    "COLLABORATION_SEPARATOR": " & "
+    "collaboration_separator": " & "
   }
 }
 ```
 
 ### Special Rules
 
-* `PORTRAIT_RE`: Regex used to identify a portrait image (default: `^profile\.jpg$`)
-* `POSTER_RE`: Regex used to identify a project's poster image (default: `^cover\.jpg$`)
-* `IMAGE_SAMPLE_STRATEGY`: Sampling strategy for gallery thumbnails
+* `creator_profile_image_re`: Regex used to identify a portrait image (default: `^profile\.jpg$`)
+* `project_cover_image_re`: Regex used to identify a project's poster image (default: `^cover\.jpg$`)
+* `image_gallery_sample_strategy`: Sampling strategy for gallery thumbnails
 
   * `spread` (default): even sampling throughout the list
   * `head`: take the first N images
@@ -332,7 +332,6 @@ This section outlines planned improvements, refactors, and feature ideas for `cr
 
 ### 🔧 Functionality
 
-- [ ] Add `debut_age` key to creator JSON (default: `None`) and use it
 - [ ] Support project-only mode (without requiring associated creators)
 - [ ] Add JSON validation schema
 - [ ] Add `--dry-run` flag to `build-json` and `build-html` commands
@@ -342,12 +341,11 @@ This section outlines planned improvements, refactors, and feature ideas for `cr
 ### 🔍 Filtering and Selection
 
 - [ ] Allow multiple exclusions/inclusions (e.g., exclude all but include `folder1`, `folderZ`)
-- [ ] Use `POSTER_RE`, `PORTRAIT_RE`, etc., as a list to define custom fallback logic
+- [ ] Use `creator_profile_image_re`, etc., as a list to define custom fallback logic
 
 ### 📄 Output & Layout
 
 - [ ] Use pagination on overview pages
-- [ ] Sort projects on overview pages (e.g., by project title, then creator name)
 - [ ] Extract and reuse button styles (e.g., for a "view PDF" button)
 - [ ] Extract shared CSS styles for customization (or theme overrides)
 - [ ] Split CSS files into modular components (e.g., layout, buttons, gallery)
@@ -355,7 +353,6 @@ This section outlines planned improvements, refactors, and feature ideas for `cr
 ### 🧹 Refactoring
 
 - [ ] DRY up code duplication, especially in `html_builder.py` and `json_builder.py`
-- [ ] Normalize config file keys to lowercase
 - [ ] Consider internal mapping for config fields (e.g., `"creator_page_visible_creator_fields"`)
 
 ### 🧪 Testing & Docs

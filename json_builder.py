@@ -70,7 +70,7 @@ def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: 
     
     projects_data = []
     for project_dir in sorted(creator_path.iterdir()):
-        if not project_dir.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(project_dir.name):
+        if not project_dir.is_dir() or compiled_media_rules["global_exclude_re"].search(project_dir.name):
             continue
 
         project_title = project_dir.name.strip()
@@ -86,29 +86,29 @@ def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: 
             rel_to_input = file.relative_to(input_path)
 
             # 1. Apply global exclusions
-            if compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(rel_path_posix):
+            if compiled_media_rules["global_exclude_re"].search(rel_path_posix):
                 continue
                 
             is_root = file.parent.resolve() == project_dir.resolve()
             folder_key = str(file.parent.relative_to(project_dir)) or project_title
 
             # 2. Match video
-            if compiled_media_rules["VIDEO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["VIDEO_EXCLUDE_RE"].search(rel_path_posix):
+            if compiled_media_rules["video_include_re"].match(rel_path_posix) and not compiled_media_rules["video_exclude_re"].search(rel_path_posix):
                 media_map[folder_key]["videos"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
             
             # 2. Match audio
-            elif compiled_media_rules["AUDIO_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["AUDIO_EXCLUDE_RE"].search(rel_path_posix):
+            elif compiled_media_rules["audio_include_re"].match(rel_path_posix) and not compiled_media_rules["audio_exclude_re"].search(rel_path_posix):
                 media_map[folder_key]["audio"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
 
             # 4. Match image
-            elif compiled_media_rules["IMAGE_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["IMAGE_EXCLUDE_RE"].search(rel_path_posix):
+            elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
                 media_map[folder_key]["images"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
                
             # 3. Match PDF 
-            elif compiled_media_rules["DOCUMENT_INCLUDE_RE"].match(rel_path_posix) and not compiled_media_rules["DOCUMENT_EXCLUDE_RE"].search(rel_path_posix):
+            elif compiled_media_rules["document_include_re"].match(rel_path_posix) and not compiled_media_rules["document_exclude_re"].search(rel_path_posix):
                 media_map[folder_key]["documents"].append(str(rel_to_input))
                 media_map[folder_key]["is_root"] = is_root
             
@@ -119,8 +119,8 @@ def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: 
             
             sampled_images = _sample_images(
                 group["images"],
-                compiled_media_rules.get("MAX_IMAGES", 20),
-                compiled_media_rules.get("IMAGE_SAMPLE_STRATEGY", ImageSampleStrategy.SPREAD)
+                compiled_media_rules.get("image_gallery_max", 20),
+                compiled_media_rules.get("image_gallery_sample_strategy", ImageSampleStrategy.SPREAD)
             )
             
             media_group = {
@@ -143,8 +143,8 @@ def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: 
             media_groups.append(media_group)
             
         # Find thumbnail
-        all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
-        poster_re = compiled_media_rules.get("POSTER_RE")
+        all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
+        poster_re = compiled_media_rules.get("project_cover_image_re")
         poster_candidates = [p for p in all_images if poster_re and poster_re.match(p.name)]
 
         thumbnail_path = ""
@@ -186,8 +186,8 @@ def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rul
     
     # Find portrait
     # TODO: DRY out code duplication. See: collect_projects_data
-    all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(p.name)]
-    portrait_re = compiled_media_rules.get("PORTRAIT_RE")
+    all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
+    portrait_re = compiled_media_rules.get("creator_profile_image_re")
     portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]
 
     portrait_path = ""
@@ -198,7 +198,7 @@ def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rul
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
-    separator = compiled_media_rules.get("COLLABORATION_SEPARATOR", None)
+    separator = compiled_media_rules.get("collaboration_separator", None)
     is_collab = _is_collaboration(creator_name, separator)
     creator_json = {
         "name": creator_name,
@@ -255,7 +255,7 @@ def process_all_creators(input_path: Path, compiled_media_rules: Dict):
     all_creators = []
 
     for creator in sorted(input_path.iterdir()):
-        if not creator.is_dir() or compiled_media_rules["GLOBAL_EXCLUDE_RE"].search(creator.name):
+        if not creator.is_dir() or compiled_media_rules["global_exclude_re"].search(creator.name):
             continue
         print(f"Processing creator: {creator.name}")
         creator_json = _build_creator_json(creator, input_path, compiled_media_rules)

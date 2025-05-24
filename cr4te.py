@@ -59,8 +59,8 @@ def main():
         
         config = cfg.apply_cli_media_overrides(
             config,
-            max_images=args.max_images,
-            image_strategy=args.image_sample_strategy
+            image_gallery_max=args.max_images,
+            image_sample_strategy=args.image_sample_strategy
         )
         
         compiled_media_rules = cfg.compile_media_rules(config["media_rules"])
