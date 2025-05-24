@@ -68,9 +68,15 @@ def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thu
     if not thumb_path.exists():
         thumb_path.parent.mkdir(parents=True, exist_ok=True)
         try:
+            #with Image.open(input_root / relative_path) as img:
+            #    img.thumbnail((thumb_type.height, thumb_type.height))
+            #    img.save(thumb_path, format='JPEG')
             with Image.open(input_root / relative_path) as img:
-                img.thumbnail((thumb_type.height, thumb_type.height))
-                img.save(thumb_path, format='JPEG')
+                target_height = thumb_type.height
+                aspect_ratio = img.width / img.height
+                target_width = int(target_height * aspect_ratio)
+                resized = img.resize((target_width, target_height), Image.LANCZOS)
+                resized.save(thumb_path, format='JPEG')
         except Exception as e:
             print(f"Error creating thumbnail for {relative_path}: {e}")
 
