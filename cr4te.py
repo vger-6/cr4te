@@ -6,7 +6,7 @@ from typing import Dict
 
 import config as cfg
 from html_builder import clear_output_folder, build_html_pages
-from json_builder import process_all_creators, clean_creator_json_files
+from json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 
@@ -52,7 +52,6 @@ def main():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
             
-        # load config
         config = _load_config(args.config)
 
         config = cfg.update_build_rules(config, args.mode)
@@ -64,7 +63,21 @@ def main():
         )
         
         compiled_media_rules = cfg.compile_media_rules(config["media_rules"])
-        process_all_creators(input_path, compiled_media_rules)
+        build_creator_json_files(input_path, compiled_media_rules)
+        
+    elif args.command == "clean-json":
+        input_path = Path(args.input).resolve()
+        if not input_path.exists() or not input_path.is_dir():
+            print(f"Input path does not exist or is not a directory: {input_path}")
+            return
+
+        if not args.force and not args.dry_run:
+            confirm = input(f"Delete all cr4te.json files in '{input_path}'? [y/N]: ").strip().lower()
+            if confirm != 'y':
+                print("Aborting.")
+                return
+
+        clean_creator_json_files(input_path, dry_run=args.dry_run)
 
     elif args.command == "build-html":
         if not args.force and args.clean:
@@ -86,26 +99,11 @@ def main():
         else:
             output_path.mkdir(parents=True, exist_ok=True)
             
-        # load config
         config = _load_config(args.config)
 
         config = cfg.update_html_labels(config, args.html_preset)
         
         build_html_pages(input_path, output_path, config["html_settings"])
-        
-    elif args.command == "clean-json":
-        input_path = Path(args.input).resolve()
-        if not input_path.exists() or not input_path.is_dir():
-            print(f"Input path does not exist or is not a directory: {input_path}")
-            return
-
-        if not args.force and not args.dry_run:
-            confirm = input(f"Delete all cr4te.json files in '{input_path}'? [y/N]: ").strip().lower()
-            if confirm != 'y':
-                print("Aborting.")
-                return
-
-        clean_creator_json_files(input_path, dry_run=args.dry_run)
 
 if __name__ == "__main__":
     main()

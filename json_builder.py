@@ -9,7 +9,7 @@ from PIL import Image
 
 from enums.image_sample_strategy import ImageSampleStrategy
 
-__all__ = ["process_all_creators", "clean_creator_json_files"]
+__all__ = ["build_creator_json_files", "clean_creator_json_files"]
 
 class Orientation(Enum):
     PORTRAIT = "portrait"
@@ -97,7 +97,7 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
 
     return media_map
 
-def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
+def _collect_creator_projects(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in existing_data.get("projects", []) if "title" in p}
     
     projects_data = []
@@ -210,7 +210,7 @@ def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rul
         "featured_portrait": existing_data.get("featured_portrait", None),
         "info": _read_readme_text(creator_path) or existing_data.get("info", ""),
         "tags": existing_data.get("tags", []),
-        "projects": _collect_projects_data(creator_path, existing_data, input_path, compiled_media_rules)
+        "projects": _collect_creator_projects(creator_path, existing_data, input_path, compiled_media_rules)
     }
     
     if is_collab:
@@ -250,7 +250,7 @@ def _write_json_files(creators: List[Dict], base_path: Path) -> None:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator, f, indent=2)
             
-def process_all_creators(input_path: Path, compiled_media_rules: Dict):
+def build_creator_json_files(input_path: Path, compiled_media_rules: Dict):
     all_creators = []
 
     for creator in sorted(input_path.iterdir()):

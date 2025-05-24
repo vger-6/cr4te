@@ -39,7 +39,7 @@ DEFAULT_CONFIG = {
         "project_page_tags_title": "Tags",
         "project_page_creator_profile": "Creator Profile",
         "project_page_videos_label": "Videos",
-        "project_page_audio_label": "Audio",
+        "project_page_audio_label": "Tracks",
         "project_page_images_label": "Images",
         "project_page_documents_label": "Documents",
         
@@ -224,7 +224,6 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "creator_page_projects_title": "Albums",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",
-                "project_page_audio_label": "Tracks",
                 "project_page_creator_profile": "Profile",
             }
         case HtmlPreset.ARTIST:

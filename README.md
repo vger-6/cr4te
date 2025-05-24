@@ -148,7 +148,7 @@ Your configuration file should be in JSON format and can override labels and med
     "project_page_tags_title": "Tags",
     "project_page_creator_profile": "Profile",
     "project_page_videos_label": "Videos",
-    "project_page_audio_label": "Audio",
+    "project_page_audio_label": "Tracks",
     "project_page_images_label": "Images",
     "project_page_documents_label": "Documents",
     

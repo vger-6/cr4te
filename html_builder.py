@@ -24,6 +24,12 @@ env = Environment(
     autoescape=select_autoescape(['html', 'xml'])
 )
 
+class MediaType(str, Enum):
+    IMAGES = "images"
+    VIDEOS = "videos"
+    TRACKS = "tracks"
+    DOCUMENTS = "documents"
+
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
     PORTRAIT = ("_portrait.jpg", 450)
@@ -150,10 +156,10 @@ def _create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> st
         os.symlink((input_root / relative_path).resolve(), dest_file)
 
     return dest_file.name
-
-def _label_for_type(folder_name: str, label: str, active_types: list[str], current_type: str) -> str:
+    
+def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
     """
-    Returns a label for the media section based on what types are present.
+    Returns a title for the media section based on what types are present.
 
     - If only one type is active, return folder_name only.
     - If multiple types, return "folder_name - label".
@@ -237,14 +243,14 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
             video_name = _create_symlink(root_input, Path(video_path), projects_dir / "videos")
             videos.append(f"videos/{video_name}")
             
-        audio = []
-        audio_rel_paths =  media_group["featured_audio"] if media_group.get("featured_audio") is not None else media_group.get("audio", [])
-        for audio_path in audio_rel_paths:
-            audio_name = _create_symlink(root_input, Path(audio_path), projects_dir / "audio")
+        tracks = []
+        track_rel_paths =  media_group["featured_audio"] if media_group.get("featured_audio") is not None else media_group.get("audio", [])
+        for track_path in track_rel_paths:
+            track_name = _create_symlink(root_input, Path(track_path), projects_dir / "tracks")
             
-            audio.append({
-                "full_url": f"audio/{audio_name}",
-                "name": Path(audio_path).stem
+            tracks.append({
+                "full_url": f"tracks/{track_name}",
+                "name": Path(track_path).stem
             })
             
         documents = []
@@ -253,10 +259,10 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
             documents_name = _create_symlink(root_input, Path(documents_path), projects_dir / "documents")
             documents.append(f"documents/{documents_name}")
 
-        image_label = html_settings.get("project_page_images_label", "Images")
-        video_label = html_settings.get("project_page_videos_label", "Videos")
-        audio_label = html_settings.get("project_page_audio_label", "Audios")
-        document_label = html_settings.get("project_page_documents_label", "Documents")
+        image_gallery_section_title = html_settings.get("project_page_images_label", "Images")
+        video_gallery_section_title = html_settings.get("project_page_videos_label", "Videos")
+        audio_gallery_section_title = html_settings.get("project_page_audio_label", "Tracks")
+        document_gallery_section_title = html_settings.get("project_page_documents_label", "Documents")
         
         is_root = media_group.get("is_root", False)
         folder_name = media_group.get("folder_name", "")
@@ -264,33 +270,27 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
         if not is_root:
             active_types = []
             if images:
-                active_types.append("images")
+                active_types.append(MediaType.IMAGES)
             if videos:
-                active_types.append("videos")
-            if audio:
-                active_types.append("audio")
+                active_types.append(MediaType.VIDEOS)
+            if tracks:
+                active_types.append(MediaType.TRACKS)
             if documents:
-                active_types.append("documents")
+                active_types.append(MediaType.DOCUMENTS)
 
-            image_label = _label_for_type(folder_name, html_settings["project_page_images_label"], active_types, "images")
-            video_label = _label_for_type(folder_name, html_settings["project_page_videos_label"], active_types, "videos")
-            audio_label = _label_for_type(folder_name, html_settings["project_page_audio_label"], active_types, "audio")
-            document_label = _label_for_type(folder_name, html_settings["project_page_documents_label"], active_types, "documents")
-        else:
-            # For root folders, use plain labels
-            image_label = html_settings["project_page_images_label"]
-            video_label = html_settings["project_page_videos_label"]
-            audio_label = html_settings["project_page_audio_label"]
-            document_label = html_settings["project_page_documents_label"]
+            image_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_images_label"], active_types, MediaType.IMAGES)
+            video_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_videos_label"], active_types, MediaType.VIDEOS)
+            audio_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_audio_label"], active_types, MediaType.TRACKS)
+            document_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_documents_label"], active_types, MediaType.DOCUMENTS)
                         
         media_groups.append({
-            "image_label": media_group.get("image_label") or image_label,
-            "video_label": media_group.get("video_label") or video_label,
-            "audio_label": media_group.get("audio_label") or audio_label,
-            "document_label": media_group.get("document_label") or document_label,
+            "image_gallery_section_title": media_group.get("image_label") or image_gallery_section_title,
+            "video_gallery_section_title": media_group.get("video_label") or video_gallery_section_title,
+            "audio_gallery_section_title": media_group.get("audio_label") or audio_gallery_section_title,
+            "document_gallery_section_title": media_group.get("document_label") or document_gallery_section_title,
             "images": images,
             "videos": videos,
-            "audio": audio,
+            "tracks": tracks,
             "documents": documents
         })
         
