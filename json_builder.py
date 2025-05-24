@@ -64,6 +64,38 @@ def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStra
             return [sorted_images[int(i * step)] for i in range(max_images)]
         case _:
             return sorted_images  # fallback
+            
+def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Dict]:
+    media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": [], "is_root": False})
+
+    for file in project_dir.rglob("*"):
+        if not file.is_file():
+            continue
+
+        rel_path_posix = file.relative_to(project_dir).as_posix()
+        rel_to_input = file.relative_to(input_path)
+
+        # Apply global exclusions
+        if compiled_media_rules["global_exclude_re"].search(rel_path_posix):
+            continue
+
+        is_root = file.parent.resolve() == project_dir.resolve()
+        folder_key = str(file.parent.relative_to(project_dir)) or project_dir.name
+
+        if compiled_media_rules["video_include_re"].match(rel_path_posix) and not compiled_media_rules["video_exclude_re"].search(rel_path_posix):
+            media_map[folder_key]["videos"].append(str(rel_to_input))
+        elif compiled_media_rules["audio_include_re"].match(rel_path_posix) and not compiled_media_rules["audio_exclude_re"].search(rel_path_posix):
+            media_map[folder_key]["audio"].append(str(rel_to_input))
+        elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
+            media_map[folder_key]["images"].append(str(rel_to_input))
+        elif compiled_media_rules["document_include_re"].match(rel_path_posix) and not compiled_media_rules["document_exclude_re"].search(rel_path_posix):
+            media_map[folder_key]["documents"].append(str(rel_to_input))
+        else:
+            continue
+
+        media_map[folder_key]["is_root"] = is_root
+
+    return media_map
 
 def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in existing_data.get("projects", []) if "title" in p}
@@ -77,40 +109,7 @@ def _collect_projects_data(creator_path: Path, existing_data: Dict, input_path: 
         project_data = existing_projects.get(project_title, {})
         existing_media_groups = {g.get("folder_name"): g for g in project_data.get("media_groups", []) if "folder_name" in g}
 
-        media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": []})
-        for file in project_dir.rglob("*"):
-            if not file.is_file():
-                continue
-            
-            rel_path_posix = file.relative_to(project_dir).as_posix()
-            rel_to_input = file.relative_to(input_path)
-
-            # 1. Apply global exclusions
-            if compiled_media_rules["global_exclude_re"].search(rel_path_posix):
-                continue
-                
-            is_root = file.parent.resolve() == project_dir.resolve()
-            folder_key = str(file.parent.relative_to(project_dir)) or project_title
-
-            # 2. Match video
-            if compiled_media_rules["video_include_re"].match(rel_path_posix) and not compiled_media_rules["video_exclude_re"].search(rel_path_posix):
-                media_map[folder_key]["videos"].append(str(rel_to_input))
-                media_map[folder_key]["is_root"] = is_root
-            
-            # 2. Match audio
-            elif compiled_media_rules["audio_include_re"].match(rel_path_posix) and not compiled_media_rules["audio_exclude_re"].search(rel_path_posix):
-                media_map[folder_key]["audio"].append(str(rel_to_input))
-                media_map[folder_key]["is_root"] = is_root
-
-            # 4. Match image
-            elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
-                media_map[folder_key]["images"].append(str(rel_to_input))
-                media_map[folder_key]["is_root"] = is_root
-               
-            # 3. Match PDF 
-            elif compiled_media_rules["document_include_re"].match(rel_path_posix) and not compiled_media_rules["document_exclude_re"].search(rel_path_posix):
-                media_map[folder_key]["documents"].append(str(rel_to_input))
-                media_map[folder_key]["is_root"] = is_root
+        media_map = _build_media_map(project_dir, input_path, compiled_media_rules)
             
         # Build media_groups list from the grouped map
         media_groups = []
