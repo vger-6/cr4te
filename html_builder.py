@@ -17,6 +17,11 @@ __all__ = ["clear_output_folder", "build_html_pages"]
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+CREATORS_DIRNAME = "creators"
+PROJECTS_DIRNAME = "projects"
+THUMBNAILS_DIRNAME = "thumbnails"
+DEFAULTS_DIRNAME = "defaults"
+
 # Setup Jinja2 environment
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 env = Environment(
@@ -42,11 +47,11 @@ class ThumbType(Enum):
         self.height = height
 
 DEFAULT_IMAGES = {
-    ThumbType.THUMB: "defaults/default_thumb.jpg",
-    ThumbType.PORTRAIT: "defaults/default_portrait.jpg",
-    ThumbType.POSTER: "defaults/default_poster.jpg",
-    ThumbType.PROJECT: "defaults/default_poster.jpg",  # Reuse poster fallback
-    ThumbType.GALLERY: "defaults/default_thumb.jpg"  # Reuse thumb fallback
+    ThumbType.THUMB: f"{DEFAULTS_DIRNAME}/default_thumb.jpg",
+    ThumbType.PORTRAIT: f"{DEFAULTS_DIRNAME}/default_portrait.jpg",
+    ThumbType.POSTER: f"{DEFAULTS_DIRNAME}/default_poster.jpg",
+    ThumbType.PROJECT: f"{DEFAULTS_DIRNAME}/default_poster.jpg",  # Reuse poster fallback
+    ThumbType.GALLERY: f"{DEFAULTS_DIRNAME}/default_thumb.jpg"  # Reuse thumb fallback
 }
 
 def _render_markdown(text: str) -> str:
@@ -65,19 +70,20 @@ def _get_creator_slug(creator: Dict) -> str:
     
 def _get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}__{project['title']}")
+    
+def _get_thumbnail_path(dest_dir: Path, relative_path: Path, thumb_type: ThumbType) -> Path:
+    slug = slugify('__'.join(relative_path.parent.parts))
+    return dest_dir / slug / (relative_path.stem + thumb_type.suffix)
                
 def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thumb_type: ThumbType) -> Path:
-    ext = thumb_type.suffix
-    slug = slugify('__'.join(relative_path.parent.parts))
-    thumb_path = dest_dir / slug / (relative_path.stem + ext)
+    thumb_path = _get_thumbnail_path(dest_dir, relative_path, thumb_type)
 
     if not thumb_path.exists():
         thumb_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            #with Image.open(input_root / relative_path) as img:
-            #    img.thumbnail((thumb_type.height, thumb_type.height))
-            #    img.save(thumb_path, format='JPEG')
             with Image.open(input_root / relative_path) as img:
+                # Note: img.thumbnail(...) maintains aspect ratio but may not match the exact height, 
+                # so we resize manually to ensure uniform thumbnail dimensions.
                 target_height = thumb_type.height
                 aspect_ratio = img.width / img.height
                 target_width = int(target_height * aspect_ratio)
@@ -109,6 +115,29 @@ def _build_project_overview_page(projects: List[dict], input_path: Path, output_
     output_path.mkdir(parents=True, exist_ok=True)
     with open(output_path / "projects.html", "w", encoding="utf-8") as f:
         f.write(rendered)
+        
+def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict]:
+    all_projects = []
+    for creator in creators:
+        for project in creator.get("projects", []):
+            if project.get('thumbnail'):
+                thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
+                thumbnail_url = get_relative_path(thumb_path, output_path)
+            else:
+                thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
+
+            project_slug = _get_project_slug(creator, project)
+            search_terms = project.get("tags", [])
+            search_text = " ".join(search_terms).lower()
+
+            all_projects.append({
+                "title": project["title"],
+                "url": f"{PROJECTS_DIRNAME}/{project_slug}.html",
+                "thumbnail_url": thumbnail_url,
+                "creator": creator["name"],
+                "search_text": search_text
+            })  
+    return all_projects
 
 def _collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
     tags = defaultdict(set)
@@ -173,7 +202,7 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
     slug = _get_project_slug(creator, project)
     print(f"Building project page: {slug}.html")
     
-    projects_dir = out_dir / "projects"
+    projects_dir = out_dir / PROJECTS_DIRNAME
 
     template = env.get_template("project.html.j2")
 
@@ -216,7 +245,7 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
 
             participants.append({
                 "name": name,
-                "url": f"../creators/{_get_creator_slug(participant)}.html",
+                "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
                 "portrait_url": portrait_url,
                 "age_at_release": age_at_release
             })
@@ -325,7 +354,7 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
     slug = _get_creator_slug(creator)
     print(f"Building creator page: {slug}.html")
     
-    creators_dir = out_dir / "creators"
+    creators_dir = out_dir / CREATORS_DIRNAME
 
     template = env.get_template("creator.html.j2")
 
@@ -380,7 +409,7 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         project_slug = _get_project_slug(creator, project)
         projects.append({
             "title": project['title'],
-            "url": f"../projects/{project_slug}.html",
+            "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
             "thumbnail_url": thumb_url,
         })
 
@@ -402,7 +431,7 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
             project_slug = _get_project_slug(collab, project)
             collab_projects.append({
                 "title": project['title'],
-                "url": f"../projects/{project_slug}.html",
+                "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
                 "thumbnail_url": thumb_url,
             })
             
@@ -438,7 +467,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
     slug = _get_creator_slug(creator)
     print(f"Building collaboration page: {slug}.html")
     
-    creators_dir = out_dir / "creators"
+    creators_dir = out_dir / CREATORS_DIRNAME
 
     template = env.get_template("collaboration.html.j2")
 
@@ -478,7 +507,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
 
             member_links.append({
                 "name": member,
-                "url": f"../creators/{member_slug}.html",
+                "url": f"../{CREATORS_DIRNAME}/{member_slug}.html",
                 "thumbnail_url": thumb_url
             })
 
@@ -494,7 +523,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
         project_slug = _get_project_slug(creator, project)
         projects.append({
             "title": project['title'],
-            "url": f"../projects/{project_slug}.html",
+            "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
             "thumbnail_url": thumb_url,
         })
 
@@ -552,7 +581,7 @@ def _build_creator_overview_page(creators: list, input_path: Path, output_path: 
         creator_slug = _get_creator_slug(creator)
         creator_entries.append({
             "name": creator['name'],
-            "url": f"creators/{creator_slug}.html",
+            "url": f"{CREATORS_DIRNAME}/{creator_slug}.html",
             "thumbnail_url": thumbnail_url,
             "search_text": search_text
         })
@@ -588,53 +617,33 @@ def _collect_creator_data(input_path: Path) -> List[Dict]:
                 creator_data.append(json.load(f))
     return creator_data
     
+def _copy_assets(output_path: Path) -> None:
+    for subfolder in ("css", "js", f"{DEFAULTS_DIRNAME}"):
+        _copy_asset_folder(SCRIPT_DIR, subfolder, output_path)
+    
+def _prepare_output_dirs(output_path: Path) -> None:
+    (output_path / CREATORS_DIRNAME).mkdir(parents=True, exist_ok=True)
+    (output_path / PROJECTS_DIRNAME).mkdir(parents=True, exist_ok=True)
+    (output_path / THUMBNAILS_DIRNAME).mkdir(parents=True, exist_ok=True)
+    
 def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
+    _prepare_output_dirs(output_path)
+    _copy_assets(output_path)
+        
+    thumbs_dir = output_path / THUMBNAILS_DIRNAME
     creators = _collect_creator_data(input_path)
-    
-    # Prepare output folders
-    (output_path / "creators").mkdir(parents=True, exist_ok=True)
-    (output_path / "projects").mkdir(parents=True, exist_ok=True)
-    (output_path / "thumbnails").mkdir(parents=True, exist_ok=True)
-    
-    _copy_asset_folder(SCRIPT_DIR, "css", output_path)
-    _copy_asset_folder(SCRIPT_DIR, "js", output_path)
-    _copy_asset_folder(SCRIPT_DIR, "defaults", output_path)
-    
-    thumbs_dir = output_path / "thumbnails"
     _build_creator_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_tags_page(creators, output_path, html_settings)
     
-    # Collect all projects
-    all_projects = []
-    for creator in creators:
-        for project in creator.get("projects", []):
-            if project.get('thumbnail'):
-                thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-                thumbnail_url = get_relative_path(thumb_path, output_path)
-            else:
-                thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
-            
-            project_slug = _get_project_slug(creator, project)
-            
-            search_terms = project.get("tags", [])
-            search_text = " ".join(search_terms).lower()
-            all_projects.append({
-                "title": project["title"],
-                "url": f"projects/{project_slug}.html",
-                "thumbnail_url": thumbnail_url,
-                "creator": creator["name"],
-                "search_text": search_text
-            })
-
-    # Build project overview page
+    all_projects = _collect_all_projects(creators, input_path, output_path, thumbs_dir)
     _build_project_overview_page(all_projects, input_path, output_path, html_settings)
     
 def clear_output_folder(output_path: Path, clear_thumbnails: bool):
     """Delete all contents of output_path except the 'thumbnails' folder."""
     for item in output_path.iterdir():
-        if clear_thumbnails or item.name != "thumbnails":
+        if clear_thumbnails or item.name != THUMBNAILS_DIRNAME:
             if item.is_dir():
                 shutil.rmtree(item)
             else:
