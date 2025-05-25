@@ -96,51 +96,55 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
         media_map[folder_key]["is_root"] = is_root
 
     return media_map
-
-def _collect_creator_projects(creator_path: Path, existing_data: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
-    existing_projects = {p["title"]: p for p in existing_data.get("projects", []) if "title" in p}
     
-    projects_data = []
+def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rules: Dict, project: Dict) -> List[Dict[str, Any]]:
+    media_groups = []
+    media_map = _build_media_map(project_dir, input_path, compiled_media_rules)
+    existing_media_groups = {g.get("folder_name"): g for g in project.get("media_groups", []) if "folder_name" in g}
+
+    for folder_name, media in media_map.items():
+        existing_media_group = existing_media_groups.get(folder_name, {})
+
+        sampled_images = _sample_images(
+            media["images"],
+            compiled_media_rules.get("image_gallery_max", 20),
+            compiled_media_rules.get("image_gallery_sample_strategy", ImageSampleStrategy.SPREAD)
+        )
+
+        media_group = {
+            "is_root": media["is_root"],
+            "videos": sorted(media["videos"]),
+            "featured_videos": existing_media_group.get("featured_videos"),
+            "video_group_name": existing_media_group.get("video_group_name"),
+            "tracks": sorted(media["tracks"]),
+            "featured_tracks": existing_media_group.get("featured_tracks"),
+            "track_group_name": existing_media_group.get("track_group_name"),
+            "images": sampled_images,
+            "featured_images": existing_media_group.get("featured_images"),
+            "image_group_name": existing_media_group.get("image_group_name"),
+            "documents": media["documents"],
+            "featured_documents": existing_media_group.get("featured_documents"),
+            "document_group_name": existing_media_group.get("document_group_name"),
+            "folder_name": folder_name
+        }
+
+        media_groups.append(media_group)
+
+    return media_groups
+
+
+def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
+    existing_projects = {p["title"]: p for p in creator.get("projects", []) if "title" in p}
+    
+    projects = []
     for project_dir in sorted(creator_path.iterdir()):
         if not project_dir.is_dir() or compiled_media_rules["global_exclude_re"].search(project_dir.name):
             continue
 
         project_title = project_dir.name.strip()
-        project_data = existing_projects.get(project_title, {})
-        existing_media_groups = {g.get("folder_name"): g for g in project_data.get("media_groups", []) if "folder_name" in g}
+        
+        existing_project = existing_projects.get(project_title, {})
 
-        media_map = _build_media_map(project_dir, input_path, compiled_media_rules)
-            
-        # Build media_groups list from the grouped map
-        media_groups = []
-        for folder_name, media in media_map.items():
-            existing_media_group = existing_media_groups.get(folder_name, {})
-            
-            sampled_images = _sample_images(
-                media["images"],
-                compiled_media_rules.get("image_gallery_max", 20),
-                compiled_media_rules.get("image_gallery_sample_strategy", ImageSampleStrategy.SPREAD)
-            )
-            
-            media_group = {
-                "is_root": media["is_root"],
-                "videos": sorted(media["videos"]),
-                "featured_videos": existing_media_group.get("featured_videos", None),
-                "video_group_name": existing_media_group.get("video_group_name", None),
-                "tracks": sorted(media["tracks"]),
-                "featured_tracks": existing_media_group.get("featured_tracks", None),
-                "track_group_name": existing_media_group.get("track_group_name", None),
-                "images": sampled_images,
-                "featured_images": existing_media_group.get("featured_images", None),
-                "image_group_name": existing_media_group.get("image_group_name", None),
-                "documents": media["documents"],
-                "featured_documents": existing_media_group.get("featured_documents", None),
-                "document_group_name": existing_media_group.get("document_group_name", None),
-                "folder_name": folder_name
-            }
-            
-            media_groups.append(media_group)
-            
         # Find thumbnail
         all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
         poster_re = compiled_media_rules.get("project_cover_image_re")
@@ -154,19 +158,19 @@ def _collect_creator_projects(creator_path: Path, existing_data: Dict, input_pat
             if poster:
                 thumbnail_path = str(poster.relative_to(input_path))
 
-        project_data = {
+        project = {
             "title": project_title,
-            "release_date": _validate_date_string(project_data.get("release_date", "")),
+            "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "thumbnail": thumbnail_path,
-            "featured_thumbnail": project_data.get("featured_thumbnail", None),
-            "info": _read_readme_text(project_dir) or project_data.get("info", ""),
-            "media_groups": media_groups,
-            "tags": project_data.get("tags", [])
+            "featured_thumbnail": existing_project.get("featured_thumbnail"),
+            "info": _read_readme_text(project_dir) or existing_project.get("info", ""),
+            "media_groups": _build_media_groups(project_dir, input_path, compiled_media_rules, existing_project),
+            "tags": existing_project.get("tags", [])
         }
         
-        projects_data.append(project_data)
+        projects.append(project)
 
-    return projects_data
+    return projects
         
 def _is_collaboration(name: str, separator: Optional[str]) -> bool:
     if not separator:
@@ -179,9 +183,9 @@ def _load_existing_json(json_path: Path) -> Dict:
             return json.load(f)
     return {}
 
-def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict:
+def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Any]:
     creator_name = creator_path.name
-    existing_data = _load_existing_json(creator_path / "cr4te.json")
+    existing_creator = _load_existing_json(creator_path / "cr4te.json")
     
     # Find portrait
     # TODO: DRY out code duplication. See: collect_projects_data
@@ -197,29 +201,29 @@ def _build_creator_json(creator_path: Path, input_path: Path, compiled_media_rul
         if portrait:
             portrait_path = str(portrait.relative_to(input_path))
 
-    separator = compiled_media_rules.get("collaboration_separator", None)
+    separator = compiled_media_rules.get("collaboration_separator")
     is_collab = _is_collaboration(creator_name, separator)
-    creator_json = {
+    creator = {
         "name": creator_name,
-        "is_collaboration": existing_data.get("is_collaboration", is_collab),
-        "born_or_founded": _validate_date_string(existing_data.get("born_or_founded", "")),
-        "active_since": _validate_date_string(existing_data.get("active_since", "")),
-        "nationality": existing_data.get("nationality", ""),
-        "aliases": existing_data.get("aliases", []),
+        "is_collaboration": existing_creator.get("is_collaboration", is_collab),
+        "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
+        "active_since": _validate_date_string(existing_creator.get("active_since", "")),
+        "nationality": existing_creator.get("nationality", ""),
+        "aliases": existing_creator.get("aliases", []),
         "portrait": portrait_path,
-        "featured_portrait": existing_data.get("featured_portrait", None),
-        "info": _read_readme_text(creator_path) or existing_data.get("info", ""),
-        "tags": existing_data.get("tags", []),
-        "projects": _collect_creator_projects(creator_path, existing_data, input_path, compiled_media_rules)
+        "featured_portrait": existing_creator.get("featured_portrait"),
+        "info": _read_readme_text(creator_path) or existing_creator.get("info", ""),
+        "tags": existing_creator.get("tags", []),
+        "projects": _collect_creator_projects(creator_path, existing_creator, input_path, compiled_media_rules)
     }
     
     if is_collab:
         members = [name.strip() for name in creator_name.split(separator)]
-        creator_json["members"] = existing_data.get("members", members)
+        creator["members"] = existing_creator.get("members", members)
     else:
-        creator_json["members"] = []
+        creator["members"] = []
     
-    return creator_json
+    return creator
     
 def _resolve_creator_collaborations(creators: List[Dict]) -> None:
     # Build collaboration map (name -> members)
@@ -253,12 +257,12 @@ def _write_json_files(creators: List[Dict], base_path: Path) -> None:
 def build_creator_json_files(input_path: Path, compiled_media_rules: Dict):
     all_creators = []
 
-    for creator in sorted(input_path.iterdir()):
-        if not creator.is_dir() or compiled_media_rules["global_exclude_re"].search(creator.name):
+    for creator_path in sorted(input_path.iterdir()):
+        if not creator_path.is_dir() or compiled_media_rules["global_exclude_re"].search(creator_path.name):
             continue
-        print(f"Processing creator: {creator.name}")
-        creator_json = _build_creator_json(creator, input_path, compiled_media_rules)
-        all_creators.append(creator_json)
+        print(f"Processing creator: {creator_path.name}")
+        creator = _build_creator(creator_path, input_path, compiled_media_rules)
+        all_creators.append(creator)
 
     _resolve_creator_collaborations(all_creators)
 
