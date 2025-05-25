@@ -370,8 +370,9 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
     # Prepare projects
     projects = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
-        if project.get('thumbnail'):
-            thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
+        thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
+        if thumbnail:
+            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, creators_dir)
         else:
             thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
