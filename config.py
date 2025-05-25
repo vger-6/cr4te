@@ -38,10 +38,10 @@ DEFAULT_CONFIG = {
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
         "project_page_creator_profile": "Creator Profile",
-        "project_page_videos_label": "Videos",
-        "project_page_audio_label": "Tracks",
-        "project_page_images_label": "Images",
-        "project_page_documents_label": "Documents",
+        "project_page_video_section_base_title": "Videos",
+        "project_page_audio_section_base_title": "Audio",
+        "project_page_image_section_base_title": "Images",
+        "project_page_document_section_base_title": "Documents",
         
         "tags_page_title": "Tags",
         
@@ -211,7 +211,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "creator_page_collabs_title_prefix": "Codirected with",
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile": "Profile",
-                "project_page_videos_label": "Movie"
+                "project_page_video_section_base_title": "Movie"
             }
         case HtmlPreset.MUSICIAN:
             return {

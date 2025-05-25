@@ -244,7 +244,7 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
             videos.append(f"videos/{video_name}")
             
         tracks = []
-        track_rel_paths =  media_group["featured_audio"] if media_group.get("featured_audio") is not None else media_group.get("audio", [])
+        track_rel_paths =  media_group["featured_tracks"] if media_group.get("featured_tracks") is not None else media_group.get("tracks", [])
         for track_path in track_rel_paths:
             track_name = _create_symlink(root_input, Path(track_path), projects_dir / "tracks")
             
@@ -259,35 +259,35 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
             documents_name = _create_symlink(root_input, Path(documents_path), projects_dir / "documents")
             documents.append(f"documents/{documents_name}")
 
-        image_gallery_section_title = html_settings.get("project_page_images_label", "Images")
-        video_gallery_section_title = html_settings.get("project_page_videos_label", "Videos")
-        audio_gallery_section_title = html_settings.get("project_page_audio_label", "Tracks")
-        document_gallery_section_title = html_settings.get("project_page_documents_label", "Documents")
+        video_gallery_section_title = html_settings.get("project_page_video_section_base_title", "Videos")
+        audio_gallery_section_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
+        image_gallery_section_title = html_settings.get("project_page_image_section_base_title", "Images")
+        document_gallery_section_title = html_settings.get("project_page_document_section_base_title", "Documents")
         
         is_root = media_group.get("is_root", False)
         folder_name = media_group.get("folder_name", "")
 
         if not is_root:
             active_types = []
-            if images:
-                active_types.append(MediaType.IMAGES)
             if videos:
                 active_types.append(MediaType.VIDEOS)
             if tracks:
                 active_types.append(MediaType.TRACKS)
+            if images:
+                active_types.append(MediaType.IMAGES)
             if documents:
                 active_types.append(MediaType.DOCUMENTS)
 
-            image_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_images_label"], active_types, MediaType.IMAGES)
-            video_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_videos_label"], active_types, MediaType.VIDEOS)
-            audio_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_audio_label"], active_types, MediaType.TRACKS)
-            document_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_documents_label"], active_types, MediaType.DOCUMENTS)
+            video_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_video_section_base_title"], active_types, MediaType.VIDEOS)
+            audio_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_audio_section_base_title"], active_types, MediaType.TRACKS)
+            image_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_image_section_base_title"], active_types, MediaType.IMAGES)
+            document_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_document_section_base_title"], active_types, MediaType.DOCUMENTS)
                         
         media_groups.append({
-            "image_gallery_section_title": media_group.get("image_label") or image_gallery_section_title,
-            "video_gallery_section_title": media_group.get("video_label") or video_gallery_section_title,
-            "audio_gallery_section_title": media_group.get("audio_label") or audio_gallery_section_title,
-            "document_gallery_section_title": media_group.get("document_label") or document_gallery_section_title,
+            "video_gallery_section_title": media_group.get("video_group_name") or video_gallery_section_title,
+            "audio_gallery_section_title": media_group.get("track_group_name") or audio_gallery_section_title,
+            "image_gallery_section_title": media_group.get("image_group_name") or image_gallery_section_title,
+            "document_gallery_section_title": media_group.get("document_group_name") or document_gallery_section_title,
             "images": images,
             "videos": videos,
             "tracks": tracks,

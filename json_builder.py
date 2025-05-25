@@ -66,7 +66,7 @@ def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStra
             return sorted_images  # fallback
             
 def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Dict]:
-    media_map = defaultdict(lambda: {"images": [], "videos": [], "documents": [], "audio": [], "is_root": False})
+    media_map = defaultdict(lambda: {"videos": [], "tracks": [], "images": [], "documents": [], "is_root": False})
 
     for file in project_dir.rglob("*"):
         if not file.is_file():
@@ -85,7 +85,7 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
         if compiled_media_rules["video_include_re"].match(rel_path_posix) and not compiled_media_rules["video_exclude_re"].search(rel_path_posix):
             media_map[folder_key]["videos"].append(str(rel_to_input))
         elif compiled_media_rules["audio_include_re"].match(rel_path_posix) and not compiled_media_rules["audio_exclude_re"].search(rel_path_posix):
-            media_map[folder_key]["audio"].append(str(rel_to_input))
+            media_map[folder_key]["tracks"].append(str(rel_to_input))
         elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif compiled_media_rules["document_include_re"].match(rel_path_posix) and not compiled_media_rules["document_exclude_re"].search(rel_path_posix):
@@ -113,29 +113,29 @@ def _collect_creator_projects(creator_path: Path, existing_data: Dict, input_pat
             
         # Build media_groups list from the grouped map
         media_groups = []
-        for folder_name, group in media_map.items():
+        for folder_name, media in media_map.items():
             existing_media_group = existing_media_groups.get(folder_name, {})
             
             sampled_images = _sample_images(
-                group["images"],
+                media["images"],
                 compiled_media_rules.get("image_gallery_max", 20),
                 compiled_media_rules.get("image_gallery_sample_strategy", ImageSampleStrategy.SPREAD)
             )
             
             media_group = {
-                "is_root": group["is_root"],
-                "videos": sorted(group["videos"]),
+                "is_root": media["is_root"],
+                "videos": sorted(media["videos"]),
                 "featured_videos": existing_media_group.get("featured_videos", None),
-                "video_label": existing_media_group.get("video_label", None),
-                "audio": sorted(group["audio"]),
-                "featured_audio": existing_media_group.get("featured_audio", None),
-                "audio_label": existing_media_group.get("audio_label", None),
+                "video_group_name": existing_media_group.get("video_group_name", None),
+                "tracks": sorted(media["tracks"]),
+                "featured_tracks": existing_media_group.get("featured_tracks", None),
+                "track_group_name": existing_media_group.get("track_group_name", None),
                 "images": sampled_images,
                 "featured_images": existing_media_group.get("featured_images", None),
-                "image_label": existing_media_group.get("image_label", None),
-                "documents": group["documents"],
+                "image_group_name": existing_media_group.get("image_group_name", None),
+                "documents": media["documents"],
                 "featured_documents": existing_media_group.get("featured_documents", None),
-                "document_label": existing_media_group.get("document_label", None),
+                "document_group_name": existing_media_group.get("document_group_name", None),
                 "folder_name": folder_name
             }
             
