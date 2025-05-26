@@ -2,7 +2,7 @@ import shutil
 import json
 import os
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Any
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
@@ -30,9 +30,9 @@ env = Environment(
 )
 
 class MediaType(str, Enum):
-    IMAGES = "images"
     VIDEOS = "videos"
     TRACKS = "tracks"
+    IMAGES = "images"
     DOCUMENTS = "documents"
 
 class ThumbType(Enum):
@@ -185,7 +185,8 @@ def _create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> st
         os.symlink((input_root / relative_path).resolve(), dest_file)
 
     return dest_file.name
-    
+
+# TODO: rename to _format_gallery_title
 def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
     """
     Returns a title for the media section based on what types are present.
@@ -197,6 +198,92 @@ def _format_section_title(folder_name: str, label: str, active_types: List[Media
     if len(active_types) == 1 and current_type in active_types:
         return folder_name
     return f"{folder_name} - {label}"
+    
+def _get_section_titles(media_group: Dict, html_settings: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool) -> Dict[str, str]:
+    video_title = html_settings.get("project_page_video_section_base_title", "Videos")
+    audio_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
+    image_title = html_settings.get("project_page_image_section_base_title", "Images")
+    document_title = html_settings.get("project_page_document_section_base_title", "Documents")
+
+    if not media_group.get("is_root", False):
+        folder_name = media_group.get("folder_name", "")
+        active_types = []
+        if has_videos:
+            active_types.append(MediaType.VIDEOS)
+        if has_tracks:
+            active_types.append(MediaType.TRACKS)
+        if has_images:
+            active_types.append(MediaType.IMAGES)
+        if has_documents:
+            active_types.append(MediaType.DOCUMENTS)
+
+        video_title = _format_section_title(folder_name, video_title, active_types, MediaType.VIDEOS)
+        audio_title = _format_section_title(folder_name, audio_title, active_types, MediaType.TRACKS)
+        image_title = _format_section_title(folder_name, image_title, active_types, MediaType.IMAGES)
+        document_title = _format_section_title(folder_name, document_title, active_types, MediaType.DOCUMENTS)
+
+    # TODO: rename to video_gallery_title,...
+    return {
+        "video_gallery_section_title": media_group.get("video_group_name") or video_title,
+        "audio_gallery_section_title": media_group.get("track_group_name") or audio_title,
+        "image_gallery_section_title": media_group.get("image_group_name") or image_title,
+        "document_gallery_section_title": media_group.get("document_group_name") or document_title,
+    }
+    
+def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thumbs_dir: Path, html_settings: Dict) -> List[Dict[str, Any]]:
+    media_groups = []
+
+    for media_group in project.get("media_groups", []):
+        image_rel_paths = media_group.get("featured_images") or media_group.get("images", [])
+        video_rel_paths = media_group.get("featured_videos") or media_group.get("videos", [])
+        track_rel_paths = media_group.get("featured_tracks") or media_group.get("tracks", [])
+        document_rel_paths = media_group.get("featured_documents") or media_group.get("documents", [])
+
+        images = [
+            {
+                "thumb_url": get_relative_path(_create_thumbnail(root_input, Path(rel), thumbs_dir, ThumbType.GALLERY), projects_dir),
+                "full_url": f"images/{_create_symlink(root_input, Path(rel), projects_dir / 'images')}",
+                "caption": Path(rel).stem
+            }
+            for rel in image_rel_paths
+        ]
+
+        videos = [
+            f"videos/{_create_symlink(root_input, Path(rel), projects_dir / 'videos')}"
+            for rel in video_rel_paths
+        ]
+
+        tracks = [
+            {
+                "full_url": f"tracks/{_create_symlink(root_input, Path(rel), projects_dir / 'tracks')}",
+                "name": Path(rel).stem
+            }
+            for rel in track_rel_paths
+        ]
+
+        documents = [
+            f"documents/{_create_symlink(root_input, Path(rel), projects_dir / 'documents')}"
+            for rel in document_rel_paths
+        ]
+
+        section_titles = _get_section_titles(
+            media_group,
+            html_settings,
+            bool(videos),
+            bool(tracks),
+            bool(images),
+            bool(documents)
+        )
+
+        media_groups.append({
+            **section_titles,
+            "images": images,
+            "videos": videos,
+            "tracks": tracks,
+            "documents": documents
+        })
+
+    return media_groups
 
 def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: Dict):
     slug = _get_project_slug(creator, project)
@@ -250,79 +337,6 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
                 "age_at_release": age_at_release
             })
 
-    # Media groups
-    media_groups = []
-    for media_group in project.get("media_groups", []):
-        images = []
-        image_rel_paths =  media_group["featured_images"] if media_group.get("featured_images") is not None else media_group.get("images", [])
-        for image_rel_path in image_rel_paths:
-            thumb_path = _create_thumbnail(root_input, Path(image_rel_path), thumbs_dir, ThumbType.GALLERY)
-            thumb_url = get_relative_path(thumb_path, projects_dir)
-            image_name = _create_symlink(root_input, Path(image_rel_path), projects_dir / "images")
-            
-            images.append({
-                "thumb_url": thumb_url,
-                "full_url": f"images/{image_name}",
-                "caption": Path(image_rel_path).stem
-            })
-
-        videos = []
-        video_rel_paths =  media_group["featured_videos"] if media_group.get("featured_videos") is not None else media_group.get("videos", [])
-        for video_path in video_rel_paths:
-            video_name = _create_symlink(root_input, Path(video_path), projects_dir / "videos")
-            videos.append(f"videos/{video_name}")
-            
-        tracks = []
-        track_rel_paths =  media_group["featured_tracks"] if media_group.get("featured_tracks") is not None else media_group.get("tracks", [])
-        for track_path in track_rel_paths:
-            track_name = _create_symlink(root_input, Path(track_path), projects_dir / "tracks")
-            
-            tracks.append({
-                "full_url": f"tracks/{track_name}",
-                "name": Path(track_path).stem
-            })
-            
-        documents = []
-        document_rel_paths =  media_group["featured_documents"] if media_group.get("featured_documents") is not None else media_group.get("documents", [])
-        for documents_path in document_rel_paths:
-            documents_name = _create_symlink(root_input, Path(documents_path), projects_dir / "documents")
-            documents.append(f"documents/{documents_name}")
-
-        video_gallery_section_title = html_settings.get("project_page_video_section_base_title", "Videos")
-        audio_gallery_section_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
-        image_gallery_section_title = html_settings.get("project_page_image_section_base_title", "Images")
-        document_gallery_section_title = html_settings.get("project_page_document_section_base_title", "Documents")
-        
-        is_root = media_group.get("is_root", False)
-        folder_name = media_group.get("folder_name", "")
-
-        if not is_root:
-            active_types = []
-            if videos:
-                active_types.append(MediaType.VIDEOS)
-            if tracks:
-                active_types.append(MediaType.TRACKS)
-            if images:
-                active_types.append(MediaType.IMAGES)
-            if documents:
-                active_types.append(MediaType.DOCUMENTS)
-
-            video_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_video_section_base_title"], active_types, MediaType.VIDEOS)
-            audio_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_audio_section_base_title"], active_types, MediaType.TRACKS)
-            image_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_image_section_base_title"], active_types, MediaType.IMAGES)
-            document_gallery_section_title = _format_section_title(folder_name, html_settings["project_page_document_section_base_title"], active_types, MediaType.DOCUMENTS)
-                        
-        media_groups.append({
-            "video_gallery_section_title": media_group.get("video_group_name") or video_gallery_section_title,
-            "audio_gallery_section_title": media_group.get("track_group_name") or audio_gallery_section_title,
-            "image_gallery_section_title": media_group.get("image_group_name") or image_gallery_section_title,
-            "document_gallery_section_title": media_group.get("document_group_name") or document_gallery_section_title,
-            "images": images,
-            "videos": videos,
-            "tracks": tracks,
-            "documents": documents
-        })
-        
     output_html = template.render(
         html_settings=html_settings,
         creator_name=creator["name"],
@@ -332,7 +346,7 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
         info_html=_render_markdown(project.get("info", "")),
         tag_map=tag_map,
         participants=participants,
-        media_groups=media_groups,
+        media_groups=_build_media_groups(project, root_input, projects_dir, thumbs_dir, html_settings),
         gallery_image_max_height=ThumbType.GALLERY.height,
         root_input=root_input,
         out_dir=projects_dir,
