@@ -21,6 +21,8 @@ CREATORS_DIRNAME = "creators"
 PROJECTS_DIRNAME = "projects"
 THUMBNAILS_DIRNAME = "thumbnails"
 DEFAULTS_DIRNAME = "defaults"
+CSS_DIRNAME = "css"
+JS_DIRNAME = "js"
 
 # Setup Jinja2 environment
 TEMPLATE_DIR = Path(__file__).parent / "templates"
@@ -299,6 +301,18 @@ def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thu
 
     return media_groups
     
+def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
+    """
+    Calculates the creator's age at the project's release date.
+    Returns an empty string if either date is missing or invalid.
+    """
+    if creator.get("born_or_founded") and project.get("release_date"):
+        date_of_birth_dt = _parse_date(creator["born_or_founded"])
+        release_dt = _parse_date(project["release_date"])
+        if date_of_birth_dt and release_dt:
+            return _calculate_age(date_of_birth_dt, release_dt)
+    return ""
+    
 def _collect_participant_entries(creator: Dict, creators: List[Dict], project: Dict, root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
     participant_names = creator.get("members") if creator.get("is_collaboration") else [creator["name"]]
@@ -315,18 +329,11 @@ def _collect_participant_entries(creator: Dict, creators: List[Dict], project: D
         else:
             portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
 
-        age_at_release = ""
-        if participant.get("born_or_founded") and project.get("release_date"):
-            date_of_birth_dt = _parse_date(participant['born_or_founded'])
-            release_dt = _parse_date(project['release_date'])
-            if date_of_birth_dt and release_dt:
-                age_at_release = _calculate_age(date_of_birth_dt, release_dt)
-
         participants.append({
             "name": name,
             "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
             "portrait_url": portrait_url,
-            "age_at_release": age_at_release
+            "age_at_release": _calculate_age_at_release(participant, project)
         })
 
     return participants
@@ -618,7 +625,7 @@ def _collect_creator_data(input_path: Path) -> List[Dict]:
     return creator_data
     
 def _copy_assets(output_path: Path) -> None:
-    for subfolder in ("css", "js", f"{DEFAULTS_DIRNAME}"):
+    for subfolder in (CSS_DIRNAME, JS_DIRNAME, DEFAULTS_DIRNAME):
         _copy_asset_folder(SCRIPT_DIR, subfolder, output_path)
     
 def _prepare_output_dirs(output_path: Path) -> None:
