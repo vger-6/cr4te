@@ -2,7 +2,7 @@ import shutil
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Iterable
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
@@ -143,39 +143,37 @@ def _build_project_overview_page(creators: list, input_path: Path, output_path: 
     output_path.mkdir(parents=True, exist_ok=True)
     with open(output_path / "projects.html", "w", encoding="utf-8") as f:
         f.write(rendered)
-        
-def _group_tags_by_category(tags: List[str]) -> Dict[str, List[str]]:
+
+def _collect_tags_from_creator(creator: Dict) -> List[str]:
+    tags = list(creator.get("tags", []))
+    for project in creator.get("projects", []):
+        tags.extend(project.get("tags", []))
+    return tags
+    
+def _group_tags_by_category(tags: Iterable[str]) -> Dict[str, List[str]]:
     """
     Groups tags by category. Tags with the format 'Category: Label' are grouped under 'Category'.
     Tags without a colon are grouped under the default 'Tag' category.
+
+    Returns:
+        A dictionary sorted by category name and tag name.
     """
-    tag_map: Dict[str, List[str]] = {}
-    for tag in sorted(tags):
+    grouped: Dict[str, Set[str]] = defaultdict(set)
+
+    for tag in tags:
         if ":" in tag:
             category, label = tag.split(":", 1)
-            tag_map.setdefault(category.strip(), []).append(label.strip())
+            grouped[category.strip()].add(label.strip())
         else:
-            tag_map.setdefault("Tag", []).append(tag.strip())
-    return tag_map
-
-def _collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
-    tags = defaultdict(set)
+            grouped["Tag"].add(tag.strip())
+            
+    return {category: sorted(grouped[category]) for category in sorted(grouped)}
+    
+def _collect_all_tags(creators: List[Dict]) -> Dict[str, List[str]]:
+    all_tags = []
     for creator in creators:
-        for tag in creator.get("tags", []):
-            if ":" in tag:
-                category, label = tag.split(":", 1)
-                tags[category.strip()].add(label.strip())
-            else:
-                tags["Tag"].add(tag.strip())
-
-        for project in creator.get("projects", []):
-            for tag in project.get("tags", []):
-                if ":" in tag:
-                    category, label = tag.split(":", 1)
-                    tags[category.strip()].add(label.strip())
-                else:
-                    tags["Tag"].add(tag.strip())
-    return tags
+        all_tags.extend(_collect_tags_from_creator(creator))
+    return _group_tags_by_category(all_tags)
 
 def _build_tags_page(creators: list, output_path: Path, html_settings: dict):
     print("Generating tags page...")
@@ -203,7 +201,6 @@ def _create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> st
 
     return dest_file.name
 
-# TODO: rename to _format_gallery_title
 def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
     """
     Returns a title for the media section based on what types are present.
@@ -239,7 +236,7 @@ def _get_section_titles(media_group: Dict, html_settings: Dict, has_videos: bool
         image_title = _format_section_title(folder_name, image_title, active_types, MediaType.IMAGES)
         document_title = _format_section_title(folder_name, document_title, active_types, MediaType.DOCUMENTS)
 
-    # TODO: rename to video_gallery_title,...
+    # TODO: rename to video_section_title,...
     return {
         "video_gallery_section_title": media_group.get("video_group_name") or video_title,
         "audio_gallery_section_title": media_group.get("track_group_name") or audio_title,
@@ -412,19 +409,6 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         except Exception as e:
             print(f"Error computing debut age: {e}")
 
-    # Prepare tags
-    all_tags = set(creator.get("tags", []))
-    for project in creator.get("projects", []):
-        all_tags.update(project.get("tags", []))
-
-    tag_map = {}
-    for tag in sorted(all_tags):
-        if ":" in tag:
-            category, label = tag.split(":", 1)
-            tag_map.setdefault(category.strip(), []).append(label.strip())
-        else:
-            tag_map.setdefault("Tag", []).append(tag.strip())
-
     # Prepare projects
     projects = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
@@ -482,7 +466,7 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         portrait_url=portrait_url,
         debut_age=debut_age,
         info_html=_render_markdown(creator.get("info", "")),
-        tag_map=tag_map,
+        tag_map=_group_tags_by_category(_collect_tags_from_creator(creator)),
         projects=projects,
         collaborations=collaborations,
         project_thumb_max_height=ThumbType.POSTER.height,
@@ -507,19 +491,6 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
         portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
-
-    # Prepare tags
-    all_tags = set(creator.get("tags", []))
-    for project in creator.get("projects", []):
-        all_tags.update(project.get("tags", []))
-
-    tag_map = {}
-    for tag in sorted(all_tags):
-        if ":" in tag:
-            category, label = tag.split(":", 1)
-            tag_map.setdefault(category.strip(), []).append(label.strip())
-        else:
-            tag_map.setdefault("Tag", []).append(tag.strip())
 
     # Prepare member links
     member_links = []
@@ -561,7 +532,7 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
         creator=creator,
         portrait_url=portrait_url,
         info_html=_render_markdown(creator.get("info", "")),
-        tag_map=tag_map,
+        tag_map=_group_tags_by_category(_collect_tags_from_creator(creator)),
         member_links=member_links,
         projects=projects,
         member_thumb_max_height=ThumbType.THUMB.height,
