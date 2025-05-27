@@ -101,21 +101,6 @@ def _sort_project(project: Dict) -> tuple:
     title = project.get("title", "").lower()
     return (not has_date, date_value, title)
     
-def _build_project_overview_page(projects: List[dict], input_path: Path, output_path: Path, html_settings: Dict):
-    template = env.get_template("project_overview.html.j2")
-
-    sorted_projects = sorted(projects, key=lambda p: p["title"].lower())
-
-    rendered = template.render(
-        projects=sorted_projects,
-        html_settings=html_settings,
-        poster_max_height=ThumbType.PROJECT.height,
-    )
-
-    output_path.mkdir(parents=True, exist_ok=True)
-    with open(output_path / "projects.html", "w", encoding="utf-8") as f:
-        f.write(rendered)
-        
 def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict]:
     all_projects = []
     for creator in creators:
@@ -137,7 +122,22 @@ def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: P
                 "creator": creator["name"],
                 "search_text": search_text
             })  
-    return all_projects
+    return sorted(all_projects, key=lambda p: p["title"].lower())
+    
+def _build_project_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: Dict):
+    template = env.get_template("project_overview.html.j2")
+
+    projects = _collect_all_projects(creators, input_path, output_path, thumbs_dir)
+
+    rendered = template.render(
+        projects=projects,
+        html_settings=html_settings,
+        poster_max_height=ThumbType.PROJECT.height,
+    )
+
+    output_path.mkdir(parents=True, exist_ok=True)
+    with open(output_path / "projects.html", "w", encoding="utf-8") as f:
+        f.write(rendered)
 
 def _collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
     tags = defaultdict(set)
@@ -649,10 +649,8 @@ def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
     _build_creator_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
+    _build_project_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
     _build_tags_page(creators, output_path, html_settings)
-    
-    all_projects = _collect_all_projects(creators, input_path, output_path, thumbs_dir)
-    _build_project_overview_page(all_projects, input_path, output_path, html_settings)
     
 def clear_output_folder(output_path: Path, clear_thumbnails: bool):
     """Delete all contents of output_path except the 'thumbnails' folder."""
