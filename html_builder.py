@@ -2,7 +2,7 @@ import shutil
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
@@ -57,6 +57,13 @@ DEFAULT_IMAGES = {
 def _render_markdown(text: str) -> str:
     return markdown.markdown(text, extensions=["extra"])
     
+def _parse_date(date_str: str) -> Optional[datetime]:
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d")
+    except (TypeError, ValueError) as e:
+        print(f"Failed to parse date '{date_str}': {e}")
+        return None
+    
 def _calculate_age(dob: datetime, date: datetime) -> str:
     try:
         age = date.year - dob.year - ((date.month, date.day) < (dob.month, dob.day))
@@ -97,7 +104,7 @@ def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thu
 def _sort_project(project: Dict) -> tuple:
     release_date = project.get("release_date", "")
     has_date = bool(release_date)
-    date_value = datetime.strptime(release_date, "%Y-%m-%d") if has_date else datetime.max
+    date_value = _parse_date(release_date) if has_date else datetime.max
     title = project.get("title", "").lower()
     return (not has_date, date_value, title)
     
@@ -127,10 +134,8 @@ def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: P
 def _build_project_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: Dict):
     template = env.get_template("project_overview.html.j2")
 
-    projects = _collect_all_projects(creators, input_path, output_path, thumbs_dir)
-
     rendered = template.render(
-        projects=projects,
+        projects=_collect_all_projects(creators, input_path, output_path, thumbs_dir),
         html_settings=html_settings,
         poster_max_height=ThumbType.PROJECT.height,
     )
@@ -138,6 +143,20 @@ def _build_project_overview_page(creators: list, input_path: Path, output_path: 
     output_path.mkdir(parents=True, exist_ok=True)
     with open(output_path / "projects.html", "w", encoding="utf-8") as f:
         f.write(rendered)
+        
+def _group_tags_by_category(tags: List[str]) -> Dict[str, List[str]]:
+    """
+    Groups tags by category. Tags with the format 'Category: Label' are grouped under 'Category'.
+    Tags without a colon are grouped under the default 'Tag' category.
+    """
+    tag_map: Dict[str, List[str]] = {}
+    for tag in sorted(tags):
+        if ":" in tag:
+            category, label = tag.split(":", 1)
+            tag_map.setdefault(category.strip(), []).append(label.strip())
+        else:
+            tag_map.setdefault("Tag", []).append(tag.strip())
+    return tag_map
 
 def _collect_all_tags(creators: List[Dict]) -> Dict[str, set[str]]:
     tags = defaultdict(set)
@@ -163,11 +182,9 @@ def _build_tags_page(creators: list, output_path: Path, html_settings: dict):
 
     template = env.get_template("tags.html.j2")
 
-    tags = _collect_all_tags(creators)
-
     output_html = template.render(
         html_settings=html_settings,
-        tags=tags,
+        tags=_collect_all_tags(creators),
     )
 
     tag_file = output_path / "tags.html"
@@ -284,16 +301,40 @@ def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thu
         })
 
     return media_groups
-
-def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: list, html_settings: Dict):
-    slug = _get_project_slug(creator, project)
-    print(f"Building project page: {slug}.html")
     
-    projects_dir = out_dir / PROJECTS_DIRNAME
+def _collect_participant_entries(creator: Dict, creators: List[Dict], project: Dict, root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+    creator_by_name = {c["name"]: c for c in creators}
+    participant_names = creator.get("members") if creator.get("is_collaboration") else [creator["name"]]
+    
+    participants = []
+    for name in participant_names:
+        participant = creator_by_name.get(name)
+        if not participant:
+            continue
 
-    template = env.get_template("project.html.j2")
+        if participant.get('portrait'):
+            thumb_path = _create_thumbnail(root_input, Path(participant['portrait']), thumbs_dir, ThumbType.PORTRAIT)
+            portrait_url = get_relative_path(thumb_path, projects_dir)
+        else:
+            portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
 
-    # Thumbnail
+        age_at_release = ""
+        if participant.get("born_or_founded") and project.get("release_date"):
+            date_of_birth_dt = _parse_date(participant['born_or_founded'])
+            release_dt = _parse_date(project['release_date'])
+            if date_of_birth_dt and release_dt:
+                age_at_release = _calculate_age(date_of_birth_dt, release_dt)
+
+        participants.append({
+            "name": name,
+            "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
+            "portrait_url": portrait_url,
+            "age_at_release": age_at_release
+        })
+
+    return participants
+    
+def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path, html_settings: Dict) -> Dict:
     thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
     if thumbnail:
         thumb_path = _create_thumbnail(root_input, Path(thumbnail), thumbs_dir, ThumbType.POSTER)
@@ -301,56 +342,30 @@ def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir:
     else:
         thumbnail_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.POSTER], projects_dir)
 
-    # Tags
-    tag_map = {}
-    for tag in sorted(project.get("tags", [])):
-        if ":" in tag:
-            category, label = tag.split(":", 1)
-            tag_map.setdefault(category.strip(), []).append(label.strip())
-        else:
-            tag_map.setdefault("Tag", []).append(tag.strip())
+    return {
+        "title": project["title"],
+        "release_date": project.get("release_date"),
+        "thumbnail_url": thumbnail_url,
+        "info_html": _render_markdown(project.get("info", "")),
+        "tag_map": _group_tags_by_category(project.get("tags", [])),
+        "participants": _collect_participant_entries(creator, creators, project, root_input, out_dir, projects_dir, thumbs_dir),
+        "media_groups": _build_media_groups(project, root_input, projects_dir, thumbs_dir, html_settings),
+        "creator_name": creator["name"],
+        "creator_slug": _get_creator_slug(creator),
+    }
 
-    # Participants (creators)
-    participants = []
-    for name in creator.get("members") if creator.get("is_collaboration") else [creator["name"]]:
-        participant = next((p for p in creators if p["name"] == name), None)
-        if participant:
-            if participant.get('portrait'):
-                thumb_path = _create_thumbnail(root_input, Path(participant['portrait']), thumbs_dir, ThumbType.PORTRAIT)
-                portrait_url = get_relative_path(thumb_path, projects_dir)
-            else:
-                portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
-
-            age_at_release = ""
-            if participant.get("born_or_founded") and project.get("release_date"):
-                try:
-                    date_of_birth_dt = datetime.strptime(participant['born_or_founded'], "%Y-%m-%d")
-                    release_dt = datetime.strptime(project['release_date'], "%Y-%m-%d")
-                    age_at_release = _calculate_age(date_of_birth_dt, release_dt)
-                except Exception as e:
-                    print(f"Error calculating age: {e}")
-
-            participants.append({
-                "name": name,
-                "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
-                "portrait_url": portrait_url,
-                "age_at_release": age_at_release
-            })
-
+def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: List[Dict], html_settings: Dict):
+    slug = _get_project_slug(creator, project)
+    print(f"Building project page: {slug}.html")
+    
+    template = env.get_template("project.html.j2")
+    
+    projects_dir = out_dir / PROJECTS_DIRNAME
+    
     output_html = template.render(
         html_settings=html_settings,
-        creator_name=creator["name"],
-        creator_slug=_get_creator_slug(creator),
-        project=project,
-        thumbnail_url=thumbnail_url,
-        info_html=_render_markdown(project.get("info", "")),
-        tag_map=tag_map,
-        participants=participants,
-        media_groups=_build_media_groups(project, root_input, projects_dir, thumbs_dir, html_settings),
+        project=_collect_project_context(creator, project, creators, root_input, out_dir, projects_dir, thumbs_dir, html_settings),
         gallery_image_max_height=ThumbType.GALLERY.height,
-        root_input=root_input,
-        out_dir=projects_dir,
-        get_relative_path=get_relative_path,
     )
 
     page_path = projects_dir / f"{slug}.html"
@@ -387,12 +402,12 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
     debut_age = ""
     if date_of_birth and (active_since or release_dates):
         try:
-            date_of_birth_dt = datetime.strptime(date_of_birth, "%Y-%m-%d")
+            date_of_birth_dt = _parse_date(date_of_birth)
             if active_since:
-                active_since_dt = datetime.strptime(active_since, "%Y-%m-%d")
+                active_since_dt = _parse_date(active_since)
                 debut_age =  _calculate_age(date_of_birth_dt, active_since_dt)
             else:
-                first_release_dt = min(datetime.strptime(d, "%Y-%m-%d") for d in release_dates)
+                first_release_dt = min(_parse_date(d) for d in release_dates)
                 debut_age = _calculate_age(date_of_birth_dt, first_release_dt)
         except Exception as e:
             print(f"Error computing debut age: {e}")
