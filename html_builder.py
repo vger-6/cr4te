@@ -120,16 +120,12 @@ def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: P
             else:
                 thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
 
-            project_slug = _get_project_slug(creator, project)
-            search_terms = project.get("tags", [])
-            search_text = " ".join(search_terms).lower()
-
             all_projects.append({
                 "title": project["title"],
-                "url": f"{PROJECTS_DIRNAME}/{project_slug}.html",
+                "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
                 "thumbnail_url": thumbnail_url,
                 "creator": creator["name"],
-                "search_text": search_text
+                "search_text": " ".join(project.get("tags", [])).lower()
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
     
@@ -559,13 +555,28 @@ def _build_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, 
         else:
             _build_collaboration_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
     
-def _build_creator_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
-    print("Generating overview page...")
+def _build_creator_search_text(creator: Dict) -> str:
+    """
+    Builds a lowercase search text string from a creator's name, tags,
+    project titles, media group labels, and project tags.
+    """
+    search_terms = [creator.get("name", "")]
+    search_terms.extend(creator.get("tags", []))
 
-    template = env.get_template("creator_overview.html.j2")
+    for project in creator.get("projects", []):
+        search_terms.append(project.get("title", ""))
+        for group in project.get("media_groups", []):
+            search_terms.append(group.get("label", ""))
+        search_terms.extend(project.get("tags", []))
 
+    return " ".join(search_terms).lower()
+    
+def _build_creator_entries(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+    """
+    Builds a list of dictionaries containing metadata for each creator,
+    including name, thumbnail URL, profile URL, and search text.
+    """
     creator_entries = []
-
     for creator in creators:
         if creator.get('portrait'):
             thumb_path = _create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.THUMB)
@@ -573,29 +584,23 @@ def _build_creator_overview_page(creators: list, input_path: Path, output_path: 
         else:
             thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
 
-        # Build search text
-        search_terms = [creator['name']]
-        search_terms.extend(creator.get("tags", []))
-        for project in creator.get('projects', []):
-            search_terms.append(project.get('title', ''))
-            for group in project.get('media_groups', []):
-                search_terms.append(group.get('label', ''))
-            for tag in project.get('tags', []):
-                search_terms.append(tag)
-
-        search_text = " ".join(search_terms).lower()
-
-        creator_slug = _get_creator_slug(creator)
         creator_entries.append({
             "name": creator['name'],
-            "url": f"{CREATORS_DIRNAME}/{creator_slug}.html",
+            "url": f"{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
             "thumbnail_url": thumbnail_url,
-            "search_text": search_text
+            "search_text": _build_creator_search_text(creator),
         })
+
+    return creator_entries
+    
+def _build_creator_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
+    print("Generating overview page...")
+
+    template = env.get_template("creator_overview.html.j2")
 
     output_html = template.render(
         html_settings=html_settings,
-        creator_entries=creator_entries,
+        creator_entries=_build_creator_entries(creators, input_path, output_path, thumbs_dir),
         creator_thumb_max_height=ThumbType.THUMB.height,
     )
 
