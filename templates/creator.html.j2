@@ -28,7 +28,7 @@
       <hr>
       <div class="section-content markdown">
         <div class="creator-info">
-          <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
+          <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
             <p><strong>Name:</strong> {{ creator.name }}</p>
             {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
@@ -40,30 +40,30 @@
             {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
             <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
             {% endif %}
-            {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and debut_age %}
-            <p><strong>Debut Age:</strong> {{ debut_age }}</p>
+            {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
+            <p><strong>Debut Age:</strong> {{ creator.debut_age }}</p>
             {% endif %}
           </div>
         </div>
       </div>
     </div>
 
-    {% if info_html %}
+    {% if creator.info_html %}
     <div class="section-box markdown">
       <div class="section-title">{{ html_settings.creator_page_about_title }}</div>
       <hr>
       <div class="section-content text-content">
-        {{ info_html | safe }}
+        {{ creator.info_html | safe }}
       </div>
     </div>
     {% endif %}
 
-    {% if tag_map %}
+    {% if creator.tag_map %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.creator_page_tags_title }}</div>
       <hr>
       <div class="section-content tag-list">
-        {% for category, tags in tag_map.items() %}
+        {% for category, tags in creator.tag_map.items() %}
         <div class="tag-category">
           <strong>{{ category }}:</strong>
           {% for tag in tags %}
@@ -79,13 +79,13 @@
 
   <div class="creator-right">
 
-    {% if projects %}
+    {% if creator.projects %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.creator_page_projects_title }}</div>
       <hr>
       <div class="section-content">
         <div class="image-gallery" id="imageGallery" data-image-max-height="{{ project_thumb_max_height }}">
-          {% for project in projects %}
+          {% for project in creator.projects %}
           <div class="image-wrapper">
             <a href="{{ project.url }}" title="{{ project.title }}">
               <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
@@ -98,7 +98,7 @@
     </div>
     {% endif %}
 
-    {% for collab in collaborations %}
+    {% for collab in creator.collaborations %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.creator_page_projects_title }} with {{ collab.label }}</div>
       <hr>

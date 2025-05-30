@@ -73,6 +73,17 @@ def _calculate_age(dob: datetime, date: datetime) -> str:
     except Exception as e:
         print(f"Error calculating age: {e}")
         return ""
+        
+def _calculate_age_from_strings(birth_date_str: str, reference_date_str: str) -> str:
+    """
+    Safely parses two date strings and returns age as string.
+    Returns empty string if either date is missing or invalid.
+    """
+    dob = _parse_date(birth_date_str)
+    ref = _parse_date(reference_date_str)
+    if dob and ref:
+        return _calculate_age(dob, ref)
+    return ""
 
 def _get_creator_slug(creator: Dict) -> str:
     return slugify(creator['name'])
@@ -104,18 +115,19 @@ def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thu
     return thumb_path
 
 def _sort_project(project: Dict) -> tuple:
-    release_date = project.get("release_date", "")
+    release_date = project.get("release_date")
     has_date = bool(release_date)
     date_value = _parse_date(release_date) if has_date else datetime.max
-    title = project.get("title", "").lower()
+    title = project["title"].lower()
     return (not has_date, date_value, title)
     
 def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict]:
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []):
-            if project.get('thumbnail'):
-                thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
+            thumbnail = project.get('featured_thumbnail') or project.get('thumbnail')
+            if thumbnail:
+                thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
                 thumbnail_url = get_relative_path(thumb_path, output_path)
             else:
                 thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
@@ -298,16 +310,12 @@ def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thu
     return media_groups
     
 def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
-    """
-    Calculates the creator's age at the project's release date.
-    Returns an empty string if either date is missing or invalid.
-    """
-    if creator.get("born_or_founded") and project.get("release_date"):
-        date_of_birth_dt = _parse_date(creator["born_or_founded"])
-        release_dt = _parse_date(project["release_date"])
-        if date_of_birth_dt and release_dt:
-            return _calculate_age(date_of_birth_dt, release_dt)
-    return ""
+    dob = creator.get("born_or_founded")
+    release_date = project.get("release_date")
+    if not dob or not release_date:
+        return ""
+        
+    return _calculate_age_from_strings(dob, release_date)
     
 def _collect_participant_entries(creator: Dict, creators: List[Dict], project: Dict, root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
@@ -318,9 +326,10 @@ def _collect_participant_entries(creator: Dict, creators: List[Dict], project: D
         participant = creator_by_name.get(name)
         if not participant:
             continue
-
-        if participant.get('portrait'):
-            thumb_path = _create_thumbnail(root_input, Path(participant['portrait']), thumbs_dir, ThumbType.PORTRAIT)
+        
+        portrait = participant.get('featured_portrait') or participant.get('portrait')
+        if portrait:
+            thumb_path = _create_thumbnail(root_input, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
             portrait_url = get_relative_path(thumb_path, projects_dir)
         else:
             portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
@@ -344,7 +353,7 @@ def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict],
 
     return {
         "title": project["title"],
-        "release_date": project.get("release_date"),
+        "release_date": project.get("release_date", ""),
         "thumbnail_url": thumbnail_url,
         "info_html": _render_markdown(project.get("info", "")),
         "tag_map": _group_tags_by_category(project.get("tags", [])),
@@ -378,6 +387,72 @@ def _build_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, 
     for creator in creators:
         for project in creator['projects']:
             _build_project_page(creator, project, root_input, out_dir, thumbs_dir, creators, html_settings)
+            
+def _get_collaboration_label(collab: Dict, creator_name: str, html_settings: Dict) -> str:
+    if creator_name in collab.get("members", []):
+        others = [n for n in collab["members"] if n != creator_name]
+        separator = html_settings.get("collaboration_separator", "")
+        return separator.join(others)
+    return collab["name"]
+    
+def _calculate_debut_age(creator: Dict) -> str:
+    dob = creator.get("born_or_founded")
+    active_since = creator.get("active_since")
+    release_dates = [p.get("release_date") for p in creator.get("projects", []) if p.get("release_date")]
+
+    if not dob or (not active_since and not release_dates):
+        return ""
+
+    if active_since:
+        return _calculate_age_from_strings(dob, active_since)
+    
+    valid_release_dates = [d for d in release_dates if _parse_date(d)]
+    if valid_release_dates:
+        earliest = min(valid_release_dates, key=lambda d: _parse_date(d))
+        return _calculate_age_from_strings(dob, earliest)
+
+    return ""
+    
+def _build_project_entries(creator: Dict, input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+    """
+    Builds a list of dictionaries with metadata for each project of a creator,
+    including title, URL, and thumbnail URL.
+    """
+    project_entries = []
+    for project in sorted(creator.get("projects", []), key=_sort_project):
+        thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
+        if thumbnail:
+            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
+            thumb_url = get_relative_path(thumb_path, creators_dir)
+        else:
+            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
+
+        project_entries.append({
+            "title": project["title"],
+            "url": f"../{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
+            "thumbnail_url": thumb_url,
+        })
+
+    return project_entries
+    
+def _build_collaboration_entries(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path, html_settings: Dict) -> List[Dict[str, Any]]:
+    """
+    Builds a list of collaboration entries for a given creator.
+    Each entry includes a label and a list of project entries.
+    """
+    creator_by_name = {c["name"]: c for c in creators}
+    collab_entries = []
+    for collab_name in creator.get("collaborations", []):
+        collab = creator_by_name.get(collab_name)
+        if not collab:
+            continue
+
+        collab_entries.append({
+            "label": _get_collaboration_label(collab, creator["name"], html_settings),
+            "projects": _build_project_entries(collab, input_path, out_dir, creators_dir, thumbs_dir),
+        })
+
+    return collab_entries
     
 def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = _get_creator_slug(creator)
@@ -394,84 +469,23 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
-
-    # Compute debut age
-    date_of_birth = creator.get("born_or_founded")
-    active_since = creator.get("active_since")
-    release_dates = [p.get("release_date") for p in creator.get("projects", []) if p.get("release_date")]
-    debut_age = ""
-    if date_of_birth and (active_since or release_dates):
-        try:
-            date_of_birth_dt = _parse_date(date_of_birth)
-            if active_since:
-                active_since_dt = _parse_date(active_since)
-                debut_age =  _calculate_age(date_of_birth_dt, active_since_dt)
-            else:
-                first_release_dt = min(_parse_date(d) for d in release_dates)
-                debut_age = _calculate_age(date_of_birth_dt, first_release_dt)
-        except Exception as e:
-            print(f"Error computing debut age: {e}")
-
-    # Prepare projects
-    projects = []
-    for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
-        if thumbnail:
-            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, creators_dir)
-        else:
-            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
-
-        project_slug = _get_project_slug(creator, project)
-        projects.append({
-            "title": project['title'],
-            "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
-            "thumbnail_url": thumb_url,
-        })
-
-    # Prepare collaborations (from creator["collaborations"])
-    collaborations = []
-    for collab_name in creator.get("collaborations", []):
-        collab = next((c for c in creators if c["name"] == collab_name), None)
-        if not collab:
-            continue
-
-        collab_projects = []
-        for project in sorted(collab.get("projects", []), key=_sort_project):
-            if project.get('thumbnail'):
-                thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
-                thumb_url = get_relative_path(thumb_path, creators_dir)
-            else:
-                thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
-
-            project_slug = _get_project_slug(collab, project)
-            collab_projects.append({
-                "title": project['title'],
-                "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
-                "thumbnail_url": thumb_url,
-            })
-            
-        # Determine label
-        if creator["name"] in collab.get("members", []):
-            others = [n for n in collab["members"] if n != creator["name"]]
-            label = " & ".join(others)
-        else:
-            label = collab_name
-
-        collaborations.append({
-            "label": label,
-            "projects": collab_projects
-        })
+        
+    creator_context = {
+        "name": creator["name"],
+        "aliases": creator.get("aliases", []),
+        "born_or_founded": creator.get("born_or_founded", ""),
+        "nationality": creator.get("nationality", ""),
+        "portrait_url": portrait_url,
+        "debut_age": _calculate_debut_age(creator),
+        "info_html": _render_markdown(creator.get("info", "")),
+        "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
+        "projects": _build_project_entries(creator, input_path, out_dir, creators_dir, thumbs_dir),
+        "collaborations": _build_collaboration_entries(creator, creators, input_path, out_dir, creators_dir, thumbs_dir, html_settings),
+    }
 
     output_html = template.render(
         html_settings=html_settings,
-        creator=creator,
-        portrait_url=portrait_url,
-        debut_age=debut_age,
-        info_html=_render_markdown(creator.get("info", "")),
-        tag_map=_group_tags_by_category(_collect_tags_from_creator(creator)),
-        projects=projects,
-        collaborations=collaborations,
+        creator=creator_context,
         project_thumb_max_height=ThumbType.POSTER.height,
     )
 
@@ -514,11 +528,11 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
                 "thumbnail_url": thumb_url
             })
 
-    # Prepare projects
     projects = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
-        if project.get('thumbnail'):
-            thumb_path = _create_thumbnail(input_path, Path(project['thumbnail']), thumbs_dir, ThumbType.PROJECT)
+        thumbnail = project.get('featured_thumbnail') or project.get('thumbnail')
+        if thumbnail:
+            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
             thumb_url = get_relative_path(thumb_path, creators_dir)
         else:
             thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
@@ -560,11 +574,11 @@ def _build_creator_search_text(creator: Dict) -> str:
     Builds a lowercase search text string from a creator's name, tags,
     project titles, media group labels, and project tags.
     """
-    search_terms = [creator.get("name", "")]
+    search_terms = [creator["name"]]
     search_terms.extend(creator.get("tags", []))
 
     for project in creator.get("projects", []):
-        search_terms.append(project.get("title", ""))
+        search_terms.append(project["title"])
         for group in project.get("media_groups", []):
             search_terms.append(group.get("label", ""))
         search_terms.extend(project.get("tags", []))
@@ -585,7 +599,7 @@ def _build_creator_entries(creators: List[Dict], input_path: Path, output_path: 
             thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
 
         creator_entries.append({
-            "name": creator['name'],
+            "name": creator["name"],
             "url": f"{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
             "thumbnail_url": thumbnail_url,
             "search_text": _build_creator_search_text(creator),
