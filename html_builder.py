@@ -454,23 +454,19 @@ def _build_collaboration_entries(creator: Dict, creators: List[Dict], input_path
 
     return collab_entries
     
-def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
-    slug = _get_creator_slug(creator)
-    print(f"Building creator page: {slug}.html")
-    
-    creators_dir = out_dir / CREATORS_DIRNAME
-
-    template = env.get_template("creator.html.j2")
-
-    # Process portrait thumbnail
+def _collect_creator_context(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path, html_settings: Dict) -> Dict[str, Any]:
+    """
+    Builds the context dictionary for rendering a creator's page,
+    including metadata, portrait, projects, collaborations, and tags.
+    """
     portrait = creator.get("featured_portrait") or creator.get("portrait")
     if portrait:
         thumb_path = _create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
         portrait_url = get_relative_path(thumb_path, creators_dir)
     else:
         portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
-        
-    creator_context = {
+
+    return {
         "name": creator["name"],
         "aliases": creator.get("aliases", []),
         "born_or_founded": creator.get("born_or_founded", ""),
@@ -482,16 +478,80 @@ def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir
         "projects": _build_project_entries(creator, input_path, out_dir, creators_dir, thumbs_dir),
         "collaborations": _build_collaboration_entries(creator, creators, input_path, out_dir, creators_dir, thumbs_dir, html_settings),
     }
+    
+def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+    slug = _get_creator_slug(creator)
+    print(f"Building creator page: {slug}.html")
+    
+    creators_dir = out_dir / CREATORS_DIRNAME
+
+    template = env.get_template("creator.html.j2")
 
     output_html = template.render(
         html_settings=html_settings,
-        creator=creator_context,
+        creator=_collect_creator_context(creator, creators, input_path, out_dir, creators_dir, thumbs_dir, html_settings),
         project_thumb_max_height=ThumbType.POSTER.height,
     )
 
     page_path = creators_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
+        
+def _collect_member_links(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+    """
+    Builds a list of dictionaries representing links to member creators
+    in a collaboration, including name, URL, and thumbnail URL.
+    """
+    if not creator.get("is_collaboration"):
+        return []
+
+    creator_by_name = {c["name"]: c for c in creators}
+    member_links = []
+
+    for member_name in creator.get("members", []):
+        member = creator_by_name.get(member_name)
+        if not member:
+            continue
+
+        member_portrait = member.get("featured_portrait") or member.get("portrait")
+        if member_portrait:
+            thumb_path = _create_thumbnail(input_path, Path(member_portrait), thumbs_dir, ThumbType.THUMB)
+            thumb_url = get_relative_path(thumb_path, creators_dir)
+        else:
+            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.THUMB], creators_dir)
+
+        member_links.append({
+            "name": member_name,
+            "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(member)}.html",
+            "thumbnail_url": thumb_url
+        })
+
+    return member_links
+        
+def _collect_collaboration_context(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> Dict[str, Any]:
+    """
+    Builds the context dictionary for rendering a collaboration page,
+    including metadata, portrait, members, projects, and tags.
+    """
+    portrait = creator.get("featured_portrait") or creator.get("portrait")
+    if portrait:
+        thumb_path = _create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
+        portrait_url = get_relative_path(thumb_path, creators_dir)
+    else:
+        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
+
+    return {
+        "name": creator["name"],
+        "member_names": creator.get("members", []),
+        "members": _collect_member_links(creator, creators, input_path, out_dir, creators_dir, thumbs_dir),
+        "born_or_founded": creator.get("born_or_founded", ""),
+        "nationality": creator.get("nationality", ""),
+        "active_since": creator.get("active_since", ""),
+        "portrait_url": portrait_url,
+        "info_html": _render_markdown(creator.get("info", "")),
+        "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
+        "projects": _build_project_entries(creator, input_path, out_dir, creators_dir, thumbs_dir),
+    }
     
 def _build_collaboration_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
     slug = _get_creator_slug(creator)
@@ -501,57 +561,9 @@ def _build_collaboration_page(creator: dict, creators: list, input_path: Path, o
 
     template = env.get_template("collaboration.html.j2")
 
-    # Process portrait thumbnail
-    portrait = creator.get("featured_portrait") or creator.get("portrait")
-    if portrait:
-        thumb_path = _create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, creators_dir)
-    else:
-        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
-
-    # Prepare member links
-    member_links = []
-    existing_creator_names = {m["name"]: m for m in creators if not m.get("is_collaboration")}
-    for member in creator.get("members", []):
-        if member in existing_creator_names:
-            member_slug = _get_creator_slug(existing_creator_names[member])
-            member_portrait = existing_creator_names[member].get("portrait")
-            if member_portrait:
-                thumb_path = _create_thumbnail(input_path, Path(member_portrait), thumbs_dir, ThumbType.THUMB)
-                thumb_url = get_relative_path(thumb_path, creators_dir)
-            else:
-                thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.THUMB], creators_dir)
-
-            member_links.append({
-                "name": member,
-                "url": f"../{CREATORS_DIRNAME}/{member_slug}.html",
-                "thumbnail_url": thumb_url
-            })
-
-    projects = []
-    for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumbnail = project.get('featured_thumbnail') or project.get('thumbnail')
-        if thumbnail:
-            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, creators_dir)
-        else:
-            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
-
-        project_slug = _get_project_slug(creator, project)
-        projects.append({
-            "title": project['title'],
-            "url": f"../{PROJECTS_DIRNAME}/{project_slug}.html",
-            "thumbnail_url": thumb_url,
-        })
-
     output_html = template.render(
         html_settings=html_settings,
-        creator=creator,
-        portrait_url=portrait_url,
-        info_html=_render_markdown(creator.get("info", "")),
-        tag_map=_group_tags_by_category(_collect_tags_from_creator(creator)),
-        member_links=member_links,
-        projects=projects,
+        creator=_collect_collaboration_context(creator, creators, input_path, out_dir, creators_dir, thumbs_dir),
         member_thumb_max_height=ThumbType.THUMB.height,
         project_thumb_max_height=ThumbType.POSTER.height,
     )

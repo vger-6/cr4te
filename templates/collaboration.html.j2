@@ -28,13 +28,13 @@
       <hr>
       <div class="section-content markdown">
         <div class="creator-info">
-          <img src="{{ portrait_url }}" alt="Portrait of {{ creator.name }}">
+          <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
             {% if 'name' in html_settings.collaboration_page_visible_collaboration_fields and creator.name %}
             <p><strong>Name:</strong> {{ creator.name }}</p>
             {% endif %}
-            {% if 'members' in html_settings.collaboration_page_visible_collaboration_fields and creator.members %}
-            <p><strong>{{ html_settings.collaboration_page_members_title }}:</strong> {{ creator.members | join(', ') }}</p>
+            {% if 'members' in html_settings.collaboration_page_visible_collaboration_fields and creator.member_names %}
+            <p><strong>{{ html_settings.collaboration_page_members_title }}:</strong> {{ creator.member_names | join(', ') }}</p>
             {% endif %}
             {% if 'founded' in html_settings.collaboration_page_visible_collaboration_fields and creator.born_or_founded %}
             <p><strong>Founded:</strong> {{ creator.born_or_founded }}</p>
@@ -50,23 +50,23 @@
       </div>
     </div>
 
-    {% if info_html %}
+    {% if creator.info_html %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_about_title }}</div>
       <hr>
       <div class="section-content text-content">
-        {{ info_html | safe }}
+        {{ creator.info_html | safe }}
       </div>
     </div>
     {% endif %}
 
-    {% if member_links %}
+    {% if creator.members %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
       <hr>
       <div class="section-content">
         <div class="image-gallery" id="imageGallery" data-image-max-height="{{ member_thumb_max_height }}">
-          {% for member in member_links %}
+          {% for member in creator.members %}
           <div class="image-wrapper">
             <a href="{{ member.url }}" title="{{ member.name }}">
               <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}" loading="lazy">
@@ -79,12 +79,12 @@
     </div>
     {% endif %}
 
-    {% if tag_map %}
+    {% if creator.tag_map %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_tags_title }}</div>
       <hr>
       <div class="section-content tag-list">
-        {% for category, tags in tag_map.items() %}
+        {% for category, tags in creator.tag_map.items() %}
         <div class="tag-category">
           <strong>{{ category }}:</strong>
           {% for tag in tags %}
@@ -100,13 +100,13 @@
 
   <div class="creator-right">
 
-    {% if projects %}
+    {% if creator.projects %}
     <div class="section-box">
       <div class="section-title">{{ html_settings.collaboration_page_projects_title }}</div>
       <hr>
       <div class="section-content">
         <div class="image-gallery" id="imageGallery" data-image-max-height="{{ project_thumb_max_height }}">
-          {% for project in projects %}
+          {% for project in creator.projects %}
           <div class="image-wrapper">
             <a href="{{ project.url }}" title="{{ project.title }}">
               <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
