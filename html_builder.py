@@ -123,21 +123,22 @@ def _get_project_slug(creator: Dict, project: Dict) -> str:
 def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, thumb_type: ThumbType) -> Path:
     slug = slugify('__'.join(relative_image_path.parent.parts))
     return thumb_dir / slug / (relative_image_path.stem + thumb_type.suffix)
+    
+def _generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType) -> None:
+    with Image.open(source_path) as img:
+        target_height = thumb_type.height
+        aspect_ratio = img.width / img.height
+        target_width = int(target_height * aspect_ratio)
+        resized = img.resize((target_width, target_height), Image.LANCZOS)
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        resized.save(dest_path, format='JPEG')
                
-def _create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_dir: Path, thumb_type: ThumbType) -> Path:
+def _get_or_create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_dir: Path, thumb_type: ThumbType) -> Path:
     thumb_path = _get_thumbnail_path(thumb_dir, relative_image_path, thumb_type)
 
     if not thumb_path.exists():
-        thumb_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            with Image.open(input_dir / relative_image_path) as img:
-                # Note: img.thumbnail(...) maintains aspect ratio but may not match the exact height, 
-                # so we resize manually to ensure uniform thumbnail dimensions.
-                target_height = thumb_type.height
-                aspect_ratio = img.width / img.height
-                target_width = int(target_height * aspect_ratio)
-                resized = img.resize((target_width, target_height), Image.LANCZOS)
-                resized.save(thumb_path, format='JPEG')
+            _generate_thumbnail(input_dir / relative_image_path, thumb_path, thumb_type)
         except Exception as e:
             print(f"Error creating thumbnail for {relative_image_path}: {e}")
 
@@ -149,7 +150,7 @@ def resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: BuildC
     falling back to a default image if the input is None or missing.
     """
     if relative_image_path:
-        return _create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
+        return _get_or_create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
     return ctx.default_image(thumb_type)
 
 def _sort_project(project: Dict) -> tuple:
@@ -299,7 +300,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
 
         images = [
             {
-                "thumb_url": get_relative_path(_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), ctx.projects_dir),
+                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), ctx.projects_dir),
                 "full_url": f"images/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'images')}",
                 "caption": Path(rel).stem
             }
