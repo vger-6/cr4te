@@ -136,6 +136,15 @@ def _create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_dir: Pat
             print(f"Error creating thumbnail for {relative_image_path}: {e}")
 
     return thumb_path
+    
+def resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: BuildContext, thumb_type: ThumbType) -> Path:
+    """
+    Returns the resolved thumbnail path for a given relative image path,
+    falling back to a default image if the input is None or missing.
+    """
+    if relative_image_path:
+        return _create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
+    return ctx.output_dir / DEFAULT_IMAGES[thumb_type]
 
 def _sort_project(project: Dict) -> tuple:
     release_date = project.get("release_date")
@@ -147,18 +156,13 @@ def _sort_project(project: Dict) -> tuple:
 def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]:
     all_projects = []
     for creator in creators:
-        for project in creator.get("projects", []):
-            thumbnail = project.get('featured_thumbnail') or project.get('thumbnail')
-            if thumbnail:
-                thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.PROJECT)
-                thumbnail_url = get_relative_path(thumb_path, ctx.output_dir)
-            else:
-                thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PROJECT], ctx.output_dir)
+        for project in creator.get("projects", []): 
+            thumb_path = resolve_thumbnail_or_default(project.get('featured_thumbnail') or project.get('thumbnail'), ctx, ThumbType.PROJECT)
 
             all_projects.append({
                 "title": project["title"],
                 "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
-                "thumbnail_url": thumbnail_url,
+                "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
                 "creator": creator["name"],
                 "search_text": " ".join(project.get("tags", [])).lower()
             })  
@@ -350,35 +354,25 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
         participant = creator_by_name.get(name)
         if not participant:
             continue
-        
-        portrait = participant.get('featured_portrait') or participant.get('portrait')
-        if portrait:
-            thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
-            portrait_url = get_relative_path(thumb_path, ctx.projects_dir)
-        else:
-            portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.projects_dir)
+         
+        thumb_path = resolve_thumbnail_or_default(participant.get('featured_portrait') or participant.get('portrait'), ctx, ThumbType.PORTRAIT)
 
         participants.append({
             "name": name,
             "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
-            "portrait_url": portrait_url,
+            "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
             "age_at_release": _calculate_age_at_release(participant, project)
         })
 
     return participants
     
-def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict:
-    thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
-    if thumbnail:
-        thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.POSTER)
-        thumbnail_url = get_relative_path(thumb_path, ctx.projects_dir)
-    else:
-        thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.POSTER], ctx.projects_dir)
+def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict: 
+    thumb_path = resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.POSTER)
 
     return {
         "title": project["title"],
         "release_date": project.get("release_date", ""),
-        "thumbnail_url": thumbnail_url,
+        "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
         "info_html": _render_markdown(project.get("info", "")),
         "tag_map": _group_tags_by_category(project.get("tags", [])),
         "participants": _collect_participant_entries(creator, project, creators, ctx),
@@ -442,17 +436,12 @@ def _build_project_entries(creator: Dict, ctx: BuildContext) -> List[Dict[str, s
     """
     project_entries = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
-        if thumbnail:
-            thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, ctx.creators_dir)
-        else:
-            thumb_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PROJECT], ctx.creators_dir)
+        thumb_path = resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.PROJECT)
 
         project_entries.append({
             "title": project["title"],
             "url": f"../{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
-            "thumbnail_url": thumb_url,
+            "thumbnail_url": get_relative_path(thumb_path, ctx.creators_dir),
         })
 
     return project_entries
@@ -481,19 +470,14 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
-    portrait = creator.get("featured_portrait") or creator.get("portrait")
-    if portrait:
-        thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, ctx.creators_dir)
-    else:
-        portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.creators_dir)
+    thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
         "aliases": creator.get("aliases", []),
         "born_or_founded": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
-        "portrait_url": portrait_url,
+        "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -533,17 +517,12 @@ def _collect_member_links(creator: Dict, creators: List[Dict], ctx: BuildContext
         if not member:
             continue
 
-        member_portrait = member.get("featured_portrait") or member.get("portrait")
-        if member_portrait:
-            thumb_path = _create_thumbnail(ctx.input_dir, Path(member_portrait), ctx.thumbs_dir, ThumbType.THUMB)
-            thumb_url = get_relative_path(thumb_path, ctx.creators_dir)
-        else:
-            thumb_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.THUMB], ctx.creators_dir)
+        thumb_path = resolve_thumbnail_or_default(member.get("featured_portrait") or member.get("portrait"), ctx, ThumbType.THUMB)
 
         member_links.append({
             "name": member_name,
             "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(member)}.html",
-            "thumbnail_url": thumb_url
+            "thumbnail_url": get_relative_path(thumb_path, ctx.creators_dir)
         })
 
     return member_links
@@ -553,12 +532,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
     Builds the context dictionary for rendering a collaboration page,
     including metadata, portrait, members, projects, and tags.
     """
-    portrait = creator.get("featured_portrait") or creator.get("portrait")
-    if portrait:
-        thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, ctx.creators_dir)
-    else:
-        portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.creators_dir)
+    thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
@@ -567,7 +541,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
         "born_or_founded": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
         "active_since": creator.get("active_since", ""),
-        "portrait_url": portrait_url,
+        "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),
@@ -622,17 +596,12 @@ def _build_creator_entries(creators: List[Dict], ctx: BuildContext) -> List[Dict
     """
     creator_entries = []
     for creator in creators:
-        portrait = creator.get('featured_portrait') or creator.get('portrait')
-        if portrait:
-            thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.THUMB)
-            thumbnail_url = get_relative_path(thumb_path, ctx.output_dir)
-        else:
-            thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.THUMB], ctx.output_dir)
+        thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.THUMB)
 
         creator_entries.append({
             "name": creator["name"],
             "url": f"{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
-            "thumbnail_url": thumbnail_url,
+            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
             "search_text": _build_creator_search_text(creator),
         })
 
