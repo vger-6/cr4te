@@ -96,7 +96,7 @@
     {% for group in project.media_groups %}
       {% if group.videos %}
       <div class="section-box">
-        <div class="section-title">{{ group.video_gallery_section_title }}</div>
+        <div class="section-title">{{ group.video_section_title }}</div>
         <hr>
         <div class="section-content video-gallery">
           {% for video in group.videos %}
@@ -110,7 +110,7 @@
       
       {% if group.tracks %}
       <div class="section-box">
-        <div class="section-title">{{ group.audio_gallery_section_title }}</div>
+        <div class="section-title">{{ group.audio_section_title }}</div>
         <hr>
         <div class="section-content">
           <div class="audio-gallery">
@@ -134,7 +134,7 @@
 
       {% if group.images %}
         <div class="section-box">
-          <div class="section-title">{{ group.image_gallery_section_title }}</div>
+          <div class="section-title">{{ group.image_section_title }}</div>
           <hr>
           <div class="section-content">
             <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}" data-image-max-height="{{ gallery_image_max_height }}">
@@ -155,7 +155,7 @@
       
       {% if group.documents %}
       <div class="section-box">
-        <div class="section-title">{{ group.document_gallery_section_title }}</div>
+        <div class="section-title">{{ group.document_section_title }}</div>
         <hr>
         <div class="section-content">
           <div class="document-gallery">

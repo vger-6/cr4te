@@ -282,12 +282,11 @@ def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, h
         image_title = _format_section_title(folder_name, image_title, active_types, MediaType.IMAGES)
         document_title = _format_section_title(folder_name, document_title, active_types, MediaType.DOCUMENTS)
 
-    # TODO: rename to video_section_title,...
     return {
-        "video_gallery_section_title": media_group.get("video_group_name") or video_title,
-        "audio_gallery_section_title": media_group.get("track_group_name") or audio_title,
-        "image_gallery_section_title": media_group.get("image_group_name") or image_title,
-        "document_gallery_section_title": media_group.get("document_group_name") or document_title,
+        "video_section_title": media_group.get("video_group_name") or video_title,
+        "audio_section_title": media_group.get("track_group_name") or audio_title,
+        "image_section_title": media_group.get("image_group_name") or image_title,
+        "document_section_title": media_group.get("document_group_name") or document_title,
     }
     
 def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
