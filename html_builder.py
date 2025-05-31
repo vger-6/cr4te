@@ -32,6 +32,31 @@ env = Environment(
     autoescape=select_autoescape(['html', 'xml'])
 )
 
+class MediaType(str, Enum):
+    VIDEOS = "videos"
+    TRACKS = "tracks"
+    IMAGES = "images"
+    DOCUMENTS = "documents"
+
+class ThumbType(Enum):
+    THUMB = ("_thumb.jpg", 300)
+    PORTRAIT = ("_portrait.jpg", 450)
+    POSTER = ("_poster.jpg", 600)
+    PROJECT = ("_project.jpg", 600)
+    GALLERY = ("_gallery.jpg", 450)
+
+    def __init__(self, suffix: str, height: int):
+        self.suffix = suffix
+        self.height = height
+        
+DEFAULT_IMAGES = {
+    ThumbType.THUMB: f"{DEFAULTS_DIRNAME}/default_thumb.jpg",
+    ThumbType.PORTRAIT: f"{DEFAULTS_DIRNAME}/default_portrait.jpg",
+    ThumbType.POSTER: f"{DEFAULTS_DIRNAME}/default_poster.jpg",
+    ThumbType.PROJECT: f"{DEFAULTS_DIRNAME}/default_poster.jpg",  # Reuse poster fallback
+    ThumbType.GALLERY: f"{DEFAULTS_DIRNAME}/default_thumb.jpg"  # Reuse thumb fallback
+}
+        
 @dataclass
 class BuildContext:
     input_dir: Path
@@ -53,31 +78,12 @@ class BuildContext:
     @property
     def defaults_dir(self) -> Path:
         return self.output_dir / DEFAULTS_DIRNAME
-
-class MediaType(str, Enum):
-    VIDEOS = "videos"
-    TRACKS = "tracks"
-    IMAGES = "images"
-    DOCUMENTS = "documents"
-
-class ThumbType(Enum):
-    THUMB = ("_thumb.jpg", 300)
-    PORTRAIT = ("_portrait.jpg", 450)
-    POSTER = ("_poster.jpg", 600)
-    PROJECT = ("_project.jpg", 600)
-    GALLERY = ("_gallery.jpg", 450)
-
-    def __init__(self, suffix: str, height: int):
-        self.suffix = suffix
-        self.height = height
-
-DEFAULT_IMAGES = {
-    ThumbType.THUMB: f"{DEFAULTS_DIRNAME}/default_thumb.jpg",
-    ThumbType.PORTRAIT: f"{DEFAULTS_DIRNAME}/default_portrait.jpg",
-    ThumbType.POSTER: f"{DEFAULTS_DIRNAME}/default_poster.jpg",
-    ThumbType.PROJECT: f"{DEFAULTS_DIRNAME}/default_poster.jpg",  # Reuse poster fallback
-    ThumbType.GALLERY: f"{DEFAULTS_DIRNAME}/default_thumb.jpg"  # Reuse thumb fallback
-}
+        
+    def default_image(self, thumb_type: ThumbType) -> Path:
+        """
+        Returns the path to the default image for a given thumbnail type.
+        """
+        return self.output_dir / DEFAULT_IMAGES[thumb_type]
 
 def _render_markdown(text: str) -> str:
     return markdown.markdown(text, extensions=["extra"])
@@ -144,7 +150,7 @@ def resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: BuildC
     """
     if relative_image_path:
         return _create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
-    return ctx.output_dir / DEFAULT_IMAGES[thumb_type]
+    return ctx.default_image(thumb_type)
 
 def _sort_project(project: Dict) -> tuple:
     release_date = project.get("release_date")
@@ -162,7 +168,7 @@ def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]
             all_projects.append({
                 "title": project["title"],
                 "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
-                "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
+                "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
                 "creator": creator["name"],
                 "search_text": " ".join(project.get("tags", [])).lower()
             })  
