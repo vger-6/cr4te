@@ -34,8 +34,8 @@
             {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
             <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
             {% endif %}
-            {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.born_or_founded %}
-            <p><strong>Date of Birth:</strong> {{ creator.born_or_founded }}</p>
+            {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
+            <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
             {% endif %}
             {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
             <p><strong>Nationality:</strong> {{ creator.nationality }}</p>

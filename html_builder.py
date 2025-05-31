@@ -170,7 +170,7 @@ def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]
                 "title": project["title"],
                 "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
                 "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
-                "creator": creator["name"],
+                "creator_name": creator["name"],
                 "search_text": " ".join(project.get("tags", [])).lower()
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
@@ -482,7 +482,7 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
     return {
         "name": creator["name"],
         "aliases": creator.get("aliases", []),
-        "born_or_founded": creator.get("born_or_founded", ""),
+        "date_of_birth": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
         "debut_age": _calculate_debut_age(creator),
@@ -545,7 +545,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
         "name": creator["name"],
         "member_names": creator.get("members", []),
         "members": _collect_member_links(creator, creators, ctx),
-        "born_or_founded": creator.get("born_or_founded", ""),
+        "founded": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
         "active_since": creator.get("active_since", ""),
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),

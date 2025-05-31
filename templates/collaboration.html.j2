@@ -36,8 +36,8 @@
             {% if 'members' in html_settings.collaboration_page_visible_collaboration_fields and creator.member_names %}
             <p><strong>{{ html_settings.collaboration_page_members_title }}:</strong> {{ creator.member_names | join(', ') }}</p>
             {% endif %}
-            {% if 'founded' in html_settings.collaboration_page_visible_collaboration_fields and creator.born_or_founded %}
-            <p><strong>Founded:</strong> {{ creator.born_or_founded }}</p>
+            {% if 'founded' in html_settings.collaboration_page_visible_collaboration_fields and creator.founded %}
+            <p><strong>Founded:</strong> {{ creator.founded }}</p>
             {% endif %}
             {% if 'nationality' in html_settings.collaboration_page_visible_collaboration_fields and creator.nationality %}
             <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
