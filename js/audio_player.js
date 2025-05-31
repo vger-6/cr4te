@@ -31,3 +31,14 @@ function highlightCurrent(liElement) {
   liElement.classList.add("playing");
 }
 
+document.querySelectorAll(".audio-gallery audio").forEach(audio => {
+  audio.addEventListener("play", () => {
+    if (currentIndex === -1) {
+      const li = audio.closest(".audio-gallery").querySelector("li");
+      if (li) {
+        playSelectedTrack(li);
+      }
+    }
+  });
+});
+
