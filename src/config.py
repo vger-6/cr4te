@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict
 
-from enums.image_sample_strategy import ImageSampleStrategy
+from .enums.image_sample_strategy import ImageSampleStrategy
 
 __all__ = ["load_config", "update_build_rules", "apply_cli_media_overrides", "compile_media_rules", "update_html_labels"]
 

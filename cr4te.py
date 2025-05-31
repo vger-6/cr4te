@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 from typing import Dict
 
-import config as cfg
-from html_builder import clear_output_folder, build_html_pages
-from json_builder import build_creator_json_files, clean_creator_json_files
+from src import config as cfg
+from src.html_builder import clear_output_folder, build_html_pages
+from src.json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 

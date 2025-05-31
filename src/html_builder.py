@@ -12,23 +12,30 @@ import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from utils import slugify, get_relative_path
+from .utils import slugify, get_relative_path
 
 __all__ = ["clear_output_folder", "build_html_pages"]
 
-SCRIPT_DIR = Path(__file__).resolve().parent
+# === Path Constants ===
+SCRIPT_DIR = Path(__file__).resolve().parents[1]
 
+# Top-level folders
+ASSETS_DIR = SCRIPT_DIR / "assets"
+TEMPLATES_DIR = SCRIPT_DIR / "templates"
+
+# Asset subfolders
+CSS_DIR = ASSETS_DIR / "css"
+JS_DIR = ASSETS_DIR / "js"
+DEFAULTS_DIR = ASSETS_DIR / "defaults"
+
+# Output structure
 CREATORS_DIRNAME = "creators"
 PROJECTS_DIRNAME = "projects"
 THUMBNAILS_DIRNAME = "thumbnails"
-DEFAULTS_DIRNAME = "defaults"
-CSS_DIRNAME = "css"
-JS_DIRNAME = "js"
 
 # Setup Jinja2 environment
-TEMPLATE_DIR = Path(__file__).parent / "templates"
 env = Environment(
-    loader=FileSystemLoader(str(TEMPLATE_DIR)),
+    loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(['html', 'xml'])
 )
 
@@ -50,11 +57,11 @@ class ThumbType(Enum):
         self.height = height
         
 DEFAULT_IMAGES = {
-    ThumbType.THUMB: f"{DEFAULTS_DIRNAME}/default_thumb.jpg",
-    ThumbType.PORTRAIT: f"{DEFAULTS_DIRNAME}/default_portrait.jpg",
-    ThumbType.POSTER: f"{DEFAULTS_DIRNAME}/default_poster.jpg",
-    ThumbType.PROJECT: f"{DEFAULTS_DIRNAME}/default_poster.jpg",  # Reuse poster fallback
-    ThumbType.GALLERY: f"{DEFAULTS_DIRNAME}/default_thumb.jpg"  # Reuse thumb fallback
+    ThumbType.THUMB: DEFAULTS_DIR / "default_thumb.jpg",
+    ThumbType.PORTRAIT: DEFAULTS_DIR / "default_portrait.jpg",
+    ThumbType.POSTER: DEFAULTS_DIR / "default_poster.jpg",
+    ThumbType.PROJECT: DEFAULTS_DIR / "default_poster.jpg",   # same as poster
+    ThumbType.GALLERY: DEFAULTS_DIR / "default_thumb.jpg",    # same as thumb
 }
         
 @dataclass
@@ -83,7 +90,7 @@ class BuildContext:
         """
         Returns the path to the default image for a given thumbnail type.
         """
-        return self.output_dir / DEFAULT_IMAGES[thumb_type]
+        return DEFAULT_IMAGES[thumb_type]
 
 def _render_markdown(text: str) -> str:
     return markdown.markdown(text, extensions=["extra"])
@@ -628,16 +635,6 @@ def _build_creator_overview_page(creators: list, ctx: BuildContext):
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
     
-def _copy_asset_folder(src_root: Path, output_dir: Path, asset_folder: str):
-    src = src_root / asset_folder
-    dst = output_dir / asset_folder
-
-    if src.exists() and src.is_dir():
-        shutil.copytree(src, dst, dirs_exist_ok=True)
-        print(f"Copied {asset_folder} to {dst}")
-    else:
-        print(f"Warning: Folder '{asset_folder}' not found at {src}")
-    
 def _collect_creator_data(input_dir: Path) -> List[Dict]:
     creator_data = []
     for creator in sorted(input_dir.iterdir()):
@@ -648,10 +645,12 @@ def _collect_creator_data(input_dir: Path) -> List[Dict]:
             with open(json_path, 'r', encoding='utf-8') as f:
                 creator_data.append(json.load(f))
     return creator_data
-    
+        
 def _copy_assets(output_dir: Path) -> None:
-    for asset_folder in (CSS_DIRNAME, JS_DIRNAME, DEFAULTS_DIRNAME):
-        _copy_asset_folder(SCRIPT_DIR, output_dir, asset_folder)
+    for asset_dir in [CSS_DIR, JS_DIR, DEFAULTS_DIR]:
+        dst = output_dir / asset_dir.relative_to(SCRIPT_DIR)
+        shutil.copytree(asset_dir, dst, dirs_exist_ok=True)
+        print(f"Copied {asset_dir.name} to {dst}")
     
 def _prepare_output_dirs(output_dir: Path) -> None:
     (output_dir / CREATORS_DIRNAME).mkdir(parents=True, exist_ok=True)

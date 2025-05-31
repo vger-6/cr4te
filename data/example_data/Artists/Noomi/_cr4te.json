@@ -1,20 +1,20 @@
 {
   "name": "Noomi",
   "is_collaboration": false,
-  "born_or_founded": "1998-07-09",
-  "active_since": "2020-01-01",
-  "nationality": "Earth",
+  "born_or_founded": "",
+  "active_since": "",
+  "nationality": "",
   "aliases": [],
   "portrait": "Noomi/profile.jpg",
   "featured_portrait": null,
   "info": "Noomi is a photographer with a passion for the world around her.\n\nShe has traveled across continents, working on various photo projects that explore light, place, and emotion.\n\nOne of her best-known series is called **Landscapes**, where she focus on capturing the emotional tone of remote natural scenes.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
-  "tags": ["Occupation:Photographer"],
+  "tags": [],
   "projects": [
     {
       "title": "Landscapes",
-      "release_date": "2022-04-21",
+      "release_date": "",
       "thumbnail": "Noomi/Landscapes/death valley.jpg",
-      "featured_thumbnail": "Noomi/Landscapes/iceland.jpg",
+      "featured_thumbnail": null,
       "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Death Valley, USA** \u2014 Barren ridges that look like brushstrokes.\n- **Icelandic Highlands** \u2014 The contrast of green moss and volcanic stone is surreal.\n- **Patagonia, Argentina** \u2014 A sharp peak surrounded by clouds.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
       "media_groups": [
         {
@@ -62,7 +62,7 @@
           "folder_name": "Travel Playlist"
         }
       ],
-      "tags": ["Travelling"]
+      "tags": []
     }
   ],
   "members": [],

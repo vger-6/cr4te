@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from PIL import Image
 
-from enums.image_sample_strategy import ImageSampleStrategy
+from .enums.image_sample_strategy import ImageSampleStrategy
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
 
