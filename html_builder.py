@@ -6,6 +6,7 @@ from typing import List, Dict, Any, Optional, Iterable
 from datetime import datetime
 from enum import Enum
 from collections import defaultdict
+from dataclasses import dataclass
 
 import markdown
 from PIL import Image
@@ -30,6 +31,28 @@ env = Environment(
     loader=FileSystemLoader(str(TEMPLATE_DIR)),
     autoescape=select_autoescape(['html', 'xml'])
 )
+
+@dataclass
+class BuildContext:
+    input_dir: Path
+    output_dir: Path
+    html_settings: Dict
+
+    @property
+    def thumbs_dir(self) -> Path:
+        return self.output_dir / THUMBNAILS_DIRNAME
+
+    @property
+    def creators_dir(self) -> Path:
+        return self.output_dir / CREATORS_DIRNAME
+
+    @property
+    def projects_dir(self) -> Path:
+        return self.output_dir / PROJECTS_DIRNAME
+
+    @property
+    def defaults_dir(self) -> Path:
+        return self.output_dir / DEFAULTS_DIRNAME
 
 class MediaType(str, Enum):
     VIDEOS = "videos"
@@ -91,17 +114,17 @@ def _get_creator_slug(creator: Dict) -> str:
 def _get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}__{project['title']}")
     
-def _get_thumbnail_path(dest_dir: Path, relative_path: Path, thumb_type: ThumbType) -> Path:
-    slug = slugify('__'.join(relative_path.parent.parts))
-    return dest_dir / slug / (relative_path.stem + thumb_type.suffix)
+def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, thumb_type: ThumbType) -> Path:
+    slug = slugify('__'.join(relative_image_path.parent.parts))
+    return thumb_dir / slug / (relative_image_path.stem + thumb_type.suffix)
                
-def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thumb_type: ThumbType) -> Path:
-    thumb_path = _get_thumbnail_path(dest_dir, relative_path, thumb_type)
+def _create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_dir: Path, thumb_type: ThumbType) -> Path:
+    thumb_path = _get_thumbnail_path(thumb_dir, relative_image_path, thumb_type)
 
     if not thumb_path.exists():
         thumb_path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            with Image.open(input_root / relative_path) as img:
+            with Image.open(input_dir / relative_image_path) as img:
                 # Note: img.thumbnail(...) maintains aspect ratio but may not match the exact height, 
                 # so we resize manually to ensure uniform thumbnail dimensions.
                 target_height = thumb_type.height
@@ -110,7 +133,7 @@ def _create_thumbnail(input_root: Path, relative_path: Path, dest_dir: Path, thu
                 resized = img.resize((target_width, target_height), Image.LANCZOS)
                 resized.save(thumb_path, format='JPEG')
         except Exception as e:
-            print(f"Error creating thumbnail for {relative_path}: {e}")
+            print(f"Error creating thumbnail for {relative_image_path}: {e}")
 
     return thumb_path
 
@@ -121,16 +144,16 @@ def _sort_project(project: Dict) -> tuple:
     title = project["title"].lower()
     return (not has_date, date_value, title)
     
-def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict]:
+def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]:
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []):
             thumbnail = project.get('featured_thumbnail') or project.get('thumbnail')
             if thumbnail:
-                thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
-                thumbnail_url = get_relative_path(thumb_path, output_path)
+                thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.PROJECT)
+                thumbnail_url = get_relative_path(thumb_path, ctx.output_dir)
             else:
-                thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.PROJECT], output_path)
+                thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PROJECT], ctx.output_dir)
 
             all_projects.append({
                 "title": project["title"],
@@ -141,17 +164,19 @@ def _collect_all_projects(creators: List[Dict], input_path: Path, output_path: P
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
     
-def _build_project_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: Dict):
+def _build_project_overview_page(creators: list, ctx: BuildContext):
+    print("Generating project overview page...")
+
     template = env.get_template("project_overview.html.j2")
 
     rendered = template.render(
-        projects=_collect_all_projects(creators, input_path, output_path, thumbs_dir),
-        html_settings=html_settings,
+        projects=_collect_all_projects(creators, ctx),
+        html_settings=ctx.html_settings,
         poster_max_height=ThumbType.PROJECT.height,
     )
 
-    output_path.mkdir(parents=True, exist_ok=True)
-    with open(output_path / "projects.html", "w", encoding="utf-8") as f:
+    ctx.output_dir.mkdir(parents=True, exist_ok=True)
+    with open(ctx.output_dir / "projects.html", "w", encoding="utf-8") as f:
         f.write(rendered)
 
 def _collect_tags_from_creator(creator: Dict) -> List[str]:
@@ -185,21 +210,21 @@ def _collect_all_tags(creators: List[Dict]) -> Dict[str, List[str]]:
         all_tags.extend(_collect_tags_from_creator(creator))
     return _group_tags_by_category(all_tags)
 
-def _build_tags_page(creators: list, output_path: Path, html_settings: dict):
+def _build_tags_page(creators: list, ctx: BuildContext):
     print("Generating tags page...")
 
     template = env.get_template("tags.html.j2")
 
     output_html = template.render(
-        html_settings=html_settings,
+        html_settings=ctx.html_settings,
         tags=_collect_all_tags(creators),
     )
 
-    tag_file = output_path / "tags.html"
+    tag_file = ctx.output_dir / "tags.html"
     with open(tag_file, "w", encoding="utf-8") as f:
         f.write(output_html)
         
-def _create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> str:
+def _create_symlink(input_dir: Path, relative_path: Path, dest_dir: Path) -> str:
     ext = relative_path.suffix.lower()
     slug_parts = relative_path.parent.parts + (relative_path.stem,) 
     base = slugify('__'.join(slug_parts))
@@ -207,7 +232,7 @@ def _create_symlink(input_root: Path, relative_path: Path, dest_dir: Path) -> st
 
     dest_file.parent.mkdir(parents=True, exist_ok=True)
     if not dest_file.exists():
-        os.symlink((input_root / relative_path).resolve(), dest_file)
+        os.symlink((input_dir / relative_path).resolve(), dest_file)
 
     return dest_file.name
 
@@ -223,7 +248,7 @@ def _format_section_title(folder_name: str, label: str, active_types: List[Media
         return folder_name
     return f"{folder_name} - {label}"
     
-def _get_section_titles(media_group: Dict, html_settings: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool) -> Dict[str, str]:
+def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool, html_settings: Dict) -> Dict[str, str]:
     video_title = html_settings.get("project_page_video_section_base_title", "Videos")
     audio_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
     image_title = html_settings.get("project_page_image_section_base_title", "Images")
@@ -254,9 +279,8 @@ def _get_section_titles(media_group: Dict, html_settings: Dict, has_videos: bool
         "document_gallery_section_title": media_group.get("document_group_name") or document_title,
     }
     
-def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thumbs_dir: Path, html_settings: Dict) -> List[Dict[str, Any]]:
+def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
     media_groups = []
-
     for media_group in project.get("media_groups", []):
         image_rel_paths = media_group.get("featured_images") or media_group.get("images", [])
         video_rel_paths = media_group.get("featured_videos") or media_group.get("videos", [])
@@ -265,38 +289,38 @@ def _build_media_groups(project: Dict, root_input: Path, projects_dir: Path, thu
 
         images = [
             {
-                "thumb_url": get_relative_path(_create_thumbnail(root_input, Path(rel), thumbs_dir, ThumbType.GALLERY), projects_dir),
-                "full_url": f"images/{_create_symlink(root_input, Path(rel), projects_dir / 'images')}",
+                "thumb_url": get_relative_path(_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), ctx.projects_dir),
+                "full_url": f"images/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'images')}",
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
         ]
 
         videos = [
-            f"videos/{_create_symlink(root_input, Path(rel), projects_dir / 'videos')}"
+            f"videos/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'videos')}"
             for rel in video_rel_paths
         ]
 
         tracks = [
             {
-                "full_url": f"tracks/{_create_symlink(root_input, Path(rel), projects_dir / 'tracks')}",
+                "full_url": f"tracks/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'tracks')}",
                 "name": Path(rel).stem
             }
             for rel in track_rel_paths
         ]
 
         documents = [
-            f"documents/{_create_symlink(root_input, Path(rel), projects_dir / 'documents')}"
+            f"documents/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'documents')}"
             for rel in document_rel_paths
         ]
 
         section_titles = _get_section_titles(
             media_group,
-            html_settings,
             bool(videos),
             bool(tracks),
             bool(images),
-            bool(documents)
+            bool(documents),
+            ctx.html_settings
         )
 
         media_groups.append({
@@ -317,7 +341,7 @@ def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
         
     return _calculate_age_from_strings(dob, release_date)
     
-def _collect_participant_entries(creator: Dict, creators: List[Dict], project: Dict, root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
     participant_names = creator.get("members") if creator.get("is_collaboration") else [creator["name"]]
     
@@ -329,10 +353,10 @@ def _collect_participant_entries(creator: Dict, creators: List[Dict], project: D
         
         portrait = participant.get('featured_portrait') or participant.get('portrait')
         if portrait:
-            thumb_path = _create_thumbnail(root_input, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
-            portrait_url = get_relative_path(thumb_path, projects_dir)
+            thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
+            portrait_url = get_relative_path(thumb_path, ctx.projects_dir)
         else:
-            portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], projects_dir)
+            portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.projects_dir)
 
         participants.append({
             "name": name,
@@ -343,13 +367,13 @@ def _collect_participant_entries(creator: Dict, creators: List[Dict], project: D
 
     return participants
     
-def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], root_input: Path, out_dir: Path, projects_dir: Path, thumbs_dir: Path, html_settings: Dict) -> Dict:
+def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict:
     thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
     if thumbnail:
-        thumb_path = _create_thumbnail(root_input, Path(thumbnail), thumbs_dir, ThumbType.POSTER)
-        thumbnail_url = get_relative_path(thumb_path, projects_dir)
+        thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.POSTER)
+        thumbnail_url = get_relative_path(thumb_path, ctx.projects_dir)
     else:
-        thumbnail_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.POSTER], projects_dir)
+        thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.POSTER], ctx.projects_dir)
 
     return {
         "title": project["title"],
@@ -357,36 +381,34 @@ def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict],
         "thumbnail_url": thumbnail_url,
         "info_html": _render_markdown(project.get("info", "")),
         "tag_map": _group_tags_by_category(project.get("tags", [])),
-        "participants": _collect_participant_entries(creator, creators, project, root_input, out_dir, projects_dir, thumbs_dir),
-        "media_groups": _build_media_groups(project, root_input, projects_dir, thumbs_dir, html_settings),
+        "participants": _collect_participant_entries(creator, project, creators, ctx),
+        "media_groups": _build_media_groups(project, ctx),
         "creator_name": creator["name"],
         "creator_slug": _get_creator_slug(creator),
     }
 
-def _build_project_page(creator: Dict, project: Dict, root_input: Path, out_dir: Path, thumbs_dir: Path, creators: List[Dict], html_settings: Dict):
+def _build_project_page(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext):
     slug = _get_project_slug(creator, project)
     print(f"Building project page: {slug}.html")
     
     template = env.get_template("project.html.j2")
     
-    projects_dir = out_dir / PROJECTS_DIRNAME
-    
     output_html = template.render(
-        html_settings=html_settings,
-        project=_collect_project_context(creator, project, creators, root_input, out_dir, projects_dir, thumbs_dir, html_settings),
+        html_settings=ctx.html_settings,
+        project=_collect_project_context(creator, project, creators, ctx),
         gallery_image_max_height=ThumbType.GALLERY.height,
     )
 
-    page_path = projects_dir / f"{slug}.html"
+    page_path = ctx.projects_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
     
-def _build_project_pages(creators: List[Dict], root_input: Path, out_dir: Path, thumbs_dir: Path, html_settings: Dict):
+def _build_project_pages(creators: List[Dict], ctx: BuildContext):
     print("Generating project pages...")
     
     for creator in creators:
         for project in creator['projects']:
-            _build_project_page(creator, project, root_input, out_dir, thumbs_dir, creators, html_settings)
+            _build_project_page(creator, project, creators, ctx)
             
 def _get_collaboration_label(collab: Dict, creator_name: str, html_settings: Dict) -> str:
     if creator_name in collab.get("members", []):
@@ -413,7 +435,7 @@ def _calculate_debut_age(creator: Dict) -> str:
 
     return ""
     
-def _build_project_entries(creator: Dict, input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+def _build_project_entries(creator: Dict, ctx: BuildContext) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries with metadata for each project of a creator,
     including title, URL, and thumbnail URL.
@@ -422,10 +444,10 @@ def _build_project_entries(creator: Dict, input_path: Path, out_dir: Path, creat
     for project in sorted(creator.get("projects", []), key=_sort_project):
         thumbnail = project.get("featured_thumbnail") or project.get("thumbnail")
         if thumbnail:
-            thumb_path = _create_thumbnail(input_path, Path(thumbnail), thumbs_dir, ThumbType.PROJECT)
-            thumb_url = get_relative_path(thumb_path, creators_dir)
+            thumb_path = _create_thumbnail(ctx.input_dir, Path(thumbnail), ctx.thumbs_dir, ThumbType.PROJECT)
+            thumb_url = get_relative_path(thumb_path, ctx.creators_dir)
         else:
-            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PROJECT], creators_dir)
+            thumb_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PROJECT], ctx.creators_dir)
 
         project_entries.append({
             "title": project["title"],
@@ -435,7 +457,7 @@ def _build_project_entries(creator: Dict, input_path: Path, out_dir: Path, creat
 
     return project_entries
     
-def _build_collaboration_entries(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path, html_settings: Dict) -> List[Dict[str, Any]]:
+def _build_collaboration_entries(creator: Dict, creators: List[Dict], ctx: BuildContext) -> List[Dict[str, Any]]:
     """
     Builds a list of collaboration entries for a given creator.
     Each entry includes a label and a list of project entries.
@@ -448,23 +470,23 @@ def _build_collaboration_entries(creator: Dict, creators: List[Dict], input_path
             continue
 
         collab_entries.append({
-            "label": _get_collaboration_label(collab, creator["name"], html_settings),
-            "projects": _build_project_entries(collab, input_path, out_dir, creators_dir, thumbs_dir),
+            "label": _get_collaboration_label(collab, creator["name"], ctx.html_settings),
+            "projects": _build_project_entries(collab, ctx),
         })
 
     return collab_entries
     
-def _collect_creator_context(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path, html_settings: Dict) -> Dict[str, Any]:
+def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildContext) -> Dict[str, Any]:
     """
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
     portrait = creator.get("featured_portrait") or creator.get("portrait")
     if portrait:
-        thumb_path = _create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, creators_dir)
+        thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
+        portrait_url = get_relative_path(thumb_path, ctx.creators_dir)
     else:
-        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
+        portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.creators_dir)
 
     return {
         "name": creator["name"],
@@ -475,29 +497,27 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], input_path: Pa
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
-        "projects": _build_project_entries(creator, input_path, out_dir, creators_dir, thumbs_dir),
-        "collaborations": _build_collaboration_entries(creator, creators, input_path, out_dir, creators_dir, thumbs_dir, html_settings),
+        "projects": _build_project_entries(creator, ctx),
+        "collaborations": _build_collaboration_entries(creator, creators, ctx),
     }
     
-def _build_creator_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def _build_creator_page(creator: dict, creators: list, ctx: BuildContext):
     slug = _get_creator_slug(creator)
     print(f"Building creator page: {slug}.html")
     
-    creators_dir = out_dir / CREATORS_DIRNAME
-
     template = env.get_template("creator.html.j2")
 
     output_html = template.render(
-        html_settings=html_settings,
-        creator=_collect_creator_context(creator, creators, input_path, out_dir, creators_dir, thumbs_dir, html_settings),
+        html_settings=ctx.html_settings,
+        creator=_collect_creator_context(creator, creators, ctx),
         project_thumb_max_height=ThumbType.POSTER.height,
     )
 
-    page_path = creators_dir / f"{slug}.html"
+    page_path = ctx.creators_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
         
-def _collect_member_links(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+def _collect_member_links(creator: Dict, creators: List[Dict], ctx: BuildContext) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries representing links to member creators
     in a collaboration, including name, URL, and thumbnail URL.
@@ -515,10 +535,10 @@ def _collect_member_links(creator: Dict, creators: List[Dict], input_path: Path,
 
         member_portrait = member.get("featured_portrait") or member.get("portrait")
         if member_portrait:
-            thumb_path = _create_thumbnail(input_path, Path(member_portrait), thumbs_dir, ThumbType.THUMB)
-            thumb_url = get_relative_path(thumb_path, creators_dir)
+            thumb_path = _create_thumbnail(ctx.input_dir, Path(member_portrait), ctx.thumbs_dir, ThumbType.THUMB)
+            thumb_url = get_relative_path(thumb_path, ctx.creators_dir)
         else:
-            thumb_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.THUMB], creators_dir)
+            thumb_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.THUMB], ctx.creators_dir)
 
         member_links.append({
             "name": member_name,
@@ -528,58 +548,56 @@ def _collect_member_links(creator: Dict, creators: List[Dict], input_path: Path,
 
     return member_links
         
-def _collect_collaboration_context(creator: Dict, creators: List[Dict], input_path: Path, out_dir: Path, creators_dir: Path, thumbs_dir: Path) -> Dict[str, Any]:
+def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: BuildContext) -> Dict[str, Any]:
     """
     Builds the context dictionary for rendering a collaboration page,
     including metadata, portrait, members, projects, and tags.
     """
     portrait = creator.get("featured_portrait") or creator.get("portrait")
     if portrait:
-        thumb_path = _create_thumbnail(input_path, Path(portrait), thumbs_dir, ThumbType.PORTRAIT)
-        portrait_url = get_relative_path(thumb_path, creators_dir)
+        thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.PORTRAIT)
+        portrait_url = get_relative_path(thumb_path, ctx.creators_dir)
     else:
-        portrait_url = get_relative_path(out_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], creators_dir)
+        portrait_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.PORTRAIT], ctx.creators_dir)
 
     return {
         "name": creator["name"],
         "member_names": creator.get("members", []),
-        "members": _collect_member_links(creator, creators, input_path, out_dir, creators_dir, thumbs_dir),
+        "members": _collect_member_links(creator, creators, ctx),
         "born_or_founded": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
         "active_since": creator.get("active_since", ""),
         "portrait_url": portrait_url,
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
-        "projects": _build_project_entries(creator, input_path, out_dir, creators_dir, thumbs_dir),
+        "projects": _build_project_entries(creator, ctx),
     }
     
-def _build_collaboration_page(creator: dict, creators: list, input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def _build_collaboration_page(creator: dict, creators: list, ctx: BuildContext):
     slug = _get_creator_slug(creator)
     print(f"Building collaboration page: {slug}.html")
-    
-    creators_dir = out_dir / CREATORS_DIRNAME
 
     template = env.get_template("collaboration.html.j2")
 
     output_html = template.render(
-        html_settings=html_settings,
-        creator=_collect_collaboration_context(creator, creators, input_path, out_dir, creators_dir, thumbs_dir),
+        html_settings=ctx.html_settings,
+        creator=_collect_collaboration_context(creator, creators, ctx),
         member_thumb_max_height=ThumbType.THUMB.height,
         project_thumb_max_height=ThumbType.POSTER.height,
     )
 
-    page_path = creators_dir / f"{slug}.html"
+    page_path = ctx.creators_dir / f"{slug}.html"
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
     
-def _build_creator_pages(creators: List[Dict], input_path: Path, out_dir: Path, thumbs_dir: Path, html_settings: dict):
+def _build_creator_pages(creators: List[Dict], ctx: BuildContext):
     print("Generating creator pages...")
     
     for creator in creators:
         if not creator["is_collaboration"]:
-            _build_creator_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
+            _build_creator_page(creator, creators, ctx)
         else:
-            _build_collaboration_page(creator, creators, input_path, out_dir, thumbs_dir, html_settings)
+            _build_collaboration_page(creator, creators, ctx)
     
 def _build_creator_search_text(creator: Dict) -> str:
     """
@@ -597,18 +615,19 @@ def _build_creator_search_text(creator: Dict) -> str:
 
     return " ".join(search_terms).lower()
     
-def _build_creator_entries(creators: List[Dict], input_path: Path, output_path: Path, thumbs_dir: Path) -> List[Dict[str, str]]:
+def _build_creator_entries(creators: List[Dict], ctx: BuildContext) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries containing metadata for each creator,
     including name, thumbnail URL, profile URL, and search text.
     """
     creator_entries = []
     for creator in creators:
-        if creator.get('portrait'):
-            thumb_path = _create_thumbnail(input_path, Path(creator['portrait']), thumbs_dir, ThumbType.THUMB)
-            thumbnail_url = get_relative_path(thumb_path, output_path)
+        portrait = creator.get('featured_portrait') or creator.get('portrait')
+        if portrait:
+            thumb_path = _create_thumbnail(ctx.input_dir, Path(portrait), ctx.thumbs_dir, ThumbType.THUMB)
+            thumbnail_url = get_relative_path(thumb_path, ctx.output_dir)
         else:
-            thumbnail_url = get_relative_path(output_path / DEFAULT_IMAGES[ThumbType.THUMB], output_path)
+            thumbnail_url = get_relative_path(ctx.output_dir / DEFAULT_IMAGES[ThumbType.THUMB], ctx.output_dir)
 
         creator_entries.append({
             "name": creator["name"],
@@ -619,34 +638,34 @@ def _build_creator_entries(creators: List[Dict], input_path: Path, output_path: 
 
     return creator_entries
     
-def _build_creator_overview_page(creators: list, input_path: Path, output_path: Path, thumbs_dir: Path, html_settings: dict):
+def _build_creator_overview_page(creators: list, ctx: BuildContext):
     print("Generating overview page...")
 
     template = env.get_template("creator_overview.html.j2")
 
     output_html = template.render(
-        html_settings=html_settings,
-        creator_entries=_build_creator_entries(creators, input_path, output_path, thumbs_dir),
+        html_settings=ctx.html_settings,
+        creator_entries=_build_creator_entries(creators, ctx),
         creator_thumb_max_height=ThumbType.THUMB.height,
     )
 
-    page_file = output_path / "index.html"
+    page_file = ctx.output_dir / "index.html"
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
     
-def _copy_asset_folder(src_root: Path, folder_name: str, output_root: Path):
-    src = src_root / folder_name
-    dst = output_root / folder_name
+def _copy_asset_folder(src_root: Path, output_dir: Path, asset_folder: str):
+    src = src_root / asset_folder
+    dst = output_dir / asset_folder
 
     if src.exists() and src.is_dir():
         shutil.copytree(src, dst, dirs_exist_ok=True)
-        print(f"Copied {folder_name} to {dst}")
+        print(f"Copied {asset_folder} to {dst}")
     else:
-        print(f"Warning: Folder '{folder_name}' not found at {src}")
+        print(f"Warning: Folder '{asset_folder}' not found at {src}")
     
-def _collect_creator_data(input_path: Path) -> List[Dict]:
+def _collect_creator_data(input_dir: Path) -> List[Dict]:
     creator_data = []
-    for creator in sorted(input_path.iterdir()):
+    for creator in sorted(input_dir.iterdir()):
         if not creator.is_dir():
             continue
         json_path = creator / "cr4te.json"
@@ -655,30 +674,31 @@ def _collect_creator_data(input_path: Path) -> List[Dict]:
                 creator_data.append(json.load(f))
     return creator_data
     
-def _copy_assets(output_path: Path) -> None:
-    for subfolder in (CSS_DIRNAME, JS_DIRNAME, DEFAULTS_DIRNAME):
-        _copy_asset_folder(SCRIPT_DIR, subfolder, output_path)
+def _copy_assets(output_dir: Path) -> None:
+    for asset_folder in (CSS_DIRNAME, JS_DIRNAME, DEFAULTS_DIRNAME):
+        _copy_asset_folder(SCRIPT_DIR, output_dir, asset_folder)
     
-def _prepare_output_dirs(output_path: Path) -> None:
-    (output_path / CREATORS_DIRNAME).mkdir(parents=True, exist_ok=True)
-    (output_path / PROJECTS_DIRNAME).mkdir(parents=True, exist_ok=True)
-    (output_path / THUMBNAILS_DIRNAME).mkdir(parents=True, exist_ok=True)
+def _prepare_output_dirs(output_dir: Path) -> None:
+    (output_dir / CREATORS_DIRNAME).mkdir(parents=True, exist_ok=True)
+    (output_dir / PROJECTS_DIRNAME).mkdir(parents=True, exist_ok=True)
+    (output_dir / THUMBNAILS_DIRNAME).mkdir(parents=True, exist_ok=True)
     
-def build_html_pages(input_path: Path, output_path: Path, html_settings: Dict):
-    _prepare_output_dirs(output_path)
-    _copy_assets(output_path)
+def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict):
+    _prepare_output_dirs(output_dir)
+    _copy_assets(output_dir)
+    
+    ctx = BuildContext(input_dir, output_dir, html_settings)
         
-    thumbs_dir = output_path / THUMBNAILS_DIRNAME
-    creators = _collect_creator_data(input_path)
-    _build_creator_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
-    _build_creator_pages(creators, input_path, output_path, thumbs_dir, html_settings)
-    _build_project_pages(creators, input_path, output_path, thumbs_dir, html_settings)
-    _build_project_overview_page(creators, input_path, output_path, thumbs_dir, html_settings)
-    _build_tags_page(creators, output_path, html_settings)
+    creators = _collect_creator_data(ctx.input_dir)
+    _build_creator_overview_page(creators, ctx)
+    _build_creator_pages(creators, ctx)
+    _build_project_pages(creators, ctx)
+    _build_project_overview_page(creators, ctx)
+    _build_tags_page(creators, ctx)
     
-def clear_output_folder(output_path: Path, clear_thumbnails: bool):
-    """Delete all contents of output_path except the 'thumbnails' folder."""
-    for item in output_path.iterdir():
+def clear_output_folder(output_dir: Path, clear_thumbnails: bool):
+    """Delete all contents of output_dir except the 'thumbnails' folder."""
+    for item in output_dir.iterdir():
         if clear_thumbnails or item.name != THUMBNAILS_DIRNAME:
             if item.is_dir():
                 shutil.rmtree(item)
