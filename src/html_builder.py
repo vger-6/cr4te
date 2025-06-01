@@ -81,10 +81,26 @@ class BuildContext:
     @property
     def projects_dir(self) -> Path:
         return self.output_dir / PROJECTS_DIRNAME
+        
+    @property
+    def media_dir(self) -> Path:
+        return self.output_dir / "media"
 
     @property
-    def defaults_dir(self) -> Path:
-        return self.output_dir / DEFAULTS_DIRNAME
+    def images_dir(self) -> Path:
+        return self.media_dir / "images"
+
+    @property
+    def videos_dir(self) -> Path:
+        return self.media_dir / "videos"
+
+    @property
+    def tracks_dir(self) -> Path:
+        return self.media_dir / "tracks"
+
+    @property
+    def documents_dir(self) -> Path:
+        return self.media_dir / "documents"
         
     def default_image(self, thumb_type: ThumbType) -> Path:
         """
@@ -127,9 +143,14 @@ def _get_creator_slug(creator: Dict) -> str:
 def _get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}__{project['title']}")
     
+def _build_slugified_filename(relative_path: Path, suffix: str) -> str:
+    parts = [*relative_path.parent.parts, relative_path.stem]
+    slug = slugify("__".join(parts))
+    return f"{slug}{suffix}"
+    
 def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, thumb_type: ThumbType) -> Path:
-    slug = slugify('__'.join(relative_image_path.parent.parts))
-    return thumb_dir / slug / (relative_image_path.stem + thumb_type.suffix)
+    filename = _build_slugified_filename(relative_image_path, thumb_type.suffix)
+    return thumb_dir / filename
     
 def _generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType) -> None:
     with Image.open(source_path) as img:
@@ -242,17 +263,19 @@ def _build_tags_page(creators: list, ctx: BuildContext):
     with open(tag_file, "w", encoding="utf-8") as f:
         f.write(output_html)
         
-def _create_symlink(input_dir: Path, relative_path: Path, dest_dir: Path) -> str:
-    ext = relative_path.suffix.lower()
-    slug_parts = relative_path.parent.parts + (relative_path.stem,) 
-    base = slugify('__'.join(slug_parts))
-    dest_file = dest_dir / f"{base}{ext}"
+def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
+    source_file = (input_dir / relative_path).resolve()
+    filename = _build_slugified_filename(relative_path, relative_path.suffix.lower())
+    dest_file = target_dir / filename
 
     dest_file.parent.mkdir(parents=True, exist_ok=True)
-    if not dest_file.exists():
-        os.symlink((input_dir / relative_path).resolve(), dest_file)
 
-    return dest_file.name
+    if not source_file.exists():
+        print(f"[Warning] Cannot create symlink: source file not found: {source_file}")
+    elif not dest_file.exists():
+        os.symlink(source_file, dest_file)
+
+    return dest_file
 
 def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
     """
@@ -307,27 +330,27 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
         images = [
             {
                 "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), ctx.projects_dir),
-                "full_url": f"images/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'images')}",
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.images_dir), ctx.projects_dir),
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
         ]
 
         videos = [
-            f"videos/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'videos')}"
+            get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), ctx.projects_dir)
             for rel in video_rel_paths
         ]
 
         tracks = [
             {
-                "full_url": f"tracks/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'tracks')}",
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), ctx.projects_dir),
                 "name": Path(rel).stem
             }
             for rel in track_rel_paths
         ]
 
         documents = [
-            f"documents/{_create_symlink(ctx.input_dir, Path(rel), ctx.projects_dir / 'documents')}"
+            get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), ctx.projects_dir)
             for rel in document_rel_paths
         ]
 
