@@ -58,14 +58,8 @@ DEFAULT_CONFIG = {
         "global_exclude_re": r"^_",
         
         "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-        "video_exclude_re": r"$^",
-        
         "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-        "audio_exclude_re": r"$^",
-        
-        "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",
-        "image_exclude_re": r"$^",
-        
+        "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",        
         "document_include_re": r"(?i)^[^/\\]+\.pdf$",
         "document_exclude_re": r"$^",
         
@@ -123,25 +117,17 @@ def _get_build_rules(mode: BuildMode) -> Dict:
             return {
                 "global_exclude_re": r"^_",
                 "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-                "video_exclude_re": r"$^",
                 "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-                "audio_exclude_re": r"$^",
                 "image_include_re": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
-                "image_exclude_re": r"$^",
                 "document_include_re": r"(?i)^[^/\\]+\.pdf$",
-                "document_exclude_re": r"$^"
             }
         case BuildMode.DEEP:
             return {
                 "global_exclude_re": r"^_",
                 "video_include_re": r"(?i).*\.(mp4|m4v)$",
-                "video_exclude_re": r"$^",
                 "audio_include_re": r"(?i).*\.(mp3|m4a)$",
-                "audio_exclude_re": r"$^",
                 "image_include_re": r"(?i).*\.(jpg|jpeg|png)$",
-                "image_exclude_re": r"$^",
                 "document_include_re": r"(?i).*\.pdf$",
-                "document_exclude_re": r"$^"
             }
         case BuildMode.HYBRID:
             return {}  # Use the base/default media_rules
@@ -174,12 +160,13 @@ def compile_media_rules(media_rules: Dict) -> Dict:
     Other values (e.g., integers) are preserved as-is.
     """
     regex_keys = {
-        "global_exclude_re", 
-        "video_include_re", "video_exclude_re", 
-        "audio_include_re", "audio_exclude_re",
-        "image_include_re", "image_exclude_re", 
-        "document_include_re", "document_exclude_re",
-        "creator_profile_image_re", "project_cover_image_re"
+        "global_exclude_re",
+        "video_include_re",
+        "audio_include_re",
+        "image_include_re",
+        "document_include_re",
+        "creator_profile_image_re", 
+        "project_cover_image_re"
     }
     enum_keys = {"image_gallery_sample_strategy": ImageSampleStrategy}
     

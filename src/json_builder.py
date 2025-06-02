@@ -82,13 +82,13 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
         is_root = file.parent.resolve() == project_dir.resolve()
         folder_key = str(file.parent.relative_to(project_dir)) or project_dir.name
 
-        if compiled_media_rules["video_include_re"].match(rel_path_posix) and not compiled_media_rules["video_exclude_re"].search(rel_path_posix):
+        if compiled_media_rules["video_include_re"].match(rel_path_posix):
             media_map[folder_key]["videos"].append(str(rel_to_input))
-        elif compiled_media_rules["audio_include_re"].match(rel_path_posix) and not compiled_media_rules["audio_exclude_re"].search(rel_path_posix):
+        elif compiled_media_rules["audio_include_re"].match(rel_path_posix):
             media_map[folder_key]["tracks"].append(str(rel_to_input))
-        elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
+        elif compiled_media_rules["image_include_re"].match(rel_path_posix):
             media_map[folder_key]["images"].append(str(rel_to_input))
-        elif compiled_media_rules["document_include_re"].match(rel_path_posix) and not compiled_media_rules["document_exclude_re"].search(rel_path_posix):
+        elif compiled_media_rules["document_include_re"].match(rel_path_posix):
             media_map[folder_key]["documents"].append(str(rel_to_input))
         else:
             continue

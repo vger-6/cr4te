@@ -36,13 +36,9 @@
   "media_rules": {
     "global_exclude_re": "^_",
     "video_include_re": "(?i)^[^/\\\\]+\\.(mp4|m4v)$",
-    "video_exclude_re": "$^",
     "audio_include_re": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
-    "audio_exclude_re": "$^",
     "image_include_re": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
-    "image_exclude_re": "$^",
     "document_include_re": "(?i)^[^/\\\\]+\\.pdf$",
-    "document_exclude_re": "$^",
     "creator_profile_image_re": "^profile\\.jpg$",
     "project_cover_image_re": "^cover\\.jpg$",
     "image_gallery_max": 20,

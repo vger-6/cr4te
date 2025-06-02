@@ -165,13 +165,9 @@ Your configuration file should be in JSON format and can override labels and med
     "global_exclude_re": "(^|/|\\\\)_",
 
     "video_include_re": ".*\\.mp4$",
-    "video_exclude_re": "$^",
     "audio_include_re": ".*\\.m4a$",
-    "audio_exclude_re": "$^",
     "image_include_re": ".*\\.jpg$",
-    "image_exclude_re": "$^",
     "document_include_re": ".*\\.pdf$",
-    "document_exclude_re": "$^",
 
     "creator_profile_image_re": "^profile\\.jpg$",
     "project_cover_image_re": "^cover\\.jpg$",
