@@ -160,6 +160,7 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
 
         project = {
             "title": project_title,
+            "is_enabled": existing_project.get("is_enabled", True),
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "thumbnail": thumbnail_path,
             "featured_thumbnail": existing_project.get("featured_thumbnail"),
@@ -205,6 +206,7 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
     is_collab = _is_collaboration(creator_name, separator)
     creator = {
         "name": creator_name,
+        "is_enabled": existing_creator.get("is_enabled", True),
         "is_collaboration": existing_creator.get("is_collaboration", is_collab),
         "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
         "active_since": _validate_date_string(existing_creator.get("active_since", "")),

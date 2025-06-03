@@ -657,6 +657,18 @@ def _build_creator_overview_page(creators: list, ctx: BuildContext):
     page_file = ctx.output_dir / "index.html"
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
+        
+def _filter_diabled_content(creators: list) -> list:
+    """
+    Removes creators and their projects that are marked as 'is_enabled': false.
+    """
+    filtered = []
+    for creator in creators:
+        if not creator.get("is_enabled", True):
+            continue
+        creator["projects"] = [p for p in creator.get("projects", []) if p.get("is_enabled", True)]
+        filtered.append(creator)
+    return filtered
     
 def _collect_creator_data(input_dir: Path) -> List[Dict]:
     creator_data = []
@@ -675,18 +687,20 @@ def _copy_assets(output_dir: Path) -> None:
         shutil.copytree(asset_dir, dst, dirs_exist_ok=True)
         print(f"Copied {asset_dir.name} to {dst}")
     
-def _prepare_output_dirs(output_dir: Path) -> None:
-    (output_dir / CREATORS_DIRNAME).mkdir(parents=True, exist_ok=True)
-    (output_dir / PROJECTS_DIRNAME).mkdir(parents=True, exist_ok=True)
-    (output_dir / THUMBNAILS_DIRNAME).mkdir(parents=True, exist_ok=True)
+def _prepare_output_dirs(ctx: BuildContext) -> None:
+    ctx.creators_dir.mkdir(parents=True, exist_ok=True)
+    ctx.projects_dir.mkdir(parents=True, exist_ok=True)
+    ctx.thumbs_dir.mkdir(parents=True, exist_ok=True)
     
 def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict):
-    _prepare_output_dirs(output_dir)
-    _copy_assets(output_dir)
-    
     ctx = BuildContext(input_dir, output_dir, html_settings)
-        
+    
+    _prepare_output_dirs(ctx)
+    _copy_assets(output_dir)
+
     creators = _collect_creator_data(ctx.input_dir)
+    creators = _filter_diabled_content(creators)
+            
     _build_creator_overview_page(creators, ctx)
     _build_creator_pages(creators, ctx)
     _build_project_pages(creators, ctx)
