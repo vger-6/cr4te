@@ -172,7 +172,7 @@ def _get_or_create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_d
 
     return thumb_path
     
-def resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: BuildContext, thumb_type: ThumbType) -> Path:
+def _resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: BuildContext, thumb_type: ThumbType) -> Path:
     """
     Returns the resolved thumbnail path for a given relative image path,
     falling back to a default image if the input is None or missing.
@@ -192,7 +192,7 @@ def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []): 
-            thumb_path = resolve_thumbnail_or_default(project.get('featured_thumbnail') or project.get('thumbnail'), ctx, ThumbType.PROJECT)
+            thumb_path = _resolve_thumbnail_or_default(project.get('featured_thumbnail') or project.get('thumbnail'), ctx, ThumbType.PROJECT)
 
             all_projects.append({
                 "title": project["title"],
@@ -391,7 +391,7 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
         if not participant:
             continue
          
-        thumb_path = resolve_thumbnail_or_default(participant.get('featured_portrait') or participant.get('portrait'), ctx, ThumbType.PORTRAIT)
+        thumb_path = _resolve_thumbnail_or_default(participant.get('featured_portrait') or participant.get('portrait'), ctx, ThumbType.PORTRAIT)
 
         participants.append({
             "name": name,
@@ -403,7 +403,7 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
     return participants
     
 def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict: 
-    thumb_path = resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.POSTER)
+    thumb_path = _resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.POSTER)
 
     return {
         "title": project["title"],
@@ -472,7 +472,7 @@ def _build_project_entries(creator: Dict, ctx: BuildContext) -> List[Dict[str, s
     """
     project_entries = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumb_path = resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.PROJECT)
+        thumb_path = _resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.PROJECT)
 
         project_entries.append({
             "title": project["title"],
@@ -506,7 +506,7 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
-    thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
@@ -553,7 +553,7 @@ def _collect_member_links(creator: Dict, creators: List[Dict], ctx: BuildContext
         if not member:
             continue
 
-        thumb_path = resolve_thumbnail_or_default(member.get("featured_portrait") or member.get("portrait"), ctx, ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(member.get("featured_portrait") or member.get("portrait"), ctx, ThumbType.THUMB)
 
         member_links.append({
             "name": member_name,
@@ -568,7 +568,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
     Builds the context dictionary for rendering a collaboration page,
     including metadata, portrait, members, projects, and tags.
     """
-    thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
@@ -632,7 +632,7 @@ def _build_creator_entries(creators: List[Dict], ctx: BuildContext) -> List[Dict
     """
     creator_entries = []
     for creator in creators:
-        thumb_path = resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.THUMB)
 
         creator_entries.append({
             "name": creator["name"],
@@ -658,7 +658,7 @@ def _build_creator_overview_page(creators: list, ctx: BuildContext):
     with open(page_file, 'w', encoding='utf-8') as f:
         f.write(output_html)
         
-def _filter_diabled_content(creators: list) -> list:
+def _filter_disabled_content(creators: list) -> list:
     """
     Removes creators and their projects that are marked as 'is_enabled': false.
     """
@@ -699,7 +699,7 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict):
     _copy_assets(output_dir)
 
     creators = _collect_creator_data(ctx.input_dir)
-    creators = _filter_diabled_content(creators)
+    creators = _filter_disabled_content(creators)
             
     _build_creator_overview_page(creators, ctx)
     _build_creator_pages(creators, ctx)
