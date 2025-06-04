@@ -203,11 +203,14 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
             portrait_path = str(portrait.relative_to(input_path))
 
     separator = compiled_media_rules.get("collaboration_separator")
-    is_collab = _is_collaboration(creator_name, separator)
+    is_collab = existing_creator.get("is_collaboration")
+    if is_collab is None:
+        is_collab = _is_collaboration(creator_name, separator)
+    
     creator = {
         "name": creator_name,
         "is_enabled": existing_creator.get("is_enabled", True),
-        "is_collaboration": existing_creator.get("is_collaboration", is_collab),
+        "is_collaboration": is_collab,
         "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
         "active_since": _validate_date_string(existing_creator.get("active_since", "")),
         "nationality": existing_creator.get("nationality", ""),
