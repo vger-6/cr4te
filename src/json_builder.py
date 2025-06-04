@@ -145,25 +145,25 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
         
         existing_project = existing_projects.get(project_title, {})
 
-        # Find thumbnail
+        # Find cover
         all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
-        poster_re = compiled_media_rules.get("project_cover_image_re")
-        poster_candidates = [p for p in all_images if poster_re and poster_re.match(p.name)]
+        cover_re = compiled_media_rules.get("cover_re")
+        cover_candidates = [p for p in all_images if cover_re and cover_re.match(p.name)]
 
-        thumbnail_path = ""
-        if poster_candidates:
-            thumbnail_path = str(poster_candidates[0].relative_to(input_path))
+        cover_path = ""
+        if cover_candidates:
+            cover_path = str(cover_candidates[0].relative_to(input_path))
         else:
-            poster = _find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
-            if poster:
-                thumbnail_path = str(poster.relative_to(input_path))
+            cover = _find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
+            if cover:
+                cover_path = str(cover.relative_to(input_path))
 
         project = {
             "title": project_title,
             "is_enabled": existing_project.get("is_enabled", True),
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
-            "thumbnail": thumbnail_path,
-            "featured_thumbnail": existing_project.get("featured_thumbnail"),
+            "cover": cover_path,
+            "featured_cover": existing_project.get("featured_cover"),
             "info": _read_readme_text(project_dir) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(project_dir, input_path, compiled_media_rules, existing_project),
             "tags": existing_project.get("tags", [])
@@ -191,7 +191,7 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
     # Find portrait
     # TODO: DRY out code duplication. See: collect_projects_data
     all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
-    portrait_re = compiled_media_rules.get("creator_profile_image_re")
+    portrait_re = compiled_media_rules.get("portrait_re")
     portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]
 
     portrait_path = ""

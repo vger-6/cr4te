@@ -38,9 +38,9 @@ Artists/
 ├── Alice/
 │   ├── cr4te.json           # Optional metadata override
 │   ├── README.md            # Optional description
-|   ├── profile.jpg          # Detected portrait (via creator_profile_image_re)
+|   ├── portrait.jpg         # Detected portrait (via portrait_re)
 │   └── Project1/
-│       ├── cover.jpg        # Detected poster (via project_cover_image_re)
+│       ├── cover.jpg        # Detected poster (via cover_re)
 │       ├── Landscape1.jpg
 │       ├── clip.mp4
 │       ├── document.pdf
@@ -169,8 +169,8 @@ Your configuration file should be in JSON format and can override labels and med
     "image_include_re": ".*\\.jpg$",
     "document_include_re": ".*\\.pdf$",
 
-    "creator_profile_image_re": "^profile\\.jpg$",
-    "project_cover_image_re": "^cover\\.jpg$",
+    "portrait_re": "^portrait\\.jpg$",
+    "cover_re": "^cover\\.jpg$",
 
     "image_gallery_max": 20,
     "image_gallery_sample_strategy": "spread",
@@ -182,8 +182,8 @@ Your configuration file should be in JSON format and can override labels and med
 
 ### Special Rules
 
-* `creator_profile_image_re`: Regex used to identify a portrait image (default: `^profile\.jpg$`)
-* `project_cover_image_re`: Regex used to identify a project's poster image (default: `^cover\.jpg$`)
+* `portrait_re`: Regex used to identify a portrait image (default: `^portrait\.jpg$`)
+* `cover_re`: Regex used to identify a project's cover image (default: `^cover\.jpg$`)
 * `image_gallery_sample_strategy`: Sampling strategy for gallery thumbnails
 
   * `spread` (default): even sampling throughout the list
@@ -289,7 +289,7 @@ This section outlines planned improvements, refactors, and feature ideas for `cr
 ### 🔍 Filtering and Selection
 
 - [ ] Allow multiple exclusions/inclusions (e.g., exclude all but include `folder1`, `folderZ`)
-- [ ] Use `creator_profile_image_re`, etc., as a list to define custom fallback logic
+- [ ] Use `portrait_re`, etc., as a list to define custom fallback logic
 
 ### 📄 Output & Layout
 

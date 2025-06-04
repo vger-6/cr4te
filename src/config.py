@@ -61,10 +61,9 @@ DEFAULT_CONFIG = {
         "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
         "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",        
         "document_include_re": r"(?i)^[^/\\]+\.pdf$",
-        "document_exclude_re": r"$^",
         
-        "creator_profile_image_re": r"^profile\.jpg$",
-        "project_cover_image_re": r"^cover\.jpg$",
+        "portrait_re": r"^portrait\.(jpg|jpeg|png)$",
+        "cover_re": r"^cover\.(jpg|jpeg|png)$",
         
         "image_gallery_max": 20,
         "image_gallery_sample_strategy": "spread",
@@ -165,8 +164,8 @@ def compile_media_rules(media_rules: Dict) -> Dict:
         "audio_include_re",
         "image_include_re",
         "document_include_re",
-        "creator_profile_image_re", 
-        "project_cover_image_re"
+        "portrait_re", 
+        "cover_re"
     }
     enum_keys = {"image_gallery_sample_strategy": ImageSampleStrategy}
     
@@ -208,6 +207,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "creator_overview_page_search_placeholder": "Search musicians, albums, tags...",
                 "project_overview_page_title": "Albums",
                 "project_overview_page_search_placeholder": "Search albums, tags...",
+                "project_page_audio_section_base_title": "Tracks",
                 "creator_page_projects_title": "Albums",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",

@@ -192,7 +192,7 @@ def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]
     all_projects = []
     for creator in creators:
         for project in creator.get("projects", []): 
-            thumb_path = _resolve_thumbnail_or_default(project.get('featured_thumbnail') or project.get('thumbnail'), ctx, ThumbType.PROJECT)
+            thumb_path = _resolve_thumbnail_or_default(project.get('featured_cover') or project.get('cover'), ctx, ThumbType.PROJECT)
 
             all_projects.append({
                 "title": project["title"],
@@ -403,7 +403,7 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
     return participants
     
 def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict: 
-    thumb_path = _resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.POSTER)
+    thumb_path = _resolve_thumbnail_or_default(project.get("featured_cover") or project.get("cover"), ctx, ThumbType.POSTER)
 
     return {
         "title": project["title"],
@@ -468,11 +468,11 @@ def _calculate_debut_age(creator: Dict) -> str:
 def _build_project_entries(creator: Dict, ctx: BuildContext) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries with metadata for each project of a creator,
-    including title, URL, and thumbnail URL.
+    including title, URL, and cover URL.
     """
     project_entries = []
     for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(project.get("featured_thumbnail") or project.get("thumbnail"), ctx, ThumbType.PROJECT)
+        thumb_path = _resolve_thumbnail_or_default(project.get("featured_cover") or project.get("cover"), ctx, ThumbType.PROJECT)
 
         project_entries.append({
             "title": project["title"],

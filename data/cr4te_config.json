@@ -39,8 +39,8 @@
     "audio_include_re": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
     "image_include_re": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
     "document_include_re": "(?i)^[^/\\\\]+\\.pdf$",
-    "creator_profile_image_re": "^profile\\.jpg$",
-    "project_cover_image_re": "^cover\\.jpg$",
+    "portrait_re": "^portrait\\.jpg$",
+    "cover_re": "^cover\\.jpg$",
     "image_gallery_max": 20,
     "image_gallery_sample_strategy": "spread",
     "collaboration_separator": " & "
