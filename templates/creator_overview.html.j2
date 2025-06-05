@@ -19,9 +19,8 @@
 
 <h1>{{ html_settings.creator_overview_page_title }}</h1>
 
-<div class="search-bar-wrapper">
-  <input type="text" id="search-input" placeholder="{{ html_settings.creator_overview_page_search_placeholder }}" class="search-box">
-</div>
+{% set placeholder = html_settings.creator_overview_page_search_placeholder %}
+{% include "partials/_search_bar.html.j2" %}
 
 <div class="section-box">
   <div class="section-content">
