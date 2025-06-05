@@ -102,6 +102,18 @@ class BuildContext:
     def documents_dir(self) -> Path:
         return self.media_dir / "documents"
         
+    @property
+    def index_html_path(self) -> Path:
+        return self.output_dir / "index.html"
+        
+    @property
+    def projects_html_path(self) -> Path:
+        return self.output_dir / "projects.html"
+        
+    @property
+    def tags_html_path(self) -> Path:
+        return self.output_dir / "tags.html"
+        
     def default_image(self, thumb_type: ThumbType) -> Path:
         """
         Returns the path to the default image for a given thumbnail type.
@@ -214,8 +226,7 @@ def _build_project_overview_page(creators: list, ctx: BuildContext):
         poster_max_height=ThumbType.PROJECT.height,
     )
 
-    ctx.output_dir.mkdir(parents=True, exist_ok=True)
-    with open(ctx.output_dir / "projects.html", "w", encoding="utf-8") as f:
+    with open(ctx.projects_html_path, "w", encoding="utf-8") as f:
         f.write(rendered)
 
 def _collect_tags_from_creator(creator: Dict) -> List[str]:
@@ -259,8 +270,7 @@ def _build_tags_page(creators: list, ctx: BuildContext):
         tags=_collect_all_tags(creators),
     )
 
-    tag_file = ctx.output_dir / "tags.html"
-    with open(tag_file, "w", encoding="utf-8") as f:
+    with open(ctx.tags_html_path, "w", encoding="utf-8") as f:
         f.write(output_html)
         
 def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
@@ -654,8 +664,7 @@ def _build_creator_overview_page(creators: list, ctx: BuildContext):
         creator_thumb_max_height=ThumbType.THUMB.height,
     )
 
-    page_file = ctx.output_dir / "index.html"
-    with open(page_file, 'w', encoding='utf-8') as f:
+    with open(ctx.index_html_path, 'w', encoding='utf-8') as f:
         f.write(output_html)
         
 def _filter_disabled_content(creators: list) -> list:
@@ -688,15 +697,16 @@ def _copy_assets(output_dir: Path) -> None:
         print(f"Copied {asset_dir.name} to {dst}")
     
 def _prepare_output_dirs(ctx: BuildContext) -> None:
+    ctx.output_dir.mkdir(parents=True, exist_ok=True)
     ctx.creators_dir.mkdir(parents=True, exist_ok=True)
     ctx.projects_dir.mkdir(parents=True, exist_ok=True)
     ctx.thumbs_dir.mkdir(parents=True, exist_ok=True)
     
-def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict):
+def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> Path:
     ctx = BuildContext(input_dir, output_dir, html_settings)
     
     _prepare_output_dirs(ctx)
-    _copy_assets(output_dir)
+    _copy_assets(ctx.output_dir)
 
     creators = _collect_creator_data(ctx.input_dir)
     creators = _filter_disabled_content(creators)
@@ -706,6 +716,8 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict):
     _build_project_pages(creators, ctx)
     _build_project_overview_page(creators, ctx)
     _build_tags_page(creators, ctx)
+    
+    return ctx.index_html_path
     
 def clear_output_folder(output_dir: Path, clear_thumbnails: bool):
     """Delete all contents of output_dir except the 'thumbnails' folder."""

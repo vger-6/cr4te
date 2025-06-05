@@ -1,6 +1,7 @@
 import argparse
 import shutil
 import json
+import webbrowser
 from pathlib import Path
 from typing import Dict
 
@@ -41,6 +42,7 @@ def main():
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
     html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML: artist (default), musician, director, author, model")
+    html_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
     
@@ -103,7 +105,10 @@ def main():
 
         config = cfg.update_html_labels(config, args.html_preset)
         
-        build_html_pages(input_path, output_path, config["html_settings"])
+        html_index_path = build_html_pages(input_path, output_path, config["html_settings"])
+        
+        if args.open:
+            webbrowser.open(f"file://{html_index_path.resolve()}")
 
 if __name__ == "__main__":
     main()
