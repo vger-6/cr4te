@@ -61,6 +61,7 @@ DEFAULT_CONFIG = {
         "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
         "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",        
         "document_include_re": r"(?i)^[^/\\]+\.pdf$",
+        "text_include_re": r"(?i)^[^/\\]+\.md$",
         
         "portrait_re": r"^portrait\.(jpg|jpeg|png)$",
         "cover_re": r"^cover\.(jpg|jpeg|png)$",
@@ -119,6 +120,7 @@ def _get_build_rules(mode: BuildMode) -> Dict:
                 "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
                 "image_include_re": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
                 "document_include_re": r"(?i)^[^/\\]+\.pdf$",
+                "text_include_re": r"(?i)^[^/\\]+\.md$",
             }
         case BuildMode.DEEP:
             return {
@@ -127,6 +129,7 @@ def _get_build_rules(mode: BuildMode) -> Dict:
                 "audio_include_re": r"(?i).*\.(mp3|m4a)$",
                 "image_include_re": r"(?i).*\.(jpg|jpeg|png)$",
                 "document_include_re": r"(?i).*\.pdf$",
+                "text_include_re": r"(?i).*\.md$",
             }
         case BuildMode.HYBRID:
             return {}  # Use the base/default media_rules
@@ -164,6 +167,7 @@ def compile_media_rules(media_rules: Dict) -> Dict:
         "audio_include_re",
         "image_include_re",
         "document_include_re",
+        "text_include_re",
         "portrait_re", 
         "cover_re"
     }

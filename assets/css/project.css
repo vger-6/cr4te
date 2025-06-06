@@ -74,6 +74,12 @@ video {
   gap: 1rem;
 }
 
+.text-gallery {
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+}
+
 .project-info {
   display: flex;
   align-items: flex-start;

@@ -12,4 +12,10 @@ def get_relative_path(file_path: Path, base_path: Path) -> str:
     if not isinstance(file_path, Path) or not isinstance(base_path, Path):
         raise TypeError("Both file_path and base_path must be pathlib.Path objects")
 
-    return Path(os.path.relpath(file_path, base_path)).as_posix()    
+    return Path(os.path.relpath(file_path, base_path)).as_posix()
+    
+def read_text(text_path: Path) -> str:
+    if text_path.exists() and text_path.is_file():
+        return text_path.read_text(encoding='utf-8').strip()
+    return ""
+

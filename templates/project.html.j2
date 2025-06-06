@@ -167,6 +167,20 @@
         </div>
       </div>
       {% endif %}
+      
+      {% if group.texts %}
+        <div class="section-box markdown">
+          <div class="section-title">{{ group.text_section_title }}</div>
+          <hr>
+          <div class="section-content text-content">
+            <div class="text-gallery">
+              {% for text in group.texts %}
+                {{ text | safe }}
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
     {% endfor %}
 
   </div>

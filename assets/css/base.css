@@ -273,6 +273,7 @@ a:focus {
 .text-content {
   padding-top: 0rem;
   padding-bottom: 0rem;
+  overflow-y: auto;
 }
 
 .image-gallery {

@@ -39,6 +39,7 @@
     "audio_include_re": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
     "image_include_re": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
     "document_include_re": "(?i)^[^/\\\\]+\\.pdf$",
+    "text_include_re": "(?i)^[^/\\\\]+\\.md$",
     "portrait_re": "^portrait\\.jpg$",
     "cover_re": "^cover\\.jpg$",
     "image_gallery_max": 20,

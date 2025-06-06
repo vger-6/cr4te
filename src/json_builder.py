@@ -27,6 +27,7 @@ def _validate_date_string(date_str: str) -> str:
 
 def _read_readme_text(folder: Path) -> str:
     readme_file = folder / "README.md"
+    # TODO: use utils.read_text method
     if readme_file.exists() and readme_file.is_file():
         return readme_file.read_text(encoding='utf-8').strip()
     return ""
@@ -66,7 +67,7 @@ def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStra
             return sorted_images  # fallback
             
 def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Dict]:
-    media_map = defaultdict(lambda: {"videos": [], "tracks": [], "images": [], "documents": [], "is_root": False})
+    media_map = defaultdict(lambda: {"videos": [], "tracks": [], "images": [], "documents": [], "texts": [], "is_root": False})
 
     for file in project_dir.rglob("*"):
         if not file.is_file():
@@ -90,6 +91,8 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif compiled_media_rules["document_include_re"].match(rel_path_posix):
             media_map[folder_key]["documents"].append(str(rel_to_input))
+        elif compiled_media_rules["text_include_re"].match(rel_path_posix):
+            media_map[folder_key]["texts"].append(str(rel_to_input))
         else:
             continue
 
@@ -125,6 +128,9 @@ def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rule
             "documents": media["documents"],
             "featured_documents": existing_media_group.get("featured_documents"),
             "document_group_name": existing_media_group.get("document_group_name"),
+            "texts": media["texts"],
+            "featured_texts": existing_media_group.get("featured_texts"),
+            "text_group_name": existing_media_group.get("text_group_name"),
             "folder_name": folder_name
         }
 
@@ -146,6 +152,7 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
         existing_project = existing_projects.get(project_title, {})
 
         # Find cover
+        # TODO: allow more image formats
         all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
         cover_re = compiled_media_rules.get("cover_re")
         cover_candidates = [p for p in all_images if cover_re and cover_re.match(p.name)]
@@ -190,6 +197,7 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
     
     # Find portrait
     # TODO: DRY out code duplication. See: collect_projects_data
+    # TODO: allow more image formats
     all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
     portrait_re = compiled_media_rules.get("portrait_re")
     portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]

@@ -12,7 +12,7 @@ import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from .utils import slugify, get_relative_path
+from .utils import slugify, get_relative_path, read_text
 
 __all__ = ["clear_output_folder", "build_html_pages"]
 
@@ -44,6 +44,7 @@ class MediaType(str, Enum):
     TRACKS = "tracks"
     IMAGES = "images"
     DOCUMENTS = "documents"
+    TEXTS = "texts"
 
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
@@ -121,7 +122,7 @@ class BuildContext:
         return DEFAULT_IMAGES[thumb_type]
 
 def _render_markdown(text: str) -> str:
-    return markdown.markdown(text, extensions=["extra"])
+    return markdown.markdown(text, extensions=["nl2br"])
     
 def _parse_date(date_str: str) -> Optional[datetime]:
     try:
@@ -299,11 +300,12 @@ def _format_section_title(folder_name: str, label: str, active_types: List[Media
         return folder_name
     return f"{folder_name} - {label}"
     
-def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool, html_settings: Dict) -> Dict[str, str]:
+def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool, has_texts: bool, html_settings: Dict) -> Dict[str, str]:
     video_title = html_settings.get("project_page_video_section_base_title", "Videos")
     audio_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
     image_title = html_settings.get("project_page_image_section_base_title", "Images")
     document_title = html_settings.get("project_page_document_section_base_title", "Documents")
+    text_title = html_settings.get("project_page_text_section_base_title", "Texts")
 
     if not media_group.get("is_root", False):
         folder_name = media_group.get("folder_name", "")
@@ -316,17 +318,21 @@ def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, h
             active_types.append(MediaType.IMAGES)
         if has_documents:
             active_types.append(MediaType.DOCUMENTS)
+        if has_texts:
+            active_types.append(MediaType.TEXTS)
 
         video_title = _format_section_title(folder_name, video_title, active_types, MediaType.VIDEOS)
         audio_title = _format_section_title(folder_name, audio_title, active_types, MediaType.TRACKS)
         image_title = _format_section_title(folder_name, image_title, active_types, MediaType.IMAGES)
         document_title = _format_section_title(folder_name, document_title, active_types, MediaType.DOCUMENTS)
+        text_title = _format_section_title(folder_name, text_title, active_types, MediaType.TEXTS)
 
     return {
         "video_section_title": media_group.get("video_group_name") or video_title,
         "audio_section_title": media_group.get("track_group_name") or audio_title,
         "image_section_title": media_group.get("image_group_name") or image_title,
         "document_section_title": media_group.get("document_group_name") or document_title,
+        "text_section_title": media_group.get("text_group_name") or text_title,
     }
     
 def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
@@ -336,6 +342,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
         video_rel_paths = media_group.get("featured_videos") or media_group.get("videos", [])
         track_rel_paths = media_group.get("featured_tracks") or media_group.get("tracks", [])
         document_rel_paths = media_group.get("featured_documents") or media_group.get("documents", [])
+        text_rel_paths = media_group.get("featured_texts") or media_group.get("texts", [])
 
         images = [
             {
@@ -363,6 +370,11 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
             get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), ctx.projects_dir)
             for rel in document_rel_paths
         ]
+        
+        texts = [
+            _render_markdown(read_text(ctx.input_dir / Path(rel)))
+            for rel in text_rel_paths
+        ]
 
         section_titles = _get_section_titles(
             media_group,
@@ -370,6 +382,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
             bool(tracks),
             bool(images),
             bool(documents),
+            bool(texts),
             ctx.html_settings
         )
 
@@ -378,7 +391,8 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
             "images": images,
             "videos": videos,
             "tracks": tracks,
-            "documents": documents
+            "documents": documents,
+            "texts": texts
         })
 
     return media_groups
