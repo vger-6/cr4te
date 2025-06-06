@@ -118,19 +118,14 @@ def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rule
             "is_root": media["is_root"],
             "videos": sorted(media["videos"]),
             "featured_videos": existing_media_group.get("featured_videos"),
-            "video_group_name": existing_media_group.get("video_group_name"),
             "tracks": sorted(media["tracks"]),
             "featured_tracks": existing_media_group.get("featured_tracks"),
-            "track_group_name": existing_media_group.get("track_group_name"),
             "images": sampled_images,
             "featured_images": existing_media_group.get("featured_images"),
-            "image_group_name": existing_media_group.get("image_group_name"),
             "documents": media["documents"],
             "featured_documents": existing_media_group.get("featured_documents"),
-            "document_group_name": existing_media_group.get("document_group_name"),
             "texts": media["texts"],
             "featured_texts": existing_media_group.get("featured_texts"),
-            "text_group_name": existing_media_group.get("text_group_name"),
             "folder_name": folder_name
         }
 

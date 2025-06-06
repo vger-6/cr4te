@@ -39,12 +39,12 @@ env = Environment(
     autoescape=select_autoescape(['html', 'xml'])
 )
 
-class MediaType(str, Enum):
-    VIDEOS = "videos"
-    TRACKS = "tracks"
-    IMAGES = "images"
-    DOCUMENTS = "documents"
-    TEXTS = "texts"
+#class MediaType(str, Enum):
+#    VIDEOS = "videos"
+#    TRACKS = "tracks"
+#    IMAGES = "images"
+#    DOCUMENTS = "documents"
+#    TEXTS = "texts"
 
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
@@ -288,51 +288,31 @@ def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> P
 
     return dest_file
 
-def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
-    """
-    Returns a title for the media section based on what types are present.
-
-    - If only one type is active, return folder_name only.
-    - If multiple types, return "folder_name - label".
-    """
-    folder_name = folder_name.replace("/", " - ").strip()
-    if len(active_types) == 1 and current_type in active_types:
-        return folder_name
-    return f"{folder_name} - {label}"
+#def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
+#    """
+#    Returns a title for the media section based on what types are present.
+#
+#    - If only one type is active, return folder_name only.
+#    - If multiple types, return "folder_name - label".
+#    """
+#    folder_name = folder_name.replace("/", " - ").strip()
+#    if len(active_types) == 1 and current_type in active_types:
+#        return folder_name
+#    return f"{folder_name} - {label}"
     
-def _get_section_titles(media_group: Dict, has_videos: bool, has_tracks: bool, has_images: bool, has_documents: bool, has_texts: bool, html_settings: Dict) -> Dict[str, str]:
-    video_title = html_settings.get("project_page_video_section_base_title", "Videos")
+def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str]:
     audio_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
     image_title = html_settings.get("project_page_image_section_base_title", "Images")
-    document_title = html_settings.get("project_page_document_section_base_title", "Documents")
-    text_title = html_settings.get("project_page_text_section_base_title", "Texts")
 
     if not media_group.get("is_root", False):
         folder_name = media_group.get("folder_name", "")
-        active_types = []
-        if has_videos:
-            active_types.append(MediaType.VIDEOS)
-        if has_tracks:
-            active_types.append(MediaType.TRACKS)
-        if has_images:
-            active_types.append(MediaType.IMAGES)
-        if has_documents:
-            active_types.append(MediaType.DOCUMENTS)
-        if has_texts:
-            active_types.append(MediaType.TEXTS)
 
-        video_title = _format_section_title(folder_name, video_title, active_types, MediaType.VIDEOS)
-        audio_title = _format_section_title(folder_name, audio_title, active_types, MediaType.TRACKS)
-        image_title = _format_section_title(folder_name, image_title, active_types, MediaType.IMAGES)
-        document_title = _format_section_title(folder_name, document_title, active_types, MediaType.DOCUMENTS)
-        text_title = _format_section_title(folder_name, text_title, active_types, MediaType.TEXTS)
+        audio_title = folder_name
+        image_title = folder_name
 
     return {
-        "video_section_title": media_group.get("video_group_name") or video_title,
-        "audio_section_title": media_group.get("track_group_name") or audio_title,
-        "image_section_title": media_group.get("image_group_name") or image_title,
-        "document_section_title": media_group.get("document_group_name") or document_title,
-        "text_section_title": media_group.get("text_group_name") or text_title,
+        "audio_section_title": audio_title,
+        "image_section_title": image_title,
     }
     
 def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
@@ -354,35 +334,39 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
         ]
 
         videos = [
-            get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), ctx.projects_dir)
+            {
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), ctx.projects_dir),
+                "title": Path(rel).stem.title()
+            }
             for rel in video_rel_paths
         ]
 
         tracks = [
             {
                 "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), ctx.projects_dir),
-                "name": Path(rel).stem
+                "title": Path(rel).stem
             }
             for rel in track_rel_paths
         ]
 
         documents = [
-            get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), ctx.projects_dir)
+            {
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), ctx.projects_dir),
+                "title": Path(rel).stem.title()
+            }
             for rel in document_rel_paths
         ]
         
         texts = [
-            _render_markdown(read_text(ctx.input_dir / Path(rel)))
+            {
+                "content": _render_markdown(read_text(ctx.input_dir / Path(rel))),
+                "title": Path(rel).stem.title()
+            }
             for rel in text_rel_paths
         ]
 
         section_titles = _get_section_titles(
             media_group,
-            bool(videos),
-            bool(tracks),
-            bool(images),
-            bool(documents),
-            bool(texts),
             ctx.html_settings
         )
 

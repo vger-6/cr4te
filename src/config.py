@@ -38,10 +38,8 @@ DEFAULT_CONFIG = {
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
         "project_page_creator_profile": "Creator Profile",
-        "project_page_video_section_base_title": "Videos",
-        "project_page_audio_section_base_title": "Audio",
+        "project_page_audio_section_base_title": "Tracks",
         "project_page_image_section_base_title": "Images",
-        "project_page_document_section_base_title": "Documents",
         
         "tags_page_title": "Tags",
         
@@ -198,10 +196,10 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "project_overview_page_title": "Movies",
                 "project_overview_page_search_placeholder": "Search movies, tags...",
                 "creator_page_projects_title": "Movies",
+                "project_page_audio_section_base_title": "Soundtrack",
                 "creator_page_collabs_title_prefix": "Codirected with",
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile": "Profile",
-                "project_page_video_section_base_title": "Movie"
             }
         case HtmlPreset.MUSICIAN:
             return {
@@ -211,7 +209,6 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "creator_overview_page_search_placeholder": "Search musicians, albums, tags...",
                 "project_overview_page_title": "Albums",
                 "project_overview_page_search_placeholder": "Search albums, tags...",
-                "project_page_audio_section_base_title": "Tracks",
                 "creator_page_projects_title": "Albums",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",
@@ -226,6 +223,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "project_overview_page_title": "Works",
                 "project_overview_page_search_placeholder": "Search works, tags...",
                 "creator_page_projects_title": "Works",
+                "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Works",
                 "project_page_creator_profile": "Profile"
@@ -239,6 +237,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "project_overview_page_title": "Books",
                 "project_overview_page_search_placeholder": "Search books, tags...",
                 "creator_page_projects_title": "Books",
+                "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Books",
                 "project_page_creator_profile": "Profile"
