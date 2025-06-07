@@ -214,6 +214,12 @@ def _sort_project(project: Dict) -> tuple:
     title = project["title"].lower()
     return (not has_date, date_value, title)
     
+def _build_project_search_text(project: Dict) -> str:
+    search_terms = [project["title"]]
+    search_terms.extend(project.get("tags", []))
+
+    return " ".join(search_terms).lower()
+    
 def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]:
     all_projects = []
     for creator in creators:
@@ -225,7 +231,7 @@ def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]
                 "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
                 "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
                 "creator_name": creator["name"],
-                "search_text": " ".join(project.get("tags", [])).lower()
+                "search_text": _build_project_search_text(project)
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
     

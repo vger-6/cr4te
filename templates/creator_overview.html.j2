@@ -26,7 +26,7 @@
   <div class="section-content">
     <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}">
     {% for creator in creator_entries %}
-      <div class="image-wrapper" data-search="{{ creator.search_text }}">
+      <div class="image-wrapper" data-search-text="{{ creator.search_text }}">
         <a href="{{ creator.url }}" title="{{ creator.name }}">
           <img src="{{ creator.thumbnail_url }}" alt="{{ creator.name }} thumbnail">
           <span>{{ creator.name }}</span>
@@ -37,7 +37,8 @@
   </div>
 </div>
 
-<script src="assets/js/filter_creators.js"></script>
+<script src="assets/js/filter_base.js"></script>
+<script src="assets/js/filter_simple.js"></script>
 <script src="assets/js/gallery_builder.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 
