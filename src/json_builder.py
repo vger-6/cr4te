@@ -1,12 +1,13 @@
 import json
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Pattern
 from datetime import datetime
 from collections import defaultdict
 
 from PIL import Image
 
+from . import utils
 from .enums.image_sample_strategy import ImageSampleStrategy
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
@@ -27,10 +28,23 @@ def _validate_date_string(date_str: str) -> str:
 
 def _read_readme_text(folder: Path) -> str:
     readme_file = folder / "README.md"
-    # TODO: use utils.read_text method
-    if readme_file.exists() and readme_file.is_file():
-        return readme_file.read_text(encoding='utf-8').strip()
-    return ""
+    return utils.read_text(readme_file)
+    
+def _find_all_images(root: Path, exclude_pattern: Pattern) -> List[Path]:
+    image_exts = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".svg"}
+
+    return [
+        p for p in root.rglob("*")
+        if p.suffix.lower() in image_exts and not exclude_pattern.search(p.name)
+    ]
+    
+def _select_best_image(all_images: List[Path], match_pattern: Optional[Pattern], orientation_fallback: Orientation) -> Optional[Path]:
+    if match_pattern:
+        for img in all_images:
+            if match_pattern.match(img.name):
+                return img
+
+    return _find_image_by_orientation(all_images, orientation_fallback)
 
 def _find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
     for img_path in sorted(images, key=lambda x: x.name):
@@ -110,8 +124,8 @@ def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rule
 
         sampled_images = _sample_images(
             media["images"],
-            compiled_media_rules.get("image_gallery_max", 20),
-            compiled_media_rules.get("image_gallery_sample_strategy", ImageSampleStrategy.SPREAD)
+            compiled_media_rules["image_gallery_max"],
+            compiled_media_rules["image_gallery_sample_strategy"]
         )
 
         media_group = {
@@ -147,24 +161,14 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
         existing_project = existing_projects.get(project_title, {})
 
         # Find cover
-        # TODO: allow more image formats
-        all_images = [p for p in project_dir.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
-        cover_re = compiled_media_rules.get("cover_re")
-        cover_candidates = [p for p in all_images if cover_re and cover_re.match(p.name)]
-
-        cover_path = ""
-        if cover_candidates:
-            cover_path = str(cover_candidates[0].relative_to(input_path))
-        else:
-            cover = _find_image_by_orientation(all_images, Orientation.LANDSCAPE)  # Fallback: heuristic
-            if cover:
-                cover_path = str(cover.relative_to(input_path))
+        all_images = _find_all_images(project_dir, compiled_media_rules["global_exclude_re"])
+        cover = _select_best_image(all_images, compiled_media_rules["cover_re"], Orientation.LANDSCAPE)
 
         project = {
             "title": project_title,
             "is_enabled": existing_project.get("is_enabled", True),
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
-            "cover": cover_path,
+            "cover": str(cover.relative_to(input_path)) if cover else "",
             "featured_cover": existing_project.get("featured_cover"),
             "info": _read_readme_text(project_dir) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(project_dir, input_path, compiled_media_rules, existing_project),
@@ -191,21 +195,10 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
     existing_creator = _load_existing_json(creator_path / "cr4te.json")
     
     # Find portrait
-    # TODO: DRY out code duplication. See: collect_projects_data
-    # TODO: allow more image formats
-    all_images = [p for p in creator_path.rglob("*.jpg") if not compiled_media_rules["global_exclude_re"].search(p.name)]
-    portrait_re = compiled_media_rules.get("portrait_re")
-    portrait_candidates = [p for p in all_images if portrait_re and portrait_re.match(p.name)]
-
-    portrait_path = ""
-    if portrait_candidates:
-        portrait_path = str(portrait_candidates[0].relative_to(input_path))
-    else:
-        portrait = _find_image_by_orientation(all_images, Orientation.PORTRAIT)  # Fallback: heuristic
-        if portrait:
-            portrait_path = str(portrait.relative_to(input_path))
-
-    separator = compiled_media_rules.get("collaboration_separator")
+    all_images = _find_all_images(creator_path, compiled_media_rules["global_exclude_re"])
+    portrait = _select_best_image(all_images, compiled_media_rules["portrait_re"], Orientation.PORTRAIT)
+    
+    separator = compiled_media_rules["collaboration_separator"]
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
         is_collab = _is_collaboration(creator_name, separator)
@@ -218,7 +211,7 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
         "active_since": _validate_date_string(existing_creator.get("active_since", "")),
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
-        "portrait": portrait_path,
+        "portrait": str(portrait.relative_to(input_path)) if portrait else "",
         "featured_portrait": existing_creator.get("featured_portrait"),
         "info": _read_readme_text(creator_path) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
