@@ -202,7 +202,7 @@ def _resolve_thumbnail_or_default(relative_image_path: Optional[str], ctx: Build
     return ctx.default_image(thumb_type)
 
 def _sort_project(project: Dict) -> tuple:
-    release_date = project.get("release_date")
+    release_date = project["release_date"]
     has_date = bool(release_date)
     date_value = _parse_date(release_date) if has_date else datetime.max
     title = project["title"].lower()
@@ -210,15 +210,15 @@ def _sort_project(project: Dict) -> tuple:
     
 def _build_project_search_text(project: Dict) -> str:
     search_terms = [project["title"]]
-    search_terms.extend(project.get("tags", []))
+    search_terms.extend(project["tags"])
 
     return " ".join(search_terms).lower()
     
 def _collect_all_projects(creators: List[Dict], ctx: BuildContext) -> List[Dict]:
     all_projects = []
     for creator in creators:
-        for project in creator.get("projects", []): 
-            thumb_path = _resolve_thumbnail_or_default(project.get('featured_cover') or project.get('cover'), ctx, ThumbType.PROJECT)
+        for project in creator["projects"]: 
+            thumb_path = _resolve_thumbnail_or_default(project['featured_cover'] or project['cover'], ctx, ThumbType.PROJECT)
 
             all_projects.append({
                 "title": project["title"],
@@ -244,9 +244,9 @@ def _build_project_overview_page(creators: list, ctx: BuildContext):
         f.write(rendered)
 
 def _collect_tags_from_creator(creator: Dict) -> List[str]:
-    tags = list(creator.get("tags", []))
-    for project in creator.get("projects", []):
-        tags.extend(project.get("tags", []))
+    tags = list(creator["tags"])
+    for project in creator["projects"]:
+        tags.extend(project["tags"])
     return tags
     
 def _group_tags_by_category(tags: Iterable[str]) -> Dict[str, List[str]]:
@@ -323,8 +323,8 @@ def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str
     audio_title = html_settings["project_page_audio_section_base_title"]
     image_title = html_settings["project_page_image_section_base_title"]
 
-    if not media_group.get("is_root", False):
-        folder_name = media_group.get("folder_name", "")
+    if not media_group["is_root"]:
+        folder_name = media_group["folder_name"]
 
         audio_title = folder_name.title()
         image_title = folder_name.title()
@@ -336,12 +336,12 @@ def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str
     
 def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
     media_groups = []
-    for media_group in project.get("media_groups", []):
-        image_rel_paths = media_group.get("featured_images") or media_group.get("images", [])
-        video_rel_paths = media_group.get("featured_videos") or media_group.get("videos", [])
-        track_rel_paths = media_group.get("featured_tracks") or media_group.get("tracks", [])
-        document_rel_paths = media_group.get("featured_documents") or media_group.get("documents", [])
-        text_rel_paths = media_group.get("featured_texts") or media_group.get("texts", [])
+    for media_group in project["media_groups"]:
+        image_rel_paths = media_group["featured_images"] or media_group["images"]
+        video_rel_paths = media_group["featured_videos"] or media_group["videos"]
+        track_rel_paths = media_group["featured_tracks"] or media_group["tracks"]
+        document_rel_paths = media_group["featured_documents"] or media_group["documents"]
+        text_rel_paths = media_group["featured_texts"] or media_group["texts"]
 
         images = [
             {
@@ -405,8 +405,8 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
     return media_groups
     
 def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
-    dob = creator.get("born_or_founded")
-    release_date = project.get("release_date")
+    dob = creator["born_or_founded"]
+    release_date = project["release_date"]
     if not dob or not release_date:
         return ""
         
@@ -414,7 +414,7 @@ def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
     
 def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
-    participant_names = creator.get("members") if creator.get("is_collaboration") else [creator["name"]]
+    participant_names = creator["members"] if creator["is_collaboration"] else [creator["name"]]
     
     participants = []
     for name in participant_names:
@@ -422,7 +422,7 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
         if not participant:
             continue
          
-        thumb_path = _resolve_thumbnail_or_default(participant.get('featured_portrait') or participant.get('portrait'), ctx, ThumbType.PORTRAIT)
+        thumb_path = _resolve_thumbnail_or_default(participant["featured_portrait"] or participant["portrait"], ctx, ThumbType.PORTRAIT)
 
         participants.append({
             "name": name,
@@ -434,15 +434,15 @@ def _collect_participant_entries(creator: Dict, project: Dict, creators: List[Di
     return participants
     
 def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict], ctx: BuildContext) -> Dict: 
-    thumb_path = _resolve_thumbnail_or_default(project.get("featured_cover") or project.get("cover"), ctx, ThumbType.POSTER)
+    thumb_path = _resolve_thumbnail_or_default(project["featured_cover"] or project["cover"], ctx, ThumbType.POSTER)
 
     return {
         "title": project["title"],
-        "release_date": project.get("release_date", ""),
+        "release_date": project["release_date"],
         "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
         "info_layout": "row" if is_portrait(thumb_path) else "column",
-        "info_html": _render_markdown(project.get("info", "")),
-        "tag_map": _group_tags_by_category(project.get("tags", [])),
+        "info_html": _render_markdown(project["info"]),
+        "tag_map": _group_tags_by_category(project["tags"]),
         "participants": _collect_participant_entries(creator, project, creators, ctx),
         "media_groups": _build_media_groups(project, ctx),
         "creator_name": creator["name"],
@@ -474,15 +474,15 @@ def _build_project_pages(creators: List[Dict], ctx: BuildContext):
             _build_project_page(creator, project, creators, ctx)
             
 def _get_collaboration_label(collab: Dict, creator_name: str, html_settings: Dict) -> str:
-    if creator_name in collab.get("members", []):
+    if creator_name in collab["members"]:
         others = [n for n in collab["members"] if n != creator_name]
         return " ".join(others)
     return collab["name"]
     
 def _calculate_debut_age(creator: Dict) -> str:
-    dob = creator.get("born_or_founded")
-    active_since = creator.get("active_since")
-    release_dates = [p.get("release_date") for p in creator.get("projects", []) if p.get("release_date")]
+    dob = creator["born_or_founded"]
+    active_since = creator["active_since"]
+    release_dates = [p["release_date"] for p in creator["projects"] if p["release_date"]]
 
     if not dob or (not active_since and not release_dates):
         return ""
@@ -503,8 +503,8 @@ def _build_project_entries(creator: Dict, ctx: BuildContext) -> List[Dict[str, s
     including title, URL, and cover URL.
     """
     project_entries = []
-    for project in sorted(creator.get("projects", []), key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(project.get("featured_cover") or project.get("cover"), ctx, ThumbType.PROJECT)
+    for project in sorted(creator["projects"], key=_sort_project):
+        thumb_path = _resolve_thumbnail_or_default(project["featured_cover"] or project["cover"], ctx, ThumbType.PROJECT)
 
         project_entries.append({
             "title": project["title"],
@@ -521,8 +521,8 @@ def _build_collaboration_entries(creator: Dict, creators: List[Dict], ctx: Build
     """
     creator_by_name = {c["name"]: c for c in creators}
     collab_entries = []
-    for collab_name in creator.get("collaborations", []):
-        collab = creator_by_name.get(collab_name)
+    for collab_name in creator["collaborations"]:
+        collab = creator_by_name[collab_name]
         if not collab:
             continue
 
@@ -538,17 +538,17 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
-    thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(creator["featured_portrait"] or creator["portrait"], ctx, ThumbType.PORTRAIT)
     
     return {
         "name": creator["name"],
-        "aliases": creator.get("aliases", []),
-        "date_of_birth": creator.get("born_or_founded", ""),
-        "nationality": creator.get("nationality", ""),
+        "aliases": creator["aliases"],
+        "date_of_birth": creator["born_or_founded"],
+        "nationality": creator["nationality"],
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
         "info_layout": "row" if is_portrait(thumb_path) else "column",
         "debut_age": _calculate_debut_age(creator),
-        "info_html": _render_markdown(creator.get("info", "")),
+        "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),
         "collaborations": _build_collaboration_entries(creator, creators, ctx),
@@ -575,18 +575,18 @@ def _collect_member_links(creator: Dict, creators: List[Dict], ctx: BuildContext
     Builds a list of dictionaries representing links to member creators
     in a collaboration, including name, URL, and thumbnail URL.
     """
-    if not creator.get("is_collaboration"):
+    if not creator["is_collaboration"]:
         return []
 
     creator_by_name = {c["name"]: c for c in creators}
     member_links = []
 
-    for member_name in creator.get("members", []):
+    for member_name in creator["members"]:
         member = creator_by_name.get(member_name)
         if not member:
             continue
 
-        thumb_path = _resolve_thumbnail_or_default(member.get("featured_portrait") or member.get("portrait"), ctx, ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(member["featured_portrait"] or member["portrait"], ctx, ThumbType.THUMB)
 
         member_links.append({
             "name": member_name,
@@ -601,18 +601,18 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
     Builds the context dictionary for rendering a collaboration page,
     including metadata, portrait, members, projects, and tags.
     """
-    thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(creator["featured_portrait"] or creator["portrait"], ctx, ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
-        "member_names": creator.get("members", []),
+        "member_names": creator["members"],
         "members": _collect_member_links(creator, creators, ctx),
-        "founded": creator.get("born_or_founded", ""),
-        "nationality": creator.get("nationality", ""),
-        "active_since": creator.get("active_since", ""),
+        "founded": creator["born_or_founded"],
+        "nationality": creator["nationality"],
+        "active_since": creator["active_since"],
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
         "info_layout": "row" if is_portrait(thumb_path) else "column",
-        "info_html": _render_markdown(creator.get("info", "")),
+        "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),
     }
@@ -649,13 +649,11 @@ def _build_creator_search_text(creator: Dict) -> str:
     project titles, media group labels, and project tags.
     """
     search_terms = [creator["name"]]
-    search_terms.extend(creator.get("tags", []))
+    search_terms.extend(creator["tags"])
 
-    for project in creator.get("projects", []):
+    for project in creator["projects"]:
         search_terms.append(project["title"])
-        for group in project.get("media_groups", []):
-            search_terms.append(group.get("label", ""))
-        search_terms.extend(project.get("tags", []))
+        search_terms.extend(project["tags"])
 
     return " ".join(search_terms).lower()
     
@@ -666,7 +664,7 @@ def _build_creator_entries(creators: List[Dict], ctx: BuildContext) -> List[Dict
     """
     creator_entries = []
     for creator in creators:
-        thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(creator["featured_portrait"] or creator["portrait"], ctx, ThumbType.THUMB)
 
         creator_entries.append({
             "name": creator["name"],
@@ -697,9 +695,9 @@ def _filter_disabled_content(creators: list) -> list:
     """
     filtered = []
     for creator in creators:
-        if not creator.get("is_enabled", True):
+        if not creator["is_enabled"]:
             continue
-        creator["projects"] = [p for p in creator.get("projects", []) if p.get("is_enabled", True)]
+        creator["projects"] = [p for p in creator["projects"] if p["is_enabled"]]
         filtered.append(creator)
     return filtered
     
