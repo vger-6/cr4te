@@ -307,8 +307,8 @@ def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str
     if not media_group.get("is_root", False):
         folder_name = media_group.get("folder_name", "")
 
-        audio_title = folder_name
-        image_title = folder_name
+        audio_title = folder_name.title()
+        image_title = folder_name.title()
 
     return {
         "audio_section_title": audio_title,
@@ -369,14 +369,18 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
             media_group,
             ctx.html_settings
         )
+        
+        sections = [
+            {"type": "video", "videos": videos},
+            {"type": "audio", "tracks": tracks},
+            {"type": "image", "images": images},
+            {"type": "document", "documents": documents},
+            {"type": "text", "texts": texts}
+        ]
 
         media_groups.append({
             **section_titles,
-            "images": images,
-            "videos": videos,
-            "tracks": tracks,
-            "documents": documents,
-            "texts": texts
+            "sections": sections
         })
 
     return media_groups

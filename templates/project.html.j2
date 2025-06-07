@@ -32,10 +32,10 @@
           <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
           <div>
             {% if 'title' in html_settings.project_page_visible_project_fields %}
-            <p><strong>Title:</strong> {{ project.title }}</p>
+              <p><strong>Title:</strong> {{ project.title }}</p>
             {% endif %}
             {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
-            <p><strong>Release Date:</strong> {{ project.release_date }}</p>
+              <p><strong>Release Date:</strong> {{ project.release_date }}</p>
             {% endif %}
           </div>
         </div>
@@ -43,50 +43,50 @@
     </div>
 
     {% if project.info_html %}
-    <div class="section-box markdown">
-      <div class="section-title">{{ html_settings.project_page_description_title }}</div>
-      <hr>
-      <div class="section-content text-content">
-        {{ project.info_html | safe }}
+      <div class="section-box markdown">
+        <div class="section-title">{{ html_settings.project_page_description_title }}</div>
+        <hr>
+        <div class="section-content text-content">
+          {{ project.info_html | safe }}
+        </div>
       </div>
-    </div>
     {% endif %}
 
     {% if project.participants %}
-    {% for participant in project.participants %}
-    <div class="section-box">
-      <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile }}</div>
-      <hr>
-      <div class="section-content">
-        <div class="creator-info">
-          <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
-          <div>
-            <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
-            {% if participant.age_at_release %}
-            <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
-            {% endif %}
+      {% for participant in project.participants %}
+        <div class="section-box">
+          <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile }}</div>
+          <hr>
+          <div class="section-content">
+            <div class="creator-info">
+              <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
+              <div>
+                <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
+                {% if participant.age_at_release %}
+                  <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
+                {% endif %}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    {% endfor %}
+      {% endfor %}
     {% endif %}
 
     {% if project.tag_map %}
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
-      <hr>
-      <div class="section-content tag-list">
-        {% for category, tags in project.tag_map.items() %}
-        <div class="tag-category">
-          <strong>{{ category }}:</strong>
-          {% for tag in tags %}
-          <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
+        <hr>
+        <div class="section-content tag-list">
+          {% for category, tags in project.tag_map.items() %}
+            <div class="tag-category">
+              <strong>{{ category }}:</strong>
+              {% for tag in tags %}
+                <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+              {% endfor %}
+            </div>
           {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
     {% endif %}
 
   </div>
@@ -94,87 +94,89 @@
   <div class="project-right">
 
     {% for group in project.media_groups %}
-
-      {% for video in group.videos %}
-      <div class="section-box">
-        <div class="section-title">{{ video.title }}</div>
-        <hr>
-        <div class="section-content video-gallery">
-          <video controls>
-            <source src="{{ video.full_url }}" type="video/mp4">
-          </video>
-        </div>
-      </div>
-      {% endfor %}
-      
-      {% if group.tracks %}
-      <div class="section-box">
-        <div class="section-title">{{ group.audio_section_title }}</div>
-        <hr>
-        <div class="section-content">
-          <div class="audio-gallery">
-            <ul id="track-list-{{ loop.index }}">
-              {% for track in group.tracks %}
-                <li 
-                  data-src="{{ track.full_url }}" 
-                  onclick="playSelectedTrack(this)"
-                  class="track-title">
-                  {{ track.title }}
-                </li>
-              {% endfor %}
-            </ul>
-            <audio id="audio-player-{{ loop.index }}" controls onended="playNextTrack(this)">
-              Your browser does not support the audio element.
-            </audio>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      {% if group.images %}
-        <div class="section-box">
-          <div class="section-title">{{ group.image_section_title }}</div>
-          <hr>
-          <div class="section-content">
-            <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}" data-image-max-height="{{ gallery_image_max_height }}">
-              {% for image in group.images %}
-              <div class="image-wrapper">
-                <a href="{{ image.full_url }}" target="_blank">
-                  <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
-                  {% if html_settings.project_page_show_image_captions %}
-                  <span>{{ image.caption }}</span>
-                  {% endif %}
-                </a>
+      {% for section in group.sections %}
+        {% if section.type == "video" %}
+          {% for video in section.videos %}
+            <div class="section-box">
+              <div class="section-title">{{ video.title }}</div>
+              <hr>
+              <div class="section-content video-gallery">
+                <video controls>
+                  <source src="{{ video.full_url }}" type="video/mp4">
+                </video>
               </div>
-              {% endfor %}
             </div>
-          </div>
-        </div>
-      {% endif %}
-      
-      {% for document in group.documents %}
-      <div class="section-box">
-        <div class="section-title">{{ document.title }}</div>
-        <hr>
-        <div class="section-content">
-          <iframe src="{{ document.full_url }}" width="100%" height="500px" style="border: none;"></iframe>
-          <a href="{{ document.full_url }}" target="_blank">Full View</a>
-        </div>
-      </div>
+          {% endfor %}
+        {% elif section.type == "audio" %}
+          {% if section.tracks %}
+            <div class="section-box">
+              <div class="section-title">{{ group.audio_section_title }}</div>
+              <hr>
+              <div class="section-content">
+                <div class="audio-gallery">
+                  <ul id="track-list-{{ loop.index }}">
+                    {% for track in section.tracks %}
+                      <li 
+                        data-src="{{ track.full_url }}" 
+                        onclick="playSelectedTrack(this)"
+                        class="track-title">
+                        {{ track.title }}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                  <audio id="audio-player-{{ loop.index }}" controls onended="playNextTrack(this)">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% elif section.type == "image" %}
+          {% if section.images %}
+            <div class="section-box">
+              <div class="section-title">{{ group.image_section_title }}</div>
+              <hr>
+              <div class="section-content">
+                <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}" data-image-max-height="{{ gallery_image_max_height }}">
+                  {% for image in section.images %}
+                    <div class="image-wrapper">
+                      <a href="{{ image.full_url }}" target="_blank">
+                        <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
+                        {% if html_settings.project_page_show_image_captions %}
+                          <span>{{ image.caption }}</span>
+                        {% endif %}
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% elif section.type == "document" %}
+          {% for document in section.documents %}
+            <div class="section-box">
+              <div class="section-title">{{ document.title }}</div>
+              <hr>
+              <div class="section-content">
+                <iframe src="{{ document.full_url }}" width="100%" height="500px" style="border: none;"></iframe>
+                <a href="{{ document.full_url }}" target="_blank">Full View</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% elif section.type == "text" %}
+          {% for text in section.texts %}
+            <div class="section-box markdown">
+              <div class="section-title">{{ text.title }}</div>
+              <hr>
+              <div class="section-content text-content">
+                <div class="text-gallery">
+                  {{ text.content | safe }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
       {% endfor %}
-      
-      {% for text in group.texts %}
-      <div class="section-box markdown">
-        <div class="section-title">{{ text.title }}</div>
-        <hr>
-        <div class="section-content text-content">
-          <div class="text-gallery">
-            {{ text.content | safe }}
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-      
     {% endfor %}
 
   </div>
