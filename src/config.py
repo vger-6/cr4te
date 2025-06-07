@@ -58,8 +58,10 @@ DEFAULT_CONFIG = {
         "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
         "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
         "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",        
+        "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
         "document_include_re": r"(?i)^[^/\\]+\.pdf$",
         "text_include_re": r"(?i)^[^/\\]+\.md$",
+        "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
         
         "portrait_re": r"^portrait\.(jpg|jpeg|png)$",
         "cover_re": r"^cover\.(jpg|jpeg|png)$",
@@ -117,8 +119,10 @@ def _get_build_rules(mode: BuildMode) -> Dict:
                 "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
                 "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
                 "image_include_re": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
+                "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
                 "document_include_re": r"(?i)^[^/\\]+\.pdf$",
                 "text_include_re": r"(?i)^[^/\\]+\.md$",
+                "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
             }
         case BuildMode.DEEP:
             return {
@@ -126,8 +130,10 @@ def _get_build_rules(mode: BuildMode) -> Dict:
                 "video_include_re": r"(?i).*\.(mp4|m4v)$",
                 "audio_include_re": r"(?i).*\.(mp3|m4a)$",
                 "image_include_re": r"(?i).*\.(jpg|jpeg|png)$",
+                "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
                 "document_include_re": r"(?i).*\.pdf$",
                 "text_include_re": r"(?i).*\.md$",
+                "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
             }
         case BuildMode.HYBRID:
             return {}  # Use the base/default media_rules
@@ -164,8 +170,10 @@ def compile_media_rules(media_rules: Dict) -> Dict:
         "video_include_re",
         "audio_include_re",
         "image_include_re",
+        "image_exclude_re",
         "document_include_re",
         "text_include_re",
+        "text_exclude_re",
         "portrait_re", 
         "cover_re"
     }

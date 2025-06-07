@@ -87,11 +87,11 @@ def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: 
             media_map[folder_key]["videos"].append(str(rel_to_input))
         elif compiled_media_rules["audio_include_re"].match(rel_path_posix):
             media_map[folder_key]["tracks"].append(str(rel_to_input))
-        elif compiled_media_rules["image_include_re"].match(rel_path_posix):
+        elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif compiled_media_rules["document_include_re"].match(rel_path_posix):
             media_map[folder_key]["documents"].append(str(rel_to_input))
-        elif compiled_media_rules["text_include_re"].match(rel_path_posix):
+        elif compiled_media_rules["text_include_re"].match(rel_path_posix) and not compiled_media_rules["text_exclude_re"].search(rel_path_posix):
             media_map[folder_key]["texts"].append(str(rel_to_input))
         else:
             continue
