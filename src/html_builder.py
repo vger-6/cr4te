@@ -320,8 +320,8 @@ def _sort_sections_by_type(sections: List[Dict], type_order: List[str]) -> List[
 #    return f"{folder_name} - {label}"
     
 def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str]:
-    audio_title = html_settings.get("project_page_audio_section_base_title", "Tracks")
-    image_title = html_settings.get("project_page_image_section_base_title", "Images")
+    audio_title = html_settings["project_page_audio_section_base_title"]
+    image_title = html_settings["project_page_image_section_base_title"]
 
     if not media_group.get("is_root", False):
         folder_name = media_group.get("folder_name", "")
@@ -476,8 +476,7 @@ def _build_project_pages(creators: List[Dict], ctx: BuildContext):
 def _get_collaboration_label(collab: Dict, creator_name: str, html_settings: Dict) -> str:
     if creator_name in collab.get("members", []):
         others = [n for n in collab["members"] if n != creator_name]
-        separator = html_settings.get("collaboration_separator", "")
-        return separator.join(others)
+        return " ".join(others)
     return collab["name"]
     
 def _calculate_debut_age(creator: Dict) -> str:
