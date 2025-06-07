@@ -12,6 +12,7 @@ import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from .enums.media_type import MediaType
 from .utils import slugify, get_relative_path, read_text
 
 __all__ = ["clear_output_folder", "build_html_pages"]
@@ -38,13 +39,6 @@ env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(['html', 'xml'])
 )
-
-#class MediaType(str, Enum):
-#    VIDEOS = "videos"
-#    TRACKS = "tracks"
-#    IMAGES = "images"
-#    DOCUMENTS = "documents"
-#    TEXTS = "texts"
 
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
@@ -306,6 +300,12 @@ def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> P
         os.symlink(source_file, dest_file)
 
     return dest_file
+    
+def _sort_sections_by_type(sections: List[Dict], type_order: List[str]) -> List[Dict]:
+    order_map = {t: i for i, t in enumerate(dict.fromkeys(type_order))}
+    fallback_order = len(order_map)
+
+    return sorted(sections, key=lambda s: order_map.get(s["type"], fallback_order))
 
 #def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
 #    """
@@ -390,16 +390,16 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
         )
         
         sections = [
-            {"type": "video", "videos": videos},
-            {"type": "audio", "tracks": tracks},
-            {"type": "image", "images": images},
-            {"type": "document", "documents": documents},
-            {"type": "text", "texts": texts}
+            {"type": MediaType.VIDEO.value, "videos": videos},
+            {"type": MediaType.AUDIO.value, "tracks": tracks},
+            {"type": MediaType.IMAGE.value, "images": images},
+            {"type": MediaType.DOCUMENT.value, "documents": documents},
+            {"type": MediaType.TEXT.value, "texts": texts}
         ]
 
         media_groups.append({
             **section_titles,
-            "sections": sections
+            "sections": _sort_sections_by_type(sections, ctx.html_settings["project_page_type_order"])
         })
 
     return media_groups
@@ -459,6 +459,7 @@ def _build_project_page(creator: Dict, project: Dict, creators: List[Dict], ctx:
         html_settings=ctx.html_settings,
         project=_collect_project_context(creator, project, creators, ctx),
         gallery_image_max_height=ThumbType.GALLERY.height,
+        MediaType=MediaType
     )
 
     page_path = ctx.projects_dir / f"{slug}.html"

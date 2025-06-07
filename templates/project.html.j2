@@ -96,7 +96,7 @@
 
     {% for group in project.media_groups %}
       {% for section in group.sections %}
-        {% if section.type == "video" %}
+        {% if section.type == MediaType.VIDEO.value %}
           {% for video in section.videos %}
             <div class="section-box">
               <div class="section-title">{{ video.title }}</div>
@@ -108,7 +108,7 @@
               </div>
             </div>
           {% endfor %}
-        {% elif section.type == "audio" %}
+        {% elif section.type == MediaType.AUDIO.value %}
           {% if section.tracks %}
             <div class="section-box">
               <div class="section-title">{{ group.audio_section_title }}</div>
@@ -132,7 +132,7 @@
               </div>
             </div>
           {% endif %}
-        {% elif section.type == "image" %}
+        {% elif section.type == MediaType.IMAGE.value %}
           {% if section.images %}
             <div class="section-box">
               <div class="section-title">{{ group.image_section_title }}</div>
@@ -153,7 +153,7 @@
               </div>
             </div>
           {% endif %}
-        {% elif section.type == "document" %}
+        {% elif section.type == MediaType.DOCUMENT.value %}
           {% for document in section.documents %}
             <div class="section-box">
               <div class="section-title">{{ document.title }}</div>
@@ -164,7 +164,7 @@
               </div>
             </div>
           {% endfor %}
-        {% elif section.type == "text" %}
+        {% elif section.type == MediaType.TEXT.value %}
           {% for text in section.texts %}
             <div class="section-box markdown">
               <div class="section-title">{{ text.title }}</div>

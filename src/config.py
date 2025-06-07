@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict
 
 from .enums.image_sample_strategy import ImageSampleStrategy
+from .enums.media_type import MediaType
 
 __all__ = ["load_config", "update_build_rules", "apply_cli_media_overrides", "compile_media_rules", "update_html_labels"]
 
@@ -48,7 +49,9 @@ DEFAULT_CONFIG = {
         "project_page_visible_project_fields": ["title", "release_date"],
         
         "project_page_image_pagination_limit" : 15,
-        "project_page_show_image_captions": False
+        "project_page_show_image_captions": False,
+        
+        "project_page_type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value]
     },
     "media_rules": {
         "global_exclude_re": r"^_",
