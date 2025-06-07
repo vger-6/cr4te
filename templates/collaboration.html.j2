@@ -27,7 +27,7 @@
       <div class="section-title">{{ html_settings.collaboration_page_profile_title }}</div>
       <hr>
       <div class="section-content markdown">
-        <div class="creator-info">
+        <div class="creator-info creator-info--{{ creator.info_layout }}">
           <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
           <div>
             {% if 'name' in html_settings.collaboration_page_visible_collaboration_fields and creator.name %}

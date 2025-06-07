@@ -155,8 +155,6 @@ Your configuration file should be in JSON format and can override labels and med
     "collaboration_page_visible_collaboration_fields": ["name", "members", "founded", "nationality", "active_since"],
     "project_page_visible_project_fields": ["title", "release_date"],
     
-    "project_page_project_info_layout": "column",
-    
     "project_page_image_pagination_limit" : 20
   },
   "media_rules": {
@@ -189,9 +187,6 @@ Your configuration file should be in JSON format and can override labels and med
   * `all`: take all images
 * `creator_page_visible_creator_fields`: Controls which creator attributes (e.g., `aliases`, `nationality`) are shown
 * `project_page_visible_project_fields`: Controls which project attributes (e.g., `release_date`) are shown
-* `project_page_project_info_layout`: Controls layout of the project overview section
-  * `column` (default): stacks image above text
-  * `row`: places them side by side
 
 ---
 

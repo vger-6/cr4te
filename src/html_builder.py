@@ -161,6 +161,19 @@ def _build_slugified_filename(relative_path: Path, suffix: str) -> str:
     slug = slugify("__".join(parts))
     return f"{slug}{suffix}"
     
+def is_portrait(image_path : Path) -> bool:
+    try:
+        with Image.open(image_path) as img:
+            width, height = img.size
+
+        if height > width:
+            return True
+        return False
+
+    except Exception as e:
+        print(f"Could not open image '{image_path}': {e}")
+        return True
+    
 def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, thumb_type: ThumbType) -> Path:
     filename = _build_slugified_filename(relative_image_path, thumb_type.suffix)
     return thumb_dir / filename
@@ -421,6 +434,7 @@ def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict],
         "title": project["title"],
         "release_date": project.get("release_date", ""),
         "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
+        "info_layout": "row" if is_portrait(thumb_path) else "column",
         "info_html": _render_markdown(project.get("info", "")),
         "tag_map": _group_tags_by_category(project.get("tags", [])),
         "participants": _collect_participant_entries(creator, project, creators, ctx),
@@ -519,13 +533,14 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
     including metadata, portrait, projects, collaborations, and tags.
     """
     thumb_path = _resolve_thumbnail_or_default(creator.get("featured_portrait") or creator.get("portrait"), ctx, ThumbType.PORTRAIT)
-
+    
     return {
         "name": creator["name"],
         "aliases": creator.get("aliases", []),
         "date_of_birth": creator.get("born_or_founded", ""),
         "nationality": creator.get("nationality", ""),
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
+        "info_layout": "row" if is_portrait(thumb_path) else "column",
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -590,6 +605,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
         "nationality": creator.get("nationality", ""),
         "active_since": creator.get("active_since", ""),
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
+        "info_layout": "row" if is_portrait(thumb_path) else "column",
         "info_html": _render_markdown(creator.get("info", "")),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),

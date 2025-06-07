@@ -47,8 +47,6 @@ DEFAULT_CONFIG = {
         "collaboration_page_visible_collaboration_fields": ["name", "members", "founded", "nationality", "active_since"],
         "project_page_visible_project_fields": ["title", "release_date"],
         
-        "project_page_project_info_layout": "column",
-        
         "project_page_image_pagination_limit" : 15,
         "project_page_show_image_captions": False
     },

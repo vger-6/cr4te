@@ -4,7 +4,19 @@
   gap: 1rem;
 }
 
-.creator-info img {
+.creator-info--column {
+  flex-direction: column;
+}
+
+.creator-info--column img {
+  width: 100%;
+}
+
+.creator-info--row {
+  flex-direction: row;
+}
+
+.creator-info--row img {
   width: 100%;
   max-width: 200px;
 }
