@@ -160,9 +160,9 @@ def is_portrait(image_path : Path) -> bool:
         with Image.open(image_path) as img:
             width, height = img.size
 
-        if height > width:
-            return True
-        return False
+        # only if the aspect ratio of an image is greater than 4/3 * 0.9 = 1.2
+        # it counts as portrait
+        return height / width > 1.2
 
     except Exception as e:
         print(f"Could not open image '{image_path}': {e}")
