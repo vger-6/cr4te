@@ -12,6 +12,12 @@ from .enums.image_sample_strategy import ImageSampleStrategy
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
 
+IMAGE_EXTS = (".jpg", ".jpeg", ".png")
+VIDEO_EXTS = (".mp4", ".m4v")
+AUDIO_EXTS = (".mp3", ".m4a")
+DOC_EXTS = (".pdf",)
+TEXT_EXTS = (".md",)
+
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
@@ -30,21 +36,18 @@ def _read_readme_text(folder: Path) -> str:
     readme_file = folder / "README.md"
     return utils.read_text(readme_file)
     
-def _find_all_images(root: Path, exclude_pattern: Pattern) -> List[Path]:
-    image_exts = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".svg"}
-
+def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
     return [
         p for p in root.rglob("*")
-        if p.suffix.lower() in image_exts and not exclude_pattern.search(p.name)
+        if p.suffix.lower() in IMAGE_EXTS and not p.name.startswith(exclude_prefix)
     ]
     
-def _select_best_image(all_images: List[Path], match_pattern: Optional[Pattern], orientation_fallback: Orientation) -> Optional[Path]:
-    if match_pattern:
-        for img in all_images:
-            if match_pattern.match(img.name):
-                return img
+def _select_best_image(images: List[Path], image_name: str, orientation_fallback: Orientation) -> Optional[Path]:
+    for image in images:
+        if image.stem.lower() == image_name.lower() and image.suffix.lower() in IMAGE_EXTS:
+            return image
 
-    return _find_image_by_orientation(all_images, orientation_fallback)
+    return _find_image_by_orientation(images, orientation_fallback)
 
 def _find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
     for img_path in sorted(images, key=lambda x: x.name):
@@ -80,52 +83,63 @@ def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStra
         case _:
             return sorted_images  # fallback
             
-def _build_media_map(project_dir: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Dict]:
-    media_map = defaultdict(lambda: {"videos": [], "tracks": [], "images": [], "documents": [], "texts": [], "is_root": False})
+def _build_media_map(media_folder: Path, input_path: Path, media_rules: Dict) -> Dict[str, Dict]:
+    media_map = defaultdict(lambda: {
+        "videos": [],
+        "tracks": [],
+        "images": [],
+        "documents": [],
+        "texts": [],
+        "is_root": False
+    })
+    
+    max_depth = media_rules["max_depth"]
 
-    for file in project_dir.rglob("*"):
+    # Helper to check max depth
+    def is_within_max_depth(path: Path) -> bool:
+        return max_depth is None or len(path.relative_to(media_folder).parts) <= max_depth
+
+    for file in media_folder.rglob("*"):
         if not file.is_file():
             continue
+        if not is_within_max_depth(file):
+            continue
+        if file.name.startswith(media_rules["global_exclude_prefix"]):
+            continue
 
-        rel_path_posix = file.relative_to(project_dir).as_posix()
+        suffix = file.suffix.lower()
+        stem = file.stem.lower()
         rel_to_input = file.relative_to(input_path)
+        is_root = file.parent.resolve() == media_folder.resolve()
+        folder_key = str(file.parent.relative_to(input_path)) or media_folder.name
 
-        # Apply global exclusions
-        if compiled_media_rules["global_exclude_re"].search(rel_path_posix):
-            continue
-
-        is_root = file.parent.resolve() == project_dir.resolve()
-        folder_key = str(file.parent.relative_to(project_dir)) or project_dir.name
-
-        if compiled_media_rules["video_include_re"].match(rel_path_posix):
+        if suffix in VIDEO_EXTS:
             media_map[folder_key]["videos"].append(str(rel_to_input))
-        elif compiled_media_rules["audio_include_re"].match(rel_path_posix):
+        elif suffix in AUDIO_EXTS:
             media_map[folder_key]["tracks"].append(str(rel_to_input))
-        elif compiled_media_rules["image_include_re"].match(rel_path_posix) and not compiled_media_rules["image_exclude_re"].search(rel_path_posix):
+        elif suffix in IMAGE_EXTS and stem not in ("cover", "portrait"):
             media_map[folder_key]["images"].append(str(rel_to_input))
-        elif compiled_media_rules["document_include_re"].match(rel_path_posix):
+        elif suffix in DOC_EXTS:
             media_map[folder_key]["documents"].append(str(rel_to_input))
-        elif compiled_media_rules["text_include_re"].match(rel_path_posix) and not compiled_media_rules["text_exclude_re"].search(rel_path_posix):
+        elif suffix in TEXT_EXTS and stem != "readme":
             media_map[folder_key]["texts"].append(str(rel_to_input))
-        else:
-            continue
 
         media_map[folder_key]["is_root"] = is_root
 
     return media_map
     
-def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rules: Dict, project: Dict) -> List[Dict[str, Any]]:
+def _build_media_groups(media_folder: Path, input_path: Path, media_rules: Dict, existing_media_groups: List[Dict[str, any]]) -> List[Dict[str, Any]]:
     media_groups = []
-    media_map = _build_media_map(project_dir, input_path, compiled_media_rules)
-    existing_media_groups = {g.get("folder_name"): g for g in project.get("media_groups", []) if "folder_name" in g}
+    media_map = _build_media_map(media_folder, input_path, media_rules)
+    existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
 
-    for folder_name, media in media_map.items():
-        existing_media_group = existing_media_groups.get(folder_name, {})
+    for folder_path, media in media_map.items():
+        existing_media_group = existing_media_groups_by_name.get(folder_path, {})
 
         sampled_images = _sample_images(
             media["images"],
-            compiled_media_rules["image_gallery_max"],
-            compiled_media_rules["image_gallery_sample_strategy"]
+            media_rules["image_gallery_max"],
+            media_rules["image_gallery_sample_strategy"]
         )
 
         media_group = {
@@ -140,20 +154,19 @@ def _build_media_groups(project_dir: Path, input_path: Path, compiled_media_rule
             "featured_documents": existing_media_group.get("featured_documents"),
             "texts": media["texts"],
             "featured_texts": existing_media_group.get("featured_texts"),
-            "folder_name": folder_name
+            "folder_path": folder_path
         }
 
         media_groups.append(media_group)
 
     return media_groups
 
-
-def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Path, compiled_media_rules: Dict) -> List[Dict]:
+def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Path, media_rules: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in creator.get("projects", []) if "title" in p}
     
     projects = []
     for project_dir in sorted(creator_path.iterdir()):
-        if not project_dir.is_dir() or compiled_media_rules["global_exclude_re"].search(project_dir.name):
+        if not project_dir.is_dir() or project_dir.name.startswith((media_rules["global_exclude_prefix"], media_rules["metadata_folder_name"])):
             continue
 
         project_title = project_dir.name.strip()
@@ -161,8 +174,8 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
         existing_project = existing_projects.get(project_title, {})
 
         # Find cover
-        all_images = _find_all_images(project_dir, compiled_media_rules["global_exclude_re"])
-        cover = _select_best_image(all_images, compiled_media_rules["cover_re"], Orientation.LANDSCAPE)
+        all_images = _find_all_images(project_dir, media_rules["global_exclude_prefix"])
+        cover = _select_best_image(all_images, "cover", Orientation.LANDSCAPE)
 
         project = {
             "title": project_title,
@@ -171,7 +184,7 @@ def _collect_creator_projects(creator_path: Path, creator: Dict, input_path: Pat
             "cover": str(cover.relative_to(input_path)) if cover else "",
             "featured_cover": existing_project.get("featured_cover"),
             "info": _read_readme_text(project_dir) or existing_project.get("info", ""),
-            "media_groups": _build_media_groups(project_dir, input_path, compiled_media_rules, existing_project),
+            "media_groups": _build_media_groups(project_dir, input_path, media_rules, existing_project.get("media_groups", [])),
             "tags": existing_project.get("tags", [])
         }
         
@@ -190,18 +203,24 @@ def _load_existing_json(json_path: Path) -> Dict:
             return json.load(f)
     return {}
 
-def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: Dict) -> Dict[str, Any]:
+def _build_creator(creator_path: Path, input_path: Path, media_rules: Dict) -> Dict[str, Any]:
     creator_name = creator_path.name
     existing_creator = _load_existing_json(creator_path / "cr4te.json")
     
     # Find portrait
-    all_images = _find_all_images(creator_path, compiled_media_rules["global_exclude_re"])
-    portrait = _select_best_image(all_images, compiled_media_rules["portrait_re"], Orientation.PORTRAIT)
+    all_images = _find_all_images(creator_path, media_rules["global_exclude_prefix"])
+    portrait = _select_best_image(all_images, "portrait", Orientation.PORTRAIT)
     
-    separator = compiled_media_rules["collaboration_separator"]
+    separator = media_rules["collaboration_separator"]
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
         is_collab = _is_collaboration(creator_name, separator)
+        
+    media_groups = []
+    if (creator_path / media_rules["metadata_folder_name"]).exists():
+        media_groups = _build_media_groups(creator_path / media_rules["metadata_folder_name"], input_path, media_rules, existing_creator.get("media_groups", []))
+    
+    media_groups.extend(_build_media_groups(creator_path, input_path, {**media_rules, "max_depth": 0}, existing_creator.get("media_groups", [])))
     
     creator = {
         "name": creator_name,
@@ -215,7 +234,8 @@ def _build_creator(creator_path: Path, input_path: Path, compiled_media_rules: D
         "featured_portrait": existing_creator.get("featured_portrait"),
         "info": _read_readme_text(creator_path) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
-        "projects": _collect_creator_projects(creator_path, existing_creator, input_path, compiled_media_rules)
+        "projects": _collect_creator_projects(creator_path, existing_creator, input_path, media_rules),
+        "media_groups": media_groups,
     }
     
     if is_collab:
@@ -255,14 +275,14 @@ def _write_json_files(creators: List[Dict], base_path: Path) -> None:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator, f, indent=2)
             
-def build_creator_json_files(input_path: Path, compiled_media_rules: Dict):
+def build_creator_json_files(input_path: Path, media_rules: Dict):
     all_creators = []
 
     for creator_path in sorted(input_path.iterdir()):
-        if not creator_path.is_dir() or compiled_media_rules["global_exclude_re"].search(creator_path.name):
+        if not creator_path.is_dir() or creator_path.name.startswith(media_rules["global_exclude_prefix"]):
             continue
         print(f"Processing creator: {creator_path.name}")
-        creator = _build_creator(creator_path, input_path, compiled_media_rules)
+        creator = _build_creator(creator_path, input_path, media_rules)
         all_creators.append(creator)
 
     _resolve_creator_collaborations(all_creators)

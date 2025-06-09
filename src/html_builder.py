@@ -39,6 +39,7 @@ env = Environment(
     loader=FileSystemLoader(str(TEMPLATES_DIR)),
     autoescape=select_autoescape(['html', 'xml'])
 )
+env.globals["MediaType"] = MediaType
 
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
@@ -160,8 +161,7 @@ def is_portrait(image_path : Path) -> bool:
         with Image.open(image_path) as img:
             width, height = img.size
 
-        # only if the aspect ratio of an image is greater than 4/3 * 0.9 = 1.2
-        # it counts as portrait
+        # consider portrait if height/width > 1.2 (approx. 4:3 with tolerance)
         return height / width > 1.2
 
     except Exception as e:
@@ -324,19 +324,20 @@ def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str
     image_title = html_settings["project_page_image_section_base_title"]
 
     if not media_group["is_root"]:
-        folder_name = media_group["folder_name"]
+        title = Path(media_group["folder_path"]).name.title()
 
-        audio_title = folder_name.title()
-        image_title = folder_name.title()
+        audio_title = title
+        image_title = title
 
     return {
         "audio_section_title": audio_title,
         "image_section_title": image_title,
     }
     
-def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]]:  
-    media_groups = []
-    for media_group in project["media_groups"]:
+def _build_media_groups_context(media_groups: List, ctx: BuildContext, base_path: Path) -> List[Dict[str, Any]]:  
+    media_groups_context = []
+
+    for media_group in media_groups:
         image_rel_paths = media_group["featured_images"] or media_group["images"]
         video_rel_paths = media_group["featured_videos"] or media_group["videos"]
         track_rel_paths = media_group["featured_tracks"] or media_group["tracks"]
@@ -345,8 +346,8 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
 
         images = [
             {
-                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), ctx.projects_dir),
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.images_dir), ctx.projects_dir),
+                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.images_dir), base_path),
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
@@ -354,7 +355,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
 
         videos = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), ctx.projects_dir),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), base_path),
                 "title": Path(rel).stem.title()
             }
             for rel in video_rel_paths
@@ -362,7 +363,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
 
         tracks = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), ctx.projects_dir),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), base_path),
                 "title": Path(rel).stem
             }
             for rel in track_rel_paths
@@ -370,7 +371,7 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
 
         documents = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), ctx.projects_dir),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), base_path),
                 "title": Path(rel).stem.title()
             }
             for rel in document_rel_paths
@@ -397,12 +398,12 @@ def _build_media_groups(project: Dict, ctx: BuildContext) -> List[Dict[str, Any]
             {"type": MediaType.TEXT.value, "texts": texts}
         ]
 
-        media_groups.append({
+        media_groups_context.append({
             **section_titles,
-            "sections": _sort_sections_by_type(sections, ctx.html_settings["project_page_type_order"])
+            "sections": _sort_sections_by_type(sections, ctx.html_settings["type_order"])
         })
 
-    return media_groups
+    return media_groups_context
     
 def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
     dob = creator["born_or_founded"]
@@ -444,7 +445,7 @@ def _collect_project_context(creator: Dict, project: Dict, creators: List[Dict],
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "participants": _collect_participant_entries(creator, project, creators, ctx),
-        "media_groups": _build_media_groups(project, ctx),
+        "media_groups": _build_media_groups_context(project["media_groups"], ctx, ctx.projects_dir),
         "creator_name": creator["name"],
         "creator_slug": _get_creator_slug(creator),
     }
@@ -458,8 +459,7 @@ def _build_project_page(creator: Dict, project: Dict, creators: List[Dict], ctx:
     output_html = template.render(
         html_settings=ctx.html_settings,
         project=_collect_project_context(creator, project, creators, ctx),
-        gallery_image_max_height=ThumbType.GALLERY.height,
-        MediaType=MediaType
+        gallery_image_max_height=ThumbType.GALLERY.height
     )
 
     page_path = ctx.projects_dir / f"{slug}.html"
@@ -552,6 +552,7 @@ def _collect_creator_context(creator: Dict, creators: List[Dict], ctx: BuildCont
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),
         "collaborations": _build_collaboration_entries(creator, creators, ctx),
+        "media_groups": _build_media_groups_context(creator["media_groups"], ctx, ctx.creators_dir),
     }
     
 def _build_creator_page(creator: dict, creators: list, ctx: BuildContext):
@@ -564,6 +565,7 @@ def _build_creator_page(creator: dict, creators: list, ctx: BuildContext):
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(creator, creators, ctx),
         project_thumb_max_height=ThumbType.POSTER.height,
+        gallery_image_max_height=ThumbType.GALLERY.height
     )
 
     page_path = ctx.creators_dir / f"{slug}.html"
@@ -615,6 +617,7 @@ def _collect_collaboration_context(creator: Dict, creators: List[Dict], ctx: Bui
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(creator, ctx),
+        "media_groups": _build_media_groups_context(creator["media_groups"], ctx, ctx.creators_dir),
     }
     
 def _build_collaboration_page(creator: dict, creators: list, ctx: BuildContext):
@@ -628,6 +631,7 @@ def _build_collaboration_page(creator: dict, creators: list, ctx: BuildContext):
         creator=_collect_collaboration_context(creator, creators, ctx),
         member_thumb_max_height=ThumbType.THUMB.height,
         project_thumb_max_height=ThumbType.POSTER.height,
+        gallery_image_max_height=ThumbType.GALLERY.height
     )
 
     page_path = ctx.creators_dir / f"{slug}.html"

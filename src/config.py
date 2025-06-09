@@ -3,12 +3,12 @@ import copy
 import re
 from enum import Enum
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.media_type import MediaType
 
-__all__ = ["load_config", "update_build_rules", "apply_cli_media_overrides", "compile_media_rules", "update_html_labels"]
+__all__ = ["load_config", "apply_cli_media_overrides", "update_html_labels"]
 
 # === Default internal config ===
 DEFAULT_CONFIG = {
@@ -51,26 +51,18 @@ DEFAULT_CONFIG = {
         "project_page_image_pagination_limit" : 15,
         "project_page_show_image_captions": False,
         
-        "project_page_type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value]
+        "type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value],
     },
-    "media_rules": {
-        "global_exclude_re": r"^_",
-        
-        "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-        "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-        "image_include_re": r"(?i)^[^/\\]+/[^/\\]+\.(jpg|jpeg|png)$",        
-        "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
-        "document_include_re": r"(?i)^[^/\\]+\.pdf$",
-        "text_include_re": r"(?i)^[^/\\]+\.md$",
-        "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
-        
-        "portrait_re": r"^portrait\.(jpg|jpeg|png)$",
-        "cover_re": r"^cover\.(jpg|jpeg|png)$",
-        
+    "media_rules": {   
         "image_gallery_max": 20,
-        "image_gallery_sample_strategy": "spread",
+        "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD.value,
         
-        "collaboration_separator": " & "
+        "max_depth": 2,
+        
+        "global_exclude_prefix": "_",
+        
+        "metadata_folder_name": "meta",
+        "collaboration_separator": " & ",
     }
 }
 
@@ -107,89 +99,17 @@ def update_html_labels(config: Dict, preset_str: str) -> Dict:
     overrides = _get_html_label_presets(preset) 
     config["html_settings"].update(overrides)
     return config
-    
-def _get_build_rules(mode: BuildMode) -> Dict:
-    """
-    Returns only the regex-related media_rules fields that are overridden
-    by the selected build mode. Other configuration fields remain untouched.
-    """
-    match mode:
-        case BuildMode.FLAT:
-            return {
-                "global_exclude_re": r"^_",
-                "video_include_re": r"(?i)^[^/\\]+\.(mp4|m4v)$",
-                "audio_include_re": r"(?i)^[^/\\]+\.(mp3|m4a)$",
-                "image_include_re": r"(?i)^[^/\\]+\.(jpg|jpeg|png)$",
-                "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
-                "document_include_re": r"(?i)^[^/\\]+\.pdf$",
-                "text_include_re": r"(?i)^[^/\\]+\.md$",
-                "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
-            }
-        case BuildMode.DEEP:
-            return {
-                "global_exclude_re": r"^_",
-                "video_include_re": r"(?i).*\.(mp4|m4v)$",
-                "audio_include_re": r"(?i).*\.(mp3|m4a)$",
-                "image_include_re": r"(?i).*\.(jpg|jpeg|png)$",
-                "image_exclude_re": r"(?i)(^|.*/)cover\.(jpg|jpeg|png)$",
-                "document_include_re": r"(?i).*\.pdf$",
-                "text_include_re": r"(?i).*\.md$",
-                "text_exclude_re": r"(?i)(^|.*/)readme\.md$",
-            }
-        case BuildMode.HYBRID:
-            return {}  # Use the base/default media_rules
-        case _:
-            raise ValueError(f"Unknown build mode: {mode}")
-
-def update_build_rules(config: Dict, mode_str: str) -> Dict:
-    """
-    Given a mode string and an existing config dict, apply build-mode-specific
-    regex overrides to the media_rules section and return the updated config.
-    """
-    mode = BuildMode(mode_str)
-    overrides = _get_build_rules(mode)
-    config["media_rules"].update(overrides)
-    return config
-    
-def apply_cli_media_overrides(config: Dict, image_gallery_max: int = None, image_sample_strategy: str = None) -> Dict:
+       
+def apply_cli_media_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None) -> Dict:
     """
     Applies CLI overrides for media_rules such as image_gallery_max and image_sample_strategy.
     """
-    if image_gallery_max is not None :
+    if image_gallery_max is not None:
         config["media_rules"]["image_gallery_max"] = image_gallery_max
-    if image_sample_strategy:
-        config["media_rules"]["image_gallery_sample_strategy"] = image_sample_strategy
+    if image_sample_strategy is not None:
+        config["media_rules"]["image_gallery_sample_strategy"] = image_sample_strategy.value
     return config
-    
-def compile_media_rules(media_rules: Dict) -> Dict:
-    """
-    Compiles all known regex patterns in media_rules into regular expressions.
-    Other values (e.g., integers) are preserved as-is.
-    """
-    regex_keys = {
-        "global_exclude_re",
-        "video_include_re",
-        "audio_include_re",
-        "image_include_re",
-        "image_exclude_re",
-        "document_include_re",
-        "text_include_re",
-        "text_exclude_re",
-        "portrait_re", 
-        "cover_re"
-    }
-    enum_keys = {"image_gallery_sample_strategy": ImageSampleStrategy}
-    
-    compiled = {}
-    for key, val in media_rules.items():
-        if key in regex_keys:
-            compiled[key] = re.compile(val)
-        elif key in enum_keys:
-            compiled[key] = enum_keys[key](val)
-        else:
-            compiled[key] = val
-    return compiled
-    
+ 
 def _get_html_label_presets(preset: HtmlPreset) -> Dict:
     """
     Returns only the labels that are overridden by the selected preset. 

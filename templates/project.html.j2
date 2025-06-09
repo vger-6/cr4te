@@ -1,3 +1,5 @@
+{% import "partials/_media_sections.html.j2" as media_macros %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,91 +96,7 @@
 
   <div class="project-right">
 
-    {% for group in project.media_groups %}
-      {% for section in group.sections %}
-        {% if section.type == MediaType.VIDEO.value %}
-          {% for video in section.videos %}
-            <div class="section-box">
-              <div class="section-title">{{ video.title }}</div>
-              <hr>
-              <div class="section-content video-gallery">
-                <video controls>
-                  <source src="{{ video.full_url }}" type="video/mp4">
-                </video>
-              </div>
-            </div>
-          {% endfor %}
-        {% elif section.type == MediaType.AUDIO.value %}
-          {% if section.tracks %}
-            <div class="section-box">
-              <div class="section-title">{{ group.audio_section_title }}</div>
-              <hr>
-              <div class="section-content">
-                <div class="audio-gallery">
-                  <ul id="track-list-{{ loop.index }}">
-                    {% for track in section.tracks %}
-                      <li 
-                        data-src="{{ track.full_url }}" 
-                        onclick="playSelectedTrack(this)"
-                        class="track-title">
-                        {{ track.title }}
-                      </li>
-                    {% endfor %}
-                  </ul>
-                  <audio id="audio-player-{{ loop.index }}" controls onended="playNextTrack(this)">
-                    Your browser does not support the audio element.
-                  </audio>
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        {% elif section.type == MediaType.IMAGE.value %}
-          {% if section.images %}
-            <div class="section-box">
-              <div class="section-title">{{ group.image_section_title }}</div>
-              <hr>
-              <div class="section-content">
-                <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}" data-image-max-height="{{ gallery_image_max_height }}">
-                  {% for image in section.images %}
-                    <div class="image-wrapper">
-                      <a href="{{ image.full_url }}" target="_blank">
-                        <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
-                        {% if html_settings.project_page_show_image_captions %}
-                          <span>{{ image.caption }}</span>
-                        {% endif %}
-                      </a>
-                    </div>
-                  {% endfor %}
-                </div>
-              </div>
-            </div>
-          {% endif %}
-        {% elif section.type == MediaType.DOCUMENT.value %}
-          {% for document in section.documents %}
-            <div class="section-box">
-              <div class="section-title">{{ document.title }}</div>
-              <hr>
-              <div class="section-content">
-                <iframe src="{{ document.full_url }}" width="100%" height="500px" style="border: none;"></iframe>
-                <a href="{{ document.full_url }}" target="_blank">Full View</a>
-              </div>
-            </div>
-          {% endfor %}
-        {% elif section.type == MediaType.TEXT.value %}
-          {% for text in section.texts %}
-            <div class="section-box markdown">
-              <div class="section-title">{{ text.title }}</div>
-              <hr>
-              <div class="section-content text-content">
-                <div class="text-gallery">
-                  {{ text.content | safe }}
-                </div>
-              </div>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
+    {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height) }}
 
   </div>
 </div>

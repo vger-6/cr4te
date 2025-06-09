@@ -29,22 +29,14 @@
     "project_page_visible_project_fields": ["title", "release_date"],
     "project_page_image_pagination_limit" : 20,
     "project_page_show_image_captions": false,
-    "project_page_type_order": ["video", "audio", "image", "document", "text"]
+    "type_order": ["video", "audio", "image", "document", "text"],
   },
   "media_rules": {
-    "global_exclude_re": "^_",
-    "video_include_re": "(?i)^[^/\\\\]+\\.(mp4|m4v)$",
-    "audio_include_re": "(?i)^[^/\\\\]+\\.(mp3|m4a)$",
-    "image_include_re": "(?i)^[^/\\\\]+/[^/\\\\]+\\.(jpg|jpeg|png)$",
-    "image_exclude_re": "(?i)(^|.*/)cover\\.(jpg|jpeg|png)$",
-    "document_include_re": "(?i)^[^/\\\\]+\\.pdf$",
-    "text_include_re": "(?i)^[^/\\\\]+\\.md$",
-    "text_exclude_re": "(?i)(^|.*/)readme\\.md$",
-    "portrait_re": "^portrait\\.jpg$",
-    "cover_re": "^cover\\.jpg$",
     "image_gallery_max": 20,
     "image_gallery_sample_strategy": "spread",
-    "collaboration_separator": " & "
+    "global_exclude_prefix": "_",
+    "metadata_folder_name": "meta",
+    "collaboration_separator": " & ",
   }
 }
 

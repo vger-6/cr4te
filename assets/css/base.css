@@ -173,6 +173,11 @@ a:focus {
   background-color: var(--section-content-bg);
 }
 
+.section-content video {
+  display: block;
+  width: 100%;
+}
+
 .text-content {
   padding-top: 0rem;
   padding-bottom: 0rem;
@@ -204,6 +209,60 @@ a:focus {
   display: block;
   width: auto;
   object-fit: contain;
+}
+
+.audio-gallery {
+  display: flex;
+  flex-direction: column;
+}
+
+.audio-gallery ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.audio-gallery li {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  background-color: var(--track-odd);
+  color: var(--text-color);
+}
+
+.audio-gallery li:nth-child(even) {
+  background-color: var(--track-even);
+}
+
+.audio-gallery li:hover {
+  background-color: var(--border-color);
+}
+
+.audio-gallery li.playing {
+  font-weight: bold;
+  background-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.pagination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.pagination-controls button {
+  background: var(--box-bg);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+.pagination-controls button.active {
+  font-weight: bold;
+  background: var(--highlight-color);
+  color: white;
+  cursor: default;
 }
 
 /*Example text-overflow: ellipsis;
