@@ -145,10 +145,17 @@
     const gallery = document.getElementById('imageGallery');
     const lightboxEnabled = gallery?.dataset.lightbox !== "false";
 
-    const wrappers = document.querySelectorAll('.image-wrapper');
-    const links = Array.from(wrappers)
-      .map(w => w.querySelector('a'))
-      .filter(a => a && a.href);
+    const galleries = document.querySelectorAll('.image-gallery[data-lightbox="true"]');
+    galleries.forEach(gallery => {
+      const links = Array.from(gallery.querySelectorAll('.image-wrapper a')).filter(a => a.href);
+      links.forEach((link, index) => {
+        link.onclick = (e) => {
+          e.preventDefault();
+          const currentGroup = links.map(a => a.href);
+          openLightbox(currentGroup, index);
+        };
+      });
+    });
 
     const newImageLinks = links.map(a => a.href);
 

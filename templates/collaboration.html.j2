@@ -68,7 +68,7 @@
       <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
       <hr>
       <div class="section-content">
-        <div class="image-gallery" id="imageGallery" data-image-max-height="{{ member_thumb_max_height }}">
+        <div class="image-gallery" data-lightbox="false" data-image-max-height="{{ member_thumb_max_height }}">
           {% for member in creator.members %}
           <div class="image-wrapper">
             <a href="{{ member.url }}" title="{{ member.name }}">
@@ -108,7 +108,7 @@
       <div class="section-title">{{ html_settings.collaboration_page_projects_title }}</div>
       <hr>
       <div class="section-content">
-        <div class="image-gallery" id="imageGallery" data-image-max-height="{{ project_thumb_max_height }}">
+        <div class="image-gallery" data-lightbox="false" data-image-max-height="{{ project_thumb_max_height }}">
           {% for project in creator.projects %}
           <div class="image-wrapper">
             <a href="{{ project.url }}" title="{{ project.title }}">
@@ -130,9 +130,9 @@
 
 <script src="../assets/js/theme_selector.js" defer></script>
 <script src="../assets/js/gallery_builder.js" defer></script>
-<!--script src="../assets/js/pagination.js" defer></script-->
+<script src="../assets/js/pagination.js" defer></script>
 <script src="../assets/js/audio_player.js" defer></script>
-<!--script src="../assets/js/lightbox.js" defer></script-->
+<script src="../assets/js/lightbox.js" defer></script>
 
 </body>
 </html>

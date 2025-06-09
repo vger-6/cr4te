@@ -220,7 +220,7 @@ def _build_creator(creator_path: Path, input_path: Path, media_rules: Dict) -> D
     if (creator_path / media_rules["metadata_folder_name"]).exists():
         media_groups = _build_media_groups(creator_path / media_rules["metadata_folder_name"], input_path, media_rules, existing_creator.get("media_groups", []))
     
-    media_groups.extend(_build_media_groups(creator_path, input_path, {**media_rules, "max_depth": 0}, existing_creator.get("media_groups", [])))
+    media_groups.extend(_build_media_groups(creator_path, input_path, {**media_rules, "max_depth": 1}, existing_creator.get("media_groups", [])))
     
     creator = {
         "name": creator_name,

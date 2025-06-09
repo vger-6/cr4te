@@ -4,52 +4,52 @@ let allWrappers = [];
 
 function renderPage(page) {
   const gallery = document.getElementById('imageGallery');
-  const controls = gallery.parentElement.querySelector('.pagination-controls');
-  
-  const configuredPageSize = parseInt(gallery.dataset.pageSize);
-  if (!isNaN(configuredPageSize) && configuredPageSize > 0) {
-    IMAGES_PER_PAGE = configuredPageSize;
-  }
+  const galleries = document.querySelectorAll('.image-gallery');
+  galleries.forEach(initGallery);
+}
 
-  const start = (page - 1) * IMAGES_PER_PAGE;
-  const end = start + IMAGES_PER_PAGE;
-  const visibleWrappers = allWrappers.slice(start, end);
+function initGallery(gallery) {
+  const controls = document.createElement('div');
+  controls.className = 'pagination-controls';
+  gallery.parentElement.appendChild(controls);
 
-  // Render only visible wrappers
-  gallery.innerHTML = '';
-  visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
-  rebuildImageGallery(); // Apply layout and sizing
+  let currentPage = 1;
+  let IMAGES_PER_PAGE = parseInt(gallery.dataset.pageSize) || 20;
+  const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
 
-  // Build pagination controls
-  const totalPages = Math.ceil(allWrappers.length / IMAGES_PER_PAGE);
-  if (controls) {
+  function renderPage(page) {
+    const start = (page - 1) * IMAGES_PER_PAGE;
+    const end = start + IMAGES_PER_PAGE;
+    const visibleWrappers = allWrappers.slice(start, end);
+
+    gallery.innerHTML = '';
+    visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
+    rebuildImageGallery?.();
+
+    const totalPages = Math.ceil(allWrappers.length / IMAGES_PER_PAGE);
     controls.innerHTML = '';
 
-    if (totalPages <= 1) {
-      controls.style.display = 'none';
-      return;
-    } else {
-      controls.style.display = '';
-    }
-
-    for (let i = 1; i <= totalPages; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = i;
-      if (i === page) {
-        btn.classList.add('active');
-      } else {
-        btn.addEventListener('click', () => {
+    if (totalPages > 1) {
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        if (i === page) btn.classList.add('active');
+        btn.onclick = () => {
           currentPage = i;
           renderPage(currentPage);
-          if (typeof rebindLightbox === 'function') {
-            rebindLightbox(); // Rebind lightbox to new images
-          }
-        });
+          rebindLightbox?.();
+        };
+        controls.appendChild(btn);
       }
-      controls.appendChild(btn);
+    } else {
+      controls.style.display = 'none';
     }
   }
+
+  renderPage(currentPage);
+  window.addEventListener('resize', () => renderPage(currentPage));
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const gallery = document.getElementById('imageGallery');
