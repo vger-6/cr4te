@@ -1,49 +1,48 @@
 {
   "name": "Noomi",
+  "is_enabled": true,
   "is_collaboration": false,
   "born_or_founded": "",
   "active_since": "",
   "nationality": "",
   "aliases": [],
-  "portrait": "Noomi/profile.jpg",
+  "portrait": "Noomi/portrait.jpg",
   "featured_portrait": null,
   "info": "Noomi is a photographer with a passion for the world around her.\n\nShe has traveled across continents, working on various photo projects that explore light, place, and emotion.\n\nOne of her best-known series is called **Landscapes**, where she focus on capturing the emotional tone of remote natural scenes.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
   "tags": [],
   "projects": [
     {
       "title": "Landscapes",
+      "is_enabled": true,
       "release_date": "",
-      "thumbnail": "Noomi/Landscapes/death valley.jpg",
-      "featured_thumbnail": null,
+      "cover": "Noomi/Landscapes/death valley.jpg",
+      "featured_cover": null,
       "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Death Valley, USA** \u2014 Barren ridges that look like brushstrokes.\n- **Icelandic Highlands** \u2014 The contrast of green moss and volcanic stone is surreal.\n- **Patagonia, Argentina** \u2014 A sharp peak surrounded by clouds.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
       "media_groups": [
         {
           "is_root": true,
           "videos": [],
           "featured_videos": null,
-          "video_group_name": null,
           "tracks": [],
           "featured_tracks": null,
-          "track_group_name": null,
           "images": [
             "Noomi/Landscapes/death valley.jpg",
             "Noomi/Landscapes/iceland.jpg",
             "Noomi/Landscapes/patagonia.jpg"
           ],
           "featured_images": null,
-          "image_group_name": null,
           "documents": [
             "Noomi/Landscapes/travel diary.pdf"
           ],
           "featured_documents": null,
-          "document_group_name": null,
-          "folder_name": "."
+          "texts": [],
+          "featured_texts": null,
+          "folder_path": "Noomi/Landscapes"
         },
         {
           "is_root": false,
           "videos": [],
           "featured_videos": null,
-          "video_group_name": null,
           "tracks": [
             "Noomi/Landscapes/Travel Playlist/1. Autumn Fall - Lid\u00e9rc.mp3",
             "Noomi/Landscapes/Travel Playlist/2. Ambient - Lid\u00e9rc.mp3",
@@ -52,17 +51,32 @@
             "Noomi/Landscapes/Travel Playlist/5. LoFi - Lid\u00e9rc.mp3"
           ],
           "featured_tracks": null,
-          "track_group_name": null,
           "images": [],
           "featured_images": null,
-          "image_group_name": null,
           "documents": [],
           "featured_documents": null,
-          "document_group_name": null,
-          "folder_name": "Travel Playlist"
+          "texts": [],
+          "featured_texts": null,
+          "folder_path": "Noomi/Landscapes/Travel Playlist"
         }
       ],
       "tags": []
+    }
+  ],
+  "media_groups": [
+    {
+      "is_root": true,
+      "videos": [],
+      "featured_videos": null,
+      "tracks": [],
+      "featured_tracks": null,
+      "images": [],
+      "featured_images": null,
+      "documents": [],
+      "featured_documents": null,
+      "texts": [],
+      "featured_texts": null,
+      "folder_path": "Noomi"
     }
   ],
   "members": [],

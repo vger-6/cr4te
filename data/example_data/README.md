@@ -59,7 +59,7 @@ pip install -r requirements.txt
 Generate JSON metadata from your media folder:
 
 ```bash
-python /path/to/cr4te/cr4te.py build-json -i <input_folder> --mode deep
+python /path/to/cr4te/cr4te.py build-json -i <input_folder> 
 ```
 
 Replace `<input_folder>` with the path to your media directory (e.g., `/path/to/cr4te/example_data/Artists`).
@@ -72,15 +72,7 @@ Replace `<input_folder>` with the path to your media directory (e.g., `/path/to/
 Generate the HTML site:
 
 ```bash
-python /path/to/cr4te/cr4te.py build-html -i <input_folder> -o <output_folder>
-```
-
-### Step 4: Open in browser
-
-Open the output site in your browser:
-
-```text
-<output_folder>/index.html
+python /path/to/cr4te/cr4te.py build-html -i <input_folder> -o <output_folder> --open
 ```
 
 ## License & Usage
