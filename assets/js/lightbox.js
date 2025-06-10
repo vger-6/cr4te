@@ -146,6 +146,8 @@
     const lightboxEnabled = gallery?.dataset.lightbox !== "false";
 
     const galleries = document.querySelectorAll('.image-gallery[data-lightbox="true"]');
+    let allLinks = [];
+
     galleries.forEach(gallery => {
       const links = Array.from(gallery.querySelectorAll('.image-wrapper a')).filter(a => a.href);
       links.forEach((link, index) => {
@@ -155,13 +157,13 @@
           openLightbox(currentGroup, index);
         };
       });
+      allLinks = allLinks.concat(links);
     });
 
-    const newImageLinks = links.map(a => a.href);
+    const newImageLinks = allLinks.map(a => a.href);
 
     if (!lightboxEnabled) {
-      // Remove existing lightbox bindings if disabled
-      links.forEach(link => {
+      allLinks.forEach(link => {
         link.onclick = null;
       });
       return;
@@ -172,7 +174,7 @@
     lastBoundLinks = newImageLinks;
     allImageLinks = newImageLinks;
 
-    links.forEach((link, index) => {
+    allLinks.forEach((link, index) => {
       link.onclick = (e) => {
         e.preventDefault();
         openLightbox(allImageLinks, index);

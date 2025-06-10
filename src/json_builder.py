@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Pattern
+from typing import List, Dict, Optional, Any
 from datetime import datetime
 from collections import defaultdict
 
@@ -126,7 +126,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
 
     return media_map
     
-def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_media_groups: List[Dict[str, any]]) -> List[Dict[str, Any]]:
+def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_media_groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     media_groups = []
     media_map = _build_media_map(ctx, media_folder)
     existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
@@ -189,6 +189,20 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
         projects.append(project)
 
     return projects
+    
+def _build_creator_media_groups(ctx: JsonBuildContext, creator_path: Path, existing_media_groups: List[Dict]) -> List[Dict]:
+    media_groups = []
+
+    # Metadata folder media
+    metadata_path = creator_path / ctx.media_rules["metadata_folder_name"]
+    if metadata_path.exists():
+        media_groups = _build_media_groups(ctx, metadata_path, existing_media_groups)
+
+    # Root-level media (shallow only)
+    shallow_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_depth": 1})
+    media_groups.extend(_build_media_groups(shallow_ctx, creator_path, existing_media_groups))
+
+    return media_groups
         
 def _is_collaboration(name: str, separator: Optional[str]) -> bool:
     if not separator:
@@ -213,13 +227,6 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
         is_collab = _is_collaboration(creator_name, separator)
-        
-    media_groups = []
-    if (creator_path / ctx.media_rules["metadata_folder_name"]).exists():
-        media_groups = _build_media_groups(ctx, creator_path / ctx.media_rules["metadata_folder_name"], existing_creator.get("media_groups", []))
-    
-    custom_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_depth": 1})
-    media_groups.extend(_build_media_groups(custom_ctx, creator_path, existing_creator.get("media_groups", [])))
     
     creator = {
         "name": creator_name,
@@ -234,7 +241,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         "info": utils.read_text(creator_path / ctx.readme_filename) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_path, existing_creator),
-        "media_groups": media_groups,
+        "media_groups": _build_creator_media_groups(ctx, creator_path, existing_creator.get("media_groups", [])),
     }
     
     if is_collab:

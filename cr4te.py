@@ -1,10 +1,8 @@
 import sys
 import argparse
-import shutil
-import json
 import webbrowser
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
@@ -14,7 +12,7 @@ from json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 
-def _load_config(config_path_arg: str) -> Dict[str, any]:
+def _load_config(config_path_arg: str) -> Dict[str, Any]:
     config_path = Path(config_path_arg).resolve() if config_path_arg else None
     return cfg.load_config(config_path)
 

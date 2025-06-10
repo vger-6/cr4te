@@ -2,11 +2,9 @@ import shutil
 import json
 import os
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Iterable
+from typing import List, Dict, Any, Optional, Iterable, Set
 from datetime import datetime
-from enum import Enum
 from collections import defaultdict
-from dataclasses import dataclass
 
 import markdown
 from PIL import Image
