@@ -5,8 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
-from .enums.image_sample_strategy import ImageSampleStrategy
-from .enums.media_type import MediaType
+from enums.image_sample_strategy import ImageSampleStrategy
+from enums.media_type import MediaType
 
 __all__ = ["load_config", "apply_cli_media_overrides", "update_html_labels"]
 

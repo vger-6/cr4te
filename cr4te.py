@@ -1,3 +1,4 @@
+import sys
 import argparse
 import shutil
 import json
@@ -5,9 +6,11 @@ import webbrowser
 from pathlib import Path
 from typing import Dict
 
-from src import config as cfg
-from src.html_builder import clear_output_folder, build_html_pages
-from src.json_builder import build_creator_json_files, clean_creator_json_files
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+
+import config as cfg
+from html_builder import clear_output_folder, build_html_pages
+from json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 
