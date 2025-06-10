@@ -16,24 +16,17 @@ CREATORS_DIRNAME = "creators"
 PROJECTS_DIRNAME = "projects"
 THUMBNAILS_DIRNAME = "thumbnails"
 
+# TODO: move to enums
 class ThumbType(Enum):
     THUMB = ("_thumb.jpg", 300)
     PORTRAIT = ("_portrait.jpg", 450)
-    POSTER = ("_poster.jpg", 600)
-    PROJECT = ("_project.jpg", 600)
+    POSTER = ("_poster.jpg", 600) # TODO: rename to COVER
+    PROJECT = ("_project.jpg", 600) # TODO: remove
     GALLERY = ("_gallery.jpg", 450)
 
     def __init__(self, suffix: str, height: int):
         self.suffix = suffix
         self.height = height
-
-DEFAULT_IMAGES = {
-    ThumbType.THUMB: "default_thumb.jpg",
-    ThumbType.PORTRAIT: "default_portrait.jpg",
-    ThumbType.POSTER: "default_poster.jpg",
-    ThumbType.PROJECT: "default_poster.jpg",
-    ThumbType.GALLERY: "default_thumb.jpg",
-}
 
 @dataclass
 class HtmlBuildContext(BaseContext):
@@ -97,5 +90,11 @@ class HtmlBuildContext(BaseContext):
         return self.output_dir / "tags.html"
 
     def default_image(self, thumb_type: ThumbType) -> Path:
-        return self.defaults_dir / DEFAULT_IMAGES[thumb_type]
+        return self.defaults_dir / {
+            ThumbType.THUMB: "default_thumb.jpg",
+            ThumbType.PORTRAIT: "default_portrait.jpg",
+            ThumbType.POSTER: "default_poster.jpg",
+            ThumbType.PROJECT: "default_poster.jpg",
+            ThumbType.GALLERY: "default_thumb.jpg",
+        }[thumb_type]
 
