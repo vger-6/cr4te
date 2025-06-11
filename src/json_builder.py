@@ -9,7 +9,6 @@ from PIL import Image
 
 import utils
 import constants
-from enums.image_sample_strategy import ImageSampleStrategy
 from context.json_context import JsonBuildContext
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
@@ -61,26 +60,7 @@ def _find_image_by_orientation(images: List[Path], orientation: Orientation = Or
         except Exception as e:
             print(f"Error checking image orientation for {img_path}: {e}")
     return None
-
-def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
-    if max_images <= 0:
-        return []
-
-    sorted_images = sorted(images)
-
-    match strategy:
-        case ImageSampleStrategy.ALL:
-            return sorted_images
-        case _ if len(sorted_images) <= max_images:
-            return sorted_images
-        case ImageSampleStrategy.HEAD:
-            return sorted_images[:max_images]
-        case ImageSampleStrategy.SPREAD:
-            step = len(sorted_images) / max_images
-            return [sorted_images[int(i * step)] for i in range(max_images)]
-        case _:
-            return sorted_images  # fallback
-            
+    
 def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dict]:
     media_map = defaultdict(lambda: {
         "videos": [],
@@ -134,19 +114,13 @@ def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_medi
     for folder_path, media in media_map.items():
         existing_media_group = existing_media_groups_by_name.get(folder_path, {})
 
-        sampled_images = _sample_images(
-            media["images"],
-            ctx.media_rules["image_gallery_max"],
-            ctx.media_rules["image_gallery_sample_strategy"]
-        )
-
         media_group = {
             "is_root": media["is_root"],
             "videos": sorted(media["videos"]),
             "tracks": sorted(media["tracks"]),
-            "images": sampled_images,
-            "documents": media["documents"],
-            "texts": media["texts"],
+            "images": sorted(media["images"]),
+            "documents": sorted(media["documents"]),
+            "texts": sorted(media["texts"]),
             "folder_path": folder_path
         }
 

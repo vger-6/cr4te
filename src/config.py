@@ -51,12 +51,12 @@ DEFAULT_CONFIG = {
         "project_page_image_pagination_limit" : 15,
         "project_page_show_image_captions": False,
         
-        "type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value],
-    },
-    "media_rules": {   
         "image_gallery_max": 20,
         "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD.value,
         
+        "type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value],
+    },
+    "media_rules": {   
         "max_depth": 2,
         
         "global_exclude_prefix": "_",
@@ -100,13 +100,10 @@ def update_html_labels(config: Dict, preset_str: str) -> Dict:
     return config
        
 def apply_cli_media_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None) -> Dict:
-    """
-    Applies CLI overrides for media_rules such as image_gallery_max and image_sample_strategy.
-    """
     if image_gallery_max is not None:
-        config["media_rules"]["image_gallery_max"] = image_gallery_max
+        config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
-        config["media_rules"]["image_gallery_sample_strategy"] = image_sample_strategy.value
+        config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy.value
     return config
  
 def _get_html_label_presets(preset: HtmlPreset) -> Dict:

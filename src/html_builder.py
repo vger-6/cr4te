@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 import constants
 from enums.media_type import MediaType
+from enums.image_sample_strategy import ImageSampleStrategy
 from utils import slugify, get_relative_path, read_text, load_json
 from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 
@@ -109,6 +110,25 @@ def _resolve_thumbnail_or_default(ctx: HtmlBuildContext, relative_image_path: Op
     if relative_image_path:
         return _get_or_create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
     return ctx.default_image(thumb_type)
+    
+def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
+    if max_images <= 0:
+        return []
+
+    sorted_images = sorted(images)
+
+    match strategy:
+        case ImageSampleStrategy.ALL:
+            return sorted_images
+        case _ if len(sorted_images) <= max_images:
+            return sorted_images
+        case ImageSampleStrategy.HEAD:
+            return sorted_images[:max_images]
+        case ImageSampleStrategy.SPREAD:
+            step = len(sorted_images) / max_images
+            return [sorted_images[int(i * step)] for i in range(max_images)]
+        case _:
+            return sorted_images  # fallback
 
 def _sort_project(project: Dict) -> tuple:
     release_date = project["release_date"]
@@ -247,12 +267,12 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
     media_groups_context = []
 
     for media_group in media_groups:
-        image_rel_paths = media_group["images"]
+        image_rel_paths = _sample_images(media_group["images"], ctx.html_settings["image_gallery_max"], ctx.html_settings["image_gallery_sample_strategy"])
         video_rel_paths = media_group["videos"]
         track_rel_paths = media_group["tracks"]
         document_rel_paths = media_group["documents"]
         text_rel_paths = media_group["texts"]
-
+        
         images = [
             {
                 "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), base_path),
