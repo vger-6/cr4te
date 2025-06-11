@@ -145,7 +145,6 @@ See this [`cr4te.json`](https://github.com/vger-6/cr4te/blob/main/data/example_d
 * `projects[*].info`: Optional per-project description
 * `projects[*].tags`: Tag list for each project
 * `images`: List of auto detected image files
-* `featured_images`: Curated list of image files (overrides images)
 * `members`: If this is a group folder, add member names
 * `collaborations`: Add collaboration names
 

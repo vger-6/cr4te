@@ -143,15 +143,10 @@ def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_medi
         media_group = {
             "is_root": media["is_root"],
             "videos": sorted(media["videos"]),
-            "featured_videos": existing_media_group.get("featured_videos"),
             "tracks": sorted(media["tracks"]),
-            "featured_tracks": existing_media_group.get("featured_tracks"),
             "images": sampled_images,
-            "featured_images": existing_media_group.get("featured_images"),
             "documents": media["documents"],
-            "featured_documents": existing_media_group.get("featured_documents"),
             "texts": media["texts"],
-            "featured_texts": existing_media_group.get("featured_texts"),
             "folder_path": folder_path
         }
 
@@ -177,10 +172,8 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
 
         project = {
             "title": project_title,
-            "is_enabled": existing_project.get("is_enabled", True),
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
-            "featured_cover": existing_project.get("featured_cover"),
             "info": utils.read_text(project_dir / ctx.readme_filename) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(ctx, project_dir, existing_project.get("media_groups", [])),
             "tags": existing_project.get("tags", [])
@@ -229,14 +222,12 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     
     creator = {
         "name": creator_name,
-        "is_enabled": existing_creator.get("is_enabled", True),
         "is_collaboration": is_collab,
         "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
         "active_since": _validate_date_string(existing_creator.get("active_since", "")),
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
-        "featured_portrait": existing_creator.get("featured_portrait"),
         "info": utils.read_text(creator_path / ctx.readme_filename) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_path, existing_creator),

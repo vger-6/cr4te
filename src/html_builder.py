@@ -127,7 +127,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
     all_projects = []
     for creator in creators:
         for project in creator["projects"]: 
-            thumb_path = _resolve_thumbnail_or_default(ctx, project['featured_cover'] or project['cover'], ThumbType.PROJECT)
+            thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.PROJECT)
 
             all_projects.append({
                 "title": project["title"],
@@ -247,11 +247,11 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
     media_groups_context = []
 
     for media_group in media_groups:
-        image_rel_paths = media_group["featured_images"] or media_group["images"]
-        video_rel_paths = media_group["featured_videos"] or media_group["videos"]
-        track_rel_paths = media_group["featured_tracks"] or media_group["tracks"]
-        document_rel_paths = media_group["featured_documents"] or media_group["documents"]
-        text_rel_paths = media_group["featured_texts"] or media_group["texts"]
+        image_rel_paths = media_group["images"]
+        video_rel_paths = media_group["videos"]
+        track_rel_paths = media_group["tracks"]
+        document_rel_paths = media_group["documents"]
+        text_rel_paths = media_group["texts"]
 
         images = [
             {
@@ -332,7 +332,7 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
         if not participant:
             continue
          
-        thumb_path = _resolve_thumbnail_or_default(ctx, participant["featured_portrait"] or participant["portrait"], ThumbType.PORTRAIT)
+        thumb_path = _resolve_thumbnail_or_default(ctx, participant["portrait"], ThumbType.PORTRAIT)
 
         participants.append({
             "name": name,
@@ -344,7 +344,7 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
     return participants
     
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
-    thumb_path = _resolve_thumbnail_or_default(ctx, project["featured_cover"] or project["cover"], ThumbType.POSTER)
+    thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.POSTER)
 
     return {
         "title": project["title"],
@@ -413,7 +413,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
     """
     project_entries = []
     for project in sorted(creator["projects"], key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(ctx, project["featured_cover"] or project["cover"], ThumbType.PROJECT)
+        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.PROJECT)
 
         project_entries.append({
             "title": project["title"],
@@ -447,7 +447,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
-    thumb_path = _resolve_thumbnail_or_default(ctx, creator["featured_portrait"] or creator["portrait"], ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
     
     return {
         "name": creator["name"],
@@ -497,7 +497,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
         if not member:
             continue
 
-        thumb_path = _resolve_thumbnail_or_default(ctx, member["featured_portrait"] or member["portrait"], ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(ctx, member["portrait"], ThumbType.THUMB)
 
         member_links.append({
             "name": member_name,
@@ -512,7 +512,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
     Builds the context dictionary for rendering a collaboration page,
     including metadata, portrait, members, projects, and tags.
     """
-    thumb_path = _resolve_thumbnail_or_default(ctx, creator["featured_portrait"] or creator["portrait"], ThumbType.PORTRAIT)
+    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
@@ -577,7 +577,7 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
     """
     creator_entries = []
     for creator in creators:
-        thumb_path = _resolve_thumbnail_or_default(ctx, creator["featured_portrait"] or creator["portrait"], ThumbType.THUMB)
+        thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.THUMB)
 
         creator_entries.append({
             "name": creator["name"],
@@ -601,18 +601,6 @@ def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
 
     with open(ctx.index_html_path, 'w', encoding='utf-8') as f:
         f.write(output_html)
-        
-def _filter_disabled_content(creators: list) -> list:
-    """
-    Removes creators and their projects that are marked as 'is_enabled': false.
-    """
-    filtered = []
-    for creator in creators:
-        if not creator["is_enabled"]:
-            continue
-        creator["projects"] = [p for p in creator["projects"] if p["is_enabled"]]
-        filtered.append(creator)
-    return filtered
     
 def _collect_all_creators(input_dir: Path) -> List[Dict]:
     creators = []
@@ -648,7 +636,6 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> 
     _copy_assets(ctx)
 
     creators = _collect_all_creators(ctx.input_dir)
-    creators = _filter_disabled_content(creators)
             
     _build_creator_overview_page(ctx, creators)
     _build_creator_pages(ctx, creators)
