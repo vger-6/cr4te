@@ -28,7 +28,7 @@ def main():
     json_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     json_parser.add_argument("--config", help="Path to configuration file (optional)")
     json_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
-    json_parser.add_argument("--image-sample-strategy", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images: spread (default), head, all")
+    json_parser.add_argument("--img-sample", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images per folder")
     
     # clean-json
     clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
@@ -41,7 +41,7 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
-    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ARTIST, help="Apply a preset label scheme for HTML: artist (default), musician, director, author, model")
+    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ART, help="Apply a preset label scheme for HTML")
     html_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
@@ -59,7 +59,7 @@ def main():
         config = cfg.apply_cli_media_overrides(
             config,
             image_gallery_max=args.max_images,
-            image_sample_strategy=cfg.ImageSampleStrategy(args.image_sample_strategy)
+            image_sample_strategy=cfg.ImageSampleStrategy(args.img_sample)
         )
         
         build_creator_json_files(input_path, config["media_rules"])

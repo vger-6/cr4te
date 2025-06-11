@@ -66,11 +66,11 @@ DEFAULT_CONFIG = {
 }
 
 class HtmlPreset(str, Enum):
-    ARTIST = "artist"
-    MUSICIAN = "musician"
-    DIRECTOR = "director"
-    AUTHOR = "author"
-    MODEL = "model"
+    ART = "art"
+    MUSIC = "music"
+    FILM = "film"
+    BOOK = "book"
+    SET = "set"
 
 class BuildMode(str, Enum):
     FLAT = "flat"
@@ -115,7 +115,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
     Other configuration fields remain untouched.
     """
     match preset:
-        case HtmlPreset.DIRECTOR:
+        case HtmlPreset.FILM:
             return {
                 "nav_creators_label": "Directors",
                 "nav_projects_label": "Movies",
@@ -129,7 +129,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile": "Profile",
             }
-        case HtmlPreset.MUSICIAN:
+        case HtmlPreset.MUSIC:
             return {
                 "nav_creators_label": "Musicians",
                 "nav_projects_label": "Albums",
@@ -142,7 +142,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Albums",
                 "project_page_creator_profile": "Profile",
             }
-        case HtmlPreset.ARTIST:
+        case HtmlPreset.ART:
             return {
                 "nav_creators_label": "Artists",
                 "nav_projects_label": "Works",
@@ -156,7 +156,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Works",
                 "project_page_creator_profile": "Profile"
             }
-        case HtmlPreset.AUTHOR:
+        case HtmlPreset.BOOK:
             return {
                 "nav_creators_label": "Author",
                 "nav_projects_label": "Books",
@@ -170,7 +170,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Books",
                 "project_page_creator_profile": "Profile"
             }
-        case HtmlPreset.MODEL:
+        case HtmlPreset.SET:
             return {
                 "nav_creators_label": "Models",
                 "nav_projects_label": "Scenes",
