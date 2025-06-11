@@ -7,6 +7,8 @@ from typing import Dict, Any
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import config as cfg
+from enums.image_sample_strategy import ImageSampleStrategy
+from enums.label_preset import LabelPreset
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import build_creator_json_files, clean_creator_json_files
 
@@ -39,9 +41,9 @@ def main():
     html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
     html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
     html_parser.add_argument("--config", help="Path to configuration file (optional)")
-    html_parser.add_argument("--html-preset", choices=[m.value for m in cfg.HtmlPreset], default=cfg.HtmlPreset.ART, help="Apply a preset label scheme for HTML")
+    html_parser.add_argument("--label-preset", choices=[m.value for m in LabelPreset], default=LabelPreset.ART, help="Apply a preset label scheme for HTML")
     html_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
-    html_parser.add_argument("--img-sample", choices=[s.value for s in cfg.ImageSampleStrategy], default=cfg.ImageSampleStrategy.SPREAD.value, help="Strategy to sample images per folder")
+    html_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], default=ImageSampleStrategy.SPREAD, help="Strategy to sample images per folder")
     html_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
@@ -97,10 +99,10 @@ def main():
         config = cfg.apply_cli_media_overrides(
             config,
             image_gallery_max=args.max_images,
-            image_sample_strategy=cfg.ImageSampleStrategy(args.img_sample)
+            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy)
         )
 
-        config = cfg.update_html_labels(config, args.html_preset)
+        config = cfg.update_html_labels(config, args.label_preset)
         
         html_index_path = build_html_pages(input_path, output_path, config["html_settings"])
         

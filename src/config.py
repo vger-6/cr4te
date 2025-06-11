@@ -5,8 +5,11 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import utils
+from validators.config_validation_schema import AppConfig
+from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
+from enums.label_preset import LabelPreset
 
 __all__ = ["load_config", "apply_cli_media_overrides", "update_html_labels"]
 
@@ -44,17 +47,17 @@ DEFAULT_CONFIG = {
         
         "tags_page_title": "Tags",
         
-        "creator_page_visible_creator_fields": ["date_of_birth", "nationality", "aliases", "debut_age"],
-        "collaboration_page_visible_collaboration_fields": ["name", "members", "founded", "nationality", "active_since"],
-        "project_page_visible_project_fields": ["title", "release_date"],
+        "creator_page_visible_creator_fields": [CreatorField.DATE_OF_BIRTH, CreatorField.NATIONALITY, CreatorField.ALIASES, CreatorField.DEBUT_AGE],
+        "collaboration_page_visible_collaboration_fields": [CollaborationField.NAME, CollaborationField.MEMBERS, CollaborationField.FOUNDED, CollaborationField.NATIONALITY, CollaborationField.ACTIVE_SINCE],
+        "project_page_visible_project_fields": [ProjectField.TITLE, ProjectField.RELEASE_DATE],
         
         "project_page_image_pagination_limit" : 15,
         "project_page_show_image_captions": False,
         
         "image_gallery_max": 20,
-        "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD.value,
+        "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD,
         
-        "type_order": [MediaType.VIDEO.value, MediaType.AUDIO.value, MediaType.IMAGE.value, MediaType.TEXT.value, MediaType.DOCUMENT.value],
+        "type_order": [MediaType.VIDEO, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT],
     },
     "media_rules": {   
         "max_depth": 2,
@@ -66,21 +69,15 @@ DEFAULT_CONFIG = {
     }
 }
 
-class HtmlPreset(str, Enum):
-    ART = "art"
-    MUSIC = "music"
-    FILM = "film"
-    BOOK = "book"
-    SET = "set"
-
-class BuildMode(str, Enum):
-    FLAT = "flat"
-    HYBRID = "hybrid"
-    DEEP = "deep"
+def _validate_config(config: dict) -> None:
+    try:
+        AppConfig(**config)
+    except ValidationError as e:
+        raise ValueError(f"Invalid config: {e}")
     
 def load_config(user_config_path: Path = None) -> Dict:
     config = copy.deepcopy(DEFAULT_CONFIG)
-
+ 
     if user_config_path:
         try:
             user_config = utils.load_json(user_config_path)
@@ -91,28 +88,36 @@ def load_config(user_config_path: Path = None) -> Dict:
             print(f"Warning: Could not load config file {user_config_path}: {e}")
             print("Proceeding with default internal configuration.")
 
+    _validate_config(config)
+
     return config
     
 def update_html_labels(config: Dict, preset_str: str) -> Dict:
-    preset = HtmlPreset(preset_str)
+    preset = LabelPreset(preset_str)
     overrides = _get_html_label_presets(preset) 
     config["html_settings"].update(overrides)
+    
+    _validate_config(config)
+
     return config
        
 def apply_cli_media_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None) -> Dict:
     if image_gallery_max is not None:
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
-        config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy.value
+        config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
+    
+    _validate_config(config)
+
     return config
  
-def _get_html_label_presets(preset: HtmlPreset) -> Dict:
+def _get_html_label_presets(preset: LabelPreset) -> Dict:
     """
     Returns only the labels that are overridden by the selected preset. 
     Other configuration fields remain untouched.
     """
     match preset:
-        case HtmlPreset.FILM:
+        case LabelPreset.FILM:
             return {
                 "nav_creators_label": "Directors",
                 "nav_projects_label": "Movies",
@@ -126,7 +131,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile": "Profile",
             }
-        case HtmlPreset.MUSIC:
+        case LabelPreset.MUSIC:
             return {
                 "nav_creators_label": "Musicians",
                 "nav_projects_label": "Albums",
@@ -139,7 +144,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Albums",
                 "project_page_creator_profile": "Profile",
             }
-        case HtmlPreset.ART:
+        case LabelPreset.ART:
             return {
                 "nav_creators_label": "Artists",
                 "nav_projects_label": "Works",
@@ -153,7 +158,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Works",
                 "project_page_creator_profile": "Profile"
             }
-        case HtmlPreset.BOOK:
+        case LabelPreset.BOOK:
             return {
                 "nav_creators_label": "Author",
                 "nav_projects_label": "Books",
@@ -167,7 +172,7 @@ def _get_html_label_presets(preset: HtmlPreset) -> Dict:
                 "collaboration_page_projects_title": "Books",
                 "project_page_creator_profile": "Profile"
             }
-        case HtmlPreset.SET:
+        case LabelPreset.MODEL:
             return {
                 "nav_creators_label": "Models",
                 "nav_projects_label": "Scenes",
