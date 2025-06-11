@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 import constants
 from enums.media_type import MediaType
-from utils import slugify, get_relative_path, read_text, load_jsons
+from utils import slugify, get_relative_path, read_text, load_json
 from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 
 
@@ -621,7 +621,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
             continue
         json_path = creator_path / constants.CR4TE_JSON_FILENAME
         if json_path.exists():
-            creator = utils.load_json(json_path)
+            creator = load_json(json_path)
             creators.append(creator)
     return creators
         
