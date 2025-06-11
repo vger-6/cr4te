@@ -1,6 +1,8 @@
 import re
 import os
+import json
 from pathlib import Path
+from typing import Dict
 
 def slugify(text: str) -> str:
     if not isinstance(text, str):
@@ -18,4 +20,8 @@ def read_text(text_path: Path) -> str:
     if text_path.exists() and text_path.is_file():
         return text_path.read_text(encoding='utf-8').strip()
     return ""
+
+def load_json(json_path: Path) -> Dict:
+    with open(json_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
 

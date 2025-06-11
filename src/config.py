@@ -4,6 +4,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
+import utils
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
 
@@ -77,18 +78,17 @@ class BuildMode(str, Enum):
     HYBRID = "hybrid"
     DEEP = "deep"
     
-def load_config(config_path: Path = None) -> Dict:
+def load_config(user_config_path: Path = None) -> Dict:
     config = copy.deepcopy(DEFAULT_CONFIG)
 
-    if config_path:
+    if user_config_path:
         try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                user_config = json.load(f)
+            user_config = utils.load_json(user_config_path)
             config["html_settings"].update(user_config.get("html_settings", {}))
             config["media_rules"].update(user_config.get("media_rules", {}))
-            print(f"Loaded configuration from {config_path}")
+            print(f"Loaded configuration from {user_config_path}")
         except Exception as e:
-            print(f"Warning: Could not load config file {config_path}: {e}")
+            print(f"Warning: Could not load config file {user_config_path}: {e}")
             print("Proceeding with default internal configuration.")
 
     return config

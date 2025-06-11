@@ -211,8 +211,7 @@ def _is_collaboration(name: str, separator: Optional[str]) -> bool:
     
 def _load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
-        with open(json_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        return utils.load_json(json_path)
     return {}
 
 def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:

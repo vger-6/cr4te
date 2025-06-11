@@ -10,10 +10,11 @@ import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from enums.media_type import MediaType
-from utils import slugify, get_relative_path, read_text
-from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 import constants
+from enums.media_type import MediaType
+from utils import slugify, get_relative_path, read_text, load_jsons
+from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
+
 
 __all__ = ["clear_output_folder", "build_html_pages"]
 
@@ -613,16 +614,16 @@ def _filter_disabled_content(creators: list) -> list:
         filtered.append(creator)
     return filtered
     
-def _collect_creator_data(input_dir: Path) -> List[Dict]:
-    creator_data = []
+def _collect_all_creators(input_dir: Path) -> List[Dict]:
+    creators = []
     for creator_path in sorted(input_dir.iterdir()):
         if not creator_path.is_dir():
             continue
         json_path = creator_path / constants.CR4TE_JSON_FILENAME
         if json_path.exists():
-            with open(json_path, 'r', encoding='utf-8') as f:
-                creator_data.append(json.load(f))
-    return creator_data
+            creator = utils.load_json(json_path)
+            creators.append(creator)
+    return creators
         
 def _copy_assets(ctx: HtmlBuildContext) -> None:
     shutil.copytree(constants.CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
@@ -646,7 +647,7 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> 
     _prepare_output_dirs(ctx)
     _copy_assets(ctx)
 
-    creators = _collect_creator_data(ctx.input_dir)
+    creators = _collect_all_creators(ctx.input_dir)
     creators = _filter_disabled_content(creators)
             
     _build_creator_overview_page(ctx, creators)
