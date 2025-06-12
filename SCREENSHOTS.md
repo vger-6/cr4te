@@ -13,4 +13,4 @@
 ![Project Overview Page](data/example/project_overview_page.png)
 
 ## Creator Overview Page
-![Creator Overview Page](data/example/creator_overview_page.png)
+![Creator Overview Page](data/example/artist_overview_page.png)
