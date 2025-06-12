@@ -25,7 +25,7 @@ This folder contains example content to help new users get started quickly with 
 
 Using the example content and *cr4te*, we are going to build HTML pages that look similar to this:
 
-<img src="project_page.png" alt="Screenshot Project Page" width="100%"/>
+<img src="data/example/project_page.png" alt="Screenshot Project Page" width="100%"/>
 
 ## Requirements
 
