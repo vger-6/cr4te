@@ -15,7 +15,7 @@ from enums.media_type import MediaType
 from enums.image_sample_strategy import ImageSampleStrategy
 from utils import slugify, get_relative_path, read_text, load_json
 from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
-
+from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["clear_output_folder", "build_html_pages"]
 
@@ -629,8 +629,11 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
             continue
         json_path = creator_path / constants.CR4TE_JSON_FILENAME
         if json_path.exists():
-            creator = load_json(json_path)
-            creators.append(creator)
+            raw_data = load_json(json_path)
+            # Validate and normalize structure
+            validated = CreatorSchema(**raw_data)
+            creators.append(validated.model_dump())
+
     return creators
         
 def _copy_assets(ctx: HtmlBuildContext) -> None:

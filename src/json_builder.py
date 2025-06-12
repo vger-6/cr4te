@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import defaultdict
 
 from PIL import Image
+from validators.cr4te_schema import Creator as CreatorSchema
 
 import utils
 import constants
@@ -32,6 +33,12 @@ def _validate_date_string(date_str: str) -> str:
         return parsed_date.strftime("%Y-%m-%d")  # Normalize
     except ValueError:
         return ""
+        
+def _validate_creator(creator: Dict) -> None:
+    try:
+        CreatorSchema(**creator)
+    except ValidationError as e:
+        raise ValueError(f"Invalid creator: {e}")
     
 def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
     return [
@@ -206,6 +213,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_path, existing_creator),
         "media_groups": _build_creator_media_groups(ctx, creator_path, existing_creator.get("media_groups", [])),
+        "collaborations": [],
     }
     
     if is_collab:
@@ -213,6 +221,8 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         creator["members"] = existing_creator.get("members", members)
     else:
         creator["members"] = []
+        
+    _validate_creator(creator)
     
     return creator
     
@@ -233,8 +243,8 @@ def _resolve_creator_collaborations(creators: List[Dict]) -> None:
             ]
             manual_collabs = creator.get("collaborations", [])
             creator["collaborations"] = sorted(set(auto_collabs + manual_collabs))
-        else:
-            creator["collaborations"] = []
+            
+            #_validate_creator(creator)
             
 def _write_json_files(creators: List[Dict], base_path: Path) -> None:
     """

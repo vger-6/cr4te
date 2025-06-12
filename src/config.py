@@ -4,8 +4,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
+from pydantic import ValidationError
+
 import utils
-from validators.config_validation_schema import AppConfig
+from validators.config_schema import AppConfig
 from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
@@ -69,7 +71,7 @@ DEFAULT_CONFIG = {
     }
 }
 
-def _validate_config(config: dict) -> None:
+def _validate_config(config: Dict) -> None:
     try:
         AppConfig(**config)
     except ValidationError as e:
