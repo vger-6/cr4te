@@ -107,6 +107,9 @@
 
   function closeLightbox() {
     showElements(false);
+    if (elements.img) {
+      elements.img.src = ''; // Clear the image source to prevent flashing
+    }
   }
 
   function showElements(visible) {
