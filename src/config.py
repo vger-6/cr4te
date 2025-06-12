@@ -75,7 +75,9 @@ def _validate_config(config: Dict) -> None:
     try:
         AppConfig(**config)
     except ValidationError as e:
-        raise ValueError(f"Invalid config: {e}")
+        error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
+        formatted = "\n".join(error_lines)
+        raise ValueError(f"Validation failed for config:\n{formatted}")      
     
 def load_config(user_config_path: Path = None) -> Dict:
     config = copy.deepcopy(DEFAULT_CONFIG)

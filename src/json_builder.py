@@ -6,11 +6,12 @@ from datetime import datetime
 from collections import defaultdict
 
 from PIL import Image
-from validators.cr4te_schema import Creator as CreatorSchema
+from pydantic import ValidationError
 
 import utils
 import constants
 from context.json_context import JsonBuildContext
+from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
 
@@ -38,7 +39,10 @@ def _validate_creator(creator: Dict) -> None:
     try:
         CreatorSchema(**creator)
     except ValidationError as e:
-        raise ValueError(f"Invalid creator: {e}")
+        name = creator.get("name", "<unknown>")
+        error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
+        formatted = "\n".join(error_lines)
+        raise ValueError(f"Validation failed for creator '{name}':\n{formatted}")
     
 def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
     return [
@@ -221,8 +225,6 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         creator["members"] = existing_creator.get("members", members)
     else:
         creator["members"] = []
-        
-    _validate_creator(creator)
     
     return creator
     
@@ -244,8 +246,6 @@ def _resolve_creator_collaborations(creators: List[Dict]) -> None:
             manual_collabs = creator.get("collaborations", [])
             creator["collaborations"] = sorted(set(auto_collabs + manual_collabs))
             
-            #_validate_creator(creator)
-            
 def _write_json_files(creators: List[Dict], base_path: Path) -> None:
     """
     Writes each creator's JSON data to <base_path>/<creator_name>/cr4te.json.
@@ -258,18 +258,21 @@ def _write_json_files(creators: List[Dict], base_path: Path) -> None:
 def build_creator_json_files(input_dir: Path, media_rules: Dict):
     ctx = JsonBuildContext(input_dir, media_rules)
 
-    all_creators = []
+    creators = []
 
     for creator_path in sorted(ctx.input_dir.iterdir()):
         if not creator_path.is_dir() or creator_path.name.startswith(ctx.media_rules["global_exclude_prefix"]):
             continue
         print(f"Processing creator: {creator_path.name}")
         creator = _build_creator(ctx, creator_path)
-        all_creators.append(creator)
+        creators.append(creator)
 
-    _resolve_creator_collaborations(all_creators)
+    _resolve_creator_collaborations(creators)
+    
+    for creator in creators:
+        _validate_creator(creator)
 
-    _write_json_files(all_creators, ctx.input_dir)
+    _write_json_files(creators, ctx.input_dir)
     
 def clean_creator_json_files(input_path: Path, dry_run: bool = False) -> None:
     total = 0

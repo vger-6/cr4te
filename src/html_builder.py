@@ -9,6 +9,7 @@ from collections import defaultdict
 import markdown
 from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from pydantic import ValidationError
 
 import constants
 from enums.media_type import MediaType
@@ -621,6 +622,15 @@ def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
 
     with open(ctx.index_html_path, 'w', encoding='utf-8') as f:
         f.write(output_html)
+        
+def _validate_creator(creator: Dict) -> Dict:
+    try:
+        return CreatorSchema(**creator)
+    except ValidationError as e:
+        name = creator.get("name", "<unknown>")
+        error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
+        formatted = "\n".join(error_lines)
+        raise ValueError(f"Validation failed for creator '{name}':\n{formatted}")
     
 def _collect_all_creators(input_dir: Path) -> List[Dict]:
     creators = []
@@ -631,7 +641,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
         if json_path.exists():
             raw_data = load_json(json_path)
             # Validate and normalize structure
-            validated = CreatorSchema(**raw_data)
+            validated = _validate_creator(raw_data)
             creators.append(validated.model_dump())
 
     return creators
