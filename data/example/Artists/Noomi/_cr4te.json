@@ -6,27 +6,25 @@
   "nationality": "",
   "aliases": [],
   "portrait": "Noomi/portrait.jpg",
-  "info": "Noomi is a photographer with a passion for the world around her.\n\nShe has traveled across continents, working on various photo projects that explore light, place, and emotion.\n\nOne of her best-known series is called **Landscapes**, where she focus on capturing the emotional tone of remote natural scenes.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
+  "info": "Noomi is a photographer with a passion for the world around her.\n\nShe is working on various photo projects that explore light, place, and emotion.\n\nOne of her best-known series is called **Landscapes**, where she focus on capturing the emotional tone of remote natural scenes.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
   "tags": [],
   "projects": [
     {
       "title": "Landscapes",
       "release_date": "",
-      "cover": "Noomi/Landscapes/death valley.jpg",
-      "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Death Valley, USA** \u2014 Barren ridges that look like brushstrokes.\n- **Icelandic Highlands** \u2014 The contrast of green moss and volcanic stone is surreal.\n- **Patagonia, Argentina** \u2014 A sharp peak surrounded by clouds.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
+      "cover": "Noomi/Landscapes/cover.jpg",
+      "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Canyon Gap** \u2014 Earthen cliffs split beneath a single bright cloud.\n- **Dunes** \u2014 Smooth, rust-colored sand waves under a clear sky.\n- **Rocky Plateau,** \u2014 Bare trees cast long shadows across dry stone.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
       "media_groups": [
         {
           "is_root": true,
           "videos": [],
           "tracks": [],
           "images": [
-            "Noomi/Landscapes/death valley.jpg",
-            "Noomi/Landscapes/iceland.jpg",
-            "Noomi/Landscapes/patagonia.jpg"
+            "Noomi/Landscapes/cloud.jpg",
+            "Noomi/Landscapes/desert.jpg",
+            "Noomi/Landscapes/trees.jpg"
           ],
-          "documents": [
-            "Noomi/Landscapes/travel diary.pdf"
-          ],
+          "documents": [],
           "texts": [],
           "folder_path": "Noomi/Landscapes"
         },
@@ -54,12 +52,16 @@
       "is_root": true,
       "videos": [],
       "tracks": [],
-      "images": [],
+      "images": [
+        "Noomi/img_001.jpg",
+        "Noomi/img_002.jpg",
+        "Noomi/img_003.jpg"
+      ],
       "documents": [],
       "texts": [],
       "folder_path": "Noomi"
     }
   ],
-  "members": [],
-  "collaborations": []
+  "collaborations": [],
+  "members": []
 }

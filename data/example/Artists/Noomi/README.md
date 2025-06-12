@@ -1,6 +1,6 @@
 Noomi is a photographer with a passion for the world around her.
 
-She has traveled across continents, working on various photo projects that explore light, place, and emotion.
+She is working on various photo projects that explore light, place, and emotion.
 
 One of her best-known series is called **Landscapes**, where she focus on capturing the emotional tone of remote natural scenes.
 

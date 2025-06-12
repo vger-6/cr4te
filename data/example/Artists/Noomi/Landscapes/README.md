@@ -2,9 +2,9 @@ A collection of landscape photographs.
 
 ### What's included
 
-- **Death Valley, USA** — Barren ridges that look like brushstrokes.
-- **Icelandic Highlands** — The contrast of green moss and volcanic stone is surreal.
-- **Patagonia, Argentina** — A sharp peak surrounded by clouds.
+- **Canyon Gap** — Earthen cliffs split beneath a single bright cloud.
+- **Dunes** — Smooth, rust-colored sand waves under a clear sky.
+- **Rocky Plateau,** — Bare trees cast long shadows across dry stone.
 
 ---
 
