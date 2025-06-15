@@ -24,7 +24,7 @@
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ creator_thumb_max_height }}" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
     {% for creator in creator_entries %}
       <div class="image-wrapper" data-search-text="{{ creator.search_text }}">
         <a href="{{ creator.url }}" title="{{ creator.name }}">
@@ -40,6 +40,7 @@
 <script src="assets/js/filter_base.js"></script>
 <script src="assets/js/filter_simple.js"></script>
 <script src="assets/js/gallery_builder.js" defer></script>
+<script src="assets/js/pagination.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 
 </body>

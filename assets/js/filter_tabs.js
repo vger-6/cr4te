@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const query = input.value.trim().toLowerCase();
     const selectedTab = document.querySelector(".az-tab.active");
     const letter = selectedTab ? selectedTab.dataset.letter.toLowerCase() : null;
-    const terms = query.match(/"[^"]+"|\S+/g)?.map(term => term.replace(/"/g, "")) || [];
+    const terms = FilterBase.extractTerms(query);
 
     const visible = allWrappers.filter(entry => {
       const azString = entry.dataset.azString.toLowerCase();
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return query ? matchesTerms : matchesLetter;
     });
 
-    FilterBase.filterAndRender(gallery, visible);
+    FilterBase.filterAndPaginate(gallery, visible);
   }
 
   input.addEventListener("input", () => {

@@ -53,7 +53,7 @@ DEFAULT_CONFIG = {
         "collaboration_page_visible_collaboration_fields": [CollaborationField.NAME, CollaborationField.MEMBERS, CollaborationField.FOUNDED, CollaborationField.NATIONALITY, CollaborationField.ACTIVE_SINCE],
         "project_page_visible_project_fields": [ProjectField.TITLE, ProjectField.RELEASE_DATE],
         
-        "project_page_image_pagination_limit" : 15,
+        "project_page_image_pagination_limit" : 30,
         "project_page_show_image_captions": False,
         
         "image_gallery_max": 20,

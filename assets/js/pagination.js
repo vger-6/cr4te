@@ -1,32 +1,32 @@
-let IMAGES_PER_PAGE = 20;
-let currentPage = 1;
-let allWrappers = [];
+let IMAGES_PER_PAGE_DEFAULT = 20;
 
-function renderPage(page) {
-  const gallery = document.getElementById('imageGallery');
-  const galleries = document.querySelectorAll('.image-gallery');
-  galleries.forEach(initGallery);
-}
-
-function initGallery(gallery) {
-  const controls = document.createElement('div');
-  controls.className = 'pagination-controls';
-  gallery.parentElement.appendChild(controls);
+// TODO: break setupPagination into:
+// function renderPaginationControls(gallery, currentPage, totalPages, onPageClick)
+// function paginateWrappers(wrappers, pageSize, currentPage)
+function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAULT) {
+  let controls = gallery.parentElement.querySelector('.pagination-controls');
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.className = 'pagination-controls';
+    gallery.parentElement.appendChild(controls);
+  } else {
+    controls.style.display = ''; // un-hide if it was hidden previously
+  }
 
   let currentPage = 1;
-  let IMAGES_PER_PAGE = parseInt(gallery.dataset.pageSize) || 20;
-  const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
 
   function renderPage(page) {
-    const start = (page - 1) * IMAGES_PER_PAGE;
-    const end = start + IMAGES_PER_PAGE;
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
     const visibleWrappers = allWrappers.slice(start, end);
 
     gallery.innerHTML = '';
     visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
-    rebuildImageGallery?.();
 
-    const totalPages = Math.ceil(allWrappers.length / IMAGES_PER_PAGE);
+    rebuildImageGallery?.();
+    if (typeof rebindLightbox === 'function') rebindLightbox();
+
+    const totalPages = Math.ceil(allWrappers.length / pageSize);
     controls.innerHTML = '';
 
     if (totalPages > 1) {
@@ -37,7 +37,6 @@ function initGallery(gallery) {
         btn.onclick = () => {
           currentPage = i;
           renderPage(currentPage);
-          rebindLightbox?.();
         };
         controls.appendChild(btn);
       }
@@ -47,23 +46,21 @@ function initGallery(gallery) {
   }
 
   renderPage(currentPage);
+
   window.addEventListener('resize', () => renderPage(currentPage));
 }
 
+window.paginateGallery = setupPagination;
 
-window.addEventListener('DOMContentLoaded', () => {
-  const gallery = document.getElementById('imageGallery');
-  if (!gallery) return;
+// Auto-run pagination on pages without a search bar
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.image-gallery').forEach(gallery => {
+    const hasSearch = !!document.getElementById('search-input');
+    if (hasSearch && gallery.id === 'imageGallery') return; // skip; filtered separately
 
-  allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
-  const paginationContainer = document.createElement('div');
-  paginationContainer.className = 'pagination-controls';
-  gallery.parentElement.appendChild(paginationContainer);
-
-  renderPage(currentPage);
-});
-
-window.addEventListener('resize', () => {
-  renderPage(currentPage);
+    const wrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
+    const pageSize = parseInt(gallery.dataset.pageSize) || IMAGES_PER_PAGE_DEFAULT;
+    setupPagination(gallery, wrappers, pageSize);
+  });
 });
 

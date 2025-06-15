@@ -3,17 +3,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const { gallery, allWrappers } = FilterBase.getAllWrappers("#imageGallery");
 
   function filter() {
-    const terms = input.value.toLowerCase().match(/"[^"]+"|\S+/g)?.map(term => term.replace(/"/g, "")) || [];
+    const terms = FilterBase.extractTerms(input.value);
     const visible = allWrappers.filter(entry => {
       const searchText = entry.dataset.searchText?.toLowerCase() || "";
-      return terms.every(term =>
-        searchText.includes(term)
-      );
+      return terms.every(term => searchText.includes(term));
     });
-    FilterBase.filterAndRender(gallery, visible);
+
+    FilterBase.filterAndPaginate(gallery, visible);
   }
 
-  // Check for ?tag= query parameter and set the input value
+  // Set search from query param
   const params = new URLSearchParams(window.location.search);
   const tag = params.get('tag');
   if (tag && input) {
@@ -22,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   input.addEventListener("input", filter);
 
-  // Trigger initial filtering
+  // Initial run
   filter();
 });
 

@@ -145,43 +145,23 @@
 
   // Expose this globally so gallery pagination can rebind image click handlers
   window.rebindLightbox = function () {
-    const gallery = document.getElementById('imageGallery');
-    const lightboxEnabled = gallery?.dataset.lightbox !== "false";
-
     const galleries = document.querySelectorAll('.image-gallery[data-lightbox="true"]');
-    let allLinks = [];
 
     galleries.forEach(gallery => {
       const links = Array.from(gallery.querySelectorAll('.image-wrapper a')).filter(a => a.href);
+
       links.forEach((link, index) => {
         link.onclick = (e) => {
           e.preventDefault();
-          const currentGroup = links.map(a => a.href);
-          openLightbox(currentGroup, index);
+
+          // Re-scope current group to only this gallery’s current links
+          const currentGroupLinks = Array.from(gallery.querySelectorAll('.image-wrapper a')).filter(a => a.href);
+          const group = currentGroupLinks.map(a => a.href);
+          const startIndex = currentGroupLinks.indexOf(link);
+
+          openLightbox(group, startIndex);
         };
       });
-      allLinks = allLinks.concat(links);
-    });
-
-    const newImageLinks = allLinks.map(a => a.href);
-
-    if (!lightboxEnabled) {
-      allLinks.forEach(link => {
-        link.onclick = null;
-      });
-      return;
-    }
-
-    if (arraysEqual(newImageLinks, lastBoundLinks)) return;
-
-    lastBoundLinks = newImageLinks;
-    allImageLinks = newImageLinks;
-
-    allLinks.forEach((link, index) => {
-      link.onclick = (e) => {
-        e.preventDefault();
-        openLightbox(allImageLinks, index);
-      };
     });
   };
 

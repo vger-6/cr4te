@@ -22,15 +22,15 @@
 {% set placeholder = html_settings.project_overview_page_search_placeholder %}
 {% include "partials/_search_bar.html.j2" %}
 
-<div class="az-tabs">
+<!--div class="az-tabs">
   {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
     <span class="az-tab" data-letter="{{ letter }}">{{ letter }}</span>
   {% endfor %}
-</div>
+</div-->
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
     {% for project in projects %}
       <div class="image-wrapper" data-az-string="{{ project.title }}" data-search-text="{{ project.search_text | default('') }}">
         <a href="{{ project.url }}" title="{{ project.title }}">
@@ -45,8 +45,10 @@
 </div>
 
 <script src="assets/js/filter_base.js"></script>
-<script src="assets/js/filter_tabs.js"></script>
+<script src="assets/js/filter_simple.js"></script>
+<!--script src="assets/js/filter_tabs.js"></script-->
 <script src="assets/js/gallery_builder.js" defer></script>
+<script src="assets/js/pagination.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 
 </body>
