@@ -1,4 +1,4 @@
-{% macro render_media_groups(media_groups, html_settings, gallery_image_max_height) %}
+{% macro render_media_groups(media_groups, html_settings, gallery_image_max_height, page_size) %}
   {% for group in media_groups %}
     {% for section in group.sections %}
       {% if section.type == MediaType.VIDEO.value %}
@@ -43,7 +43,7 @@
             <div class="section-title">{{ group.image_section_title }}</div>
             <hr>
             <div class="section-content">
-              <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ html_settings.project_page_image_pagination_limit }}" data-image-max-height="{{ gallery_image_max_height }}">
+              <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
                 {% for image in section.images %}
                   <div class="image-wrapper">
                     <a href="{{ image.full_url }}" target="_blank">

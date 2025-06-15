@@ -30,7 +30,7 @@
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ poster_max_height }}" data-page-size="{{ html_settings.project_page_image_pagination_limit }}">
+    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ gallery_image_max_height }}" data-page-size="{{ html_settings.project_overview_page_image_page_size }}">
     {% for project in projects %}
       <div class="image-wrapper" data-az-string="{{ project.title }}" data-search-text="{{ project.search_text | default('') }}">
         <a href="{{ project.url }}" title="{{ project.title }}">

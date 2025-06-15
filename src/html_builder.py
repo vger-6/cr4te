@@ -167,7 +167,7 @@ def _build_project_overview_page(ctx: HtmlBuildContext, creators: list):
     rendered = template.render(
         projects=_collect_all_projects(ctx, creators),
         html_settings=ctx.html_settings,
-        poster_max_height=ThumbType.COVER.height,
+        gallery_image_max_height=ThumbType.THUMB.height,
     )
 
     with open(ctx.projects_html_path, "w", encoding="utf-8") as f:
@@ -617,7 +617,7 @@ def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator_entries=_build_creator_entries(ctx, creators),
-        creator_thumb_max_height=ThumbType.THUMB.height,
+        gallery_image_max_height=ThumbType.THUMB.height,
     )
 
     with open(ctx.index_html_path, 'w', encoding='utf-8') as f:

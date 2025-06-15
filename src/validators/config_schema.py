@@ -39,12 +39,19 @@ class HtmlSettings(BaseModel):
     project_page_image_section_base_title: str
 
     tags_page_title: str
+    
+    creator_overview_page_image_page_size: conint(ge=0)
+    
+    project_overview_page_image_page_size: conint(ge=0)
 
     creator_page_visible_creator_fields: List[CreatorField]
+    creator_page_image_page_size: conint(ge=0)
+    
     collaboration_page_visible_collaboration_fields: List[CollaborationField]
     project_page_visible_project_fields: List[ProjectField]
 
-    project_page_image_pagination_limit: conint(ge=0)
+    project_page_image_page_size: conint(ge=0)
+    
     project_page_show_image_captions: bool
 
     image_gallery_max: conint(ge=0)
