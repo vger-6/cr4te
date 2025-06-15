@@ -14,7 +14,7 @@ from pydantic import ValidationError
 import constants
 from enums.media_type import MediaType
 from enums.image_sample_strategy import ImageSampleStrategy
-from utils import slugify, get_relative_path, read_text, load_json
+from utils import slugify, get_relative_path, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -148,7 +148,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
     all_projects = []
     for creator in creators:
         for project in creator["projects"]: 
-            thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.PROJECT)
+            thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.COVER)
 
             all_projects.append({
                 "title": project["title"],
@@ -167,7 +167,7 @@ def _build_project_overview_page(ctx: HtmlBuildContext, creators: list):
     rendered = template.render(
         projects=_collect_all_projects(ctx, creators),
         html_settings=ctx.html_settings,
-        poster_max_height=ThumbType.PROJECT.height,
+        poster_max_height=ThumbType.COVER.height,
     )
 
     with open(ctx.projects_html_path, "w", encoding="utf-8") as f:
@@ -365,7 +365,7 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
     return participants
     
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
-    thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.POSTER)
+    thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
     return {
         "title": project["title"],
@@ -434,7 +434,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
     """
     project_entries = []
     for project in sorted(creator["projects"], key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.PROJECT)
+        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
         project_entries.append({
             "title": project["title"],
@@ -494,7 +494,7 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(ctx, creator, creators),
-        project_thumb_max_height=ThumbType.POSTER.height,
+        project_thumb_max_height=ThumbType.COVER.height,
         gallery_image_max_height=ThumbType.GALLERY.height
     )
 
@@ -560,7 +560,7 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         html_settings=ctx.html_settings,
         creator=_collect_collaboration_context(ctx, creator, creators),
         member_thumb_max_height=ThumbType.THUMB.height,
-        project_thumb_max_height=ThumbType.POSTER.height,
+        project_thumb_max_height=ThumbType.COVER.height,
         gallery_image_max_height=ThumbType.GALLERY.height
     )
 
@@ -646,15 +646,17 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
 
     return creators
         
-def _copy_assets(ctx: HtmlBuildContext) -> None:
+def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
     shutil.copytree(constants.CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
     print(f"Copied {constants.CR4TE_CSS_DIR.name} to {ctx.css_dir}")
        
     shutil.copytree(constants.CR4TE_JS_DIR, ctx.js_dir, dirs_exist_ok=True)
     print(f"Copied {constants.CR4TE_JS_DIR.name} to {ctx.js_dir}")
        
-    shutil.copytree(constants.CR4TE_DEFAULTS_DIR, ctx.defaults_dir, dirs_exist_ok=True)
-    print(f"Copied {constants.CR4TE_DEFAULTS_DIR.name} to {ctx.defaults_dir}")
+    ctx.defaults_dir.mkdir(parents=True, exist_ok=True)
+    create_centered_text_image(int(ThumbType.THUMB.height * 3 / 4), ThumbType.THUMB.height, "Thumb", ctx.defaults_dir / 'thumb.png')
+    create_centered_text_image(int(ThumbType.PORTRAIT.height * 3 / 4), ThumbType.PORTRAIT.height, "Portrait", ctx.defaults_dir / 'portrait.png')
+    create_centered_text_image(int(ThumbType.COVER.height * 4 / 3), ThumbType.COVER.height, "Cover", ctx.defaults_dir / 'cover.png')
     
 def _prepare_output_dirs(ctx: HtmlBuildContext) -> None:
     ctx.output_dir.mkdir(parents=True, exist_ok=True)
@@ -666,7 +668,7 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> 
     ctx = HtmlBuildContext(input_dir, output_dir, html_settings)
     
     _prepare_output_dirs(ctx)
-    _copy_assets(ctx)
+    _prepare_static_assets(ctx)
 
     creators = _collect_all_creators(ctx.input_dir)
             
