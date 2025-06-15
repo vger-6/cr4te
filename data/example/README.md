@@ -10,7 +10,6 @@ This folder contains example content to help new users get started quickly with 
 
 * [Contents](#contents)
 * [Quick-Start](#quick-start)
-* [Requirements](#requirements)
 * [Step-by-Step Guide](#step-by-step-guide)
 * [License & Usage](#license--usage)
 * [Attribution](#attribution)
@@ -26,15 +25,6 @@ This folder contains example content to help new users get started quickly with 
 Using the example content and *cr4te*, we are going to build HTML pages that look similar to this:
 
 <img src="project_page.png" alt="Screenshot Project Page" width="100%"/>
-
-## Requirements
-
-Install these Python packages (preferably in a virtual environment):
-
-* Python 3.10+
-* [Pillow](https://pypi.org/project/Pillow/)
-* [Markdown](https://pypi.org/project/Markdown/)
-* [Jinja2](https://pypi.org/project/Jinja2/)
 
 ## Step-by-Step Guide
 
