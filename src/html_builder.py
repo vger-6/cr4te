@@ -13,9 +13,10 @@ from pydantic import ValidationError
 
 import constants
 from enums.media_type import MediaType
+from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
 from utils import slugify, get_relative_path, read_text, load_json, create_centered_text_image
-from context.html_context import HtmlBuildContext, ThumbType, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
+from context.html_context import HtmlBuildContext, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["clear_output_folder", "build_html_pages"]
@@ -61,13 +62,15 @@ def _get_creator_slug(creator: Dict) -> str:
     
 def _get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}__{project['title']}")
-    
-def _build_slugified_filename(relative_path: Path, suffix: str) -> str:
+ 
+def _build_slugified_filename(relative_path: Path, tag: str) -> str:
     parts = [*relative_path.parent.parts, relative_path.stem]
+    if tag:
+        parts.append(tag)
     slug = slugify("__".join(parts))
-    return f"{slug}{suffix}"
+    return f"{slug}{relative_path.suffix.lower()}"
     
-def is_portrait(image_path : Path) -> bool:
+def _is_portrait(image_path : Path) -> bool:
     try:
         with Image.open(image_path) as img:
             width, height = img.size
@@ -78,26 +81,28 @@ def is_portrait(image_path : Path) -> bool:
     except Exception as e:
         print(f"Could not open image '{image_path}': {e}")
         return True
+        
+def _infer_layout_from_orientation(thumb_path: Path) -> str:
+    return "row" if _is_portrait(thumb_path) else "column"
     
-def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, thumb_type: ThumbType) -> Path:
-    filename = _build_slugified_filename(relative_image_path, thumb_type.suffix)
+def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, tag: str) -> Path:
+    filename = _build_slugified_filename(relative_image_path, tag)
     return thumb_dir / filename
     
-def _generate_thumbnail(source_path: Path, dest_path: Path, thumb_type: ThumbType) -> None:
+def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) -> None:
     with Image.open(source_path) as img:
-        target_height = thumb_type.height
         aspect_ratio = img.width / img.height
         target_width = int(target_height * aspect_ratio)
         resized = img.resize((target_width, target_height), Image.LANCZOS)
         dest_path.parent.mkdir(parents=True, exist_ok=True)
         resized.save(dest_path, format='JPEG')
                
-def _get_or_create_thumbnail(input_dir: Path, relative_image_path: Path, thumb_dir: Path, thumb_type: ThumbType) -> Path:
-    thumb_path = _get_thumbnail_path(thumb_dir, relative_image_path, thumb_type)
+def _get_or_create_thumbnail(ctx: HtmlBuildContext, relative_image_path: Path, thumb_type: ThumbType) -> Path:
+    thumb_path = _get_thumbnail_path(ctx.thumbs_dir, relative_image_path, thumb_type.value)
 
     if not thumb_path.exists():
         try:
-            _generate_thumbnail(input_dir / relative_image_path, thumb_path, thumb_type)
+            _generate_thumbnail(ctx.input_dir / relative_image_path, thumb_path, ctx.thumb_height(thumb_type))
         except Exception as e:
             print(f"Error creating thumbnail for {relative_image_path}: {e}")
 
@@ -109,8 +114,8 @@ def _resolve_thumbnail_or_default(ctx: HtmlBuildContext, relative_image_path: Op
     falling back to a default image if the input is None or missing.
     """
     if relative_image_path:
-        return _get_or_create_thumbnail(ctx.input_dir, Path(relative_image_path), ctx.thumbs_dir, thumb_type)
-    return ctx.default_image(thumb_type)
+        return _get_or_create_thumbnail(ctx, Path(relative_image_path), thumb_type)
+    return ctx.thumb_default(thumb_type)
     
 def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
     if max_images <= 0:
@@ -167,7 +172,7 @@ def _build_project_overview_page(ctx: HtmlBuildContext, creators: list):
     rendered = template.render(
         projects=_collect_all_projects(ctx, creators),
         html_settings=ctx.html_settings,
-        gallery_image_max_height=ThumbType.THUMB.height,
+        gallery_image_max_height=ctx.thumb_height(ThumbType.THUMB),
     )
 
     with open(ctx.projects_html_path, "w", encoding="utf-8") as f:
@@ -219,7 +224,7 @@ def _build_tags_page(ctx: HtmlBuildContext, creators: list):
         
 def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
     source_file = (input_dir / relative_path).resolve()
-    filename = _build_slugified_filename(relative_path, relative_path.suffix.lower())
+    filename = _build_slugified_filename(relative_path, "")
     dest_file = target_dir / filename
 
     dest_file.parent.mkdir(parents=True, exist_ok=True)
@@ -276,7 +281,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
         
         images = [
             {
-                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx.input_dir, Path(rel), ctx.thumbs_dir, ThumbType.GALLERY), base_path),
+                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), base_path),
                 "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.images_dir), base_path),
                 "caption": Path(rel).stem
             }
@@ -371,7 +376,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "title": project["title"],
         "release_date": project["release_date"],
         "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
-        "info_layout": "row" if is_portrait(thumb_path) else "column",
+        "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "participants": _collect_participant_entries(ctx, creator, project, creators),
@@ -389,7 +394,7 @@ def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, cre
     output_html = template.render(
         html_settings=ctx.html_settings,
         project=_collect_project_context(ctx, creator, project, creators),
-        gallery_image_max_height=ThumbType.GALLERY.height
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
     )
 
     page_path = ctx.projects_dir / f"{slug}.html"
@@ -476,7 +481,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
-        "info_layout": "row" if is_portrait(thumb_path) else "column",
+        "info_layout": _infer_layout_from_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -494,8 +499,8 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(ctx, creator, creators),
-        project_thumb_max_height=ThumbType.COVER.height,
-        gallery_image_max_height=ThumbType.GALLERY.height
+        project_thumb_max_height=ctx.thumb_height(ThumbType.COVER),
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
     )
 
     page_path = ctx.creators_dir / f"{slug}.html"
@@ -543,7 +548,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
         "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
-        "info_layout": "row" if is_portrait(thumb_path) else "column",
+        "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
@@ -559,9 +564,9 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator=_collect_collaboration_context(ctx, creator, creators),
-        member_thumb_max_height=ThumbType.THUMB.height,
-        project_thumb_max_height=ThumbType.COVER.height,
-        gallery_image_max_height=ThumbType.GALLERY.height
+        member_thumb_max_height=ctx.thumb_height(ThumbType.THUMB),
+        project_thumb_max_height=ctx.thumb_height(ThumbType.COVER),
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
     )
 
     page_path = ctx.creators_dir / f"{slug}.html"
@@ -617,7 +622,7 @@ def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator_entries=_build_creator_entries(ctx, creators),
-        gallery_image_max_height=ThumbType.THUMB.height,
+        gallery_image_max_height=ctx.thumb_height(ThumbType.THUMB)
     )
 
     with open(ctx.index_html_path, 'w', encoding='utf-8') as f:
@@ -654,9 +659,12 @@ def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
     print(f"Copied {constants.CR4TE_JS_DIR.name} to {ctx.js_dir}")
        
     ctx.defaults_dir.mkdir(parents=True, exist_ok=True)
-    create_centered_text_image(int(ThumbType.THUMB.height * 3 / 4), ThumbType.THUMB.height, "Thumb", ctx.defaults_dir / 'thumb.png')
-    create_centered_text_image(int(ThumbType.PORTRAIT.height * 3 / 4), ThumbType.PORTRAIT.height, "Portrait", ctx.defaults_dir / 'portrait.png')
-    create_centered_text_image(int(ThumbType.COVER.height * 4 / 3), ThumbType.COVER.height, "Cover", ctx.defaults_dir / 'cover.png')
+    thumb_height = ctx.thumb_height(ThumbType.THUMB)
+    create_centered_text_image(int(thumb_height * 3 / 4), thumb_height, "Thumb", ctx.defaults_dir / ctx.thumb_default(ThumbType.THUMB))
+    portrait_height = ctx.thumb_height(ThumbType.PORTRAIT)
+    create_centered_text_image(int(portrait_height * 3 / 4), portrait_height, "Portrait", ctx.defaults_dir / ctx.thumb_default(ThumbType.PORTRAIT))
+    cover_height = ctx.thumb_height(ThumbType.COVER)
+    create_centered_text_image(int(cover_height * 4 / 3), cover_height, "Cover", ctx.thumb_default(ThumbType.COVER))
     
 def _prepare_output_dirs(ctx: HtmlBuildContext) -> None:
     ctx.output_dir.mkdir(parents=True, exist_ok=True)

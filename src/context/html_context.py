@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict
 from enum import Enum
 
+from enums.thumb_type import ThumbType
 from context.base_context import BaseContext
 from constants import (
     SCRIPT_DIR,
@@ -15,17 +16,6 @@ from constants import (
 CREATORS_DIRNAME = "creators"
 PROJECTS_DIRNAME = "projects"
 THUMBNAILS_DIRNAME = "thumbnails"
-
-# TODO: move to enums
-class ThumbType(Enum):
-    THUMB = ("_thumb.jpg", 300)
-    PORTRAIT = ("_portrait.jpg", 450)
-    COVER = ("_cover.jpg", 600)
-    GALLERY = ("_gallery.jpg", 450)
-
-    def __init__(self, suffix: str, height: int):
-        self.suffix = suffix
-        self.height = height
 
 @dataclass
 class HtmlBuildContext(BaseContext):
@@ -88,11 +78,19 @@ class HtmlBuildContext(BaseContext):
     def tags_html_path(self) -> Path:
         return self.output_dir / "tags.html"
 
-    def default_image(self, thumb_type: ThumbType) -> Path:
+    def thumb_default(self, thumb_type: ThumbType) -> Path:
         return self.defaults_dir / {
             ThumbType.THUMB: "thumb.png",
             ThumbType.PORTRAIT: "portrait.png",
             ThumbType.COVER: "cover.png",
             ThumbType.GALLERY: "thumb.png",
+        }[thumb_type]
+        
+    def thumb_height(self, thumb_type: ThumbType) -> int:
+        return {
+            ThumbType.THUMB: 300,
+            ThumbType.PORTRAIT: 450,
+            ThumbType.COVER: 600,
+            ThumbType.GALLERY: 450,
         }[thumb_type]
 
