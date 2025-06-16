@@ -3,10 +3,11 @@
 > **⚠️ Under Construction**
 > This project is still in development. Features, structure, and configuration may change without notice.
 
-A fast, static site generator for organizing and showcasing creative media collections.
+A fast, static site generator for organizing and showcasing media collections.
+
 cr4te scans your existing folder structure, extracts metadata and media (images, videos, audio, documents), and generates clean, responsive HTML galleries. With built-in search, tagging, filtering, and pagination, it's ideal for archiving, browsing, or publishing rich media portfolios—no manual curation or database required.
 
-<img src="data/example/artist_page.png" alt="Screenshot Creator Page" width="100%"/>
+<img src="data/example/artist_page.png" alt="Screenshot Artist Page" width="100%"/>
 
 [View full gallery](SCREENSHOTS.md)
 
@@ -45,10 +46,10 @@ Domain/
 
 This could represent domains like:
 
-* Music → Musician → Album
-* Library → Author → Book
-* Movies → Director → Film
-* Design Portfolios → Designer → Project
+* **Music** → Musician → Album
+* **Library** → Author → Book
+* **Movies** → Director → Film
+* **Design Portfolios** → Designer → Project
 
 ...and so on.
 

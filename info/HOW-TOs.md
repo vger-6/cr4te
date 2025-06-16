@@ -1,4 +1,4 @@
-# How Tos
+# How-Tos
 
 ## Create Default Images
 
