@@ -1,6 +1,7 @@
 import sys
 import argparse
 import webbrowser
+import json
 from pathlib import Path
 from typing import Dict, Any
 
@@ -47,6 +48,9 @@ def main():
     html_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
+    
+    # print-config
+    config_parser = subparsers.add_parser("print-config", help="Print the default configuration as JSON")
     
     args = parser.parse_args()
     
@@ -108,6 +112,9 @@ def main():
         
         if args.open:
             webbrowser.open(f"file://{html_index_path.resolve()}")
+            
+    elif args.command == "print-config":
+        print(json.dumps(cfg.DEFAULT_CONFIG, indent=4))
 
 if __name__ == "__main__":
     main()
