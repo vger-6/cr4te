@@ -1,4 +1,5 @@
 import json
+import re
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional, Any
@@ -24,6 +25,15 @@ TEXT_EXTS = (".md",)
 class Orientation(Enum):
     PORTRAIT = "portrait"
     LANDSCAPE = "landscape"
+    
+def _split(text: str, separators: List[str]) -> List[str]:
+    """
+    Splits the input text using any of the provided multi-character separators.
+    """
+    if not separators:
+        return [text]  # fallback: no split
+    pattern = "|".join(re.escape(sep) for sep in separators)
+    return [part for part in re.split(pattern, text) if part]
     
 def _validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
@@ -182,10 +192,10 @@ def _build_creator_media_groups(ctx: JsonBuildContext, creator_path: Path, exist
 
     return media_groups
         
-def _is_collaboration(name: str, separator: Optional[str]) -> bool:
-    if not separator:
+def _is_collaboration(name: str, separators: Optional[List[str]]) -> bool:
+    if not separators:
         return False
-    return separator in name
+    return any(sep in name for sep in separators)
     
 def _load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
@@ -200,10 +210,10 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     all_images = _find_all_images(creator_path, ctx.media_rules["global_exclude_prefix"])
     portrait = _select_best_image(all_images, "portrait", Orientation.PORTRAIT)
     
-    separator = ctx.media_rules["collaboration_separator"]
+    separators = ctx.media_rules["collaboration_separators"]
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
-        is_collab = _is_collaboration(creator_name, separator)
+        is_collab = _is_collaboration(creator_name, separators)
     
     creator = {
         "name": creator_name,
@@ -221,7 +231,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     }
     
     if is_collab:
-        members = [name.strip() for name in creator_name.split(separator)]
+        members = [name.strip() for name in _split(creator_name, separators)]
         creator["members"] = existing_creator.get("members", members)
     else:
         creator["members"] = []

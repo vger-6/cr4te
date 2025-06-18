@@ -73,7 +73,7 @@ DEFAULT_CONFIG = {
         "global_exclude_prefix": "_",
         
         "metadata_folder_name": "meta",
-        "collaboration_separator": " & ",
+        "collaboration_separators": ["&", ","],
     }
 }
 

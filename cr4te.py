@@ -7,7 +7,7 @@ from typing import Dict, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
-import config as cfg
+import config_manager as cfg
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.label_preset import LabelPreset
 from html_builder import clear_output_folder, build_html_pages

@@ -64,7 +64,7 @@ class MediaRules(BaseModel):
     max_depth: conint(ge=0)
     global_exclude_prefix: str
     metadata_folder_name: str
-    collaboration_separator: str
+    collaboration_separators: List[str]
 
 # Top-level config schema
 class AppConfig(BaseModel):
