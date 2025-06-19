@@ -88,7 +88,7 @@ class HtmlBuildContext(BaseContext):
         
     def thumb_height(self, thumb_type: ThumbType) -> int:
         return {
-            ThumbType.THUMB: 300,
+            ThumbType.THUMB: 350,
             ThumbType.PORTRAIT: 450,
             ThumbType.COVER: 600,
             ThumbType.GALLERY: 450,

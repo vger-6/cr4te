@@ -12,6 +12,7 @@ from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
 from enums.label_preset import LabelPreset
+from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 
 __all__ = ["load_config", "apply_cli_media_overrides", "update_html_labels"]
 
@@ -50,8 +51,12 @@ DEFAULT_CONFIG = {
         "tags_page_title": "Tags",
         
         "creator_overview_page_image_page_size": 50,
+        "creator_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+        "creator_overview_page_image_gallery_aspect_ratio": "3/4",
         
         "project_overview_page_image_page_size": 25,
+        "project_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+        "project_overview_page_image_gallery_aspect_ratio": "4/3",
         
         "creator_page_visible_creator_fields": [f for f in CreatorField],
         "creator_page_image_page_size" : 15,

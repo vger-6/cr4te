@@ -312,3 +312,35 @@ a:focus {
   cursor: default;
   text-decoration: none;
 }
+
+/* Applies ONLY for the aspect gallery */
+.image-gallery--aspect {
+  display: grid;
+  gap: 1rem;
+}
+
+.image-gallery--aspect .image-wrapper {
+  display: block;
+}
+
+.image-gallery--aspect .image-wrapper a {
+  display: block;
+  text-align: left;
+}
+
+.image-gallery--aspect .aspect-ratio-box {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3; /* default fallback */
+}
+
+.image-gallery--aspect .aspect-ratio-box img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+

@@ -24,22 +24,38 @@
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery" id="imageGallery" data-image-max-height="{{ gallery_image_max_height }}" data-page-size="{{ html_settings.creator_overview_page_image_page_size }}">
-    {% for creator in creator_entries %}
-      <div class="image-wrapper" data-search-text="{{ creator.search_text }}">
-        <a href="{{ creator.url }}" title="{{ creator.name }}">
-          <img src="{{ creator.thumbnail_url }}" alt="{{ creator.name }} thumbnail">
-          <span>{{ creator.name }}</span>
-        </a>
-      </div>
-    {% endfor %}
+    <div class="image-gallery {% if html_settings.creator_overview_page_image_gallery_building_strategy == 'aspect' %} image-gallery--aspect {% endif %}"
+         id="imageGallery"
+         data-image-max-height="{{ gallery_image_max_height }}"
+         data-page-size="{{ html_settings.creator_overview_page_image_page_size }}"
+         data-aspect-ratio="{{ html_settings.creator_overview_page_image_gallery_aspect_ratio or '1/1' }}">
+      {% for creator in creator_entries %}
+        <div class="image-wrapper" 
+             data-search-text="{{ creator.search_text }}"
+             data-az-string="{{ creator.name }}">
+          <a href="{{ creator.url }}" title="{{ creator.name }}">
+            {% if html_settings.creator_overview_page_image_gallery_building_strategy == 'aspect' %}
+              <div class="aspect-ratio-box" style="aspect-ratio: {{ html_settings.creator_overview_page_image_gallery_aspect_ratio or '1/1' }};">
+                <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
+              </div>
+            {% else %}
+              <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
+            {% endif %}
+            <span>{{ creator.name }}</span><br>
+          </a>
+        </div>
+      {% endfor %}
     </div>
   </div>
 </div>
 
 <script src="assets/js/filter_base.js"></script>
 <script src="assets/js/filter_simple.js"></script>
-<script src="assets/js/gallery_builder.js" defer></script>
+{% if html_settings.creator_overview_page_image_gallery_building_strategy == "aspect" %}
+  <script src="assets/js/aspect_gallery_builder.js" defer></script>
+{% else %}
+  <script src="assets/js/gallery_builder.js" defer></script>
+{% endif %}
 <script src="assets/js/pagination.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 

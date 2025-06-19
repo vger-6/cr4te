@@ -1,9 +1,11 @@
 from enum import Enum
 from typing import List
+import re
 
 from pydantic import BaseModel, conint, validator
 
 from enums.image_sample_strategy import ImageSampleStrategy
+from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from enums.media_type import MediaType
 from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 
@@ -41,8 +43,12 @@ class HtmlSettings(BaseModel):
     tags_page_title: str
     
     creator_overview_page_image_page_size: conint(ge=0)
+    creator_overview_page_image_gallery_building_strategy: ImageGalleryBuildingStrategy
+    creator_overview_page_image_gallery_aspect_ratio: str
     
     project_overview_page_image_page_size: conint(ge=0)
+    project_overview_page_image_gallery_building_strategy: ImageGalleryBuildingStrategy
+    project_overview_page_image_gallery_aspect_ratio: str
 
     creator_page_visible_creator_fields: List[CreatorField]
     creator_page_image_page_size: conint(ge=0)
@@ -58,6 +64,16 @@ class HtmlSettings(BaseModel):
     image_gallery_sample_strategy: ImageSampleStrategy
 
     type_order: List[MediaType]
+    
+    @validator('project_overview_page_image_gallery_aspect_ratio', 'creator_overview_page_image_gallery_aspect_ratio')
+    def validate_aspect_ratio_colon_format(cls, v):
+        match = re.match(r'^(\d+)/(\d+)$', v.strip())
+        if not match:
+            raise ValueError("Aspect ratio must be in the format 'w:h' (e.g., '4/3')")
+        w, h = map(int, match.groups())
+        if w <= 0 or h <= 0:
+            raise ValueError("Aspect ratio values must be greater than zero")
+        return v.strip()
 
 # Media rules schema
 class MediaRules(BaseModel):
