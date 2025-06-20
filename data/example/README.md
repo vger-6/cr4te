@@ -60,7 +60,7 @@ python cr4te.py build-json -i example/data/Artists
 Generate the HTML site:
 
 ```bash
-python /path/to/cr4te/cr4te.py build-html -i example/data/Artists -o <output_folder> --open
+python cr4te.py build-html -i example/data/Artists -o <output_folder> --open
 ```
 E.g. replace `<output_folder>` with `example/data/out`
 

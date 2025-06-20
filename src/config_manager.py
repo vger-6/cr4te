@@ -50,11 +50,11 @@ DEFAULT_CONFIG = {
         
         "tags_page_title": "Tags",
         
-        "creator_overview_page_image_page_size": 50,
+        "creator_overview_page_image_page_size": 100,
         "creator_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
         "creator_overview_page_image_gallery_aspect_ratio": "3/4",
         
-        "project_overview_page_image_page_size": 25,
+        "project_overview_page_image_page_size": 100,
         "project_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
         "project_overview_page_image_gallery_aspect_ratio": "4/3",
         
