@@ -36,11 +36,16 @@ class HtmlSettings(BaseModel):
     project_page_overview_title: str
     project_page_description_title: str
     project_page_tags_title: str
-    project_page_creator_profile: str
+    project_page_creator_profile_title: str
     project_page_audio_section_base_title: str
     project_page_image_section_base_title: str
 
     tags_page_title: str
+    
+    image_gallery_max: conint(ge=0)
+    image_gallery_sample_strategy: ImageSampleStrategy
+    
+    media_type_order: List[MediaType]
     
     creator_gallery_building_strategy: ImageGalleryBuildingStrategy
     creator_gallery_aspect_ratio: str
@@ -48,24 +53,19 @@ class HtmlSettings(BaseModel):
     project_gallery_building_strategy: ImageGalleryBuildingStrategy
     project_gallery_aspect_ratio: str
     
-    creator_overview_page_image_page_size: conint(ge=0)
+    creator_overview_page_creator_gallery_page_size: conint(ge=0)
     
-    project_overview_page_image_page_size: conint(ge=0)
+    project_overview_page_project_gallery_page_size: conint(ge=0)
     
     creator_page_visible_creator_fields: List[CreatorField]
-    creator_page_image_page_size: conint(ge=0)
+    creator_page_image_gallery_page_size: conint(ge=0)
     
     collaboration_page_visible_collaboration_fields: List[CollaborationField]
     project_page_visible_project_fields: List[ProjectField]
 
-    project_page_image_page_size: conint(ge=0)
+    project_page_image_gallery_page_size: conint(ge=0)
     
-    project_page_show_image_captions: bool
-
-    image_gallery_max: conint(ge=0)
-    image_gallery_sample_strategy: ImageSampleStrategy
-
-    type_order: List[MediaType]
+    project_page_image_gallery_captions_visible: bool
     
     @validator('project_gallery_aspect_ratio', 'creator_gallery_aspect_ratio')
     def validate_aspect_ratio_colon_format(cls, v):

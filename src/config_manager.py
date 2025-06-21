@@ -44,11 +44,16 @@ DEFAULT_CONFIG = {
         "project_page_overview_title": "Overview",
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
-        "project_page_creator_profile": "Creator Profile",
+        "project_page_creator_profile_title": "Creator Profile",
         "project_page_audio_section_base_title": "Tracks",
         "project_page_image_section_base_title": "Images",
         
         "tags_page_title": "Tags",
+        
+        "image_gallery_max": 20,
+        "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD,
+        
+        "media_type_order": [MediaType.VIDEO, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT],
         
         "creator_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
         "creator_gallery_aspect_ratio": "3/4",
@@ -56,23 +61,18 @@ DEFAULT_CONFIG = {
         "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
         "project_gallery_aspect_ratio": "4/3",
         
-        "creator_overview_page_image_page_size": 100,
+        "creator_overview_page_creator_gallery_page_size": 100,
         
-        "project_overview_page_image_page_size": 100,
+        "project_overview_page_project_gallery_page_size": 100,
         
         "creator_page_visible_creator_fields": [f for f in CreatorField],
-        "creator_page_image_page_size" : 15,
+        "creator_page_image_gallery_page_size" : 15,
         
         "collaboration_page_visible_collaboration_fields": [f for f in CollaborationField],
         
         "project_page_visible_project_fields": [f for f in ProjectField],
-        "project_page_image_page_size" : 15,
-        "project_page_show_image_captions": False,
-        
-        "image_gallery_max": 20,
-        "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD,
-        
-        "type_order": [MediaType.VIDEO, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT],
+        "project_page_image_gallery_page_size" : 15,
+        "project_page_image_gallery_captions_visible": False,
     },
     "media_rules": {   
         "max_depth": 5,
@@ -146,7 +146,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "project_page_audio_section_base_title": "Soundtrack",
                 "creator_page_collabs_title_prefix": "Codirected with",
                 "collaboration_page_projects_title": "Movies",
-                "project_page_creator_profile": "Profile",
+                "project_page_creator_profile_title": "Profile",
             }
         case LabelPreset.MUSIC:
             return {
@@ -159,7 +159,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "creator_page_projects_title": "Albums",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",
-                "project_page_creator_profile": "Profile",
+                "project_page_creator_profile_title": "Profile",
             }
         case LabelPreset.ART:
             return {
@@ -173,7 +173,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Works",
-                "project_page_creator_profile": "Profile"
+                "project_page_creator_profile_title": "Profile"
             }
         case LabelPreset.BOOK:
             return {
@@ -187,7 +187,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Books",
-                "project_page_creator_profile": "Profile"
+                "project_page_creator_profile_title": "Profile"
             }
         case LabelPreset.MODEL:
             return {
@@ -201,7 +201,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "creator_page_collabs_title_prefix": "Scenes with",
                 "collaboration_page_members_title": "Featuring",
                 "collaboration_page_projects_title": "Scenes",
-                "project_page_creator_profile": "Model Profile"
+                "project_page_creator_profile_title": "Model Profile"
             }
         case _:
             raise ValueError(f"Unknown preset: {preset}")

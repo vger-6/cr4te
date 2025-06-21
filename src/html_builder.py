@@ -236,8 +236,8 @@ def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> P
 
     return dest_file
     
-def _sort_sections_by_type(sections: List[Dict], type_order: List[str]) -> List[Dict]:
-    order_map = {t: i for i, t in enumerate(dict.fromkeys(type_order))}
+def _sort_sections_by_type(sections: List[Dict], media_type_order: List[str]) -> List[Dict]:
+    order_map = {t: i for i, t in enumerate(dict.fromkeys(media_type_order))}
     fallback_order = len(order_map)
 
     return sorted(sections, key=lambda s: order_map.get(s["type"], fallback_order))
@@ -335,7 +335,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         media_groups_context.append({
             **section_titles,
-            "sections": _sort_sections_by_type(sections, ctx.html_settings["type_order"])
+            "sections": _sort_sections_by_type(sections, ctx.html_settings["media_type_order"])
         })
 
     return media_groups_context

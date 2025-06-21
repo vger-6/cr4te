@@ -36,7 +36,7 @@
     <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
          id="imageGallery"
          data-image-max-height="{{ gallery_image_max_height }}"
-         data-page-size="{{ html_settings.project_overview_page_image_page_size }}"
+         data-page-size="{{ html_settings.project_overview_page_project_gallery_page_size }}"
          data-aspect-ratio="{{ aspect_ratio }}">
       {% for project in projects %}
         <div class="image-wrapper"
