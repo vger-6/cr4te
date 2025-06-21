@@ -11,10 +11,10 @@ from validators.config_schema import AppConfig
 from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
-from enums.label_preset import LabelPreset
+from enums.domain_preset import DomainPreset
 from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 
-__all__ = ["load_config", "apply_cli_media_overrides", "update_html_labels"]
+__all__ = ["load_config", "apply_cli_overrides"]
 
 # === Default internal config ===
 DEFAULT_CONFIG = {
@@ -108,33 +108,27 @@ def load_config(user_config_path: Path = None) -> Dict:
     _validate_config(config)
 
     return config
-    
-def update_html_labels(config: Dict, preset_str: str) -> Dict:
-    preset = LabelPreset(preset_str)
-    overrides = _get_html_label_presets(preset) 
-    config["html_settings"].update(overrides)
-    
-    _validate_config(config)
-
-    return config
        
-def apply_cli_media_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None) -> Dict:
+def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, domain_preset: Optional[DomainPreset] = None) -> Dict:
     if image_gallery_max is not None:
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
+    if domain_preset is not None:
+        overrides = _get_domain_presets(domain_preset)
+        config["html_settings"].update(overrides)
     
     _validate_config(config)
 
     return config
  
-def _get_html_label_presets(preset: LabelPreset) -> Dict:
+def _get_domain_presets(preset: DomainPreset) -> Dict:
     """
-    Returns only the labels that are overridden by the selected preset. 
-    Other configuration fields remain untouched.
+    Returns all config overrides for the selected domain preset, 
+    including labels, media ordering, and gallery settings.
     """
     match preset:
-        case LabelPreset.FILM:
+        case DomainPreset.FILM:
             return {
                 "nav_creators_label": "Directors",
                 "nav_projects_label": "Movies",
@@ -148,7 +142,7 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "collaboration_page_projects_title": "Movies",
                 "project_page_creator_profile_title": "Profile",
             }
-        case LabelPreset.MUSIC:
+        case DomainPreset.MUSIC:
             return {
                 "nav_creators_label": "Musicians",
                 "nav_projects_label": "Albums",
@@ -160,8 +154,11 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",
                 "project_page_creator_profile_title": "Profile",
+                "media_type_order": [MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.VIDEO],
+                "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+                "project_gallery_aspect_ratio": "1/1",
             }
-        case LabelPreset.ART:
+        case DomainPreset.ART:
             return {
                 "nav_creators_label": "Artists",
                 "nav_projects_label": "Works",
@@ -173,9 +170,9 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Works",
-                "project_page_creator_profile_title": "Profile"
+                "project_page_creator_profile_title": "Profile",
             }
-        case LabelPreset.BOOK:
+        case DomainPreset.BOOK:
             return {
                 "nav_creators_label": "Author",
                 "nav_projects_label": "Books",
@@ -187,9 +184,12 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "project_page_audio_section_base_title": "Audio",
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Books",
-                "project_page_creator_profile_title": "Profile"
+                "project_page_creator_profile_title": "Profile",
+                "media_type_order": [MediaType.DOCUMENT, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.VIDEO],
+                "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+                "project_gallery_aspect_ratio": "1.414/1",
             }
-        case LabelPreset.MODEL:
+        case DomainPreset.MODEL:
             return {
                 "nav_creators_label": "Models",
                 "nav_projects_label": "Scenes",
@@ -201,7 +201,8 @@ def _get_html_label_presets(preset: LabelPreset) -> Dict:
                 "creator_page_collabs_title_prefix": "Scenes with",
                 "collaboration_page_members_title": "Featuring",
                 "collaboration_page_projects_title": "Scenes",
-                "project_page_creator_profile_title": "Model Profile"
+                "project_page_creator_profile_title": "Model Profile",
+                "media_type_order": [MediaType.VIDEO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.AUDIO],
             }
         case _:
             raise ValueError(f"Unknown preset: {preset}")

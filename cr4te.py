@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import config_manager as cfg
 from enums.image_sample_strategy import ImageSampleStrategy
-from enums.label_preset import LabelPreset
+from enums.domain_preset import DomainPreset
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import build_creator_json_files, clean_creator_json_files
 
@@ -31,7 +31,7 @@ def main():
     build_parser.add_argument("-i", "--input", help="Path to the Creators folder")
     build_parser.add_argument("-o", "--output", help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
-    build_parser.add_argument("--label-preset", choices=[m.value for m in LabelPreset], default=LabelPreset.ART, help="Apply a preset label scheme for HTML")
+    build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], default=DomainPreset.ART, help="Apply a common domain preset")
     build_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], default=ImageSampleStrategy.SPREAD, help="Strategy to sample images per folder")
     build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
@@ -56,14 +56,13 @@ def main():
                 
         config = _load_config(args.config)
         
-        config = cfg.apply_cli_media_overrides(
+        config = cfg.apply_cli_overrides(
             config,
             image_gallery_max=args.max_images,
-            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy)
+            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy),
+            domain_preset=DomainPreset(args.domain_preset)
         )
 
-        config = cfg.update_html_labels(config, args.label_preset)
-        
         if args.print_config_only:
             # Only warn if output is not redirected
             if sys.stdout.isatty():

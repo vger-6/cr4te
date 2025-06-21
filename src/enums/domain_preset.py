@@ -1,6 +1,6 @@
 from enum import Enum
 
-class LabelPreset(str, Enum):
+class DomainPreset(str, Enum):
     ART = "art"
     MUSIC = "music"
     FILM = "film"
