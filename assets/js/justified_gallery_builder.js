@@ -1,7 +1,16 @@
+function parseGapValue(value) {
+  if (value.endsWith('rem')) {
+    const rem = parseFloat(value);
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  }
+  return parseFloat(value);
+}
+
 function rebuildJustifiedImageGallery() {
   document.querySelectorAll('.image-gallery--justified').forEach(gallery => {
     const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
-    const gap = 16;
+    const computedStyle = window.getComputedStyle(gallery);
+    const gap = parseGapValue(computedStyle.columnGap || computedStyle.gap || "1rem");
     const galleryWidth = gallery.clientWidth;
 
     const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));

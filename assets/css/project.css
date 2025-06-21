@@ -22,7 +22,7 @@
 
 .project-info--row img {
   width: 100%;
-  max-width: 200px;
+  max-width: 12.5rem;
 }
 
 .creator-info {
@@ -37,7 +37,7 @@
 
 .creator-info img {
   width: 100%;
-  max-width: 200px;
+  max-width: 12.5rem;
 }
 
 .creator-info > div > *:first-child,

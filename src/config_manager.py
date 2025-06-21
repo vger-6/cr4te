@@ -56,10 +56,10 @@ DEFAULT_CONFIG = {
         "media_type_order": [MediaType.VIDEO, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT],
         
         "creator_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-        "creator_gallery_aspect_ratio": "3/4",
+        "creator_gallery_aspect_ratio": "2/3",
         
         "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-        "project_gallery_aspect_ratio": "4/3",
+        "project_gallery_aspect_ratio": "3/2",
         
         "creator_overview_page_creator_gallery_page_size": 100,
         
@@ -190,7 +190,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                 "project_page_creator_profile_title": "Profile",
                 "media_type_order": [MediaType.DOCUMENT, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.VIDEO],
                 "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-                "project_gallery_aspect_ratio": "1.414/1",
+                "project_gallery_aspect_ratio": "1000/1414",
             }
         case DomainPreset.MODEL:
             return {
