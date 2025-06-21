@@ -22,12 +22,12 @@
 {% set placeholder = html_settings.creator_overview_page_search_placeholder %}
 {% include "partials/_search_bar.html.j2" %}
 
-{% set is_aspect = html_settings.creator_overview_page_image_gallery_building_strategy == 'aspect' %}
-{% set aspect_ratio = html_settings.creator_overview_page_image_gallery_aspect_ratio or '1/1' %}
+{% set is_aspect = html_settings.creator_gallery_building_strategy == 'aspect' %}
+{% set aspect_ratio = html_settings.creator_gallery_aspect_ratio or '1/1' %}
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery {% if is_aspect %}image-gallery--aspect{% endif %}"
+    <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
          id="imageGallery"
          data-image-max-height="{{ gallery_image_max_height }}"
          data-page-size="{{ html_settings.creator_overview_page_image_page_size }}"
@@ -37,13 +37,7 @@
              data-search-text="{{ creator.search_text }}"
              data-az-string="{{ creator.name }}">
           <a href="{{ creator.url }}" title="{{ creator.name }}">
-            {% if is_aspect %}
-              <div class="aspect-ratio-box" style="aspect-ratio: {{ aspect_ratio }};">
-                <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
-              </div>
-            {% else %}
-              <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
-            {% endif %}
+            <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
             <span>{{ creator.name }}</span><br>
           </a>
         </div>
@@ -54,11 +48,8 @@
 
 <script src="assets/js/filter_base.js"></script>
 <script src="assets/js/filter_simple.js"></script>
-{% if is_aspect %}
-  <script src="assets/js/aspect_gallery_builder.js" defer></script>
-{% else %}
-  <script src="assets/js/gallery_builder.js" defer></script>
-{% endif %}
+<script src="assets/js/aspect_gallery_builder.js" defer></script>
+<script src="assets/js/justified_gallery_builder.js" defer></script>
 <script src="assets/js/pagination.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 

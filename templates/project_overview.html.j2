@@ -28,12 +28,12 @@
   {% endfor %}
 </div-->
 
-{% set is_aspect = html_settings.project_overview_page_image_gallery_building_strategy == 'aspect' %}
-{% set aspect_ratio = html_settings.project_overview_page_image_gallery_aspect_ratio or '1/1' %}
+{% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
+{% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
 
 <div class="section-box">
   <div class="section-content">
-    <div class="image-gallery {% if is_aspect %}image-gallery--aspect{% endif %}"
+    <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
          id="imageGallery"
          data-image-max-height="{{ gallery_image_max_height }}"
          data-page-size="{{ html_settings.project_overview_page_image_page_size }}"
@@ -43,13 +43,7 @@
              data-az-string="{{ project.title }}"
              data-search-text="{{ project.search_text | default('') }}">
           <a href="{{ project.url }}" title="{{ project.title }}">
-            {% if is_aspect %}
-              <div class="aspect-ratio-box" style="aspect-ratio: {{ aspect_ratio }};">
-                <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}">
-              </div>
-            {% else %}
-              <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}">
-            {% endif %}
+            <img src="{{ project.thumbnail_url }}" alt="Poster for {{ project.title }}">
             <span>{{ project.title }}</span><br>
             <span><small>{{ project.creator_name }}</small></span>
           </a>
@@ -62,11 +56,8 @@
 <script src="assets/js/filter_base.js"></script>
 <script src="assets/js/filter_simple.js"></script>
 <!--script src="assets/js/filter_tabs.js"></script-->
-{% if is_aspect %}
-  <script src="assets/js/aspect_gallery_builder.js" defer></script>
-{% else %}
-  <script src="assets/js/gallery_builder.js" defer></script>
-{% endif %}
+<script src="assets/js/aspect_gallery_builder.js" defer></script>
+<script src="assets/js/justified_gallery_builder.js" defer></script>
 <script src="assets/js/pagination.js" defer></script>
 <script src="assets/js/theme_selector.js" defer></script>
 

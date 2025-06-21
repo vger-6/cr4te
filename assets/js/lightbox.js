@@ -145,7 +145,7 @@
 
   // Expose this globally so gallery pagination can rebind image click handlers
   window.rebindLightbox = function () {
-    const galleries = document.querySelectorAll('.image-gallery[data-lightbox="true"]');
+    const galleries = document.querySelectorAll('.image-gallery--justified[data-lightbox="true"], .image-gallery--aspect[data-lightbox="true"]');
 
     galleries.forEach(gallery => {
       const links = Array.from(gallery.querySelectorAll('.image-wrapper a')).filter(a => a.href);

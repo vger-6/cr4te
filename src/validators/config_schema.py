@@ -42,14 +42,16 @@ class HtmlSettings(BaseModel):
 
     tags_page_title: str
     
+    creator_gallery_building_strategy: ImageGalleryBuildingStrategy
+    creator_gallery_aspect_ratio: str
+    
+    project_gallery_building_strategy: ImageGalleryBuildingStrategy
+    project_gallery_aspect_ratio: str
+    
     creator_overview_page_image_page_size: conint(ge=0)
-    creator_overview_page_image_gallery_building_strategy: ImageGalleryBuildingStrategy
-    creator_overview_page_image_gallery_aspect_ratio: str
     
     project_overview_page_image_page_size: conint(ge=0)
-    project_overview_page_image_gallery_building_strategy: ImageGalleryBuildingStrategy
-    project_overview_page_image_gallery_aspect_ratio: str
-
+    
     creator_page_visible_creator_fields: List[CreatorField]
     creator_page_image_page_size: conint(ge=0)
     
@@ -65,7 +67,7 @@ class HtmlSettings(BaseModel):
 
     type_order: List[MediaType]
     
-    @validator('project_overview_page_image_gallery_aspect_ratio', 'creator_overview_page_image_gallery_aspect_ratio')
+    @validator('project_gallery_aspect_ratio', 'creator_gallery_aspect_ratio')
     def validate_aspect_ratio_colon_format(cls, v):
         match = re.match(r'^(\d+)/(\d+)$', v.strip())
         if not match:

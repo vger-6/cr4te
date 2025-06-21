@@ -1,5 +1,5 @@
-function rebuildImageGallery() {
-  document.querySelectorAll('.image-gallery').forEach(gallery => {
+function rebuildJustifiedImageGallery() {
+  document.querySelectorAll('.image-gallery--justified').forEach(gallery => {
     const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
     const gap = 16;
     const galleryWidth = gallery.clientWidth;
@@ -102,6 +102,7 @@ function rebuildImageGallery() {
   });
 }
 
-window.addEventListener('load', rebuildImageGallery);
-window.addEventListener('resize', rebuildImageGallery);
+//TODO: Debounce the resize events e.g., using setTimeout
+window.addEventListener('load', rebuildJustifiedImageGallery);
+window.addEventListener('resize', rebuildJustifiedImageGallery);
 

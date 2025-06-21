@@ -1,4 +1,4 @@
-function rebuildImageGallery() {
+function rebuildAspectImageGallery() {
   document.querySelectorAll('.image-gallery--aspect').forEach(gallery => {
     const aspectRatio = gallery.dataset.aspectRatio || "1/1";
     const [w, h] = aspectRatio.split('/').map(Number);
@@ -22,6 +22,6 @@ function rebuildImageGallery() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', rebuildImageGallery);
-window.addEventListener('resize', rebuildImageGallery);
+window.addEventListener('DOMContentLoaded', rebuildAspectImageGallery);
+window.addEventListener('resize', rebuildAspectImageGallery);
 

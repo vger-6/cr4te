@@ -23,7 +23,8 @@ function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAUL
     gallery.innerHTML = '';
     visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
 
-    rebuildImageGallery?.();
+    if (typeof rebuildJustifiedImageGallery === 'function') rebuildJustifiedImageGallery();
+    if (typeof rebuildAspectImageGallery === 'function') rebuildAspectImageGallery();
     if (typeof rebindLightbox === 'function') rebindLightbox();
 
     const totalPages = Math.ceil(allWrappers.length / pageSize);
@@ -54,7 +55,7 @@ window.paginateGallery = setupPagination;
 
 // Auto-run pagination on pages without a search bar
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.image-gallery').forEach(gallery => {
+  document.querySelectorAll('.image-gallery--justified, .image-gallery--aspect').forEach(gallery => {
     const hasSearch = !!document.getElementById('search-input');
     if (hasSearch && gallery.id === 'imageGallery') return; // skip; filtered separately
 

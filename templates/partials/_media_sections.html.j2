@@ -43,7 +43,7 @@
             <div class="section-title">{{ group.image_section_title }}</div>
             <hr>
             <div class="section-content">
-              <div class="image-gallery" id="imageGallery" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
+              <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
                 {% for image in section.images %}
                   <div class="image-wrapper">
                     <a href="{{ image.full_url }}" target="_blank">

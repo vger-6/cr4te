@@ -90,7 +90,7 @@ class HtmlBuildContext(BaseContext):
         return {
             ThumbType.THUMB: 350,
             ThumbType.PORTRAIT: 450,
-            ThumbType.COVER: 600,
+            ThumbType.COVER: 400,
             ThumbType.GALLERY: 450,
         }[thumb_type]
 

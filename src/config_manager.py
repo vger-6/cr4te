@@ -50,13 +50,15 @@ DEFAULT_CONFIG = {
         
         "tags_page_title": "Tags",
         
+        "creator_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+        "creator_gallery_aspect_ratio": "3/4",
+        
+        "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+        "project_gallery_aspect_ratio": "4/3",
+        
         "creator_overview_page_image_page_size": 100,
-        "creator_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-        "creator_overview_page_image_gallery_aspect_ratio": "3/4",
         
         "project_overview_page_image_page_size": 100,
-        "project_overview_page_image_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-        "project_overview_page_image_gallery_aspect_ratio": "4/3",
         
         "creator_page_visible_creator_fields": [f for f in CreatorField],
         "creator_page_image_page_size" : 15,

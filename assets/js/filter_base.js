@@ -24,7 +24,8 @@ window.FilterBase = {
     } else {
       gallery.innerHTML = '';
       wrappers.forEach(wrapper => gallery.appendChild(wrapper));
-      if (typeof rebuildImageGallery === 'function') rebuildImageGallery();
+      if (typeof rebuildJustifiedImageGallery === 'function') rebuildJustifiedImageGallery();
+      if (typeof rebuildAspectImageGallery === 'function') rebuildAspectImageGallery();
       if (typeof rebindLightbox === 'function') rebindLightbox();
     }
   }
