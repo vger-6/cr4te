@@ -83,6 +83,8 @@ class MediaRules(BaseModel):
     global_exclude_prefix: str
     metadata_folder_name: str
     collaboration_separators: List[str]
+    portrait_basename: str
+    cover_basename: str
 
 # Top-level config schema
 class AppConfig(BaseModel):

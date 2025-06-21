@@ -81,6 +81,9 @@ DEFAULT_CONFIG = {
         
         "metadata_folder_name": "meta",
         "collaboration_separators": ["&", ","],
+        
+        "portrait_basename": "portrait",
+        "cover_basename": "cover",
     }
 }
 

@@ -116,7 +116,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
             media_map[folder_key]["videos"].append(str(rel_to_input))
         elif suffix in AUDIO_EXTS:
             media_map[folder_key]["tracks"].append(str(rel_to_input))
-        elif suffix in IMAGE_EXTS and stem not in ("cover", "portrait"):  # TODO: put 'cover' and 'portrait' into config file
+        elif suffix in IMAGE_EXTS and stem not in (ctx.media_rules["cover_basename"], ctx.media_rules["portrait_basename"]):
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
             media_map[folder_key]["documents"].append(str(rel_to_input))
@@ -163,7 +163,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
 
         # Find cover
         all_images = _find_all_images(project_dir, ctx.media_rules["global_exclude_prefix"])
-        cover = _select_best_image(all_images, "cover", Orientation.LANDSCAPE)
+        cover = _select_best_image(all_images, ctx.media_rules["cover_basename"], Orientation.LANDSCAPE)
 
         project = {
             "title": project_title,
@@ -208,7 +208,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     
     # Find portrait
     all_images = _find_all_images(creator_path, ctx.media_rules["global_exclude_prefix"])
-    portrait = _select_best_image(all_images, "portrait", Orientation.PORTRAIT)
+    portrait = _select_best_image(all_images, ctx.media_rules["portrait_basename"], Orientation.PORTRAIT)
     
     separators = ctx.media_rules["collaboration_separators"]
     is_collab = existing_creator.get("is_collaboration")
