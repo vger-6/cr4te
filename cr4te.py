@@ -26,10 +26,17 @@ def main():
     
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # build-json
-    json_parser = subparsers.add_parser("build-json", help="Generate JSON metadata from media folders")
-    json_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
-    json_parser.add_argument("--config", help="Path to configuration file (optional)")
+    # build
+    build_parser = subparsers.add_parser("build", help="Generate JSON metadata and build HTML site")
+    build_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
+    build_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
+    build_parser.add_argument("--config", help="Path to configuration file (optional)")
+    build_parser.add_argument("--label-preset", choices=[m.value for m in LabelPreset], default=LabelPreset.ART, help="Apply a preset label scheme for HTML")
+    build_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
+    build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], default=ImageSampleStrategy.SPREAD, help="Strategy to sample images per folder")
+    build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
+    build_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
+    build_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
     
     # clean-json
     clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
@@ -37,58 +44,21 @@ def main():
     clean_parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without removing anything")
     clean_parser.add_argument("--force", action="store_true", help="Actually delete files instead of showing a preview")
 
-    # build-html
-    html_parser = subparsers.add_parser("build-html", help="Generate HTML site from JSON metadata")
-    html_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
-    html_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
-    html_parser.add_argument("--config", help="Path to configuration file (optional)")
-    html_parser.add_argument("--label-preset", choices=[m.value for m in LabelPreset], default=LabelPreset.ART, help="Apply a preset label scheme for HTML")
-    html_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
-    html_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], default=ImageSampleStrategy.SPREAD, help="Strategy to sample images per folder")
-    html_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
-    html_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
-    html_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
-    
     # print-config
     config_parser = subparsers.add_parser("print-config", help="Print the default configuration as JSON")
     
     args = parser.parse_args()
     
-    if args.command == "build-json":
+    if args.command == "build":
+        if args.clean and not args.force:
+            parser.error("--clean must be used together with --force")
+        
         input_path = Path(args.input).resolve()
         if not input_path.exists() or not input_path.is_dir():
             print(f"Input path does not exist or is not a directory: {input_path}")
             return
             
-        config = _load_config(args.config)
-        
-        build_creator_json_files(input_path, config["media_rules"])
-        
-    elif args.command == "clean-json":
-        input_path = Path(args.input).resolve()
-        if not input_path.exists() or not input_path.is_dir():
-            print(f"Input path does not exist or is not a directory: {input_path}")
-            return
-
-        if not args.force and not args.dry_run:
-            confirm = input(f"Delete all cr4te.json files in '{input_path}'? [y/N]: ").strip().lower()
-            if confirm != 'y':
-                print("Aborting.")
-                return
-
-        clean_creator_json_files(input_path, dry_run=args.dry_run)
-
-    elif args.command == "build-html":
-        if not args.force and args.clean:
-            parser.error("--clean must be used together with --force")
-        
-        input_path = Path(args.input).resolve()
         output_path = Path(args.output).resolve()
-
-        if not input_path.exists() or not input_path.is_dir():
-            print(f"Input path does not exist or is not a directory: {input_path}")
-            return
-
         if output_path.exists():
             confirm = 'y' if args.force else input(f"Output folder '{output_path}' already exists. Delete everything except thumbnails and rebuild? [y/N]: ").strip().lower()
             if confirm != 'y':
@@ -108,11 +78,30 @@ def main():
 
         config = cfg.update_html_labels(config, args.label_preset)
         
+        print("Building JSON metadata...")
+        build_creator_json_files(input_path, config["media_rules"])
+        
+        print("Building HTML site...")
         html_index_path = build_html_pages(input_path, output_path, config["html_settings"])
         
         if args.open:
+            print("Opening index.html...")
             webbrowser.open(f"file://{html_index_path.resolve()}")
-            
+        
+    elif args.command == "clean-json":
+        input_path = Path(args.input).resolve()
+        if not input_path.exists() or not input_path.is_dir():
+            print(f"Input path does not exist or is not a directory: {input_path}")
+            return
+
+        if not args.force and not args.dry_run:
+            confirm = input(f"Delete all cr4te.json files in '{input_path}'? [y/N]: ").strip().lower()
+            if confirm != 'y':
+                print("Aborting.")
+                return
+
+        clean_creator_json_files(input_path, dry_run=args.dry_run)
+
     elif args.command == "print-config":
         print(json.dumps(cfg.DEFAULT_CONFIG, indent=4))
 
