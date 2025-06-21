@@ -28,8 +28,8 @@ def main():
 
     # build
     build_parser = subparsers.add_parser("build", help="Generate JSON metadata and build HTML site")
-    build_parser.add_argument("-i", "--input", required=True, help="Path to the Creators folder")
-    build_parser.add_argument("-o", "--output", required=True, help="Path to the HTML output folder")
+    build_parser.add_argument("-i", "--input", help="Path to the Creators folder")
+    build_parser.add_argument("-o", "--output", help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
     build_parser.add_argument("--label-preset", choices=[m.value for m in LabelPreset], default=LabelPreset.ART, help="Apply a preset label scheme for HTML")
     build_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
@@ -37,19 +37,54 @@ def main():
     build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     build_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     build_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
+    build_parser.add_argument("--print-config-only", action="store_true", help="Print adjusted configuration and exit (no file operations or build)")
     
     # clean-json
     clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
     clean_parser.add_argument("-i", "--input", required=True, help="Path to input folder containing creators")
     clean_parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without removing anything")
     clean_parser.add_argument("--force", action="store_true", help="Actually delete files instead of showing a preview")
-
-    # print-config
-    config_parser = subparsers.add_parser("print-config", help="Print the default configuration as JSON")
     
     args = parser.parse_args()
     
     if args.command == "build":
+        if not args.print_config_only:
+            if not args.input:
+                parser.error("argument -i/--input is required unless --print-config-only is used")
+            if not args.output:
+                parser.error("argument -o/--output is required unless --print-config-only is used")
+                
+        config = _load_config(args.config)
+        
+        config = cfg.apply_cli_media_overrides(
+            config,
+            image_gallery_max=args.max_images,
+            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy)
+        )
+
+        config = cfg.update_html_labels(config, args.label_preset)
+        
+        if args.print_config_only:
+            # Only warn if output is not redirected
+            if sys.stdout.isatty():
+                ignored_flags = []
+                if args.input:
+                    ignored_flags.append("--input")
+                if args.output:
+                    ignored_flags.append("--output")
+                if args.open:
+                    ignored_flags.append("--open")
+                if args.force:
+                    ignored_flags.append("--force")
+                if args.clean:
+                    ignored_flags.append("--clean")
+                
+                if ignored_flags:
+                    print(f"[Info] Ignoring flags: {', '.join(sorted(ignored_flags))} (no build performed).", file=sys.stderr)
+        
+            print(json.dumps(config, indent=4))
+            return   
+        
         if args.clean and not args.force:
             parser.error("--clean must be used together with --force")
         
@@ -67,16 +102,6 @@ def main():
             clear_output_folder(output_path, args.clean)
         else:
             output_path.mkdir(parents=True, exist_ok=True)
-            
-        config = _load_config(args.config)
-        
-        config = cfg.apply_cli_media_overrides(
-            config,
-            image_gallery_max=args.max_images,
-            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy)
-        )
-
-        config = cfg.update_html_labels(config, args.label_preset)
         
         print("Building JSON metadata...")
         build_creator_json_files(input_path, config["media_rules"])
@@ -101,9 +126,6 @@ def main():
                 return
 
         clean_creator_json_files(input_path, dry_run=args.dry_run)
-
-    elif args.command == "print-config":
-        print(json.dumps(cfg.DEFAULT_CONFIG, indent=4))
 
 if __name__ == "__main__":
     main()
