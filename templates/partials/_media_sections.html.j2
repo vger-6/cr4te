@@ -7,9 +7,40 @@
             <div class="section-title">{{ video.title }}</div>
             <hr>
             <div class="section-content">
-              <video controls>
-                <source src="{{ video.full_url }}" type="video/mp4">
-              </video>
+              <div class="video-wrapper">
+                  <video preload="metadata">
+                    <source src="{{ video.full_url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+
+                  <div class="video-controls">
+                    <button class="control-btn" onclick="toggleVideoPlay(this)">
+                      <svg viewBox="0 0 24 24" class="icon play-toggle-icon">
+                        <path d="M8 5v14l11-7z" data-play></path>
+                        <path d="M6 19h4V5H6v14zm8 0h4V5h-4v14z" data-pause style="display: none;"></path>
+                      </svg>
+                    </button>
+
+                    <input type="range" class="progress-bar" value="0" step="0.01" onchange="seekVideo(this)" disabled>
+
+                    <span class="time-display">00:00:00 / 00:00:00</span>
+
+                    <div class="volume-container">
+                      <svg viewBox="0 0 24 24" class="icon volume-icon">
+                        <path d="M5 9v6h4l5 5V4l-5 5H5z" />
+                        <path d="M15.5 10.5a1.5 1.5 0 0 1 0 3" fill="none" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M17.5 8a4 4 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2" />
+                      </svg>
+                      <input type="range" class="volume-slider" min="0" max="1" step="0.01" oninput="setVideoVolume(this)">
+                    </div>
+
+                    <button class="control-btn" onclick="toggleFullscreen(this)">
+                      <svg viewBox="0 0 24 24" class="icon fullscreen-icon">
+                        <path d="M4 4h6v2H6v4H4V4zm16 0v6h-2V6h-4V4h6zm-6 16v-2h4v-4h2v6h-6zm-6 0H4v-6h2v4h4v2z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
             </div>
           </div>
         {% endfor %}
@@ -30,9 +61,47 @@
                     </li>
                   {% endfor %}
                 </ul>
-                <audio id="audio-player-{{ loop.index }}" controls onended="playNextTrack(this)">
-                  Your browser does not support the audio element.
-                </audio>
+                <div class="audio-controls">
+                  <button class="control-btn" onclick="togglePlay(this)">
+                    <svg viewBox="0 0 24 24" class="icon play-toggle-icon">
+                      <path d="M8 5v14l11-7z" data-play></path>
+                      <path d="M6 19h4V5H6v14zm8 0h4V5h-4v14z" data-pause style="display: none;"></path>
+                    </svg>
+                  </button>
+                  
+                  <button class="control-btn" onclick="stopAudio(this)">
+                    <svg viewBox="0 0 24 24" class="icon stop-icon"><rect x="6" y="6" width="12" height="12"/></svg>
+                  </button>
+                  
+                  <button class="control-btn" onclick="prevTrack(this)">
+                    <svg viewBox="0 0 24 24" class="icon prev-icon">
+                      <rect x="5" y="5" width="2" height="14"/>
+                      <path d="M18 5v14l-10-7z"/>
+                    </svg>
+                  </button>
+
+                  <button class="control-btn" onclick="nextTrack(this)">
+                    <svg viewBox="0 0 24 24" class="icon next-icon">
+                      <path d="M6 5v14l10-7z"/>
+                      <rect x="17" y="5" width="2" height="14"/>
+                    </svg>
+                  </button>
+
+                  <input type="range" class="progress-bar" value="0" step="0.02" onchange="seekAudio(this)">
+
+                  <span class="time-display">00:00:00 / 00:00:00</span>
+
+                  <div class="volume-container">
+                    <svg viewBox="0 0 24 24" class="icon volume-icon">
+                      <path d="M5 9v6h4l5 5V4l-5 5H5z" />
+                      <path d="M15.5 10.5a1.5 1.5 0 0 1 0 3" fill="none" stroke="currentColor" stroke-width="1.5" />
+                      <path d="M17.5 8a4 4 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <input type="range" class="volume-slider" min="0" max="1" step="0.01" oninput="setVolume(this)">
+                  </div>
+                  
+                  <audio onended="playNextTrack(this)" preload="metadata" style="display: none;"></audio>
+                </div>
               </div>
             </div>
           </div>

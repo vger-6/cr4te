@@ -173,10 +173,12 @@ a:focus {
   background-color: var(--section-content-bg);
 }
 
+/*
 .section-content video {
   display: block;
   width: 100%;
 }
+*/
 
 .text-content {
   padding-top: 0rem;
@@ -343,3 +345,106 @@ a:focus {
   text-decoration: none;
 }
 
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.audio-controls > * {
+  min-width: 0px;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  border-width: 1px;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 0.0rem;
+  display: flex;
+  align-items: center;
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: var(--text-color);
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.volume-slider {
+  width: 5rem;
+  background-size: 50% 100%; 
+}
+
+.progress-bar {
+  flex: 1;
+  min-width: 5rem;
+  background-size: 0% 100%;
+}
+
+.time-display {
+  color: var(--text-muted-color);
+  min-width: 8rem;
+  text-align: center;
+}
+
+.video-wrapper,
+.video-wrapper video {
+  border: none;
+  border-radius: 0;
+  background: none;
+  display: block;
+  width: 100%;
+}
+
+.video-wrapper {
+  position: relative;
+}
+
+.video-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  z-index: 10;
+}
+
+.video-controls > * {
+  min-width: 0px;
+}
+
+.video-wrapper.hide-controls .video-controls {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.video-wrapper .video-controls {
+  transition: opacity 0.3s ease;
+}
+
+.video-wrapper.hide-cursor {
+  cursor: none;
+}
+
+.video-wrapper:fullscreen,
+.video-wrapper:fullscreen video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
