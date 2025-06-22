@@ -31,9 +31,9 @@ def main():
     build_parser.add_argument("-i", "--input", help="Path to the Creators folder")
     build_parser.add_argument("-o", "--output", help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
-    build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], default=DomainPreset.ART, help="Apply a common domain preset")
-    build_parser.add_argument("--max-images", type=int, default=20, help="Maximum number of images to include per media group")
-    build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], default=ImageSampleStrategy.SPREAD, help="Strategy to sample images per folder")
+    build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], help="Apply a common domain preset")
+    build_parser.add_argument("--max-images", type=int, help="Maximum number of images to include per media group")
+    build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
     build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     build_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     build_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
@@ -59,8 +59,8 @@ def main():
         config = cfg.apply_cli_overrides(
             config,
             image_gallery_max=args.max_images,
-            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy),
-            domain_preset=DomainPreset(args.domain_preset)
+            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
+            domain_preset=DomainPreset(args.domain_preset) if args.domain_preset else None
         )
 
         if args.print_config_only:

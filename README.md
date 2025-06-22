@@ -95,7 +95,7 @@ python cr4te.py build -i <input_folder> -o <output_folder> --domain-preset film
 
 Available presets:
 
-* `art` (default)
+* `art`
 * `film`
 * `music`
 * `book`
@@ -104,8 +104,8 @@ If `--config` is not specified, cr4te uses internal defaults.
 
 Additional options:
 
-* `--max-images` — Set maximum images per media group (overrides config)
-* `--image-sample-strategy` — Image selection strategy: `spread` (default), `head`, `all`
+* `--max-images` — Set maximum images per media group (overrides config). The default is 20
+* `--image-sample-strategy` — Image selection strategy: `spread`, `head`, `all`
   * `spread` (default): even sampling throughout the list
   * `head`: take the first N images
   * `all`: take all images
