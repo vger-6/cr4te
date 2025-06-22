@@ -1,99 +1,3 @@
-.theme-forest-night {
-  --bg-color: #0d1b1e;
-  
-  --box-bg: #1c3a3e;
-  --border-color: #345;
-  --hr-color: #466;
-  --title-bg: #112;
-  --title-color: #cdeac0;
-  
-  --text-color: #d8e5dd;              
-  --text-muted-color: #88a39a;        
-  --tag-category-color: #b2dfdb;      
-  --tag-text-color: #fefae0;          
-  --section-content-bg: transparent;  
-
-  --link-color: #a8dadc;
-  --link-visited-color: #f4a261;
-  --link-hover-color: #ffffff;
-  --link-disabled-color: #44615d;
-  
-  --track-odd: #24494d;
-  --track-even: #2e5a5f;
-}
-
-.theme-midnight-monochrome {
-  --bg-color: #0f0f0f;
-  
-  --box-bg: #1a1a1a;
-  --border-color: #2e2e2e;
-  --hr-color: #444;
-  --title-bg: #000;
-  --title-color: #e5e5e5;
-  
-  --text-color: #cccccc;              
-  --text-muted-color: #888888;        
-  --tag-category-color: #aaaaaa;      
-  --tag-text-color: #ffffff;          
-  --section-content-bg: transparent;  
-
-  --link-color: #8ab4f8;
-  --link-visited-color: #b38df8;
-  --link-hover-color: #ffffff;
-  --link-disabled-color: #555;
-  
-  --track-odd: #1f1f1f;
-  --track-even: #262626;
-}
-
-.theme-warm-linen {
-  --bg-color: #faf4ed;
-  
-  --box-bg: #fefcf9;
-  --border-color: #e6dcd1;
-  --hr-color: #d4c4b4;
-  --title-bg: #f0e4d7;
-  --title-color: #4a3f35;
-  
-  --text-color: #5a4a3f;               
-  --text-muted-color: #8b7d70;         
-  --tag-category-color: #a88362;       
-  --tag-text-color: #6a4e42;           
-  --section-content-bg: transparent;   
-
-  --link-color: #8a4f7d;
-  --link-visited-color: #a65b84;
-  --link-hover-color: #ce5a57;
-  --link-disabled-color: #aaa;
-  
-  --track-odd: #f9f3eb;
-  --track-even: #f2e7db;
-}
-
-.theme-sunset-neon {
-  --bg-color: #2a0c1f;
-  
-  --box-bg: #3c1028;
-  --border-color: #f27d42;
-  --hr-color: #fc9867;
-  --title-bg: #66101f;
-  --title-color: #ffddc1;
-  
-  --text-color: #ffd7c2;               
-  --text-muted-color: #f8a48d;         
-  --tag-category-color: #ffb684;       
-  --tag-text-color: #fff1eb;           
-  --section-content-bg: transparent;  
-
-  --link-color: #ff6e6e;
-  --link-visited-color: #ff9a8b;
-  --link-hover-color: #ffcba4;
-  --link-disabled-color: #b04a4a;
-  
-  --track-odd: #4a162f;
-  --track-even: #5b1a36;
-}
-
 .theme-frozen-aurora {
   --bg-color: #0e1b2a;
   
@@ -116,5 +20,29 @@
   
   --track-odd: #18374f;
   --track-even: #1f4660;
+}
+
+.theme-forest-night {
+  --bg-color: #0d1b1e;
+  
+  --box-bg: #1c3a3e;
+  --border-color: #345;
+  --hr-color: #466;
+  --title-bg: #112;
+  --title-color: #cdeac0;
+  
+  --text-color: #d8e5dd;              
+  --text-muted-color: #88a39a;        
+  --tag-category-color: #b2dfdb;      
+  --tag-text-color: #fefae0;          
+  --section-content-bg: transparent;  
+
+  --link-color: #a8dadc;
+  --link-visited-color: #f4a261;
+  --link-hover-color: #ffffff;
+  --link-disabled-color: #44615d;
+  
+  --track-odd: #24494d;
+  --track-even: #2e5a5f;
 }
 
