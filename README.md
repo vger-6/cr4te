@@ -22,7 +22,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **Automatically builds a gallery website** from your existing folder structure (e.g. directors and movies)
 * **Dedicated overview pages with filter and tag-aware search**
 * **Video, audio, image, and document organization with dynamic labels**
-* **HTML label presets for different domains** (art, music, books, film, ...)
+* **HTML domain presets for different domains** (art, music, books, film, ...)
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
 * **Theme switcher with persistent selection** using localStorage
@@ -87,10 +87,10 @@ python cr4te.py build -i <input_folder> -o <output_folder>
 python cr4te.py build -i <input_folder> -o <output_folder> --config path/to/my_config.json
 ```
 
-### Optional: Apply a Label Preset
+### Optional: Apply a Domain Preset
 
 ```bash
-python cr4te.py build -i <input_folder> -o <output_folder> --label-preset film
+python cr4te.py build -i <input_folder> -o <output_folder> --domain-preset film
 ```
 
 Available presets:
@@ -116,7 +116,11 @@ If `--image-sample-strategy all` is used `--max-images` has no effect.
 
 ## Configuration
 
-Your configuration file should be in JSON format and can override labels and media matching rules.
+Your configuration file should be in JSON format and can override labels and media matching rules. Use the `--print-config-only` flag to print a config file on screen or redirect it to a json file for further adjustment and later use.
+
+```bash
+python cr4te.py build [options] --print-config-only > my_config.json
+```
 
 ### Special Rules
 
