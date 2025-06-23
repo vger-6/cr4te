@@ -55,22 +55,40 @@
   gap: 1rem;
   margin-bottom: 2rem;
   flex-wrap: nowrap;
-  height: calc(100vh - 8rem); /* Adjust if needed for fixed header */
+  height: calc(100vh - 9rem); /* Adjust if needed for fixed header */
   overflow: hidden;
 }
 
 .project-left,
 .project-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   height: 100%;
-  overflow-y: scroll;
-  scrollbar-width: none;          /* Firefox */
-  -ms-overflow-style: none;       /* IE and Edge */
+  overflow-y: overlay;
+  padding-right: 0px;
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #666 transparent;
   min-width: 0;
 }
 
+/* WebKit (Chrome, Safari, Edge) scrollbar styling */
 .project-left::-webkit-scrollbar,
 .project-right::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  width: 4px;
+}
+
+.project-left::-webkit-scrollbar-track,
+.project-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-left::-webkit-scrollbar-thumb,
+.project-right::-webkit-scrollbar-thumb {
+  background-color: #666;
+  border-radius: 2px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }
 
 .project-left {
@@ -85,25 +103,33 @@
 @media (max-width: 768px) {
   .project-layout {
     flex-direction: column;
-    height: calc(100vh - 8rem);
-    overflow-y: auto;
+    height: calc(100vh - 9rem); /* pinned layout height */
+    overflow-y: overlay;
+    padding-right: 0px;
+    scrollbar-width: thin;
+    scrollbar-color: #666 transparent;
+  }
+
+  .project-layout::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .project-layout::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .project-layout::-webkit-scrollbar-thumb {
+    background-color: #666;
+    border-radius: 2px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
   .project-left,
   .project-right {
     flex: none;
     height: auto;
-    overflow: visible;
-    width: 100%;
-  }
-
-  .project-layout::-webkit-scrollbar {
-    display: none;
-  }
-
-  .project-layout {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible; /* no internal scrolling */
+    padding-right: 0;
   }
 }
-

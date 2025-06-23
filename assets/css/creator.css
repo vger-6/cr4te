@@ -33,22 +33,40 @@
   display: flex;
   flex-wrap: nowrap;
   gap: 1rem;
-  height: calc(100vh - 8rem);
+  height: calc(100vh - 9rem);
   overflow: hidden;
 }
 
 .creator-left,
 .creator-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   height: 100%;
-  overflow-y: scroll;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow-y: overlay;
+  padding-right: 0px;
+  scrollbar-width: thin;  /* Firefox */
+  scrollbar-color: #666 transparent;
   min-width: 0;
 }
 
+/* WebKit (Chrome, Safari, Edge) scrollbar styling */
 .creator-left::-webkit-scrollbar,
 .creator-right::-webkit-scrollbar {
-  display: none;
+  width: 4px;
+}
+
+.creator-left::-webkit-scrollbar-track,
+.creator-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.creator-left::-webkit-scrollbar-thumb,
+.creator-right::-webkit-scrollbar-thumb {
+  background-color: #666;
+  border-radius: 2px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }
 
 .creator-left {
@@ -63,24 +81,33 @@
 @media (max-width: 768px) {
   .creator-layout {
     flex-direction: column;
-    height: calc(100vh - 8rem);  /* Adjust if needed for fixed header */
-    overflow-y: auto;
+    height: calc(100vh - 9rem); /* pinned layout height */
+    overflow-y: overlay;
+    padding-right: 0px;
+    scrollbar-width: thin;
+    scrollbar-color: #666 transparent;
+  }
+
+  .creator-layout::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .creator-layout::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .creator-layout::-webkit-scrollbar-thumb {
+    background-color: #666;
+    border-radius: 2px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
   .creator-left,
   .creator-right {
     flex: none;
     height: auto;
-    overflow: visible;
-  }
-
-  .creator-layout::-webkit-scrollbar {
-    display: none;
-  }
-
-  .creator-layout {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible; /* no internal scrolling */
+    padding-right: 0;
   }
 }
-
