@@ -33,6 +33,11 @@ body {
   padding: 1rem;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 h1 {
   font-size: 1.8rem;
   font-weight: bold;
@@ -147,6 +152,20 @@ a:focus {
   text-decoration: underline;
 }
 
+.overview-layout {
+  height: calc(100vh - 12.5rem);
+  overflow-y: auto;
+}
+
+.overview-layout::-webkit-scrollbar {
+  display: none;
+}
+
+.overview-layout {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
 .section-box {
   border: 2px solid var(--border-color);
   background-color: var(--box-bg);
@@ -183,8 +202,8 @@ a:focus {
 .text-content {
   padding-top: 0rem;
   padding-bottom: 0rem;
-  max-height: 30rem;
-  overflow-y: auto;
+  /*max-height: 30rem;
+  overflow-y: auto;*/
 }
 
 .image-gallery--justified {

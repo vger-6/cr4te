@@ -31,28 +31,56 @@
 
 .creator-layout {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
   flex-wrap: nowrap;
+  gap: 1rem;
+  height: calc(100vh - 8rem);
+  overflow: hidden;
+}
+
+.creator-left,
+.creator-right {
+  height: 100%;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-width: 0;
+}
+
+.creator-left::-webkit-scrollbar,
+.creator-right::-webkit-scrollbar {
+  display: none;
 }
 
 .creator-left {
   flex: 3;
-  min-width: 0;
 }
 
 .creator-right {
   flex: 7;
-  min-width: 0;
 }
 
+/* Small screen behavior */
 @media (max-width: 768px) {
   .creator-layout {
     flex-direction: column;
+    height: calc(100vh - 8rem);  /* Adjust if needed for fixed header */
+    overflow-y: auto;
   }
 
   .creator-left,
   .creator-right {
-    width: 100%;
+    flex: none;
+    height: auto;
+    overflow: visible;
+  }
+
+  .creator-layout::-webkit-scrollbar {
+    display: none;
+  }
+
+  .creator-layout {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 }
+

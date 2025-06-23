@@ -55,25 +55,55 @@
   gap: 1rem;
   margin-bottom: 2rem;
   flex-wrap: nowrap;
+  height: calc(100vh - 8rem); /* Adjust if needed for fixed header */
+  overflow: hidden;
+}
+
+.project-left,
+.project-right {
+  height: 100%;
+  overflow-y: scroll;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE and Edge */
+  min-width: 0;
+}
+
+.project-left::-webkit-scrollbar,
+.project-right::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 .project-left {
   flex: 3;
-  min-width: 0;
 }
 
 .project-right {
   flex: 7;
-  min-width: 0;
 }
 
+/* Small screen behavior */
 @media (max-width: 768px) {
   .project-layout {
     flex-direction: column;
+    height: calc(100vh - 8rem);
+    overflow-y: auto;
   }
 
   .project-left,
   .project-right {
+    flex: none;
+    height: auto;
+    overflow: visible;
     width: 100%;
   }
+
+  .project-layout::-webkit-scrollbar {
+    display: none;
+  }
+
+  .project-layout {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
+

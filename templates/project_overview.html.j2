@@ -28,6 +28,8 @@
   {% endfor %}
 </div-->
 
+<div class="overview-layout">
+
 {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
 {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
 
@@ -51,6 +53,8 @@
       {% endfor %}
     </div>
   </div>
+</div>
+
 </div>
 
 <script src="assets/js/filter_base.js"></script>
