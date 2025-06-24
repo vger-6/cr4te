@@ -10,32 +10,36 @@
 </head>
 <body>
 
-<div class="top-link">
-  <a href="index.html">{{ html_settings.nav_creators_label }}</a> &middot;
-  <a href="projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
-  <span class="nav-current">{{ html_settings.nav_tags_label }}</span>
-  {% include "partials/_theme_dropdown.html.j2" %}
-</div>
-
-<h1>{{ html_settings.tags_page_title }}</h1>
-
-<div class="overview-layout">
-
-<div class="section-box">
-  <div class="section-content tag-list">
-
-    {% for category, tag_list in tags.items() %}
-    <div class="tag-category" id="{{ category | lower | replace(' ', '-') }}">
-      <strong>{{ category }}:</strong>
-      {% for tag in tag_list %}
-        <a class="tag" href="index.html?tag={{ tag }}">{{ tag }}</a>
-      {% endfor %}
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <a href="index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+      <a href="projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
+      <span class="nav-current">{{ html_settings.nav_tags_label }}</span>
+      {% include "partials/_theme_dropdown.html.j2" %}
     </div>
-    {% endfor %}
+
+    <h1>{{ html_settings.tags_page_title }}</h1>
+  </div>
+
+  <div class="overview-layout">
+
+    <div class="section-box">
+      <div class="section-content tag-list">
+
+        {% for category, tag_list in tags.items() %}
+        <div class="tag-category" id="{{ category | lower | replace(' ', '-') }}">
+          <strong>{{ category }}:</strong>
+          {% for tag in tag_list %}
+            <a class="tag" href="index.html?tag={{ tag }}">{{ tag }}</a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+     </div>
+    </div>
 
   </div>
-</div>
-
 </div>
 
 <script src="assets/js/theme_selector.js" defer></script>

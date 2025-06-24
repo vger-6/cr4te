@@ -1,9 +1,10 @@
 .overview-layout {
-  height: calc(100vh - 12.5rem);
-  overflow-y: overlay;
+  height: 100%;
+  overflow-y: auto;
   padding-right: 0px;
   scrollbar-width: thin;  /* Firefox */
   scrollbar-color: #666 transparent;
+  margin-bottom: 2rem;
 }
 
 /* WebKit (Chrome, Safari, Edge) scrollbar styling */
@@ -21,3 +22,4 @@
   border: 3px solid transparent;
   background-clip: content-box;
 }
+

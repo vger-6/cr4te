@@ -13,91 +13,95 @@
 </head>
 <body>
 
-<div class="top-link">
-  <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
-  <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
-  <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
-  <a href="../creators/{{ project.creator_slug }}.html">{{ project.creator_name }}</a>
-  {% include "partials/_theme_dropdown.html.j2" %}
-</div>
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+      <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
+      <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
+      <a href="../creators/{{ project.creator_slug }}.html">{{ project.creator_name }}</a>
+      {% include "partials/_theme_dropdown.html.j2" %}
+    </div>
 
-<h1>{{ project.title }}</h1>
+    <h1>{{ project.title }}</h1>
+  </div>
 
-<div class="project-layout">
+  <div class="project-layout">
 
-  <div class="project-left">
+    <div class="project-left">
 
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
-      <hr>
-      <div class="section-content markdown">
-        <div class="project-info project-info--{{ project.info_layout }}">
-          <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
-          <div>
-            {% if 'title' in html_settings.project_page_visible_project_fields %}
-              <p><strong>Title:</strong> {{ project.title }}</p>
-            {% endif %}
-            {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
-              <p><strong>Release Date:</strong> {{ project.release_date }}</p>
-            {% endif %}
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
+        <hr>
+        <div class="section-content markdown">
+          <div class="project-info project-info--{{ project.info_layout }}">
+            <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
+            <div>
+              {% if 'title' in html_settings.project_page_visible_project_fields %}
+                <p><strong>Title:</strong> {{ project.title }}</p>
+              {% endif %}
+              {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
+                <p><strong>Release Date:</strong> {{ project.release_date }}</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    {% if project.info_html %}
-      <div class="section-box markdown">
-        <div class="section-title">{{ html_settings.project_page_description_title }}</div>
-        <hr>
-        <div class="section-content text-content">
-          {{ project.info_html | safe }}
-        </div>
-      </div>
-    {% endif %}
-
-    {% if project.participants %}
-      {% for participant in project.participants %}
-        <div class="section-box">
-          <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+      {% if project.info_html %}
+        <div class="section-box markdown">
+          <div class="section-title">{{ html_settings.project_page_description_title }}</div>
           <hr>
-          <div class="section-content">
-            <div class="creator-info">
-              <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
-              <div>
-                <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
-                {% if participant.age_at_release %}
-                  <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
-                {% endif %}
+          <div class="section-content text-content">
+            {{ project.info_html | safe }}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if project.participants %}
+        {% for participant in project.participants %}
+          <div class="section-box">
+            <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="creator-info">
+                <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
+                <div>
+                  <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
+                  {% if participant.age_at_release %}
+                    <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
+                  {% endif %}
+                </div>
               </div>
             </div>
           </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if project.tag_map %}
+        <div class="section-box">
+          <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
+          <hr>
+          <div class="section-content tag-list">
+            {% for category, tags in project.tag_map.items() %}
+              <div class="tag-category">
+                <strong>{{ category }}:</strong>
+                {% for tag in tags %}
+                  <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
-      {% endfor %}
-    {% endif %}
+      {% endif %}
 
-    {% if project.tag_map %}
-      <div class="section-box">
-        <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
-        <hr>
-        <div class="section-content tag-list">
-          {% for category, tags in project.tag_map.items() %}
-            <div class="tag-category">
-              <strong>{{ category }}:</strong>
-              {% for tag in tags %}
-                <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
-              {% endfor %}
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    {% endif %}
+    </div>
 
-  </div>
+    <div class="project-right">
 
-  <div class="project-right">
+      {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height, html_settings.project_page_image_gallery_page_size) }}
 
-    {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height, html_settings.project_page_image_gallery_page_size) }}
-
+    </div>
   </div>
 </div>
 

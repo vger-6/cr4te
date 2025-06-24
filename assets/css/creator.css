@@ -31,10 +31,10 @@
 
 .creator-layout {
   display: flex;
-  flex-wrap: nowrap;
   gap: 1rem;
-  height: calc(100vh - 9rem);
+  height: 100%;
   overflow: hidden;
+  margin-bottom: 2rem;
 }
 
 .creator-left,
@@ -43,7 +43,7 @@
   flex-direction: column;
   gap: 1rem;
   height: 100%;
-  overflow-y: overlay;
+  overflow-y: auto;
   padding-right: 0px;
   scrollbar-width: thin;  /* Firefox */
   scrollbar-color: #666 transparent;
@@ -81,8 +81,8 @@
 @media (max-width: 768px) {
   .creator-layout {
     flex-direction: column;
-    height: calc(100vh - 9rem); /* pinned layout height */
-    overflow-y: overlay;
+    height: 100%; 
+    overflow-y: auto;
     padding-right: 0px;
     scrollbar-width: thin;
     scrollbar-color: #666 transparent;
@@ -111,3 +111,4 @@
     padding-right: 0;
   }
 }
+

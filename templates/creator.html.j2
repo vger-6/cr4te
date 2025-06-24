@@ -13,126 +13,130 @@
 </head>
 <body>
 
-<div class="top-link">
-  <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
-  <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
-  <a href="../tags.html">{{ html_settings.nav_tags_label }}</a>
-  {% include "partials/_theme_dropdown.html.j2" %}
-</div>
-
-<h1>{{ creator.name }}</h1>
-
-<div class="creator-layout">
-
-  <div class="creator-left">
-
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.creator_page_profile_title }}</div>
-      <hr>
-      <div class="section-content markdown">
-        <div class="creator-info creator-info--{{ creator.info_layout }}">
-          <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
-          <div>
-            <p><strong>Name:</strong> {{ creator.name }}</p>
-            {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
-            <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
-            {% endif %}
-            {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
-            <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
-            {% endif %}
-            {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
-            <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
-            {% endif %}
-            {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
-            <p><strong>Debut Age:</strong> {{ creator.debut_age }}</p>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+      <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
+      <a href="../tags.html">{{ html_settings.nav_tags_label }}</a>
+      {% include "partials/_theme_dropdown.html.j2" %}
     </div>
 
-    {% if creator.info_html %}
-    <div class="section-box markdown">
-      <div class="section-title">{{ html_settings.creator_page_about_title }}</div>
-      <hr>
-      <div class="section-content text-content">
-        {{ creator.info_html | safe }}
-      </div>
-    </div>
-    {% endif %}
-
-    {% if creator.tag_map %}
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.creator_page_tags_title }}</div>
-      <hr>
-      <div class="section-content tag-list">
-        {% for category, tags in creator.tag_map.items() %}
-        <div class="tag-category">
-          <strong>{{ category }}:</strong>
-          {% for tag in tags %}
-            <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
-          {% endfor %}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-
+    <h1>{{ creator.name }}</h1>
   </div>
 
-  <div class="creator-right">
-  
-    {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
-    {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
+  <div class="creator-layout">
 
-    {% if creator.projects %}
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.creator_page_projects_title }}</div>
-      <hr>
-      <div class="section-content">
-        <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
-             data-lightbox="false"
-             data-image-max-height="{{ project_thumb_max_height }}"
-             data-aspect-ratio="{{ aspect_ratio }}">
-          {% for project in creator.projects %}
-          <div class="image-wrapper">
-            <a href="{{ project.url }}" title="{{ project.title }}">
-              <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
-              <span>{{ project.title }}</span>
-            </a>
+    <div class="creator-left">
+
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.creator_page_profile_title }}</div>
+        <hr>
+        <div class="section-content markdown">
+          <div class="creator-info creator-info--{{ creator.info_layout }}">
+            <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+            <div>
+              <p><strong>Name:</strong> {{ creator.name }}</p>
+              {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
+              <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
+              {% endif %}
+              {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
+              <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
+              {% endif %}
+              {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
+              <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
+              {% endif %}
+              {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
+              <p><strong>Debut Age:</strong> {{ creator.debut_age }}</p>
+              {% endif %}
+            </div>
           </div>
-          {% endfor %}
-        </div>  
+        </div>
       </div>
-    </div>
-    {% endif %}
 
-    {% for collab in creator.collaborations %}
-    <div class="section-box">
-      <div class="section-title">{{ html_settings.creator_page_projects_title }} with {{ collab.label }}</div>
-      <hr>
-      <div class="section-content">
-        <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
-             data-lightbox="false"
-             data-image-max-height="{{ project_thumb_max_height }}"
-             data-aspect-ratio="{{ aspect_ratio }}">
-          {% for project in collab.projects %}
-          <div class="image-wrapper">
-            <a href="{{ project.url }}" title="{{ project.title }}">
-              <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
-              <span>{{ project.title }}</span>
-            </a>
+      {% if creator.info_html %}
+      <div class="section-box markdown">
+        <div class="section-title">{{ html_settings.creator_page_about_title }}</div>
+        <hr>
+        <div class="section-content text-content">
+          {{ creator.info_html | safe }}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if creator.tag_map %}
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.creator_page_tags_title }}</div>
+        <hr>
+        <div class="section-content tag-list">
+          {% for category, tags in creator.tag_map.items() %}
+          <div class="tag-category">
+            <strong>{{ category }}:</strong>
+            {% for tag in tags %}
+              <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+            {% endfor %}
           </div>
           {% endfor %}
         </div>
       </div>
+      {% endif %}
+
     </div>
-    {% endfor %}
-    
-    {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height, html_settings.creator_page_image_gallery_page_size) }}
+
+    <div class="creator-right">
+      
+      {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
+      {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
+
+      {% if creator.projects %}
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.creator_page_projects_title }}</div>
+        <hr>
+        <div class="section-content">
+          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
+               data-lightbox="false"
+               data-image-max-height="{{ project_thumb_max_height }}"
+               data-aspect-ratio="{{ aspect_ratio }}">
+            {% for project in creator.projects %}
+            <div class="image-wrapper">
+              <a href="{{ project.url }}" title="{{ project.title }}">
+                <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                <span>{{ project.title }}</span>
+              </a>
+            </div>
+            {% endfor %}
+          </div>  
+        </div>
+      </div>
+      {% endif %}
+
+      {% for collab in creator.collaborations %}
+      <div class="section-box">
+        <div class="section-title">{{ html_settings.creator_page_projects_title }} with {{ collab.label }}</div>
+        <hr>
+        <div class="section-content">
+          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
+               data-lightbox="false"
+               data-image-max-height="{{ project_thumb_max_height }}"
+               data-aspect-ratio="{{ aspect_ratio }}">
+            {% for project in collab.projects %}
+            <div class="image-wrapper">
+              <a href="{{ project.url }}" title="{{ project.title }}">
+                <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                <span>{{ project.title }}</span>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+        
+      {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height, html_settings.creator_page_image_gallery_page_size) }}
+
+    </div>
 
   </div>
-
 </div>
 
 <script src="../assets/js/theme_selector.js" defer></script>

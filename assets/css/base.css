@@ -38,6 +38,19 @@ html, body {
   overflow: hidden;
 }
 
+.page-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-color);
+}
+
+.page-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 h1 {
   font-size: 1.8rem;
   font-weight: bold;
@@ -46,6 +59,11 @@ h1 {
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
+}
+
+.top-link {
+  margin-bottom: 1rem;
+  font-weight: bold;
 }
 
 .markdown h1, .markdown h2 {
@@ -75,11 +93,6 @@ a:hover,
 a:focus {
   color: var(--link-hover-color);
   text-decoration: underline;
-}
-
-.top-link {
-  margin-bottom: 1rem;
-  font-weight: bold;
 }
 
 .theme-dropdown {
@@ -312,7 +325,7 @@ a:focus {
 }*/
 
 .search-bar-wrapper {
-  margin: 1rem 2rem 1rem 0rem;
+  margin: 0rem 2rem 1rem 0rem;
 }
 
 .search-box {
