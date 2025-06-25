@@ -178,3 +178,83 @@ document.querySelectorAll(".audio-gallery .volume-slider").forEach(slider => {
   slider.style.backgroundSize = `${slider.value * 100}% 100%`;
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const audioSections = document.querySelectorAll('.section-box.audio-section');
+  const threshold = 100;
+  let currentScrollContainer = null;
+  
+  // Set initial state
+  audioSections.forEach(section => {
+    const controls = section.querySelector('.audio-controls');
+    if (controls) {
+      controls.style.opacity = '0';
+      controls.style.pointerEvents = 'none';
+    }
+  });
+
+  function getScrollContainer() {
+    if (window.innerWidth <= 768) {
+      return (
+        document.querySelector('.project-layout') ||
+        document.querySelector('.creator-layout')
+      );
+    } else {
+      return (
+        document.querySelector('.project-right') ||
+        document.querySelector('.creator-right')
+      );
+    }
+  }
+
+  function updateAudioControlsVisibility() {
+    const scrollContainer = getScrollContainer();
+    const containerTop = scrollContainer.getBoundingClientRect().top;
+
+    audioSections.forEach(section => {
+      const controls = section.querySelector('.audio-controls');
+      if (!controls) return;
+
+      const sectionRect = section.getBoundingClientRect();
+      const controlsRect = controls.getBoundingClientRect();
+      const verticalDistance = controlsRect.top - sectionRect.top;
+
+      if (verticalDistance >= threshold) {
+        controls.style.opacity = '1';
+        controls.style.pointerEvents = 'auto';
+      } else {
+        controls.style.opacity = '0';
+        controls.style.pointerEvents = 'none';
+      }
+    });
+  }
+
+  function setupScrollListener() {
+    const newScrollContainer = getScrollContainer();
+
+    if (newScrollContainer !== currentScrollContainer) {
+      // Remove old listener
+      if (currentScrollContainer) {
+        currentScrollContainer.removeEventListener('scroll', updateAudioControlsVisibility);
+      }
+
+      // Add new listener
+      newScrollContainer.addEventListener('scroll', updateAudioControlsVisibility);
+      currentScrollContainer = newScrollContainer;
+    }
+  }
+
+  // Optional: debounce resize for performance
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      setupScrollListener();
+      updateAudioControlsVisibility();
+    }, 150);
+  });
+
+  // Initial setup
+  setupScrollListener();
+  updateAudioControlsVisibility();
+});
+

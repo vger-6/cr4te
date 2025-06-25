@@ -46,7 +46,7 @@
         {% endfor %}
       {% elif section.type == MediaType.AUDIO.value %}
         {% if section.tracks %}
-          <div class="section-box">
+          <div class="section-box audio-section">
             <div class="section-title">{{ group.audio_section_title }}</div>
             <hr>
             <div class="section-content">
@@ -102,6 +102,7 @@
                   
                   <audio onended="playNextTrack(this)" preload="metadata" style="display: none;"></audio>
                 </div>
+                <div class="track-list-blocker"></div>
               </div>
             </div>
           </div>

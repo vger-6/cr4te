@@ -375,6 +375,35 @@ a:focus {
   min-width: 0px;
 }
 
+.section-box.audio-section {
+  position: relative;
+  
+}
+
+.section-box.audio-section .audio-controls {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 2;
+  background: var(--box-bg);
+  padding: 0.5rem;
+  border: 2px solid white;
+  transition: opacity 0.3s ease;
+}
+
+/* creates a solid rectangle just beneath the control */
+.track-list-blocker {
+  position: sticky;
+  bottom: 0;
+  height: 1rem;
+  background: var(--box-bg);
+  z-index: 5;
+  pointer-events: none; /* ensures it's transparent to clicks */
+}
+
+.audio-section .section-content {
+  padding-bottom: 0;
+}
+
 .control-btn {
   background: none;
   border: none;
