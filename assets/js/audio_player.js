@@ -1,3 +1,4 @@
+let isSeeking = false;
 let currentList = null;
 let currentIndex = -1;
 
@@ -95,7 +96,7 @@ function setVolume(input) {
 }
 
 function updateProgress(audio) {
-  if (!audio) return;
+  if (!audio || isSeeking) return; // prevent jump while seeking
 
   const gallery = audio.closest(".audio-gallery");
   const bar = gallery.querySelector(".progress-bar");
@@ -179,6 +180,20 @@ document.querySelectorAll(".audio-gallery .volume-slider").forEach(slider => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".audio-gallery .progress-bar").forEach(bar => {
+    // Disable initially
+    bar.disabled = true;
+    bar.value = 0;
+
+    // Listen for user interaction
+    bar.addEventListener("mousedown", () => { isSeeking = true; });
+    bar.addEventListener("touchstart", () => { isSeeking = true; });
+    bar.addEventListener("mouseup", () => { isSeeking = false; });
+    bar.addEventListener("touchend", () => { isSeeking = false; });
+    bar.addEventListener("mouseleave", () => { isSeeking = false; });
+    bar.addEventListener("blur", () => { isSeeking = false; });
+  });
+
   const audioSections = document.querySelectorAll('.section-box.audio-section');
   const threshold = 100;
   let currentScrollContainer = null;

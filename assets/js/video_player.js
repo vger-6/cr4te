@@ -1,4 +1,5 @@
 const CONTROL_HIDE_DELAY = 2000;
+let isVideoSeeking = false;
 
 function toggleVideoPlay(btn) {
   const wrapper = btn.closest(".video-wrapper");
@@ -21,6 +22,8 @@ function toggleVideoPlay(btn) {
 function seekVideo(input) {
   const video = input.closest(".video-wrapper").querySelector("video");
   video.currentTime = (input.value / 100) * video.duration;
+
+  isVideoSeeking = false;
 }
 
 function setVideoVolume(input) {
@@ -40,6 +43,8 @@ function toggleFullscreen(btn) {
 }
 
 function updateVideoProgress(video) {
+  if (!video || isVideoSeeking) return;
+
   const wrapper = video.closest(".video-wrapper");
   const bar = wrapper.querySelector(".progress-bar");
   const display = wrapper.querySelector(".time-display");
@@ -156,6 +161,17 @@ document.querySelectorAll(".video-wrapper").forEach(wrapper => {
     if (document.fullscreenElement !== wrapper) {
       wrapper.classList.remove("hide-cursor");
     }
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".video-wrapper .progress-bar").forEach(bar => {
+    bar.addEventListener("mousedown", () => { isVideoSeeking = true; });
+    bar.addEventListener("mouseup", () => { isVideoSeeking = false; });
+    bar.addEventListener("touchstart", () => { isVideoSeeking = true; });
+    bar.addEventListener("touchend", () => { isVideoSeeking = false; });
+    bar.addEventListener("mouseleave", () => { isVideoSeeking = false; });
+    bar.addEventListener("blur", () => { isVideoSeeking = false; });
   });
 });
 
