@@ -77,6 +77,30 @@ class HtmlBuildContext(BaseContext):
     @property
     def tags_html_path(self) -> Path:
         return self.output_dir / "tags.html"
+        
+    @property
+    def project_page_audio_section_base_title(self) -> str:
+        return self.html_settings["project_page_audio_section_base_title"]
+
+    @property
+    def project_page_image_section_base_title(self) -> str:
+        return self.html_settings["project_page_image_section_base_title"]
+
+    @property
+    def image_gallery_max(self) -> int:
+        return self.html_settings["image_gallery_max"]
+
+    @property
+    def image_gallery_sample_strategy(self) -> str:
+        return self.html_settings["image_gallery_sample_strategy"]
+
+    @property
+    def media_type_order(self) -> list:
+        return self.html_settings["media_type_order"]
+
+    @property
+    def image_captions_visible(self) -> bool:
+        return self.html_settings["project_page_image_gallery_captions_visible"]
 
     def thumb_default(self, thumb_type: ThumbType) -> Path:
         return self.defaults_dir / {

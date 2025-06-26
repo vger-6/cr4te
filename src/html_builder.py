@@ -254,10 +254,7 @@ def _sort_sections_by_type(sections: List[Dict], media_type_order: List[str]) ->
 #        return folder_name
 #    return f"{folder_name} - {label}"
     
-def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str]:
-    audio_title = html_settings["project_page_audio_section_base_title"]
-    image_title = html_settings["project_page_image_section_base_title"]
-
+def _get_section_titles(media_group: Dict, audio_section_title: str, image_section_title: str) -> Dict[str, str]:
     if not media_group["is_root"]:
         title = Path(media_group["folder_path"]).name.title()
 
@@ -265,15 +262,15 @@ def _get_section_titles(media_group: Dict, html_settings: Dict) -> Dict[str, str
         image_title = title
 
     return {
-        "audio_section_title": audio_title,
-        "image_section_title": image_title,
+        "audio_section_title": audio_section_title,
+        "image_section_title": image_section_title,
     }
     
 def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_path: Path) -> List[Dict[str, Any]]:  
     media_groups_context = []
 
     for media_group in media_groups:
-        image_rel_paths = _sample_images(media_group["images"], ctx.html_settings["image_gallery_max"], ctx.html_settings["image_gallery_sample_strategy"])
+        image_rel_paths = _sample_images(media_group["images"], ctx.image_gallery_max, ctx.image_gallery_sample_strategy)
         video_rel_paths = media_group["videos"]
         track_rel_paths = media_group["tracks"]
         document_rel_paths = media_group["documents"]
@@ -322,7 +319,8 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         section_titles = _get_section_titles(
             media_group,
-            ctx.html_settings
+            ctx.project_page_audio_section_base_title,
+            ctx.project_page_image_section_base_title
         )
         
         sections = [
@@ -335,7 +333,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         media_groups_context.append({
             **section_titles,
-            "sections": _sort_sections_by_type(sections, ctx.html_settings["media_type_order"])
+            "sections": _sort_sections_by_type(sections, ctx.media_type_order)
         })
 
     return media_groups_context
@@ -408,7 +406,7 @@ def _build_project_pages(ctx: HtmlBuildContext, creators: List[Dict]):
         for project in creator['projects']:
             _build_project_page(ctx, creator, project, creators)
             
-def _get_collaboration_label(collab: Dict, creator_name: str, html_settings: Dict) -> str:
+def _get_collaboration_label(collab: Dict, creator_name: str) -> str:
     if creator_name in collab["members"]:
         others = [n for n in collab["members"] if n != creator_name]
         return " ".join(others)
@@ -462,7 +460,7 @@ def _build_collaboration_entries(ctx: HtmlBuildContext, creator: Dict, creators:
             continue
 
         collab_entries.append({
-            "label": _get_collaboration_label(collab, creator["name"], ctx.html_settings),
+            "label": _get_collaboration_label(collab, creator["name"]),
             "projects": _build_project_entries(ctx, collab),
         })
 
