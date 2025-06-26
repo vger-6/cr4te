@@ -55,7 +55,7 @@ function updateVideoProgress(video) {
     bar.style.backgroundSize = `${percent}% 100%`;
   }
 
-  const format = sec => new Date(sec * 1000).toISOString().substr(11, 8);
+  const format = sec => window.utils.formatTime(sec);
   if (display) {
     display.textContent = `${format(video.currentTime)} / ${format(video.duration || 0)}`;
   }
@@ -79,7 +79,7 @@ document.querySelectorAll(".video-wrapper video").forEach(video => {
 
     const display = wrapper.querySelector(".time-display");
     if (display) {
-      const format = sec => new Date(sec * 1000).toISOString().substr(11, 8);
+      const format = sec => window.utils.formatTime(sec);
       display.textContent = `${format(video.currentTime)} / ${format(video.duration || 0)}`;
     }
   });

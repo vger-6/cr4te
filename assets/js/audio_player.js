@@ -109,7 +109,7 @@ function updateProgress(audio) {
   }
 
   if (timeDisplay) {
-    const format = sec => new Date(sec * 1000).toISOString().substr(11, 8);
+    const format = sec => window.utils.formatTime(sec);
     timeDisplay.textContent = `${format(audio.currentTime)} / ${format(audio.duration || 0)}`;
   }
 }
