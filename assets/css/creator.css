@@ -46,7 +46,7 @@
   overflow-y: auto;
   padding-right: 0px;
   scrollbar-width: thin;  /* Firefox */
-  scrollbar-color: #666 transparent;
+  scrollbar-color: var(--scrollbar-color) transparent;
   min-width: 0;
 }
 
@@ -63,7 +63,7 @@
 
 .creator-left::-webkit-scrollbar-thumb,
 .creator-right::-webkit-scrollbar-thumb {
-  background-color: #666;
+  background-color: var(--scrollbar-thumb-color);
   border-radius: 2px;
   border: 3px solid transparent;
   background-clip: content-box;
@@ -85,7 +85,7 @@
     overflow-y: auto;
     padding-right: 0px;
     scrollbar-width: thin;
-    scrollbar-color: #666 transparent;
+    scrollbar-color: var(--scrollbar-color) transparent;
   }
 
   .creator-layout::-webkit-scrollbar {
@@ -97,7 +97,7 @@
   }
 
   .creator-layout::-webkit-scrollbar-thumb {
-    background-color: #666;
+    background-color: var(--scrollbar-thumb-color);
     border-radius: 2px;
     border: 3px solid transparent;
     background-clip: content-box;

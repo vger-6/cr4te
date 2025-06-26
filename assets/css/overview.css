@@ -3,7 +3,7 @@
   overflow-y: auto;
   padding-right: 0px;
   scrollbar-width: thin;  /* Firefox */
-  scrollbar-color: #666 transparent;
+  scrollbar-color: var(--scrollbar-color) transparent;
   margin-bottom: 2rem;
 }
 
@@ -17,7 +17,7 @@
 }
 
 .overview-layout::-webkit-scrollbar-thumb {
-  background-color: #666;
+  background-color: var(--scrollbar-thumb-color);
   border-radius: 2px;
   border: 3px solid transparent;
   background-clip: content-box;

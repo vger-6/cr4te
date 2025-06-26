@@ -1,48 +1,76 @@
 .theme-frozen-aurora {
   --bg-color: #0e1b2a;
-  
+
+  --hover-background-color: #2ec8e6;
+  --hover-text-color: #002633;
+
+  --selected-background-color: #2ec8e6;
+  --selected-text-color: #002633;
+
   --box-bg: #162d42;
   --border-color: #55bcd7;
   --hr-color: #89ecf5;
   --title-bg: #14324b;
   --title-color: #e0faff;
-  
-  --text-color: #d9f2ff;              
-  --text-muted-color: #a6c4d8;        
-  --tag-category-color: #97d1f3;      
-  --tag-text-color: #ffffff;          
-  --section-content-bg: transparent; 
+
+  --text-color: #d9f2ff;
+  --text-muted-color: #a6c4d8;
+  --tag-category-color: #97d1f3;
+  --tag-text-color: #ffffff;
+  --tag-background-color: #1c3b52;
+
+  --section-content-bg: transparent;
 
   --link-color: #82e9de;
   --link-visited-color: #aad8ef;
   --link-hover-color: #ffffff;
   --link-disabled-color: #669ea6;
-  
+
   --track-odd: #18374f;
   --track-even: #1f4660;
+
+  --icon-fill-color: #d9f2ff;
+  --control-border-color: #82e9de;
+
+  --scrollbar-color: #294d66;
+  --scrollbar-thumb-color: #55bcd7;
 }
 
 .theme-forest-night {
   --bg-color: #0d1b1e;
-  
+
+  --hover-background-color: #cccccc;
+  --hover-text-color: #102014;
+
+  --selected-background-color: #cccccc;
+  --selected-text-color: #102014;
+
   --box-bg: #1c3a3e;
   --border-color: #345;
   --hr-color: #466;
   --title-bg: #112;
   --title-color: #cdeac0;
-  
-  --text-color: #d8e5dd;              
-  --text-muted-color: #88a39a;        
-  --tag-category-color: #b2dfdb;      
-  --tag-text-color: #fefae0;          
-  --section-content-bg: transparent;  
+
+  --text-color: #d8e5dd;
+  --text-muted-color: #88a39a;
+  --tag-category-color: #b2dfdb;
+  --tag-text-color: #fefae0;
+  --tag-background-color: #2b4742;
+
+  --section-content-bg: transparent;
 
   --link-color: #a8dadc;
   --link-visited-color: #f4a261;
   --link-hover-color: #ffffff;
   --link-disabled-color: #44615d;
-  
+
   --track-odd: #24494d;
   --track-even: #2e5a5f;
+
+  --icon-fill-color: #d8e5dd;
+  --control-border-color: #a8dadc;
+
+  --scrollbar-color: #2e5a5f;
+  --scrollbar-thumb-color: #88a39a;
 }
 

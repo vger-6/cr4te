@@ -6,6 +6,12 @@
   /* Default theme fallback */
   --bg-color: #ffffff;
   
+  --hover-background-color: #cccccc;
+  --hover-text-color: #111111;
+  
+  --selected-background-color: #cccccc;
+  --selected-text-color: #111111;
+  
   --box-bg: #f9f9f9;
   --border-color: #cccccc;
   --hr-color: #dddddd;
@@ -16,6 +22,7 @@
   --text-muted-color: #666666;
   --tag-category-color: #888888;
   --tag-text-color: #444444;
+  --tag-background-color: #fff2;
   --section-content-bg: transparent;
 
   --link-color: #007acc;
@@ -25,6 +32,12 @@
 
   --track-odd: #f0f0f0;
   --track-even: #e0e0e0;
+  
+  --icon-fill-color: #111111;
+  --control-border-color: #111111;
+  
+  --scrollbar-color: #666;
+  --scrollbar-thumb-color: #666;
 }
 
 body {
@@ -141,12 +154,14 @@ a:focus {
 }
 
 .theme-panel .theme-option:hover {
-  background-color: var(--border-color);
+  background-color: var(--hover-background-color);
+  color: var(--hover-text-color);
 }
 
 .theme-panel .theme-option.selected {
   font-weight: bold;
-  background-color: var(--border-color);
+  background-color: var(--selected-background-color);
+  color: var(--selected-text-color);
 }
 
 .az-tabs {
@@ -287,13 +302,14 @@ a:focus {
 }
 
 .audio-gallery li:hover {
-  background-color: var(--border-color);
+  background-color: var(--hover-background-color);
+  color: var(--hover-text-color);
 }
 
 .audio-gallery li.playing {
   font-weight: bold;
-  background-color: var(--border-color);
-  color: var(--text-color);
+  background-color: var(--selected-background-color);
+  color: var(--selected-text-color);
 }
 
 .pagination-controls {
@@ -313,8 +329,8 @@ a:focus {
 
 .pagination-controls button.active {
   font-weight: bold;
-  background: var(--highlight-color);
-  color: white;
+  background: var(--box-bg);
+  color: var(--control-border-color);
   cursor: default;
 }
 
@@ -351,7 +367,7 @@ a:focus {
 
 .tag {
   display: inline-block;
-  background-color: #fff2;
+  background-color: var(--tag-background-color);
   padding: 0.2rem 0.5rem;
   margin: 0.2rem;
   border-radius: 0.5rem;
@@ -380,7 +396,6 @@ a:focus {
 
 .section-box.audio-section {
   position: relative;
-  
 }
 
 .section-box.audio-section .audio-controls {
@@ -389,7 +404,7 @@ a:focus {
   z-index: 2;
   background: var(--box-bg);
   padding: 0.5rem;
-  border: 2px solid white;
+  border: 2px solid var(--control-border-color);
   transition: opacity 0.3s ease;
 }
 
@@ -421,7 +436,7 @@ a:focus {
 .icon {
   width: 1.5rem;
   height: 1.5rem;
-  fill: var(--text-color);
+  fill: var(--icon-fill-color);
 }
 
 .volume-container {
