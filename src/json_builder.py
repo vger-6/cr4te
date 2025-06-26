@@ -92,7 +92,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
         "is_root": False
     })
     
-    max_depth = ctx.media_rules["max_depth"]
+    max_depth = ctx.max_depth
 
     # Helper to check max depth
     def is_within_max_depth(path: Path) -> bool:
@@ -103,7 +103,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
             continue
         if not is_within_max_depth(file):
             continue
-        if file.name.startswith(ctx.media_rules["global_exclude_prefix"]):
+        if file.name.startswith(ctx.global_exclude_prefix):
             continue
 
         suffix = file.suffix.lower()
@@ -116,11 +116,11 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
             media_map[folder_key]["videos"].append(str(rel_to_input))
         elif suffix in AUDIO_EXTS:
             media_map[folder_key]["tracks"].append(str(rel_to_input))
-        elif suffix in IMAGE_EXTS and stem not in (ctx.media_rules["cover_basename"], ctx.media_rules["portrait_basename"]):
+        elif suffix in IMAGE_EXTS and stem not in (ctx.cover_basename, ctx.portrait_basename):
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
             media_map[folder_key]["documents"].append(str(rel_to_input))
-        elif suffix in TEXT_EXTS and stem != "readme":
+        elif suffix in TEXT_EXTS and file.name.lower() != ctx.readme_filename.lower():
             media_map[folder_key]["texts"].append(str(rel_to_input))
 
         media_map[folder_key]["is_root"] = is_root
@@ -154,7 +154,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
     
     projects = []
     for project_dir in sorted(creator_path.iterdir()):
-        if not project_dir.is_dir() or project_dir.name.startswith((ctx.media_rules["global_exclude_prefix"], ctx.media_rules["metadata_folder_name"])):
+        if not project_dir.is_dir() or project_dir.name.startswith((ctx.global_exclude_prefix, ctx.metadata_folder_name)):
             continue
 
         project_title = project_dir.name.strip()
@@ -162,8 +162,8 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
         existing_project = existing_projects.get(project_title, {})
 
         # Find cover
-        all_images = _find_all_images(project_dir, ctx.media_rules["global_exclude_prefix"])
-        cover = _select_best_image(all_images, ctx.media_rules["cover_basename"], Orientation.LANDSCAPE)
+        all_images = _find_all_images(project_dir, ctx.global_exclude_prefix)
+        cover = _select_best_image(all_images, ctx.cover_basename, Orientation.LANDSCAPE)
 
         project = {
             "title": project_title,
@@ -182,7 +182,7 @@ def _build_creator_media_groups(ctx: JsonBuildContext, creator_path: Path, exist
     media_groups = []
 
     # Metadata folder media
-    metadata_path = creator_path / ctx.media_rules["metadata_folder_name"]
+    metadata_path = creator_path / ctx.metadata_folder_name
     if metadata_path.exists():
         media_groups = _build_media_groups(ctx, metadata_path, existing_media_groups)
 
@@ -207,10 +207,10 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     existing_creator = _load_existing_json(creator_path / constants.CR4TE_JSON_FILENAME)
     
     # Find portrait
-    all_images = _find_all_images(creator_path, ctx.media_rules["global_exclude_prefix"])
-    portrait = _select_best_image(all_images, ctx.media_rules["portrait_basename"], Orientation.PORTRAIT)
+    all_images = _find_all_images(creator_path, ctx.global_exclude_prefix)
+    portrait = _select_best_image(all_images, ctx.portrait_basename, Orientation.PORTRAIT)
     
-    separators = ctx.media_rules["collaboration_separators"]
+    separators = ctx.collaboration_separators
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
         is_collab = _is_collaboration(creator_name, separators)
@@ -271,7 +271,7 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
     creators = []
 
     for creator_path in sorted(ctx.input_dir.iterdir()):
-        if not creator_path.is_dir() or creator_path.name.startswith(ctx.media_rules["global_exclude_prefix"]):
+        if not creator_path.is_dir() or creator_path.name.startswith(ctx.global_exclude_prefix):
             continue
         print(f"Processing creator: {creator_path.name}")
         creator = _build_creator(ctx, creator_path)
