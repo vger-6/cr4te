@@ -208,7 +208,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   function getScrollContainer() {
-    if (window.innerWidth <= 768) {
+    const breakpoint = window.utils.getBreakpointPx();
+    if (window.innerWidth <= breakpoint) {
       return (
         document.querySelector('.project-layout') ||
         document.querySelector('.creator-layout')

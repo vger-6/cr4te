@@ -99,7 +99,7 @@
 }
 
 /* Small screen behavior */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .project-layout {
     flex-direction: column;
     height: 100%;

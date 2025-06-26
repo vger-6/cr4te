@@ -1,18 +1,10 @@
-function parseGapValue(value) {
-  if (value.endsWith('rem')) {
-    const rem = parseFloat(value);
-    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
-  }
-  return parseFloat(value);
-}
-
 function rebuildAspectImageGallery() {
   document.querySelectorAll('.image-gallery--aspect').forEach(gallery => {
     const aspectRatio = gallery.dataset.aspectRatio || "1/1";
     const [w, h] = aspectRatio.split('/').map(Number);
     const maxHeight = parseFloat(gallery.dataset.imageMaxHeight || "200");
     const computedStyle = window.getComputedStyle(gallery);
-    const gap = parseGapValue(computedStyle.columnGap || computedStyle.gap || "1rem");
+    const gap = window.utils.parseGapValue(computedStyle.columnGap || computedStyle.gap || "1rem");
 
     const galleryWidth = gallery.clientWidth;
 

@@ -1,4 +1,6 @@
 :root {
+  --mobile-breakpoint: 48rem;
+
   --font-family: sans-serif;
   
   /* Default theme fallback */
