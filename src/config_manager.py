@@ -19,33 +19,33 @@ __all__ = ["load_config", "apply_cli_overrides"]
 # === Default internal config ===
 DEFAULT_CONFIG = {
     "html_settings": {
-        "nav_creators_label": "Creators",
-        "nav_projects_label": "Projects",
+        "nav_creators_label": "Artists",
+        "nav_projects_label": "Works",
         "nav_tags_label": "Tags",
         
-        "creator_overview_page_title": "Creators",
-        "creator_overview_page_search_placeholder": "Search creators, projects, tags...",
+        "creator_overview_page_title": "Artists",
+        "creator_overview_page_search_placeholder": "Search artists, works, tags...",
         
-        "project_overview_page_title": "Projects",
-        "project_overview_page_search_placeholder": "Search projects, tags...",
+        "project_overview_page_title": "Works",
+        "project_overview_page_search_placeholder": "Search works, tags...",
         
         "creator_page_profile_title": "Profile",
         "creator_page_about_title": "About",
         "creator_page_tags_title": "Tags",
-        "creator_page_projects_title": "Projects",
-        "creator_page_collabs_title_prefix": "Projects with",
+        "creator_page_projects_title": "Works",
+        "creator_page_collabs_title_prefix": "With",
         
         "collaboration_page_profile_title": "Profile",
         "collaboration_page_about_title": "About",
         "collaboration_page_tags_title": "Tags",
         "collaboration_page_members_title": "Members",
-        "collaboration_page_projects_title": "Projects",
+        "collaboration_page_projects_title": "Works",
         
         "project_page_overview_title": "Overview",
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
-        "project_page_creator_profile_title": "Creator Profile",
-        "project_page_audio_section_base_title": "Tracks",
+        "project_page_creator_profile_title": "Profile",
+        "project_page_audio_section_base_title": "Audio",
         "project_page_image_section_base_title": "Images",
         
         "tags_page_title": "Tags",
@@ -162,19 +162,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                 "project_gallery_aspect_ratio": "1/1",
             }
         case DomainPreset.ART:
-            return {
-                "nav_creators_label": "Artists",
-                "nav_projects_label": "Works",
-                "creator_overview_page_title": "Artists",
-                "creator_overview_page_search_placeholder": "Search artists, works, tags...",
-                "project_overview_page_title": "Works",
-                "project_overview_page_search_placeholder": "Search works, tags...",
-                "creator_page_projects_title": "Works",
-                "project_page_audio_section_base_title": "Audio",
-                "creator_page_collabs_title_prefix": "With",
-                "collaboration_page_projects_title": "Works",
-                "project_page_creator_profile_title": "Profile",
-            }
+            return {}
         case DomainPreset.BOOK:
             return {
                 "nav_creators_label": "Author",

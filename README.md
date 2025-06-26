@@ -25,7 +25,7 @@ If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/
 * **HTML domain presets for different domains** (art, music, books, film, ...)
 * **User-customizable labels and media rules** via optional config file
 * **Fast static HTML output** with no runtime dependencies during browsing
-* **Theme switcher with persistent selection** using localStorage
+* **Theme switcher**
 
 > This tool is an ongoing work-in-progress. Expect improvements, breaking changes, and new features.
 
@@ -81,6 +81,8 @@ See also the [Quick-Start](https://github.com/vger-6/cr4te/blob/main/data/exampl
 python cr4te.py build -i <input_folder> -o <output_folder>
 ```
 
+See [Troubleshooting](#troubleshooting) if something is not working.
+
 ### Optional: Custom Configuration
 
 ```bash
@@ -95,7 +97,7 @@ python cr4te.py build -i <input_folder> -o <output_folder> --domain-preset film
 
 Available presets:
 
-* `art`
+* `art` (default)
 * `film`
 * `music`
 * `book`
@@ -199,7 +201,7 @@ This will fix localStorage issues and better match how your site behaves when de
 ---
 
 ### Building HTML Pages Not Working?
-If running the `build-html` command doesn't work or fails silently, it may be due to insufficient file permissions. Try running the command with administrator privileges (e.g., using sudo on Unix-based systems or an elevated Command Prompt on Windows).
+If running the `build` command doesn't work or fails silently, it may be due to insufficient file permissions. Try running the command with administrator privileges (e.g., using sudo on Unix-based systems or an elevated Command Prompt on Windows).
 
 Also, ensure:
 * The output directory is writable.
@@ -210,36 +212,4 @@ Also, ensure:
 This project is licensed under the terms of the LICENSE file included.
 
 ---
-
-## TODO
-
-This section outlines planned improvements, refactors, and feature ideas for `cr4te`.
-
-### 🔧 Functionality
-
-- [ ] Add `--dry-run` flag to `build-json` and `build-html` commands
-- [ ] Add optional progress bar (e.g., using `tqdm`) for large folder trees
-- [ ] Enable post-processing via custom hooks (e.g., metadata or templating)
-
-### 📄 Output & Layout
-
-- [ ] Extract shared CSS styles for customization (or theme overrides)
-- [ ] Split CSS files into modular components (e.g., layout, buttons, gallery)
-
-### 🧹 Refactoring
-
-- [ ] Consider internal mapping for config fields (e.g., `"creator_page_visible_creator_fields"`)
-
-### 🧪 Testing & Docs
-
-- [ ] Add unit tests
-- [ ] Add more professional logging (with support for `--verbose`)
-
----
-
-## Credits
-
-Created for artists, curators, media historians, and creative developers who want simple but structured control over their digital media archives.
-
-> Development is ongoing. Feedback, ideas, and contributions are very welcome!
  
