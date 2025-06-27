@@ -26,12 +26,6 @@
   {% set placeholder = html_settings.project_overview_page_search_placeholder %}
   {% include "partials/_search_bar.html.j2" %}
 
-  <!--div class="az-tabs">
-    {% for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
-      <span class="az-tab" data-letter="{{ letter }}">{{ letter }}</span>
-    {% endfor %}
-  </div-->
-
   <div class="overview-layout">
 
     {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
@@ -63,9 +57,7 @@
 </div>
 
 <script src="assets/js/utils.js" defer></script>
-<script src="assets/js/filter_base.js"></script>
-<script src="assets/js/filter_simple.js"></script>
-<!--script src="assets/js/filter_tabs.js"></script-->
+<script src="assets/js/search_filter.js"></script>
 <script src="assets/js/aspect_gallery_builder.js" defer></script>
 <script src="assets/js/justified_gallery_builder.js" defer></script>
 <script src="assets/js/pagination.js" defer></script>
