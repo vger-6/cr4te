@@ -342,6 +342,21 @@ a:focus {
   color: var(--selected-text-color);
 }
 
+.track-title {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+}
+
+.track-title-text {
+  flex: 1;
+}
+
+.track-duration-text {
+  width: 4rem;
+  text-align: right;
+}
+
 .pagination-controls {
   display: flex;
   flex-wrap: wrap;

@@ -2,4 +2,5 @@ Pillow>=9.0.0
 markdown>=3.3.0
 Jinja2>=3.0.0
 pydantic>=2.11.5
+mutagen>=1.46.0
 

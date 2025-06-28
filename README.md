@@ -166,6 +166,7 @@ Thumbnails are automatically generated into `/thumbnails/`.
 
 * Python 3.10+
 * Pillow
+* Mutagen
 * Markdown
 * Jinja2
 * Pydantic

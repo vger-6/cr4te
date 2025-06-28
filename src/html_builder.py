@@ -1,6 +1,7 @@
 import shutil
 import json
 import os
+import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Iterable, Set
 from datetime import datetime
@@ -8,6 +9,7 @@ from collections import defaultdict
 
 import markdown
 from PIL import Image
+from mutagen import File as MutagenFile
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import ValidationError
 
@@ -69,7 +71,7 @@ def _build_slugified_filename(relative_path: Path, tag: str) -> str:
         parts.append(tag)
     slug = slugify("__".join(parts))
     return f"{slug}{relative_path.suffix.lower()}"
-    
+        
 def _is_portrait(image_path : Path) -> bool:
     try:
         with Image.open(image_path) as img:
@@ -266,6 +268,19 @@ def _get_section_titles(media_group: Dict, audio_section_title: str, image_secti
         "image_section_title": image_section_title,
     }
     
+def _get_audio_duration_seconds(file_path: Path) -> int:
+    """
+    Returns the duration of the given audio file in seconds,
+    or 0 if the duration cannot be determined.
+    """
+    try:
+        audio = MutagenFile(str(file_path))
+        if audio and audio.info:
+            return int(audio.info.length)
+    except Exception as e:
+        print(f"Warning: could not read duration for {file_path}: {e}")
+    return 0
+    
 def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_path: Path) -> List[Dict[str, Any]]:  
     media_groups_context = []
 
@@ -296,7 +311,8 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
         tracks = [
             {
                 "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), base_path),
-                "title": Path(rel).stem
+                "title": Path(rel).stem,
+                "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
             for rel in track_rel_paths
         ]
@@ -325,7 +341,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
         
         sections = [
             {"type": MediaType.VIDEO.value, "videos": videos},
-            {"type": MediaType.AUDIO.value, "tracks": tracks},
+            {"type": MediaType.AUDIO.value, "tracks": tracks, "meta": {"total_duration_seconds": sum(track["duration_seconds"] for track in tracks)}},
             {"type": MediaType.IMAGE.value, "images": images},
             {"type": MediaType.DOCUMENT.value, "documents": documents},
             {"type": MediaType.TEXT.value, "texts": texts}
