@@ -157,6 +157,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                 "creator_page_collabs_title_prefix": "With",
                 "collaboration_page_projects_title": "Albums",
                 "project_page_creator_profile_title": "Profile",
+                "project_page_audio_section_base_title": "Tracks",
                 "media_type_order": [MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.VIDEO],
                 "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                 "project_gallery_aspect_ratio": "1/1",

@@ -103,7 +103,7 @@ function rebuildJustifiedImageGallery() {
   });
 }
 
-//TODO: Debounce the resize events e.g., using setTimeout
+//TODO: Debounce the resize events e.g., using setTimeout. See also aspect_gallery_builder.js
 window.addEventListener('load', rebuildJustifiedImageGallery);
 window.addEventListener('resize', rebuildJustifiedImageGallery);
 
