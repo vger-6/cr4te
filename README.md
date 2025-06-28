@@ -9,7 +9,7 @@ cr4te scans your existing folder structure, extracts metadata and media (images,
 
 <img src="data/example/artist_page.png" alt="Screenshot Artist Page" width="100%"/>
 
-[View full gallery](SCREENSHOTS.md)
+[View full gallery](info/SCREENSHOTS.md)
 
 ## Support This Project 🙏
 
