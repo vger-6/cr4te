@@ -234,15 +234,6 @@ a:focus {
   gap: 1rem;
 }
 
-.image-gallery--aspect .image-wrapper {
-  display: block;
-}
-
-.image-gallery--aspect .image-wrapper a {
-  display: block;
-  text-align: left;
-}
-
 .image-gallery--aspect .aspect-ratio-box {
   width: 100%;
   position: relative;
@@ -277,6 +268,45 @@ a:focus {
   display: block;
   width: auto;
   object-fit: contain;
+}
+
+.image-caption {
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.image-card {
+  background: rgba(255, 255, 255, 0.0);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.image-card a {
+  text-decoration: none;
+}
+
+.image-card:hover {
+  background:  var(--hover-background-color);
+  /*transform: translateY(-4px);*/
+}
+
+.image-card:hover .image-caption {
+  color: var(--hover-text-color); 
+}
+
+.image-gallery--aspect .image-wrapper {
+  display: block;
+}
+
+.image-gallery--aspect .image-wrapper a {
+  display: block;
+  text-align: left;
 }
 
 .audio-gallery {
@@ -404,7 +434,7 @@ a:focus {
   z-index: 2;
   background: var(--box-bg);
   padding: 0.5rem;
-  border: 2px solid var(--control-border-color);
+  border: 1px solid var(--control-border-color);
   transition: opacity 0.3s ease;
 }
 
@@ -465,7 +495,6 @@ a:focus {
 .video-wrapper,
 .video-wrapper video {
   border: none;
-  border-radius: 0;
   background: none;
   display: block;
   width: 100%;

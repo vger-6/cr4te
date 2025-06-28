@@ -99,7 +99,9 @@
                     <a href="{{ image.full_url }}" target="_blank">
                       <img src="{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
                       {% if html_settings.project_page_image_gallery_captions_visible %}
-                        <span>{{ image.caption }}</span>
+                        <div class=image-caption>
+                          <span>{{ image.caption }}</span>
+                        </div>
                       {% endif %}
                     </a>
                   </div>

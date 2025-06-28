@@ -39,12 +39,13 @@
              data-page-size="{{ html_settings.creator_overview_page_creator_gallery_page_size }}"
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for creator in creator_entries %}
-          <div class="image-wrapper" 
-               data-search-text="{{ creator.search_text }}"
-               data-az-string="{{ creator.name }}">
+          <div class="image-wrapper image-card" 
+               data-search-text="{{ creator.search_text }}">
             <a href="{{ creator.url }}" title="{{ creator.name }}">
               <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
-              <span>{{ creator.name }}</span><br>
+              <div class=image-caption>
+                <span>{{ creator.name }}</span>
+              </div>
             </a>
           </div>
           {% endfor %}
