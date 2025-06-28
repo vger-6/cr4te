@@ -428,7 +428,7 @@ a:focus {
 /*pagination.js queries pagination-controls-wrapper*/
 .audio-controls-wrapper,
 .pagination-controls-wrapper  {
-  position: sticky;
+  /*position: sticky;*/
   bottom: 0rem;
   padding-top: 1rem;
   background: var(--box-bg);
