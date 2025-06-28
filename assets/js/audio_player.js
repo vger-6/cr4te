@@ -195,13 +195,13 @@
       bar.addEventListener("blur", () => { isSeeking = false; });
     });
 
-    const audioSections = document.querySelectorAll('.section-box.audio-section');
+    const audioSections = document.querySelectorAll('.section-box.audio-gallery-section');
     const threshold = 100;
     let currentScrollContainer = null;
       
     // Set initial state
     audioSections.forEach(section => {
-      const controls = section.querySelector('.audio-controls');
+      const controls = section.querySelector('.audio-controls-wrapper');
       if (controls) {
         controls.style.opacity = '0';
         controls.style.pointerEvents = 'none';
@@ -228,7 +228,7 @@
       const containerTop = scrollContainer.getBoundingClientRect().top;
 
       audioSections.forEach(section => {
-        const controls = section.querySelector('.audio-controls');
+        const controls = section.querySelector('.audio-controls-wrapper');
         if (!controls) return;
 
         const sectionRect = section.getBoundingClientRect();

@@ -164,25 +164,6 @@ a:focus {
   color: var(--selected-text-color);
 }
 
-.az-tabs {
-  margin: 1rem 0;
-  text-align: center;
-}
-
-.az-tab {
-  display: inline-block;
-  margin: 0 0.4rem;
-  padding: 0.3rem 0.6rem;
-  cursor: pointer;
-  font-weight: bold;
-  color: var(--link-color);
-}
-
-.az-tab.active {
-  color: var(--link-hover-color);
-  text-decoration: underline;
-}
-
 .section-box {
   border: 2px solid var(--border-color);
   background-color: var(--box-bg);
@@ -208,13 +189,6 @@ a:focus {
   padding: 1rem;
   background-color: var(--section-content-bg);
 }
-
-/*
-.section-content video {
-  display: block;
-  width: 100%;
-}
-*/
 
 .text-content {
   padding-top: 0rem;
@@ -358,17 +332,21 @@ a:focus {
 }
 
 .pagination-controls {
+  background: var(--box-bg);
+  padding: 0.5rem;
+  border: 1px solid var(--control-border-color);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+  transition: opacity 0.3s ease;
 }
 
 .pagination-controls button {
   background: var(--box-bg);
   border: 1px solid var(--border-color);
-  padding: 0.25rem 0.75rem;
+  height: 1.5rem;
+  width: 2rem;
   cursor: pointer;
 }
 
@@ -431,40 +409,31 @@ a:focus {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
   flex-wrap: wrap;
+  background: var(--box-bg);
+  padding: 0.5rem;
+  border: 1px solid var(--control-border-color);
 }
 
 .audio-controls > * {
   min-width: 0px;
 }
 
-.section-box.audio-section {
+/*
+.section-box.audio-gallery-section {
   position: relative;
 }
+*/
 
-.section-box.audio-section .audio-controls {
+/*pagination.js queries pagination-controls-wrapper*/
+.audio-controls-wrapper,
+.pagination-controls-wrapper  {
   position: sticky;
-  bottom: 1rem;
-  z-index: 2;
+  bottom: 0rem;
+  padding-top: 1rem;
   background: var(--box-bg);
-  padding: 0.5rem;
-  border: 1px solid var(--control-border-color);
+  z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;
-}
-
-/* creates a solid rectangle just beneath the control */
-.track-list-blocker {
-  position: sticky;
-  bottom: 0;
-  height: 1rem;
-  background: var(--box-bg);
-  z-index: 3;
-  pointer-events: none; /* ensures it's transparent to clicks */
-}
-
-.audio-section .section-content {
-  padding-bottom: 0;
 }
 
 .control-btn {
