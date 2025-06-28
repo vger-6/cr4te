@@ -49,6 +49,8 @@
     const tag = params.get('tag');
     if (tag && input) {
       input.value = tag;
+      
+      window.utils.clearUrlParam('tag');
     }
 
     input.addEventListener("input", filter);

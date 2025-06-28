@@ -17,3 +17,11 @@ window.utils.getBreakpointPx = function (varName = '--mobile-breakpoint') {
 window.utils.formatTime = function (sec) {
   return new Date(sec * 1000).toISOString().substr(11, 8);
 }
+
+window.utils.clearUrlParam = function (paramName) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete(paramName);
+  const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+  window.history.replaceState({}, '', newUrl);
+};
+
