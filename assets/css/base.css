@@ -483,12 +483,18 @@ a:focus {
 .volume-slider {
   width: 5rem;
   background-size: 50% 100%; 
+  cursor: pointer;
 }
 
 .progress-bar {
   flex: 1;
   min-width: 5rem;
   background-size: 0% 100%;
+  cursor: pointer;
+}
+
+.progress-bar:disabled {
+  cursor: default;
 }
 
 .time-display {
