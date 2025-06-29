@@ -1,41 +1,42 @@
 {% import "partials/_icons.html.j2" as icons %}
 {% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_video_player.html.j2" as video_player %}
 
 {% macro render_media_groups(media_groups, html_settings, gallery_image_max_height, page_size) %}
   {% for group in media_groups %}
     {% for section in group.sections %}
       {% if section.type == MediaType.VIDEO.value %}
-        {% for video in section.videos %}
+        {% set total = section.videos|length %}
+        {% if total is odd %}
+          {# First video alone #}
           <div class="section-box">
-            <div class="section-title">{{ video.title }}</div>
+            <div class="section-title">{{ section.videos[0].title }}</div>
             <hr>
             <div class="section-content">
-              <div class="video-wrapper">
-                  <video preload="metadata">
-                    <source src="{{ video.full_url }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                  </video>
+              {{ video_player.render(section.videos[0]) }}
+            </div>
+          </div>
 
-                  <div class="video-controls">
-                    <button class="control-btn" onclick="toggleVideoPlay(this)">
-                      {{ icons.play_pause_icon() }}
-                    </button>
+          {# Remaining videos in rows of two #}
+          {% set videos = section.videos[1:] %}
+          {% else %}
+            {% set videos = section.videos %}
+          {% endif %}
 
-                    <input type="range" class="progress-bar" value="0" step="0.01" onchange="seekVideo(this)" disabled>
-
-                    <span class="time-display">00:00:00 / 00:00:00</span>
-
-                    <div class="volume-container">
-                      {{ icons.volume_icon() }}
-                      <input type="range" class="volume-slider" min="0" max="1" step="0.01" oninput="setVideoVolume(this)">
-                    </div>
-
-                    <button class="control-btn" onclick="toggleFullscreen(this)">
-                      {{ icons.fullscreen_icon() }}
-                    </button>
+        {% for i in range(0, videos|length, 2) %}
+          <div class="video-row">
+            {% for j in [0, 1] %}
+              {% if i + j < videos|length %}
+                {% set video = videos[i + j] %}
+                <div class="section-box">
+                  <div class="section-title">{{ video.title }}</div>
+                  <hr>
+                  <div class="section-content">
+                    {{ video_player.render(video) }}
                   </div>
                 </div>
-            </div>
+              {% endif %}
+            {% endfor %}
           </div>
         {% endfor %}
       {% elif section.type == MediaType.AUDIO.value %}

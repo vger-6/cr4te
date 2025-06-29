@@ -1,5 +1,6 @@
 :root {
   --mobile-breakpoint: 48rem;
+  --body-padding: 1rem;
 
   --font-family: sans-serif;
   
@@ -45,7 +46,7 @@ body {
   font-family: var(--font-family);
   background-color: var(--bg-color);
   margin: 0;
-  padding: 1rem;
+  padding: var(--body-padding);
 }
 
 html, body {
@@ -540,3 +541,25 @@ a:focus {
   height: 100%;
   object-fit: contain;
 }
+
+.video-row {
+  display: flex; 
+  gap: 1rem;
+}
+
+.video-row .section-box {
+  flex: 1;
+}
+
+/* Small screen behavior */
+@media (max-width: 96rem) {
+  .video-row {
+    flex-direction: column;
+  }
+  
+  .video-row .section-box {
+    flex: unset;
+    width: 100%;
+  }
+}
+

@@ -51,8 +51,9 @@
 }
 
 .project-layout {
+  --layout-gap: 1rem;
   display: flex;
-  gap: 1rem;
+  gap: var(--layout-gap);
   height: 100%;
   overflow: hidden;
   margin-bottom: 2rem;
@@ -92,6 +93,7 @@
 
 .project-left {
   flex: 3;
+  min-width: calc((var(--mobile-breakpoint) / 2) - ((2 * var(--body-padding) + var(--layout-gap)) / 2));
 }
 
 .project-right {

@@ -1,0 +1,25 @@
+{% import "partials/_icons.html.j2" as icons %}
+
+{% macro render(video) %}
+  <div class="video-wrapper">
+    <video preload="metadata">
+      <source src="{{ video.full_url }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button class="control-btn" onclick="toggleVideoPlay(this)">
+        {{ icons.play_pause_icon() }}
+      </button>
+      <input type="range" class="progress-bar" value="0" step="0.01" onchange="seekVideo(this)" disabled>
+      <span class="time-display">00:00:00 / 00:00:00</span>
+      <div class="volume-container">
+        {{ icons.volume_icon() }}
+        <input type="range" class="volume-slider" min="0" max="1" step="0.01" oninput="setVideoVolume(this)">
+      </div>
+      <button class="control-btn" onclick="toggleFullscreen(this)">
+        {{ icons.fullscreen_icon() }}
+      </button>
+    </div>
+  </div>
+{% endmacro %}
+
