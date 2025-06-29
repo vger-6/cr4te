@@ -26,7 +26,7 @@
   {% set placeholder = html_settings.project_overview_page_search_placeholder %}
   {% include "partials/_search_bar.html.j2" %}
 
-  <div class="overview-layout scrollable-container">
+  <div class="overview-layout">
 
     {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
     {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}

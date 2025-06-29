@@ -26,9 +26,15 @@
     function getExplicitScrollableAncestor(el) {
       let parent = el.parentElement;
       while (parent) {
-        if (parent.classList.contains('scrollable-container')) {
+        const style = window.getComputedStyle(parent);
+        const overflowY = style.getPropertyValue('overflow-y');
+        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll');
+        const canScroll = parent.scrollHeight > parent.clientHeight;
+
+        if (isScrollable && canScroll) {
           return parent;
         }
+
         parent = parent.parentElement;
       }
       return null;
