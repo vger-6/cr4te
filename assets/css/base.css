@@ -167,8 +167,6 @@ a:focus {
 .section-box {
   border: 2px solid var(--border-color);
   background-color: var(--box-bg);
-  padding: 0;
-  margin-bottom: 0rem;
 }
 
 .section-title {
@@ -333,8 +331,9 @@ a:focus {
 
 .pagination-controls {
   background: var(--box-bg);
-  padding: 0.5rem;
-  border: 1px solid var(--control-border-color);
+  /*padding: 0.5rem;*/
+  padding-top: 1rem;
+  /*border: 1px solid var(--border-color);*/
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -343,17 +342,19 @@ a:focus {
 }
 
 .pagination-controls button {
+  color: var(--text-color);
+  font-weight: bold;
   background: var(--box-bg);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--icon-fill-color);
   height: 1.5rem;
   width: 2rem;
   cursor: pointer;
 }
 
-.pagination-controls button.active {
-  font-weight: bold;
+.pagination-controls button.in-active {
   background: var(--box-bg);
-  color: var(--control-border-color);
+  color: var(--link-disabled-color);
+  border: 1px solid var(--link-disabled-color);
   cursor: default;
 }
 
@@ -412,7 +413,7 @@ a:focus {
   flex-wrap: wrap;
   background: var(--box-bg);
   padding: 0.5rem;
-  border: 1px solid var(--control-border-color);
+  border: 1px solid var(--border-color);
 }
 
 .audio-controls > * {
@@ -425,12 +426,25 @@ a:focus {
 }
 */
 
+.audio-gallery-section .section-content {
+  padding-bottom: 0rem;
+}
+
+.audio-controls-wrapper  {
+  position: sticky;
+  bottom: 0rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  background: var(--box-bg);
+  z-index: 3; /* Above track list, below sticky controls */
+  transition: opacity 0.3s ease;
+}
+
 /*pagination.js queries pagination-controls-wrapper*/
-.audio-controls-wrapper,
 .pagination-controls-wrapper  {
   /*position: sticky;*/
   bottom: 0rem;
-  padding-top: 1rem;
+  /*padding-top: 1rem;*/
   background: var(--box-bg);
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;

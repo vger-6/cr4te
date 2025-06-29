@@ -53,11 +53,15 @@
         for (let i = 1; i <= totalPages; i++) {
           const btn = document.createElement('button');
           btn.textContent = i;
-          if (i === page) btn.classList.add('active');
-          btn.onclick = () => {
-            currentPage = i;
-            renderPage(currentPage, true);
-          };
+          if (i === page) {
+            btn.classList.add('in-active');
+          }
+          else {
+            btn.onclick = () => {
+              currentPage = i;
+              renderPage(currentPage, true);
+            };
+          }
           controls.appendChild(btn);
         }
       } else {
@@ -69,17 +73,16 @@
         const sectionBox = gallery.closest('.section-box');
         if (sectionBox) {
           const scrollContainer = getExplicitScrollableAncestor(sectionBox);
-          if (scrollContainer) {
-            scrollContainer.scrollTo({
-              top: sectionBox.offsetTop - scrollContainer.offsetTop,
-              behavior: 'smooth'
-            });
-          } else {
-            sectionBox.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
+
+          requestAnimationFrame(() => {
+            // This runs after the browser has done a reflow/layout pass
+            if (scrollContainer) {
+              scrollContainer.scrollTo({
+                top: sectionBox.offsetTop - scrollContainer.offsetTop,
+                behavior: 'smooth'
+              });
+            } 
+          });
         }
       }
     }
