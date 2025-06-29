@@ -139,14 +139,14 @@ See this [`cr4te.json`](https://github.com/vger-6/cr4te/blob/main/data/example/A
 * `nationality`: Any free-form text
 * `aliases`: List of alternate names
 * `info`: Optional bio text (supports Markdown)
-* `tags`: Format should be `Category:Tag`, e.g. `Occupation:Photographer` or just `Photographer`
+* `tags`: Format should be `Category:Tag`, e.g. `Occupation:Photographer`. `Photographer` without a category works too.
 * `projects[*].info`: Optional per-project description
 * `projects[*].tags`: Tag list for each project
 * `members`: If this is a group folder, add member names
 * `collaborations`: Add collaboration names
 
 > **⚠️ Note**
-> Other fields might be overridden automatically during the building process. Editing those fileds by hand is futile.
+> Other fields might be overridden automatically during the build process. Editing those fileds by hand is futile.
 
 ---
 
