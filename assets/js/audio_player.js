@@ -75,6 +75,7 @@
     gallery.querySelectorAll(".track-title").forEach(el => el.classList.remove("playing"));
     updatePlayPauseIcon(gallery, false);
     resetProgressUI(gallery);
+    updateButtonStates(gallery, false); 
   }
 
   function highlightCurrent(liElement) {
@@ -137,6 +138,18 @@
       }
     }
   }
+  
+  function updateButtonStates(gallery, isPlaying) {
+    const nextBtn = gallery.querySelector(".control-btn[onclick*='nextTrack']");
+    const prevBtn = gallery.querySelector(".control-btn[onclick*='prevTrack']");
+    const stopBtn = gallery.querySelector(".control-btn[onclick*='stopAudio']");
+
+    [nextBtn, prevBtn, stopBtn].forEach(btn => {
+      if (btn) {
+        btn.classList.toggle("disabled", !isPlaying);
+      }
+    });
+  }
 
   function resetProgressUI(gallery) {
     setProgressBarEnabled(gallery, false);
@@ -149,6 +162,7 @@
   function updateUIOnPlay(gallery) {
     updatePlayPauseIcon(gallery, true);
     setProgressBarEnabled(gallery, true);
+    updateButtonStates(gallery, true);
   }
 
   // Initialize audio players
@@ -179,8 +193,12 @@
   document.querySelectorAll(".audio-gallery .volume-slider").forEach(slider => {
     slider.style.backgroundSize = `${slider.value * 100}% 100%`;
   });
-
+  
   document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".audio-gallery").forEach(gallery => {
+      updateButtonStates(gallery, false);
+    });
+    
     document.querySelectorAll(".audio-gallery .progress-bar").forEach(bar => {
       // Disable initially
       bar.disabled = true;

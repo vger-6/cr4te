@@ -462,6 +462,12 @@ a:focus {
   align-items: center;
 }
 
+.control-btn.disabled {
+  opacity: 0.5; 
+  cursor: default;
+  pointer-events: none;
+}
+
 .icon {
   width: 1.5rem;
   height: 1.5rem;
