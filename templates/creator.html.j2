@@ -122,10 +122,12 @@
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in collab.projects %}
-            <div class="image-wrapper">
+            <div class="image-wrapper image-card">
               <a href="{{ project.url }}" title="{{ project.title }}">
                 <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
-                <span>{{ project.title }}</span>
+                <div class=image-caption>
+                  <span>{{ project.title }}</span>
+                </div>
               </a>
             </div>
             {% endfor %}
