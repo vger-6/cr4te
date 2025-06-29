@@ -1,36 +1,54 @@
 (function () {
   let isSeeking = false;
-  let currentList = null;
-  let currentIndex = -1;
+
+  function setGalleryState(gallery, list, index) {
+    gallery._currentList = list;
+    gallery.dataset.currentIndex = index;
+  }
+
+  function getGalleryState(gallery) {
+    return {
+      list: gallery._currentList || [],
+      index: parseInt(gallery.dataset.currentIndex || "-1", 10),
+    };
+  }
 
   function playTrack(audio, liElement) {
     const gallery = audio.closest(".audio-gallery");
     const listItems = [...liElement.parentElement.querySelectorAll("li")];
 
-    currentList = listItems;
-    currentIndex = listItems.indexOf(liElement);
+    const currentIndex = listItems.indexOf(liElement);
+    setGalleryState(gallery, listItems, currentIndex);
 
     audio.src = liElement.dataset.src;
     audio.play();
 
-    highlightCurrent(liElement);
+    highlightCurrent(gallery, liElement);
     updateUIOnPlay(gallery);
   }
 
   function playNextTrack(audio) {
-    if (!currentList || currentIndex + 1 >= currentList.length) return;
-    currentIndex++;
-    const nextLi = currentList[currentIndex];
+    const gallery = audio.closest(".audio-gallery");
+    const { list, index } = getGalleryState(gallery);
+
+    if (!list || index + 1 >= list.length) return;
+
+    const nextIndex = index + 1;
+    const nextLi = list[nextIndex];
+    setGalleryState(gallery, list, nextIndex);
     playTrack(audio, nextLi);
   }
 
   function prevTrack(btn) {
-    if (!currentList || currentIndex <= 0) return;
     const gallery = btn.closest(".audio-gallery");
     const audio = gallery.querySelector("audio");
+    const { list, index } = getGalleryState(gallery);
 
-    currentIndex--;
-    const prevLi = currentList[currentIndex];
+    if (!list || index <= 0) return;
+
+    const prevIndex = index - 1;
+    const prevLi = list[prevIndex];
+    setGalleryState(gallery, list, prevIndex);
     playTrack(audio, prevLi);
   }
 
@@ -58,28 +76,36 @@
       updatePlayPauseIcon(gallery, false);
     }
   }
-
-  function stopAudio(btn) {
-    const gallery = btn.closest(".audio-gallery");
-    const audio = gallery.querySelector("audio");
-    if (!audio) return;
+  
+  function stopAudioControls(gallery, audio) {
+    if (!gallery || !audio) return;
 
     audio.pause();
     audio.currentTime = 0;
     audio.removeAttribute("src");
     audio.load();
 
-    currentIndex = -1;
-    currentList = null;
+    setGalleryState(gallery, null, -1);
 
     gallery.querySelectorAll(".track-title").forEach(el => el.classList.remove("playing"));
     updatePlayPauseIcon(gallery, false);
     resetProgressUI(gallery);
-    updateButtonStates(gallery, false); 
+    updateButtonStates(gallery, false);
   }
 
-  function highlightCurrent(liElement) {
-    document.querySelectorAll(".track-title").forEach(el => el.classList.remove("playing"));
+  function stopAudio(btn) {
+    const gallery = btn.closest(".audio-gallery");
+    const audio = gallery?.querySelector("audio");
+    stopAudioControls(gallery, audio);
+  }
+
+  function stopAudioFromAudioElement(audio) {
+    const gallery = audio.closest(".audio-gallery");
+    stopAudioControls(gallery, audio);
+  }
+
+  function highlightCurrent(gallery, liElement) {
+    gallery.querySelectorAll(".track-title").forEach(el => el.classList.remove("playing"));
     liElement.classList.add("playing");
   }
 
@@ -93,12 +119,11 @@
   function setVolume(input) {
     const audio = input.closest(".audio-gallery").querySelector("audio");
     audio.volume = input.value;
-
     input.style.backgroundSize = `${input.value * 100}% 100%`;
   }
 
   function updateProgress(audio) {
-    if (!audio || isSeeking) return; // prevent jump while seeking
+    if (!audio || isSeeking) return;
 
     const gallery = audio.closest(".audio-gallery");
     const bar = gallery.querySelector(".progress-bar");
@@ -138,7 +163,7 @@
       }
     }
   }
-  
+
   function updateButtonStates(gallery, isPlaying) {
     const nextBtn = gallery.querySelector(".control-btn[onclick*='nextTrack']");
     const prevBtn = gallery.querySelector(".control-btn[onclick*='prevTrack']");
@@ -165,7 +190,6 @@
     updateButtonStates(gallery, true);
   }
 
-  // Initialize audio players
   document.querySelectorAll(".audio-gallery audio").forEach(audio => {
     const gallery = audio.closest(".audio-gallery");
 
@@ -173,7 +197,8 @@
 
     audio.addEventListener("play", () => {
       updateUIOnPlay(gallery);
-      if (currentIndex === -1) {
+      const { index } = getGalleryState(gallery);
+      if (index === -1) {
         const li = gallery.querySelector("li");
         if (li) playSelectedTrack(li);
       }
@@ -182,29 +207,26 @@
     audio.addEventListener("pause", () => {
       updatePlayPauseIcon(gallery, false);
     });
+
+    audio.addEventListener("ended", () => {
+      const { list, index } = getGalleryState(gallery);
+      if (!list || index + 1 >= list.length) {
+        stopAudioFromAudioElement(audio);
+      } else {
+        playNextTrack(audio);
+      }
+    });
   });
 
-  // Initial UI reset on load
-  document.querySelectorAll(".audio-gallery .progress-bar").forEach(bar => {
-    bar.disabled = true;
-    bar.value = 0;
-  });
-
-  document.querySelectorAll(".audio-gallery .volume-slider").forEach(slider => {
-    slider.style.backgroundSize = `${slider.value * 100}% 100%`;
-  });
-  
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".audio-gallery").forEach(gallery => {
       updateButtonStates(gallery, false);
     });
-    
+
     document.querySelectorAll(".audio-gallery .progress-bar").forEach(bar => {
-      // Disable initially
       bar.disabled = true;
       bar.value = 0;
 
-      // Listen for user interaction
       bar.addEventListener("mousedown", () => { isSeeking = true; });
       bar.addEventListener("touchstart", () => { isSeeking = true; });
       bar.addEventListener("mouseup", () => { isSeeking = false; });
@@ -213,11 +235,14 @@
       bar.addEventListener("blur", () => { isSeeking = false; });
     });
 
+    document.querySelectorAll(".audio-gallery .volume-slider").forEach(slider => {
+      slider.style.backgroundSize = `${slider.value * 100}% 100%`;
+    });
+
     const audioSections = document.querySelectorAll('.section-box.audio-gallery-section');
     const threshold = 100;
     let currentScrollContainer = null;
-      
-    // Set initial state
+
     audioSections.forEach(section => {
       const controls = section.querySelector('.audio-controls-wrapper');
       if (controls) {
@@ -227,24 +252,11 @@
     });
 
     function getScrollContainer() {
-      const breakpoint = window.utils.getBreakpointPx();
-      if (window.innerWidth <= breakpoint) {
-        return (
-          document.querySelector('.project-layout') ||
-          document.querySelector('.creator-layout')
-        );
-      } else {
-        return (
-          document.querySelector('.project-right') ||
-          document.querySelector('.creator-right')
-        );
-      }
+      const firstGallery = document.querySelector('.audio-gallery');
+      return firstGallery ? window.utils.getExplicitScrollableAncestor(firstGallery) || window : window;
     }
 
     function updateAudioControlsVisibility() {
-      const scrollContainer = getScrollContainer();
-      const containerTop = scrollContainer.getBoundingClientRect().top;
-
       audioSections.forEach(section => {
         const controls = section.querySelector('.audio-controls-wrapper');
         if (!controls) return;
@@ -267,18 +279,14 @@
       const newScrollContainer = getScrollContainer();
 
       if (newScrollContainer !== currentScrollContainer) {
-        // Remove old listener
         if (currentScrollContainer) {
           currentScrollContainer.removeEventListener('scroll', updateAudioControlsVisibility);
         }
-
-        // Add new listener
         newScrollContainer.addEventListener('scroll', updateAudioControlsVisibility);
         currentScrollContainer = newScrollContainer;
       }
     }
 
-    // Optional: debounce resize for performance
     let resizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
@@ -288,11 +296,10 @@
       }, 150);
     });
 
-    // Initial setup
     setupScrollListener();
     updateAudioControlsVisibility();
   });
-    
+
   window.playSelectedTrack = playSelectedTrack;
   window.togglePlay = togglePlay;
   window.stopAudio = stopAudio;
@@ -302,3 +309,4 @@
   window.setVolume = setVolume;
   window.playNextTrack = playNextTrack;
 })();
+

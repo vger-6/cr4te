@@ -8,12 +8,22 @@ window.utils.parseGapValue = function (value) {
   return parseFloat(value);
 };
 
-//TODO: obsolete. see pagination.js
-window.utils.getBreakpointPx = function (varName = '--mobile-breakpoint') {
-  const rootStyles = getComputedStyle(document.documentElement);
-  const value = rootStyles.getPropertyValue(varName).trim();
-  return window.utils.parseGapValue(value);
-};
+window.utils.getExplicitScrollableAncestor = function (el) {
+  let parent = el.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const overflowY = style.getPropertyValue('overflow-y');
+    const isScrollable = (overflowY === 'auto' || overflowY === 'scroll');
+    const canScroll = parent.scrollHeight > parent.clientHeight;
+
+    if (isScrollable && canScroll) {
+      return parent;
+    }
+
+    parent = parent.parentElement;
+  }
+  return null;
+}
 
 window.utils.formatTime = function (sec) {
   return new Date(sec * 1000).toISOString().substr(11, 8);

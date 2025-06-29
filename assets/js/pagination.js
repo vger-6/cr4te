@@ -23,23 +23,6 @@
 
     let currentPage = 1;
     
-    function getExplicitScrollableAncestor(el) {
-      let parent = el.parentElement;
-      while (parent) {
-        const style = window.getComputedStyle(parent);
-        const overflowY = style.getPropertyValue('overflow-y');
-        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll');
-        const canScroll = parent.scrollHeight > parent.clientHeight;
-
-        if (isScrollable && canScroll) {
-          return parent;
-        }
-
-        parent = parent.parentElement;
-      }
-      return null;
-    }
-
     function renderPage(page, autoScroll = false) {
       const start = (page - 1) * pageSize;
       const end = start + pageSize;
@@ -78,7 +61,7 @@
       if (autoScroll) {
         const sectionBox = gallery.closest('.section-box');
         if (sectionBox) {
-          const scrollContainer = getExplicitScrollableAncestor(sectionBox);
+          const scrollContainer = window.utils.getExplicitScrollableAncestor(sectionBox);
 
           requestAnimationFrame(() => {
             // This runs after the browser has done a reflow/layout pass
