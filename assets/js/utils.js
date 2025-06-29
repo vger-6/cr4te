@@ -1,12 +1,43 @@
 window.utils = window.utils || {};
 
-window.utils.parseGapValue = function (value) {
-  if (value.endsWith('rem')) {
-    const rem = parseFloat(value);
-    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+window.utils.parseCssLength = function (value, contextElement = document.documentElement) {
+  if (typeof value !== 'string') return NaN;
+
+  const trimmed = value.trim().toLowerCase();
+
+  if (trimmed.endsWith('px')) {
+    return parseFloat(trimmed);
   }
-  return parseFloat(value);
+
+  if (trimmed.endsWith('rem')) {
+    const rem = parseFloat(trimmed);
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return rem * rootFontSize;
+  }
+
+  if (trimmed.endsWith('em')) {
+    const em = parseFloat(trimmed);
+    const fontSize = parseFloat(getComputedStyle(contextElement).fontSize);
+    return em * fontSize;
+  }
+
+  if (trimmed.endsWith('vw')) {
+    const vw = parseFloat(trimmed);
+    return (vw / 100) * window.innerWidth;
+  }
+
+  if (trimmed.endsWith('vh')) {
+    const vh = parseFloat(trimmed);
+    return (vh / 100) * window.innerHeight;
+  }
+
+  // Add more units here if needed: e.g., vmin, vmax, etc.
+
+  // Attempt to parse as a raw number
+  const numeric = parseFloat(trimmed);
+  return isNaN(numeric) ? NaN : numeric;
 };
+
 
 window.utils.getExplicitScrollableAncestor = function (el) {
   let parent = el.parentElement;

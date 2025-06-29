@@ -2,7 +2,7 @@ function rebuildJustifiedImageGallery() {
   document.querySelectorAll('.image-gallery--justified').forEach(gallery => {
     const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
     const computedStyle = window.getComputedStyle(gallery);
-    const gap = window.utils.parseGapValue(computedStyle.columnGap || computedStyle.gap || "1rem");
+    const gap = window.utils.parseCssLength(computedStyle.columnGap || computedStyle.gap || "1rem");
     const galleryWidth = gallery.clientWidth;
 
     const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
