@@ -9,7 +9,7 @@
   <title>{{ creator.name }}</title>
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/theme.css">
-  <link rel="stylesheet" href="../assets/css/creator.css">
+  <link rel="stylesheet" href="../assets/css/two-column-layout.css">
 </head>
 <body>
 
@@ -25,15 +25,15 @@
     <h1>{{ creator.name }}</h1>
   </div>
 
-  <div class="creator-layout">
+  <div class="two-column-layout">
 
-    <div class="creator-left">
+    <div class="left-column">
       
       <div class="section-box">
         <div class="section-title">{{ html_settings.collaboration_page_profile_title }}</div>
         <hr>
         <div class="section-content markdown">
-          <div class="creator-info creator-info--{{ creator.info_layout }}">
+          <div class="info-block info-block--{{ creator.info_layout }}">
             <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
             <div>
               {% if 'name' in html_settings.collaboration_page_visible_collaboration_fields and creator.name %}
@@ -67,16 +67,25 @@
       {% endif %}
 
       {% if creator.members %}
+      
+      {% set is_aspect = html_settings.creator_gallery_building_strategy == 'aspect' %}
+      {% set aspect_ratio = html_settings.creator_gallery_aspect_ratio or '1/1' %}
+      
       <div class="section-box">
         <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
         <hr>
         <div class="section-content">
-          <div class="image-gallery" data-lightbox="false" data-image-max-height="{{ member_thumb_max_height }}">
+          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}" 
+               data-lightbox="false" 
+               data-image-max-height="{{ member_thumb_max_height }}"
+               data-aspect-ratio="{{ aspect_ratio }}">
             {% for member in creator.members %}
-            <div class="image-wrapper">
+            <div class="image-wrapper image-card">
               <a href="{{ member.url }}" title="{{ member.name }}">
                 <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}" loading="lazy">
-                <span>{{ member.name }}</span>
+                <div class=image-caption>
+                  <span>{{ member.name }}</span>
+                </div>
               </a>
             </div>
             {% endfor %}
@@ -104,12 +113,13 @@
 
     </div>
 
-    <div class="creator-right">
+    <div class="right-column">
+      
+      {% if creator.projects %}
       
       {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
       {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
-
-      {% if creator.projects %}
+      
       <div class="section-box">
         <div class="section-title">{{ html_settings.collaboration_page_projects_title }}</div>
         <hr>
@@ -119,10 +129,12 @@
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
-            <div class="image-wrapper">
+            <div class="image-wrapper image-card">
               <a href="{{ project.url }}" title="{{ project.title }}">
                 <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
-                <span>{{ project.title }}</span>
+                <div class=image-caption>
+                  <span>{{ project.title }}</span>
+                </div>
               </a>
             </div>
             {% endfor %}

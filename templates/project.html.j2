@@ -9,7 +9,7 @@
   <title>{{ project.title }}</title>
   <link rel="stylesheet" href="../assets/css/base.css">
   <link rel="stylesheet" href="../assets/css/theme.css">
-  <link rel="stylesheet" href="../assets/css/project.css">
+  <link rel="stylesheet" href="../assets/css/two-column-layout.css">
 </head>
 <body>
 
@@ -26,15 +26,15 @@
     <h1>{{ project.title }}</h1>
   </div>
 
-  <div class="project-layout">
+  <div class="two-column-layout">
 
-    <div class="project-left">
+    <div class="left-column">
 
       <div class="section-box">
         <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
         <hr>
         <div class="section-content markdown">
-          <div class="project-info project-info--{{ project.info_layout }}">
+          <div class="info-block info-block--{{ project.info_layout }}">
             <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
             <div>
               {% if 'title' in html_settings.project_page_visible_project_fields %}
@@ -64,7 +64,7 @@
             <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
             <hr>
             <div class="section-content">
-              <div class="creator-info">
+              <div class="info-block info-block--row">
                 <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
                 <div>
                   <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
@@ -97,7 +97,7 @@
 
     </div>
 
-    <div class="project-right">
+    <div class="right-column">
 
       {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height, html_settings.project_page_image_gallery_page_size) }}
 

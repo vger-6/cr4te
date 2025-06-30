@@ -1,66 +1,45 @@
-.project-info {
+.info-block {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
 }
 
-.project-info strong {
-  color: var(--text-muted-color);
-}
-
-.project-info--column {
+.info-block--column {
   flex-direction: column;
 }
 
-.project-info--column img {
+.info-block--column img{
   width: 100%;
 }
 
-.project-info--row {
+.info-block--row {
   flex-direction: row;
 }
 
-.project-info--row img {
+.info-block--row img {
   width: 100%;
   max-width: 12.5rem;
 }
 
-.creator-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.creator-info strong {
-  color: var(--text-muted-color);
-}
-
-.creator-info img {
-  width: 100%;
-  max-width: 12.5rem;
-}
-
-.creator-info > div > *:first-child,
-.project-info > div > *:first-child {
+.info-block > div > *:first-child {
   margin-top: 0;
 }
 
-.creator-info > div > *:last-child,
-.project-info > div > *:last-child {
+.info-block > div > *:last-child {
   margin-bottom: 0;
 }
 
-.project-layout {
-  --layout-gap: 1rem;
+.two-column-layout {
+  --two-column-layout-gap: 1rem;
   display: flex;
-  gap: var(--layout-gap);
+  gap: var(--two-column-layout-gap);
   height: 100%;
   overflow: hidden;
   margin-bottom: 2rem;
 }
 
-.project-left,
-.project-right {
+.left-column,
+.right-column {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -69,40 +48,40 @@
   padding-right: 0px;
   scrollbar-width: thin;  /* Firefox */
   scrollbar-color: var(--scrollbar-color) transparent;
+}
+
+.left-column {
+  flex: 3;
+  min-width: calc((var(--mobile-breakpoint) / 2) - ((2 * var(--body-padding) + var(--two-column-layout-gap)) / 2));
+}
+
+.right-column {
+  flex: 7;
   min-width: 0;
 }
 
 /* WebKit (Chrome, Safari, Edge) scrollbar styling */
-.project-left::-webkit-scrollbar,
-.project-right::-webkit-scrollbar {
+.left-column::-webkit-scrollbar,
+.right-column::-webkit-scrollbar {
   width: 4px;
 }
 
-.project-left::-webkit-scrollbar-track,
-.project-right::-webkit-scrollbar-track {
+.left-column::-webkit-scrollbar-track,
+.right-column::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.project-left::-webkit-scrollbar-thumb,
-.project-right::-webkit-scrollbar-thumb {
+.left-column::-webkit-scrollbar-thumb,
+.right-column::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb-color);
   border-radius: 2px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 
-.project-left {
-  flex: 3;
-  min-width: calc((var(--mobile-breakpoint) / 2) - ((2 * var(--body-padding) + var(--layout-gap)) / 2));
-}
-
-.project-right {
-  flex: 7;
-}
-
 /* Small screen behavior */
 @media (max-width: 48rem) {
-  .project-layout {
+  .two-column-layout {
     flex-direction: column;
     height: 100%;
     overflow-y: auto;
@@ -111,23 +90,23 @@
     scrollbar-color: var(--scrollbar-color) transparent;
   }
 
-  .project-layout::-webkit-scrollbar {
+  .two-column-layout::-webkit-scrollbar {
     width: 4px;
   }
 
-  .project-layout::-webkit-scrollbar-track {
+  .two-column-layout::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .project-layout::-webkit-scrollbar-thumb {
+  .two-column-layout::-webkit-scrollbar-thumb {
     background-color:var(--scrollbar-thumb-color);
     border-radius: 2px;
     border: 3px solid transparent;
     background-clip: content-box;
   }
 
-  .project-left,
-  .project-right {
+  .left-column,
+  .right-column {
     flex: none;
     height: auto;
     overflow: visible; /* no internal scrolling */
