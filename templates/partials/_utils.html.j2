@@ -1,5 +1,7 @@
 {% macro format_duration(seconds) %}
-  {% if seconds >= 3600 %}
+  {% if seconds <= 0 %}
+    {{ "" }}
+  {% elif seconds >= 3600 %}
     {{ ("%02d:%02d:%02d") % (seconds // 3600, (seconds % 3600) // 60, seconds % 60) }}
   {% else %}
     {{ ("%02d:%02d") % (seconds // 60, seconds % 60) }}
