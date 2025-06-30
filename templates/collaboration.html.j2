@@ -68,9 +68,8 @@
 
       {% if creator.members %}
       
-      {% set is_aspect = html_settings.creator_gallery_building_strategy == 'aspect' %}
+      <!--{% set is_aspect = html_settings.creator_gallery_building_strategy == 'aspect' %}
       {% set aspect_ratio = html_settings.creator_gallery_aspect_ratio or '1/1' %}
-      
       <div class="section-box">
         <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
         <hr>
@@ -91,7 +90,23 @@
             {% endfor %}
           </div>
         </div>
-      </div>
+      </div>-->
+      
+      {% for member in creator.members%}
+        <div class="section-box">
+          <div class="section-title">{{ member.name }} - {{ html_settings.collaboration_page_members_title }}</div>
+          <hr>
+          <div class="section-content">
+            <div class="info-block info-block--row">
+              <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+              <div>
+                <p><strong>Name:</strong> <a href="{{ member.url }}">{{ member.name }}</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      
       {% endif %}
 
       {% if creator.tag_map %}
