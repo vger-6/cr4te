@@ -99,7 +99,7 @@
   }
 
   .two-column-layout::-webkit-scrollbar-thumb {
-    background-color:var(--scrollbar-thumb-color);
+    background-color: var(--scrollbar-thumb-color);
     border-radius: 2px;
     border: 3px solid transparent;
     background-clip: content-box;
