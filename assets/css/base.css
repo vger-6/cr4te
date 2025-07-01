@@ -245,19 +245,24 @@ a:focus {
 
 .image-caption {
   margin-top: 0.5rem;
+  margin-left: 0.5rem;
   display: block;
 }
 
 .image-card {
-  background: rgba(255, 255, 255, 0.0);
-  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
   border-radius: 0.5rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid var(--border-color);
+  border: none;
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
+}
+
+.image-card .image-caption {
+  margin-left: 0.5rem;
 }
 
 .image-card a {
