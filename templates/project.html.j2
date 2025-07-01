@@ -60,7 +60,7 @@
 
       {% if project.participants %}
         {% for participant in project.participants %}
-          <div class="moveable-placeholder" id="placeholder-1"></div>
+          <div class="original-placeholder" id="placeholder-1"></div>
           <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-1">
             <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
             <hr>
@@ -80,7 +80,7 @@
       {% endif %}
 
       {% if project.tag_map %}
-        <div class="moveable-placeholder" id="placeholder-2"></div>
+        <div class="original-placeholder" id="placeholder-2"></div>
         <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-2">
           <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
           <hr>
@@ -103,7 +103,7 @@
 
       {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height, html_settings.project_page_image_gallery_page_size) }}
       
-      <div id="placeholder"></div>
+      <div id="mobile-placeholder"></div>
 
     </div>
   </div>

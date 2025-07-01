@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
   const mobileBreakpoint = window.utils.getBreakpointPx();
   const sections = document.querySelectorAll('.moveable-to-placeholder');
-  const mobilePlaceholder = document.getElementById('placeholder');
+  const mobilePlaceholder = document.getElementById('mobile-placeholder');
 
   if (!mobilePlaceholder) return;
 

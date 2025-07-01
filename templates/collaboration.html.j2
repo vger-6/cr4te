@@ -93,7 +93,7 @@
       </div>-->
       
       {% for member in creator.members%}
-        <div class="moveable-placeholder" id="placeholder-1"></div>
+        <div class="original-placeholder" id="placeholder-1"></div>
         <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-1">
           <div class="section-title">{{ member.name }} - {{ html_settings.collaboration_page_profile_title }}</div>
           <hr>
@@ -111,7 +111,7 @@
       {% endif %}
 
       {% if creator.tag_map %}
-      <div class="moveable-placeholder" id="placeholder-2"></div>
+      <div class="original-placeholder" id="placeholder-2"></div>
       <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-2">
         <div class="section-title">{{ html_settings.collaboration_page_tags_title }}</div>
         <hr>
@@ -162,7 +162,7 @@
         
       {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height) }}
       
-      <div id="placeholder"></div>
+      <div id="mobile-placeholder"></div>
 
     </div>
 
