@@ -508,6 +508,11 @@ a:focus {
   text-align: center;
 }
 
+.video-wrapper {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+
 .video-wrapper,
 .video-wrapper video {
   border: none;
@@ -516,8 +521,9 @@ a:focus {
   width: 100%;
 }
 
-.video-wrapper {
-  position: relative;
+.video-wrapper video {
+  height: 100%;
+  object-fit: cover; 
 }
 
 .video-controls {
