@@ -38,6 +38,11 @@ window.utils.parseCssLength = function (value, contextElement = document.documen
   return isNaN(numeric) ? NaN : numeric;
 };
 
+window.utils.getBreakpointPx = function (varName = '--mobile-breakpoint') {
+  const rootStyles = getComputedStyle(document.documentElement);
+  const value = rootStyles.getPropertyValue(varName).trim();
+  return window.utils.parseCssLength(value);
+};
 
 window.utils.getExplicitScrollableAncestor = function (el) {
   let parent = el.parentElement;

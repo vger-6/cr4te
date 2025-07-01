@@ -65,7 +65,8 @@
       {% endif %}
 
       {% if creator.tag_map %}
-      <div class="section-box">
+      <div class="moveable-placeholder" id="placeholder-1"></div>
+      <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-1">
         <div class="section-title">{{ html_settings.creator_page_tags_title }}</div>
         <hr>
         <div class="section-content tag-list">
@@ -137,6 +138,8 @@
       {% endfor %}
         
       {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height, html_settings.creator_page_image_gallery_page_size) }}
+      
+      <div id="placeholder"></div>
 
     </div>
 
@@ -151,6 +154,7 @@
 <script src="../assets/js/audio_player.js" defer></script>
 <script src="../assets/js/video_player.js" defer></script>
 <script src="../assets/js/lightbox.js" defer></script>
+<script src="../assets/js/responsive_content_mover.js" defer></script>
 
 </body>
 </html>

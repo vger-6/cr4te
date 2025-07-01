@@ -79,6 +79,10 @@
   background-clip: content-box;
 }
 
+.moveable-placeholder {
+  display: none;
+}
+
 /* Small screen behavior */
 @media (max-width: 48rem) {
   .two-column-layout {
