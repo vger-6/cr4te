@@ -58,44 +58,46 @@
         </div>
       {% endif %}
 
-      {% if project.participants %}
-        {% for participant in project.participants %}
-          <div class="original-placeholder" id="placeholder-1"></div>
-          <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-1">
-            <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
-            <hr>
-            <div class="section-content">
-              <div class="info-block info-block--row">
-                <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
-                <div>
-                  <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
-                  {% if participant.age_at_release %}
-                    <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
-                  {% endif %}
+      <div class="original-placeholder" data-mobile-target="1">
+        {% if project.participants %}
+          {% for participant in project.participants %}
+            <div class="section-box">
+              <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+              <hr>
+              <div class="section-content">
+                <div class="info-block info-block--row">
+                  <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
+                  <div>
+                    <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
+                    {% if participant.age_at_release %}
+                      <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        {% endfor %}
-      {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
 
-      {% if project.tag_map %}
-        <div class="original-placeholder" id="placeholder-2"></div>
-        <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-2">
-          <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
-          <hr>
-          <div class="section-content tag-list">
-            {% for category, tags in project.tag_map.items() %}
-              <div class="tag-category">
-                <strong>{{ category }}:</strong>
-                {% for tag in tags %}
-                  <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
-                {% endfor %}
-              </div>
-            {% endfor %}
+      <div class="original-placeholder" data-mobile-target="2">
+        {% if project.tag_map %}
+          <div class="section-box">
+            <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
+            <hr>
+            <div class="section-content tag-list">
+              {% for category, tags in project.tag_map.items() %}
+                <div class="tag-category">
+                  <strong>{{ category }}:</strong>
+                  {% for tag in tags %}
+                    <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
           </div>
-        </div>
-      {% endif %}
+        {% endif %}
+      </div>
 
     </div>
 
@@ -103,7 +105,8 @@
 
       {{ media_macros.render_media_groups(project.media_groups, html_settings, gallery_image_max_height, html_settings.project_page_image_gallery_page_size) }}
       
-      <div id="mobile-placeholder"></div>
+      <div class="mobile-placeholder" data-mobile-target="1"></div>
+      <div class="mobile-placeholder" data-mobile-target="2"></div>
 
     </div>
   </div>

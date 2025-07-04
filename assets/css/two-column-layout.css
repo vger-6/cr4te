@@ -79,7 +79,8 @@
   background-clip: content-box;
 }
 
-.original-placeholder {
+.original-placeholder,
+.mobile-placeholder {
   display: none;
 }
 

@@ -65,68 +65,42 @@
         </div>
       </div>
       {% endif %}
-
-      {% if creator.members %}
       
-      <!--{% set is_aspect = html_settings.creator_gallery_building_strategy == 'aspect' %}
-      {% set aspect_ratio = html_settings.creator_gallery_aspect_ratio or '1/1' %}
-      <div class="section-box">
-        <div class="section-title">{{ html_settings.collaboration_page_members_title }}</div>
-        <hr>
-        <div class="section-content">
-          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}" 
-               data-lightbox="false" 
-               data-image-max-height="{{ member_thumb_max_height }}"
-               data-aspect-ratio="{{ aspect_ratio }}">
-            {% for member in creator.members %}
-            <div class="image-wrapper image-card">
-              <a href="{{ member.url }}" title="{{ member.name }}">
-                <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}" loading="lazy">
-                <div class=image-caption>
-                  <span>{{ member.name }}</span>
+      <div class="original-placeholder" data-mobile-target="1">
+        {% for member in creator.members%}
+          <div class="section-box">
+            <div class="section-title">{{ member.name }} - {{ html_settings.collaboration_page_profile_title }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="info-block info-block--row">
+                <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+                <div>
+                  <p><strong>Name:</strong> <a href="{{ member.url }}">{{ member.name }}</a></p>
                 </div>
-              </a>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>-->
-      
-      {% for member in creator.members%}
-        <div class="original-placeholder" id="placeholder-1"></div>
-        <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-1">
-          <div class="section-title">{{ member.name }} - {{ html_settings.collaboration_page_profile_title }}</div>
-          <hr>
-          <div class="section-content">
-            <div class="info-block info-block--row">
-              <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
-              <div>
-                <p><strong>Name:</strong> <a href="{{ member.url }}">{{ member.name }}</a></p>
               </div>
             </div>
           </div>
-        </div>
-      {% endfor %}
-      
-      {% endif %}
+        {% endfor %}
+      </div>
 
-      {% if creator.tag_map %}
-      <div class="original-placeholder" id="placeholder-2"></div>
-      <div class="section-box moveable-to-placeholder" data-placeholder-id="placeholder-2">
-        <div class="section-title">{{ html_settings.collaboration_page_tags_title }}</div>
-        <hr>
-        <div class="section-content tag-list">
-          {% for category, tags in creator.tag_map.items() %}
-          <div class="tag-category">
-            <strong>{{ category }}:</strong>
-            {% for tag in tags %}
-              <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+      <div class="original-placeholder" data-mobile-target="1">
+        {% if creator.tag_map %}
+        <div class="section-box">
+          <div class="section-title">{{ html_settings.collaboration_page_tags_title }}</div>
+          <hr>
+          <div class="section-content tag-list">
+            {% for category, tags in creator.tag_map.items() %}
+            <div class="tag-category">
+              <strong>{{ category }}:</strong>
+              {% for tag in tags %}
+                <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+              {% endfor %}
+            </div>
             {% endfor %}
           </div>
-          {% endfor %}
         </div>
+        {% endif %}
       </div>
-      {% endif %}
 
     </div>
 
@@ -162,7 +136,8 @@
         
       {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height) }}
       
-      <div id="mobile-placeholder"></div>
+      <div class="mobile-placeholder" data-mobile-target="1"></div>
+      <div class="mobile-placeholder" data-mobile-target="2"></div>
 
     </div>
 

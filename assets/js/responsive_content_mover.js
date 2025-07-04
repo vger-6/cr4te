@@ -1,29 +1,48 @@
-document.addEventListener("DOMContentLoaded", function() {
-  const mobileBreakpoint = window.utils.getBreakpointPx();
-  const sections = document.querySelectorAll('.moveable-to-placeholder');
-  const mobilePlaceholder = document.getElementById('mobile-placeholder');
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileBreakpoint = window.utils.getBreakpointPx('--mobile-breakpoint') || 768;
+  const originalPlaceholders = document.querySelectorAll('.original-placeholder');
 
-  if (!mobilePlaceholder) return;
+  const state = []; // Track what to move
 
-  function relocateSections() {
-    if (window.innerWidth <= mobileBreakpoint) {
-      sections.forEach(el => mobilePlaceholder.appendChild(el));
-    } else {
-      sections.forEach(el => {
-        const placeholderId = el.dataset.placeholderId;
-        const originalPlaceholder = document.getElementById(placeholderId);
-        if (originalPlaceholder) {
-          originalPlaceholder.insertAdjacentElement('afterend', el);
+  originalPlaceholders.forEach(original => {
+    const targetId = original.getAttribute('data-mobile-target');
+    const mobile = document.querySelector(`.mobile-placeholder[data-mobile-target="${targetId}"]`);
+    if (!mobile) {
+      console.warn(`Missing .mobile-placeholder for target ${targetId}`);
+      return;
+    }
+    const contents = Array.from(original.children);
+    if (contents.length === 0) {
+      console.warn(`No content inside .original-placeholder with target ${targetId}`);
+      return;
+    }
+    state.push({ contents, original, mobile });
+  });
+
+  function updateLayout() {
+    const isMobile = window.innerWidth <= mobileBreakpoint;
+    state.forEach(({ contents, original, mobile }) => {
+      const target = isMobile ? mobile : original;
+
+      // Move content
+      contents.forEach(node => {
+        if (node.parentElement !== target) {
+          target.appendChild(node);
         }
       });
-    }
+
+      // Update placeholder visibility
+      original.style.display = isMobile ? 'none' : 'block';
+      mobile.style.display = isMobile ? 'block' : 'none';
+    });
   }
 
-  relocateSections();
+  updateLayout();
+  
   let resizeTimeout;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(relocateSections, 100);
+    resizeTimeout = setTimeout(updateLayout, 100);
   });
 });
 
