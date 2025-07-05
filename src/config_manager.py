@@ -62,6 +62,7 @@ DEFAULT_CONFIG = {
         "project_gallery_aspect_ratio": "3/2",
         
         "creator_overview_page_creator_gallery_page_size": 100,
+        "creator_overview_page_show_creator_thumbnails": True,
         
         "project_overview_page_project_gallery_page_size": 100,
         
