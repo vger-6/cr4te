@@ -34,9 +34,7 @@
         <hr>
         <div class="section-content markdown">
           <div class="info-block info-block--{{ creator.info_layout }}">
-            {% if 'portrait' in html_settings.creator_page_visible_creator_fields %}
             <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
-            {% endif %}
             <div>
               <p><strong>Name:</strong> {{ creator.name }}</p>
               {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
