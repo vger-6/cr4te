@@ -84,6 +84,8 @@ DEFAULT_CONFIG = {
         
         "portrait_basename": "portrait",
         "cover_basename": "cover",
+        
+        "auto_find_portrait": True,
     }
 }
 
@@ -113,13 +115,14 @@ def load_config(user_config_path: Path = None) -> Dict:
     return config
        
 def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, domain_preset: Optional[DomainPreset] = None) -> Dict:
+    if domain_preset is not None:
+        overrides = _get_domain_presets(domain_preset)
+        config["html_settings"].update(overrides["html_settings"])
+        config["media_rules"].update(overrides["media_rules"])
     if image_gallery_max is not None:
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
-    if domain_preset is not None:
-        overrides = _get_domain_presets(domain_preset)
-        config["html_settings"].update(overrides)
     
     _validate_config(config)
 
@@ -133,68 +136,82 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
     match preset:
         case DomainPreset.FILM:
             return {
-                "nav_creators_label": "Directors",
-                "nav_projects_label": "Movies",
-                "creator_overview_page_title": "Directors",
-                "creator_overview_page_search_placeholder": "Search directors, movies, tags...",
-                "project_overview_page_title": "Movies",
-                "project_overview_page_search_placeholder": "Search movies, tags...",
-                "creator_page_projects_title": "Movies",
-                "project_page_audio_section_base_title": "Soundtrack",
-                "creator_page_collabs_title_prefix": "Codirected with",
-                "collaboration_page_projects_title": "Movies",
-                "project_page_creator_profile_title": "Profile",
+                "html_settings": {
+                    "nav_creators_label": "Directors",
+                    "nav_projects_label": "Movies",
+                    "creator_overview_page_title": "Directors",
+                    "creator_overview_page_search_placeholder": "Search directors, movies, tags...",
+                    "project_overview_page_title": "Movies",
+                    "project_overview_page_search_placeholder": "Search movies, tags...",
+                    "creator_page_projects_title": "Movies",
+                    "project_page_audio_section_base_title": "Soundtrack",
+                    "creator_page_collabs_title_prefix": "Codirected with",
+                    "collaboration_page_projects_title": "Movies",
+                    "project_page_creator_profile_title": "Profile",
+                 },
+               "media_rules": {},
             }
         case DomainPreset.MUSIC:
             return {
-                "nav_creators_label": "Musicians",
-                "nav_projects_label": "Albums",
-                "creator_overview_page_title": "Musicians",
-                "creator_overview_page_search_placeholder": "Search musicians, albums, tags...",
-                "project_overview_page_title": "Albums",
-                "project_overview_page_search_placeholder": "Search albums, tags...",
-                "creator_page_projects_title": "Albums",
-                "creator_page_collabs_title_prefix": "With",
-                "collaboration_page_projects_title": "Albums",
-                "project_page_creator_profile_title": "Profile",
-                "project_page_audio_section_base_title": "Tracks",
-                "media_type_order": [MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.VIDEO],
-                "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-                "project_gallery_aspect_ratio": "1/1",
+                "html_settings": {
+                    "nav_creators_label": "Musicians",
+                    "nav_projects_label": "Albums",
+                    "creator_overview_page_title": "Musicians",
+                    "creator_overview_page_search_placeholder": "Search musicians, albums, tags...",
+                    "project_overview_page_title": "Albums",
+                    "project_overview_page_search_placeholder": "Search albums, tags...",
+                    "creator_page_projects_title": "Albums",
+                    "creator_page_collabs_title_prefix": "With",
+                    "collaboration_page_projects_title": "Albums",
+                    "project_page_creator_profile_title": "Profile",
+                    "project_page_audio_section_base_title": "Tracks",
+                    "media_type_order": [MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.VIDEO],
+                    "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+                    "project_gallery_aspect_ratio": "1/1",
+                },
+               "media_rules": {},
             }
         case DomainPreset.ART:
-            return {}
+            return {"html_settings": {}, "media_rules": {}}
         case DomainPreset.BOOK:
             return {
-                "nav_creators_label": "Author",
-                "nav_projects_label": "Books",
-                "creator_overview_page_title": "Author",
-                "creator_overview_page_search_placeholder": "Search author, books, tags...",
-                "project_overview_page_title": "Books",
-                "project_overview_page_search_placeholder": "Search books, tags...",
-                "creator_page_projects_title": "Books",
-                "project_page_audio_section_base_title": "Audio",
-                "creator_page_collabs_title_prefix": "With",
-                "collaboration_page_projects_title": "Books",
-                "project_page_creator_profile_title": "Profile",
-                "media_type_order": [MediaType.DOCUMENT, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.VIDEO],
-                "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
-                "project_gallery_aspect_ratio": "1000/1414",
+                "html_settings": {
+                    "nav_creators_label": "Author",
+                    "nav_projects_label": "Books",
+                    "creator_overview_page_title": "Author",
+                    "creator_overview_page_search_placeholder": "Search author, books, tags...",
+                    "project_overview_page_title": "Books",
+                    "project_overview_page_search_placeholder": "Search books, tags...",
+                    "creator_page_projects_title": "Books",
+                    "project_page_audio_section_base_title": "Audio",
+                    "creator_page_collabs_title_prefix": "With",
+                    "collaboration_page_projects_title": "Books",
+                    "project_page_creator_profile_title": "Profile",
+                    "media_type_order": [MediaType.DOCUMENT, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.VIDEO],
+                    "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
+                    "project_gallery_aspect_ratio": "1000/1414",
+                },
+               "media_rules": {
+                    "auto_find_portrait": False,
+               },
             }
         case DomainPreset.MODEL:
             return {
-                "nav_creators_label": "Models",
-                "nav_projects_label": "Scenes",
-                "creator_overview_page_title": "Models",
-                "creator_overview_page_search_placeholder": "Search models, scenes, tags...",
-                "project_overview_page_title": "Scenes",
-                "project_overview_page_search_placeholder": "Search scenes, tags...",
-                "creator_page_projects_title": "Scenes",
-                "creator_page_collabs_title_prefix": "Scenes with",
-                "collaboration_page_members_title": "Featuring",
-                "collaboration_page_projects_title": "Scenes",
-                "project_page_creator_profile_title": "Model Profile",
-                "media_type_order": [MediaType.VIDEO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.AUDIO],
+                "html_settings": {
+                    "nav_creators_label": "Models",
+                    "nav_projects_label": "Scenes",
+                    "creator_overview_page_title": "Models",
+                    "creator_overview_page_search_placeholder": "Search models, scenes, tags...",
+                    "project_overview_page_title": "Scenes",
+                    "project_overview_page_search_placeholder": "Search scenes, tags...",
+                    "creator_page_projects_title": "Scenes",
+                    "creator_page_collabs_title_prefix": "Scenes with",
+                    "collaboration_page_members_title": "Featuring",
+                    "collaboration_page_projects_title": "Scenes",
+                    "project_page_creator_profile_title": "Model Profile",
+                    "media_type_order": [MediaType.VIDEO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.AUDIO],
+                },
+               "media_rules": {},
             }
         case _:
             raise ValueError(f"Unknown preset: {preset}")

@@ -4,6 +4,13 @@
 
   --font-family: sans-serif;
   
+  --h1-font-size: 2rem;
+  --h2-font-size: 1.8rem;
+  --h3-font-size: 1.6rem;
+  --h4-font-size: 1.4rem;
+  --h5-font-size: 1.2rem;
+  --h6-font-size: 1rem;
+  
   /* Default theme fallback */
   --bg-color: #ffffff;
   
@@ -69,7 +76,7 @@ html, body {
 }
 
 h1 {
-  font-size: 1.8rem;
+  font-size: var(--h1-font-size);
   font-weight: bold;
   color: var(--title-color);
   background-color: var(--title-bg);
@@ -90,6 +97,22 @@ h1 {
   padding: initial;
   margin-bottom: initial;
   border-radius: initial;
+}
+
+.markdown h1 {
+  font-size: var(--h3-font-size);
+}
+
+.markdown h2 {
+  font-size: var(--h4-font-size);
+}
+
+.markdown h3 {
+  font-size: var(--h5-font-size);
+}
+
+.markdown h4,  .markdown h5, .markdown h6 {
+  font-size: var(--h6-font-size);
 }
 
 .markdown ul {
@@ -175,7 +198,7 @@ a:focus {
   color: var(--title-color);
   padding: 0.5rem 1rem;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: var(--h3-font-size);
 }
 
 .section-box hr {

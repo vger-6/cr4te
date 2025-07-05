@@ -31,6 +31,10 @@ class JsonBuildContext(BaseContext):
         return self.media_rules["portrait_basename"]
         
     @property
+    def auto_find_portrait(self) -> str:
+        return self.media_rules["auto_find_portrait"]
+        
+    @property
     def metadata_folder_name(self) -> str:
         return self.media_rules["metadata_folder_name"]
         

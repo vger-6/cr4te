@@ -60,12 +60,33 @@ def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
         if p.suffix.lower() in IMAGE_EXTS and not p.name.startswith(exclude_prefix)
     ]
     
-def _select_best_image(images: List[Path], image_name: str, orientation_fallback: Orientation) -> Optional[Path]:
+def _find_image_by_name(images: List[Path], image_name: str) -> Optional[Path]:
     for image in images:
-        if image.stem.lower() == image_name.lower() and image.suffix.lower() in IMAGE_EXTS:
+        if image.stem.lower() == image_name.lower():
             return image
+    return None
+    
+def _select_best_image(images: List[Path], image_name: str, orientation_fallback: Orientation) -> Optional[Path]:
+    """
+    Selects the best image from a list:
+    - First, tries to find an image matching the given name.
+    - If not found, tries to find an image matching the specified orientation.
+    - If both fail, returns the first image in the list.
+    - Returns None if the image list is empty.
+    """
+    if not images:
+        return None
 
-    return _find_image_by_orientation(images, orientation_fallback)
+    image = _find_image_by_name(images, image_name)
+    if image:
+        return image
+
+    image = _find_image_by_orientation(images, orientation_fallback)
+    if image:
+        return image
+
+    return images[0]
+
 
 def _find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
     for img_path in sorted(images, key=lambda x: x.name):
@@ -208,7 +229,11 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     
     # Find portrait
     all_images = _find_all_images(creator_path, ctx.global_exclude_prefix)
-    portrait = _select_best_image(all_images, ctx.portrait_basename, Orientation.PORTRAIT)
+    portrait = (
+        _select_best_image(all_images, ctx.portrait_basename, Orientation.PORTRAIT) 
+        if ctx.auto_find_portrait 
+        else _find_image_by_name(all_images, ctx.portrait_basename)
+    )
     
     separators = ctx.collaboration_separators
     is_collab = existing_creator.get("is_collaboration")

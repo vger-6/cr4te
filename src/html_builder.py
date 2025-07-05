@@ -155,7 +155,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
     all_projects = []
     for creator in creators:
         for project in creator["projects"]: 
-            thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.COVER)
+            thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.GALLERY)
 
             all_projects.append({
                 "title": project["title"],
@@ -453,7 +453,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
     """
     project_entries = []
     for project in sorted(creator["projects"], key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
+        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.GALLERY)
 
         project_entries.append({
             "title": project["title"],
@@ -513,7 +513,7 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(ctx, creator, creators),
-        project_thumb_max_height=ctx.thumb_height(ThumbType.COVER),
+        project_thumb_max_height=ctx.thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
     )
 
@@ -579,7 +579,7 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         html_settings=ctx.html_settings,
         creator=_collect_collaboration_context(ctx, creator, creators),
         member_thumb_max_height=ctx.thumb_height(ThumbType.THUMB),
-        project_thumb_max_height=ctx.thumb_height(ThumbType.COVER),
+        project_thumb_max_height=ctx.thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
     )
 
