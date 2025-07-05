@@ -85,6 +85,7 @@ class MediaRules(BaseModel):
     collaboration_separators: List[str]
     portrait_basename: str
     cover_basename: str
+    auto_find_portrait: bool
 
 # Top-level config schema
 class AppConfig(BaseModel):

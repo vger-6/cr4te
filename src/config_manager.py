@@ -85,7 +85,7 @@ DEFAULT_CONFIG = {
         "portrait_basename": "portrait",
         "cover_basename": "cover",
         
-        "auto_find_portrait": True,
+        "auto_find_portrait": False,
     }
 }
 
@@ -114,7 +114,7 @@ def load_config(user_config_path: Path = None) -> Dict:
 
     return config
        
-def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, domain_preset: Optional[DomainPreset] = None) -> Dict:
+def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portrait = False, domain_preset: Optional[DomainPreset] = None) -> Dict:
     if domain_preset is not None:
         overrides = _get_domain_presets(domain_preset)
         config["html_settings"].update(overrides["html_settings"])
@@ -123,6 +123,8 @@ def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, i
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
+    if auto_find_portrait is True:
+        config["media_rules"]["auto_find_portrait"] = True
     
     _validate_config(config)
 
@@ -191,9 +193,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                     "project_gallery_aspect_ratio": "1000/1414",
                 },
-               "media_rules": {
-                    "auto_find_portrait": False,
-               },
+               "media_rules": {},
             }
         case DomainPreset.MODEL:
             return {
