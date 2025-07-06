@@ -34,7 +34,9 @@
         <hr>
         <div class="section-content markdown">
           <div class="info-block info-block--{{ creator.info_layout }}">
-            <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+            <a href="{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+              <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+            </a>
             <div>
               {% if 'name' in html_settings.collaboration_page_visible_collaboration_fields and creator.name %}
               <p><strong>Name:</strong> {{ creator.name }}</p>
@@ -73,7 +75,9 @@
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
-                <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+                <a href="{{ member.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
+                  <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+                </a>
                 <div>
                   <p><strong>Name:</strong> <a href="{{ member.url }}">{{ member.name }}</a></p>
                 </div>

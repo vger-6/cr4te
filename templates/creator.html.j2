@@ -34,7 +34,9 @@
         <hr>
         <div class="section-content markdown">
           <div class="info-block info-block--{{ creator.info_layout }}">
-            <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+            <a href="{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+              <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+            </a>
             <div>
               <p><strong>Name:</strong> {{ creator.name }}</p>
               {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}

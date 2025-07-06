@@ -35,7 +35,9 @@
         <hr>
         <div class="section-content markdown">
           <div class="info-block info-block--{{ project.info_layout }}">
-            <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
+            <a href="{{ project.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
+              <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
+            </a>
             <div>
               {% if 'title' in html_settings.project_page_visible_project_fields %}
                 <p><strong>Title:</strong> {{ project.title }}</p>
@@ -65,7 +67,9 @@
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
-                <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
+                <a href="{{ project.creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                  <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
+                </a>
                 <div>
                   <p><strong>Name:</strong> <a href="{{ project.creator.url }}">{{ project.creator.name }}</a></p>
                   {% if project.creator.age_at_release %}
@@ -85,7 +89,9 @@
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
-                <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
+                <a href="{{ project.collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                  <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
+                </a>
                 <div>
                   <p><strong>Name:</strong> <a href="{{ project.collaboration.url }}">{{ project.collaboration.name }}</a></p>
                 </div>
@@ -103,7 +109,9 @@
               <hr>
               <div class="section-content">
                 <div class="info-block info-block--row">
-                  <img src="{{ participant.portrait_url }}" alt="Portrait of {{ participant.name }}">
+                  <a href="{{ participant.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ participant.portrait_url}}" alt="Portrait of {{ participant.name }}">
+                  </a>
                   <div>
                     <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
                     {% if participant.age_at_release %}

@@ -169,9 +169,19 @@
       });
     });
   };
+  
+  window.rebindSingleLightbox = function () {
+    document.querySelectorAll('a[data-lightbox-single="true"]').forEach(link => {
+      link.onclick = (e) => {
+        e.preventDefault();
+        openLightbox([link.href], 0); // Use a group of one image
+      };
+    });
+  };
 
   window.addEventListener('DOMContentLoaded', () => {
     rebindLightbox(); // Initial bind
+    rebindSingleLightbox();
   });
 })();
 
