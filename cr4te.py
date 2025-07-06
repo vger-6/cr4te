@@ -15,6 +15,20 @@ from json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 
+# Short flags
+FLAG_INPUT_SHORT = "-i"
+FLAG_OUTPUT_SHORT = "-o"
+
+# Long Flags
+FLAG_AUTO_FIND_PORTRAITS = "--auto-find-portraits"
+FLAG_HIDE_PORTRAITS = "--hide-portraits"
+FLAG_INPUT = "--input"
+FLAG_OUTPUT = "--output"
+FLAG_OPEN = "--open"
+FLAG_FORCE = "--force"
+FLAG_CLEAN = "--clean"
+FLAG_PRINT_CONFIG_ONLY = "--print-config-only"
+
 def _load_config(config_path_arg: str) -> Dict[str, Any]:
     config_path = Path(config_path_arg).resolve() if config_path_arg else None
     return cfg.load_config(config_path)
@@ -28,36 +42,36 @@ def main():
 
     # build
     build_parser = subparsers.add_parser("build", help="Generate JSON metadata and build HTML site")
-    build_parser.add_argument("-i", "--input", help="Path to the Creators folder")
-    build_parser.add_argument("-o", "--output", help="Path to the HTML output folder")
+    build_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, help="Path to the Creators folder")
+    build_parser.add_argument(FLAG_OUTPUT_SHORT, FLAG_OUTPUT, help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
     build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], help="Apply a common domain preset")
     build_parser.add_argument("--max-images", type=int, help="Maximum number of images to include per media group")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
-    build_parser.add_argument("--auto-find-portraits", action="store_true", help="Search folders recursively to find a fitting portrait")
-    build_parser.add_argument("--hide-portraits", action="store_true", help="Hide portraits on all pages")
-    build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
-    build_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
-    build_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
-    build_parser.add_argument("--print-config-only", action="store_true", help="Print adjusted configuration and exit (no file operations or build)")
+    build_parser.add_argument(FLAG_AUTO_FIND_PORTRAITS, action="store_true", help="Search folders recursively to find a fitting portrait")
+    build_parser.add_argument(FLAG_HIDE_PORTRAITS, action="store_true", help="Hide portraits on all pages")
+    build_parser.add_argument(FLAG_OPEN, action='store_true', help="Open index.html in the default browser after building.")
+    build_parser.add_argument(FLAG_FORCE, action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
+    build_parser.add_argument(FLAG_CLEAN, action="store_true", help=f"Also delete the thumbnails folder (only valid with {FLAG_FORCE})")
+    build_parser.add_argument(FLAG_PRINT_CONFIG_ONLY, action="store_true", help="Print adjusted configuration and exit (no file operations or build)")
     
     # clean-json
     clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
-    clean_parser.add_argument("-i", "--input", required=True, help="Path to input folder containing creators")
+    clean_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, required=True, help="Path to input folder containing creators")
     clean_parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without removing anything")
-    clean_parser.add_argument("--force", action="store_true", help="Actually delete files instead of showing a preview")
+    clean_parser.add_argument(FLAG_FORCE, action="store_true", help="Actually delete files instead of showing a preview")
     
     args = parser.parse_args()
     
     if args.command == "build":
         if not args.print_config_only:
             if not args.input:
-                parser.error("argument -i/--input is required unless --print-config-only is used")
+                parser.error(f"argument {FLAG_INPUT_SHORT}/{FLAG_INPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
             if not args.output:
-                parser.error("argument -o/--output is required unless --print-config-only is used")
+                parser.error(f"argument {FLAG_OUTPUT_SHORT}/{FLAG_OUTPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
                 
         if args.auto_find_portraits and args.hide_portraits:
-            print("[Warning] Both --auto-find-portraits and --hide-portraits are set. "
+            print(f"[Warning] Both {FLAG_AUTO_FIND_PORTRAITS} and {FLAG_HIDE_PORTRAITS} are set. "
                   "Automatic portrait finding will still run, but portraits will not be shown in the output.",
                   file=sys.stderr)
                 
@@ -77,15 +91,15 @@ def main():
             if sys.stdout.isatty():
                 ignored_flags = []
                 if args.input:
-                    ignored_flags.append("--input")
+                    ignored_flags.append(FLAG_INPUT)
                 if args.output:
-                    ignored_flags.append("--output")
+                    ignored_flags.append(FLAG_OUTPUT)
                 if args.open:
-                    ignored_flags.append("--open")
+                    ignored_flags.append(FLAG_OPEN)
                 if args.force:
-                    ignored_flags.append("--force")
+                    ignored_flags.append(FLAG_FORCE)
                 if args.clean:
-                    ignored_flags.append("--clean")
+                    ignored_flags.append(FLAG_CLEAN)
                 
                 if ignored_flags:
                     print(f"[Info] Ignoring flags: {', '.join(sorted(ignored_flags))} (no build performed).", file=sys.stderr)
@@ -94,7 +108,7 @@ def main():
             return   
         
         if args.clean and not args.force:
-            parser.error("--clean must be used together with --force")
+            parser.error(f"{FLAG_CLEAN} must be used together with {FLAG_FORCE}")
         
         input_path = Path(args.input).resolve()
         if not input_path.exists() or not input_path.is_dir():
