@@ -96,6 +96,11 @@
 
     updateLightboxImage();
     showElements(true);
+    
+    // Hide arrows if only one image
+    const single = currentGroup.length <= 1;
+    elements.leftArrow.style.display = single ? 'none' : 'block';
+    elements.rightArrow.style.display = single ? 'none' : 'block';
   }
 
   function updateLightboxImage() {
