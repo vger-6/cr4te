@@ -70,6 +70,8 @@ class HtmlSettings(BaseModel):
     project_page_collaboration_profile_visible: bool
     project_page_participant_profiles_visible: bool
     
+    hide_portraits: bool
+    
     @validator('project_gallery_aspect_ratio', 'creator_gallery_aspect_ratio')
     def validate_aspect_ratio_colon_format(cls, v):
         match = re.match(r'^(\d+)/(\d+)$', v.strip())
@@ -88,7 +90,7 @@ class MediaRules(BaseModel):
     collaboration_separators: List[str]
     portrait_basename: str
     cover_basename: str
-    auto_find_portrait: bool
+    auto_find_portraits: bool
 
 # Top-level config schema
 class AppConfig(BaseModel):

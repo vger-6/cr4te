@@ -75,6 +75,8 @@ DEFAULT_CONFIG = {
         "project_page_image_gallery_captions_visible": False,
         "project_page_collaboration_profile_visible": True,
         "project_page_participant_profiles_visible": True,
+        
+        "hide_portraits": False,
     },
     "media_rules": {   
         "max_depth": 5,
@@ -87,7 +89,7 @@ DEFAULT_CONFIG = {
         "portrait_basename": "portrait",
         "cover_basename": "cover",
         
-        "auto_find_portrait": False,
+        "auto_find_portraits": False,
     }
 }
 
@@ -116,7 +118,7 @@ def load_config(user_config_path: Path = None) -> Dict:
 
     return config
        
-def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portrait = False, domain_preset: Optional[DomainPreset] = None) -> Dict:
+def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain_preset: Optional[DomainPreset] = None) -> Dict:
     if domain_preset is not None:
         overrides = _get_domain_presets(domain_preset)
         config["html_settings"].update(overrides["html_settings"])
@@ -125,8 +127,10 @@ def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, i
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
-    if auto_find_portrait is True:
-        config["media_rules"]["auto_find_portrait"] = True
+    if auto_find_portraits is True:
+        config["media_rules"]["auto_find_portraits"] = True
+    if hide_portraits is True:
+        config["html_settings"]["hide_portraits"] = True
     
     _validate_config(config)
 

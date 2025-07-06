@@ -42,7 +42,9 @@
           <div class="image-wrapper image-card" 
                data-search-text="{{ creator.search_text }}">
             <a href="{{ creator.url }}" title="{{ creator.name }}">
-              <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
+              {% if not html_settings.hide_portraits %}
+                <img src="{{ creator.thumbnail_url }}" alt="Poster for {{ creator.name }}">
+              {% endif %}
               <div class=image-caption>
                 <span>{{ creator.name }}</span>
               </div>

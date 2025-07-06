@@ -67,9 +67,11 @@
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
-                <a href="{{ project.creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                  <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
-                </a>
+                {% if not html_settings.hide_portraits %}
+                  <a href="{{ project.creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
+                  </a>
+                {% endif %}
                 <div>
                   <p><strong>Name:</strong> <a href="{{ project.creator.url }}">{{ project.creator.name }}</a></p>
                   {% if project.creator.age_at_release %}
@@ -89,9 +91,11 @@
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
-                <a href="{{ project.collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                  <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
-                </a>
+                {% if not html_settings.hide_portraits %}
+                  <a href="{{ project.collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
+                  </a>
+                {% endif %}
                 <div>
                   <p><strong>Name:</strong> <a href="{{ project.collaboration.url }}">{{ project.collaboration.name }}</a></p>
                 </div>
@@ -109,9 +113,11 @@
               <hr>
               <div class="section-content">
                 <div class="info-block info-block--row">
-                  <a href="{{ participant.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ participant.portrait_url}}" alt="Portrait of {{ participant.name }}">
-                  </a>
+                  {% if not html_settings.hide_portraits %}
+                    <a href="{{ participant.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                      <img src="{{ participant.portrait_url}}" alt="Portrait of {{ participant.name }}">
+                    </a>
+                  {% endif %}
                   <div>
                     <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
                     {% if participant.age_at_release %}

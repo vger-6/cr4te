@@ -34,7 +34,8 @@ def main():
     build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], help="Apply a common domain preset")
     build_parser.add_argument("--max-images", type=int, help="Maximum number of images to include per media group")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
-    build_parser.add_argument("--auto-find-portrait", action="store_true", help="Search folders recursively to find a fitting portrait")
+    build_parser.add_argument("--auto-find-portraits", action="store_true", help="Search folders recursively to find a fitting portrait")
+    build_parser.add_argument("--hide-portraits", action="store_true", help="Hide portraits on all pages")
     build_parser.add_argument('--open', action='store_true', help="Open index.html in the default browser after building.")
     build_parser.add_argument("--force", action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     build_parser.add_argument("--clean", action="store_true", help="Also delete the thumbnails folder (only valid with --force)")
@@ -55,13 +56,19 @@ def main():
             if not args.output:
                 parser.error("argument -o/--output is required unless --print-config-only is used")
                 
+        if args.auto_find_portraits and args.hide_portraits:
+            print("[Warning] Both --auto-find-portraits and --hide-portraits are set. "
+                  "Automatic portrait finding will still run, but portraits will not be shown in the output.",
+                  file=sys.stderr)
+                
         config = _load_config(args.config)
         
         config = cfg.apply_cli_overrides(
             config,
             image_gallery_max=args.max_images,
             image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-            auto_find_portrait=args.auto_find_portrait,
+            auto_find_portraits=args.auto_find_portraits,
+            hide_portraits=args.hide_portraits,
             domain_preset=DomainPreset(args.domain_preset) if args.domain_preset else None
         )
 
