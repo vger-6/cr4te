@@ -32,8 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // Update placeholder visibility
-      original.style.display = isMobile ? 'none' : 'block';
-      mobile.style.display = isMobile ? 'block' : 'none';
+      original.style.display = isMobile ? 'none' : 'flex';
+      mobile.style.display = isMobile ? 'flex' : 'none';
     });
   }
 

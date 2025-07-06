@@ -260,8 +260,8 @@ def _get_section_titles(media_group: Dict, audio_section_title: str, image_secti
     if not media_group["is_root"]:
         title = Path(media_group["folder_path"]).name.title()
 
-        audio_title = title
-        image_title = title
+        audio_section_title = title
+        image_section_title = title
 
     return {
         "audio_section_title": audio_section_title,

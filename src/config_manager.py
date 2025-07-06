@@ -156,6 +156,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "creator_page_collabs_title_prefix": "Codirected with",
                     "collaboration_page_projects_title": "Movies",
                     "project_page_creator_profile_title": "Profile",
+                    "project_gallery_aspect_ratio": "2/3",
                  },
                "media_rules": {},
             }
