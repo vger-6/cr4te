@@ -12,7 +12,7 @@
     {
       "title": "Landscapes",
       "release_date": "",
-      "cover": "Noomi/Landscapes/cover.jpg",
+      "cover": "Noomi/Landscapes/desert.jpg",
       "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Canyon Gap** \u2014 Earthen cliffs split beneath a single bright cloud.\n- **Dunes** \u2014 Smooth, rust-colored sand waves under a clear sky.\n- **Rocky Plateau,** \u2014 Bare trees cast long shadows across dry stone.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
       "media_groups": [
         {
@@ -42,6 +42,28 @@
           "documents": [],
           "texts": [],
           "folder_path": "Noomi/Landscapes/Travel Playlist"
+        }
+      ],
+      "tags": []
+    },
+    {
+      "title": "Landscapes II",
+      "release_date": "",
+      "cover": "Noomi/Landscapes II/death valley.jpg",
+      "info": "A collection of landscape photographs.\n\n### What's included\n\n- **Death Valley, USA** \u2014 Barren ridges that look like brushstrokes.\n- **Icelandic Highlands** \u2014 The contrast of green moss and volcanic stone is surreal.\n- **Patagonia, Argentina** \u2014 A sharp peak surrounded by clouds.\n\n---\n\n*Noomi is a fictional character, created along with this portfolio to help you explore what `cr4te` can do. All media used here is royalty-free and safe to use.*",
+      "media_groups": [
+        {
+          "is_root": true,
+          "videos": [],
+          "tracks": [],
+          "images": [
+            "Noomi/Landscapes II/death valley.jpg",
+            "Noomi/Landscapes II/iceland.jpg",
+            "Noomi/Landscapes II/patagonia.jpg"
+          ],
+          "documents": [],
+          "texts": [],
+          "folder_path": "Noomi/Landscapes II"
         }
       ],
       "tags": []
