@@ -364,40 +364,60 @@ def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
     
 def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
-    participant_names = creator["members"] if creator["is_collaboration"] else [creator["name"]]
+    participant_names = creator["members"]
     
     participants = []
     for name in participant_names:
         participant = creator_by_name.get(name)
         if not participant:
             continue
-         
-        thumb_path = _resolve_thumbnail_or_default(ctx, participant["portrait"], ThumbType.PORTRAIT)
 
-        participants.append({
-            "name": name,
-            "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(participant)}.html",
-            "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
-            "age_at_release": _calculate_age_at_release(participant, project)
-        })
+        participants.append(_collect_creator_entries(ctx, participant, project))
 
     return participants
+
+# TODO: remove code duplication: _collect_creator_entries, _collect_collaborator_entries, and _collect_project_context. see also project.html.j2.
+def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
+    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
+
+    return {
+        "name": creator["name"],
+        "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
+        "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
+        "age_at_release": _calculate_age_at_release(creator, project),
+    }
+    
+def _collect_collaborator_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[str, str]:
+    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
+
+    return {
+        "name": creator["name"],
+        "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
+        "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
+    }
     
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
     thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
-    return {
+    project_context = {
         "title": project["title"],
         "release_date": project["release_date"],
         "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
-        "participants": _collect_participant_entries(ctx, creator, project, creators),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"], ctx.projects_dir),
         "creator_name": creator["name"],
-        "creator_slug": _get_creator_slug(creator),
+        "creator_url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
     }
+    
+    if creator["is_collaboration"]:
+        project_context["participants"] = _collect_participant_entries(ctx, creator, project, creators)
+        project_context["collaboration"] = _collect_collaborator_entries(ctx, creator)
+    else:
+        project_context["creator"] = _collect_creator_entries(ctx, creator, project)
+    
+    return project_context
 
 def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]):
     slug = _get_project_slug(creator, project)

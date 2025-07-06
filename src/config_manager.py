@@ -73,6 +73,8 @@ DEFAULT_CONFIG = {
         "project_page_visible_project_fields": [f for f in ProjectField],
         "project_page_image_gallery_page_size" : 15,
         "project_page_image_gallery_captions_visible": False,
+        "project_page_collaboration_profile_visible": True,
+        "project_page_participant_profiles_visible": True,
     },
     "media_rules": {   
         "max_depth": 5,

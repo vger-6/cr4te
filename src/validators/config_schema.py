@@ -67,6 +67,9 @@ class HtmlSettings(BaseModel):
     
     project_page_image_gallery_captions_visible: bool
     
+    project_page_collaboration_profile_visible: bool
+    project_page_participant_profiles_visible: bool
+    
     @validator('project_gallery_aspect_ratio', 'creator_gallery_aspect_ratio')
     def validate_aspect_ratio_colon_format(cls, v):
         match = re.match(r'^(\d+)/(\d+)$', v.strip())

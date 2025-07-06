@@ -19,7 +19,7 @@
       <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
       <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
       <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
-      <a href="../creators/{{ project.creator_slug }}.html">{{ project.creator_name }}</a>
+      <a href="{{ project.creator_url }}">{{ project.creator_name }}</a>
       {% include "partials/_theme_dropdown.html.j2" %}
     </div>
 
@@ -57,9 +57,46 @@
           </div>
         </div>
       {% endif %}
-
+      
       <div class="original-placeholder" data-mobile-target="1">
-        {% if project.participants %}
+        {% if project.creator %}
+          <div class="section-box">
+            <div class="section-title">{{ project.creator.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="info-block info-block--row">
+                <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
+                <div>
+                  <p><strong>Name:</strong> <a href="{{ project.creator.url }}">{{ project.creator.name }}</a></p>
+                  {% if project.creator.age_at_release %}
+                    <p><strong>At Age:</strong> {{ project.creator.age_at_release }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="original-placeholder" data-mobile-target="2">
+        {% if project.collaboration and html_settings.project_page_collaboration_profile_visible %}
+          <div class="section-box">
+            <div class="section-title">{{ project.collaboration.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="info-block info-block--row">
+                <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
+                <div>
+                  <p><strong>Name:</strong> <a href="{{ project.collaboration.url }}">{{ project.collaboration.name }}</a></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="original-placeholder" data-mobile-target="3">
+        {% if html_settings.project_page_participant_profiles_visible %}
           {% for participant in project.participants %}
             <div class="section-box">
               <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
@@ -80,7 +117,7 @@
         {% endif %}
       </div>
 
-      <div class="original-placeholder" data-mobile-target="2">
+      <div class="original-placeholder" data-mobile-target="4">
         {% if project.tag_map %}
           <div class="section-box">
             <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
@@ -107,6 +144,8 @@
       
       <div class="mobile-placeholder" data-mobile-target="1"></div>
       <div class="mobile-placeholder" data-mobile-target="2"></div>
+      <div class="mobile-placeholder" data-mobile-target="3"></div>
+      <div class="mobile-placeholder" data-mobile-target="4"></div>
 
     </div>
   </div>
