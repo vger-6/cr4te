@@ -17,7 +17,7 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
-from utils import slugify, get_relative_path, read_text, load_json, create_centered_text_image
+from utils import slugify, build_unique_path, get_relative_path, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -64,14 +64,7 @@ def _get_creator_slug(creator: Dict) -> str:
     
 def _get_project_slug(creator: Dict, project: Dict) -> str:
     return slugify(f"{creator['name']}__{project['title']}")
- 
-def _build_slugified_filename(relative_path: Path, tag: str) -> str:
-    parts = [*relative_path.parent.parts, relative_path.stem]
-    if tag:
-        parts.append(tag)
-    slug = slugify("__".join(parts))
-    return f"{slug}{relative_path.suffix.lower()}"
-        
+     
 def _is_portrait(image_path : Path) -> bool:
     try:
         with Image.open(image_path) as img:
@@ -87,10 +80,6 @@ def _is_portrait(image_path : Path) -> bool:
 def _infer_layout_from_orientation(thumb_path: Path) -> str:
     return "row" if _is_portrait(thumb_path) else "column"
     
-def _get_thumbnail_path(thumb_dir: Path, relative_image_path: Path, tag: str) -> Path:
-    filename = _build_slugified_filename(relative_image_path, tag)
-    return thumb_dir / filename
-    
 def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) -> None:
     with Image.open(source_path) as img:
         aspect_ratio = img.width / img.height
@@ -100,7 +89,7 @@ def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) 
         resized.save(dest_path, format='JPEG')
                
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, relative_image_path: Path, thumb_type: ThumbType) -> Path:
-    thumb_path = _get_thumbnail_path(ctx.thumbs_dir, relative_image_path, thumb_type.value)
+    thumb_path = build_unique_path(ctx.thumbs_dir, relative_image_path, thumb_type.value)
 
     if not thumb_path.exists():
         try:
@@ -226,9 +215,9 @@ def _build_tags_page(ctx: HtmlBuildContext, creators: list):
         
 def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
     source_file = (input_dir / relative_path).resolve()
-    filename = _build_slugified_filename(relative_path, "")
-    dest_file = target_dir / filename
-
+    
+    dest_file = build_unique_path(target_dir, relative_path)
+    
     dest_file.parent.mkdir(parents=True, exist_ok=True)
 
     if not source_file.exists():
@@ -243,18 +232,6 @@ def _sort_sections_by_type(sections: List[Dict], media_type_order: List[str]) ->
     fallback_order = len(order_map)
 
     return sorted(sections, key=lambda s: order_map.get(s["type"], fallback_order))
-
-#def _format_section_title(folder_name: str, label: str, active_types: List[MediaType], current_type: MediaType) -> str:
-#    """
-#    Returns a title for the media section based on what types are present.
-#
-#    - If only one type is active, return folder_name only.
-#    - If multiple types, return "folder_name - label".
-#    """
-#    folder_name = folder_name.replace("/", " - ").strip()
-#    if len(active_types) == 1 and current_type in active_types:
-#        return folder_name
-#    return f"{folder_name} - {label}"
     
 def _get_section_titles(media_group: Dict, audio_section_title: str, image_section_title: str) -> Dict[str, str]:
     if not media_group["is_root"]:
@@ -294,7 +271,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
         images = [
             {
                 "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), base_path),
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.images_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
@@ -302,7 +279,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         videos = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.videos_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
                 "title": Path(rel).stem.title()
             }
             for rel in video_rel_paths
@@ -310,7 +287,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         tracks = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.tracks_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
                 "title": Path(rel).stem,
                 "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
@@ -319,7 +296,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         documents = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.documents_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
                 "title": Path(rel).stem.title()
             }
             for rel in document_rel_paths

@@ -47,24 +47,8 @@ class HtmlBuildContext(BaseContext):
         return self.output_dir / PROJECTS_DIRNAME
 
     @property
-    def media_dir(self) -> Path:
-        return self.output_dir / "media"
-
-    @property
-    def images_dir(self) -> Path:
-        return self.media_dir / "images"
-
-    @property
-    def videos_dir(self) -> Path:
-        return self.media_dir / "videos"
-
-    @property
-    def tracks_dir(self) -> Path:
-        return self.media_dir / "tracks"
-
-    @property
-    def documents_dir(self) -> Path:
-        return self.media_dir / "documents"
+    def symlinks_dir(self) -> Path:
+        return self.output_dir / "symlinks"
 
     @property
     def index_html_path(self) -> Path:
