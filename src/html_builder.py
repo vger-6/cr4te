@@ -352,26 +352,25 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
         participants.append(_collect_creator_entries(ctx, participant, project))
 
     return participants
-
-# TODO: remove code duplication: _collect_creator_entries, _collect_collaborator_entries, and _collect_project_context. see also project.html.j2.
-def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
+    
+def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[str, str]:
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
     return {
         "name": creator["name"],
         "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
         "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
-        "age_at_release": _calculate_age_at_release(creator, project),
     }
+
+def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
+    entries = _collect_creator_base_entries(ctx, creator)
+    
+    entries["age_at_release"] = _calculate_age_at_release(creator, project)
+
+    return entries
     
 def _collect_collaborator_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[str, str]:
-    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
-
-    return {
-        "name": creator["name"],
-        "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
-        "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
-    }
+    return _collect_creator_base_entries(ctx, creator)
     
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
     thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
@@ -384,8 +383,6 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"], ctx.projects_dir),
-        "creator_name": creator["name"],
-        "creator_url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
     }
     
     if creator["is_collaboration"]:

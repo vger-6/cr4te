@@ -13,13 +13,15 @@
 </head>
 <body>
 
+{% set creator_base = project.creator or project.collaboration %}
+
 <div class="page-container">
   <div class="page-header">
     <div class="top-link">
       <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
       <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
       <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
-      <a href="{{ project.creator_url }}">{{ project.creator_name }}</a>
+      <a href="{{ creator_base.url }}">{{ creator_base.name }}</a>
       {% include "partials/_theme_dropdown.html.j2" %}
     </div>
 
@@ -62,20 +64,22 @@
       
       <div class="original-placeholder" data-mobile-target="1">
         {% if project.creator %}
+          {% set creator = project.creator%}
+        
           <div class="section-box">
-            <div class="section-title">{{ project.creator.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <div class="section-title">{{ creator.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ project.creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ project.creator.portrait_url }}" alt="Portrait of {{ project.creator.name }}">
+                  <a href="{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ project.creator.url }}">{{ project.creator.name }}</a></p>
-                  {% if project.creator.age_at_release %}
-                    <p><strong>At Age:</strong> {{ project.creator.age_at_release }}</p>
+                  <p><strong>Name:</strong> <a href="{{ creator.url }}">{{ creator.name }}</a></p>
+                  {% if creator.age_at_release %}
+                    <p><strong>At Age:</strong> {{ creator.age_at_release }}</p>
                   {% endif %}
                 </div>
               </div>
@@ -86,18 +90,20 @@
       
       <div class="original-placeholder" data-mobile-target="2">
         {% if project.collaboration and html_settings.project_page_collaboration_profile_visible %}
+        
+          {% set collaboration = project.collaboration%}
           <div class="section-box">
-            <div class="section-title">{{ project.collaboration.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <div class="section-title">{{ collaboration.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ project.collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ project.collaboration.portrait_url }}" alt="Portrait of {{ project.collaboration.name }}">
+                  <a href="{{ collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ collaboration.portrait_url }}" alt="Portrait of {{ collaboration.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ project.collaboration.url }}">{{ project.collaboration.name }}</a></p>
+                  <p><strong>Name:</strong> <a href="{{ collaboration.url }}">{{ collaboration.name }}</a></p>
                 </div>
               </div>
             </div>
