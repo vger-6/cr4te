@@ -17,7 +17,7 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
-from utils import slugify, build_unique_path, get_relative_path, read_text, load_json, create_centered_text_image
+from utils import slugify, build_unique_path, tag_path, get_relative_path, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -89,7 +89,8 @@ def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) 
         resized.save(dest_path, format='JPEG')
                
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, relative_image_path: Path, thumb_type: ThumbType) -> Path:
-    thumb_path = build_unique_path(ctx.thumbs_dir, relative_image_path, thumb_type.value)
+    thumb_path = ctx.thumbs_dir / build_unique_path(relative_image_path)
+    thumb_path = tag_path(thumb_path, thumb_type.value)
 
     if not thumb_path.exists():
         try:
@@ -216,7 +217,7 @@ def _build_tags_page(ctx: HtmlBuildContext, creators: list):
 def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
     source_file = (input_dir / relative_path).resolve()
     
-    dest_file = build_unique_path(target_dir, relative_path)
+    dest_file = target_dir / build_unique_path(relative_path)
     
     dest_file.parent.mkdir(parents=True, exist_ok=True)
 

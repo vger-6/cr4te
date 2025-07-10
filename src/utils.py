@@ -28,29 +28,40 @@ def load_json(json_path: Path) -> Dict:
     with open(json_path, 'r', encoding='utf-8') as f:
         return json.load(f)
         
-#def build_slugified_filename(relative_path: Path, tag: str) -> str:
-#    parts = [*relative_path.parent.parts, relative_path.stem]
-#    if tag:
-#        parts.append(tag)
-#    slug = slugify("__".join(parts))
-#    return f"{slug}{relative_path.suffix.lower()}"
+#def build_unique_path(target_dir: Path, relative_path: Path) -> Path:
+#    def short_hash(path: str, length: int = 8) -> str:
+#        return hashlib.sha1(path.encode('utf-8')).hexdigest()[:length]
+#
+#    # Slugify directory parts
+#    slugified_parts = [slugify(part) for part in relative_path.parent.parts]
+#    
+#    # Slugify filename and extension
+#    basename = slugify(relative_path.stem)
+#    extension = relative_path.suffix.lower()  # Includes the dot (e.g., ".jpg")
+#
+#    # Generate short hash
+#    hash_suffix = short_hash(str(relative_path))
+#
+#    final_name = f"{basename}_{hash_suffix}{extension}"
+#
+#    return target_dir.joinpath(*slugified_parts, final_name)
+        
+def build_unique_path(relative_path: Path) -> Path:
+    original_suffix = relative_path.suffix
+    sha1 = hashlib.sha1(str(relative_path).encode("utf-8")).hexdigest()
 
-def _short_hash(path: str, length: int = 8) -> str:
-    return hashlib.sha1(path.encode('utf-8')).hexdigest()[:length]
+    chunks = [
+        sha1[0:2],
+        sha1[2:4],
+        sha1[4:6],
+        sha1[6:8],
+        sha1[8:] + original_suffix
+    ]
 
-def build_unique_path(target_dir: Path, relative_path: Path, tag: str = "") -> Path:
-    slugified_parts = [slugify(part) for part in relative_path.parent.parts]
-    basename = slugify(relative_path.stem)
-    extension = relative_path.suffix.lower()
-
-    hash_suffix = _short_hash(str(relative_path))
-
-    if tag:
-        basename = f"{basename}_{slugify(tag)}_{hash_suffix}"
-    else:
-        basename = f"{basename}_{hash_suffix}"
-
-    return target_dir.joinpath(*slugified_parts, f"{basename}{extension}")
+    return Path(*chunks)
+    
+def tag_path(input_path: Path, tag: str) -> Path:
+    return input_path.with_name(f"{input_path.stem}_{tag}{input_path.suffix}")
 
 def create_centered_text_image(width: int, height: int, text: str, output_path: Path)->None:
     # Create an image with grey background
