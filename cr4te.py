@@ -69,11 +69,12 @@ def main():
                 parser.error(f"argument {FLAG_INPUT_SHORT}/{FLAG_INPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
             if not args.output:
                 parser.error(f"argument {FLAG_OUTPUT_SHORT}/{FLAG_OUTPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
-                
-        if args.auto_find_portraits and args.hide_portraits:
-            print(f"[Warning] Both {FLAG_AUTO_FIND_PORTRAITS} and {FLAG_HIDE_PORTRAITS} are set. "
-                  "Automatic portrait finding will still run, but portraits will not be shown in the output.",
-                  file=sys.stderr)
+        
+        if not args.print_config_only or sys.stdout.isatty():
+            if args.auto_find_portraits and args.hide_portraits:
+                print(f"[Warning] Both {FLAG_AUTO_FIND_PORTRAITS} and {FLAG_HIDE_PORTRAITS} are set. "
+                      "Automatic portrait finding will still run, but portraits will not be shown in the output.",
+                      file=sys.stderr)
                 
         config = _load_config(args.config)
         
