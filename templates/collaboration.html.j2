@@ -7,18 +7,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ creator.name }}</title>
-  <link rel="stylesheet" href="../assets/css/base.css">
-  <link rel="stylesheet" href="../assets/css/theme.css">
-  <link rel="stylesheet" href="../assets/css/two-column-layout.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/base.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/theme.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/two-column-layout.css">
 </head>
 <body>
 
 <div class="page-container">
   <div class="page-header">
     <div class="top-link">
-      <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
-      <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
-      <a href="../tags.html">{{ html_settings.nav_tags_label }}</a>
+      <a href="{{ path_to_root }}index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+      <a href="{{ path_to_root }}projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
+      <a href="{{ path_to_root }}tags.html">{{ html_settings.nav_tags_label }}</a>
       {% include "partials/_theme_dropdown.html.j2" %}
     </div>
 
@@ -35,8 +35,8 @@
         <div class="section-content markdown">
           <div class="info-block info-block--{{ creator.info_layout }}">
             {% if not html_settings.hide_portraits %}
-              <a href="{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+              <a href="{{ path_to_root }}{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                <img src="{{ path_to_root }}{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
               </a>
             {% endif %}
             <div>
@@ -78,12 +78,12 @@
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ member.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+                  <a href="{{ path_to_root }}{{ member.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ path_to_root }}{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ member.url }}">{{ member.name }}</a></p>
+                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ member.url }}">{{ member.name }}</a></p>
                 </div>
               </div>
             </div>
@@ -129,8 +129,8 @@
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
             <div class="image-wrapper image-card">
-              <a href="{{ project.url }}" title="{{ project.title }}">
-                <img src="{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+              <a href="{{ path_to_root }}{{ project.url }}" title="{{ project.title }}">
+                <img src="{{ path_to_root }}{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
                 <div class=image-caption>
                   <span>{{ project.title }}</span>
                 </div>
@@ -152,15 +152,15 @@
   </div>
 </div>
 
-<script src="../assets/js/utils.js" defer></script>
-<script src="../assets/js/theme_selector.js" defer></script>
-<script src="../assets/js/justified_gallery_builder.js" defer></script>
-<script src="../assets/js/aspect_gallery_builder.js" defer></script>
-<script src="../assets/js/pagination.js" defer></script>
-<script src="../assets/js/audio_player.js" defer></script>
-<script src="../assets/js/video_player.js" defer></script>
-<script src="../assets/js/lightbox.js" defer></script>
-<script src="../assets/js/responsive_content_mover.js" defer></script>
+<script src="{{ path_to_root }}assets/js/utils.js" defer></script>
+<script src="{{ path_to_root }}assets/js/theme_selector.js" defer></script>
+<script src="{{ path_to_root }}assets/js/justified_gallery_builder.js" defer></script>
+<script src="{{ path_to_root }}assets/js/aspect_gallery_builder.js" defer></script>
+<script src="{{ path_to_root }}assets/js/pagination.js" defer></script>
+<script src="{{ path_to_root }}assets/js/audio_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/video_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/lightbox.js" defer></script>
+<script src="{{ path_to_root }}assets/js/responsive_content_mover.js" defer></script>
 
 </body>
 </html>

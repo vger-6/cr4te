@@ -17,8 +17,8 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
-from utils import slugify, build_unique_path, tag_path, get_relative_path, read_text, load_json, create_centered_text_image
-from context.html_context import HtmlBuildContext, CREATORS_DIRNAME, PROJECTS_DIRNAME, THUMBNAILS_DIRNAME
+from utils import slugify, build_unique_path, get_path_to_root, tag_path, get_relative_path, read_text, load_json, create_centered_text_image
+from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["clear_output_folder", "build_html_pages"]
@@ -29,6 +29,12 @@ env = Environment(
     autoescape=select_autoescape(['html', 'xml'])
 )
 env.globals["MediaType"] = MediaType
+
+FILE_TREE_DEPTH = 4
+
+# HTML files live inside: output_dir/html/<depth levels>/<file.html>
+# So to get back to output_dir, we need (depth + 1) "../" segments
+HTML_PATH_TO_ROOT = get_path_to_root(FILE_TREE_DEPTH + 1)
 
 def _render_markdown(text: str) -> str:
     return markdown.markdown(text, extensions=["nl2br"])
@@ -59,11 +65,11 @@ def _calculate_age_from_strings(birth_date_str: str, reference_date_str: str) ->
         return _calculate_age(dob, ref)
     return ""
 
-def _get_creator_slug(creator: Dict) -> str:
-    return slugify(creator['name'])
+def _build_rel_creator_path(creator: Dict) -> str:
+    return build_unique_path(Path(creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
     
-def _get_project_slug(creator: Dict, project: Dict) -> str:
-    return slugify(f"{creator['name']}__{project['title']}")
+def _build_rel_project_path(creator: Dict, project: Dict) -> str:
+    return build_unique_path(Path(creator['name'], project['title']).with_suffix(".html"), FILE_TREE_DEPTH)
      
 def _is_portrait(image_path : Path) -> bool:
     try:
@@ -76,7 +82,8 @@ def _is_portrait(image_path : Path) -> bool:
     except Exception as e:
         print(f"Could not open image '{image_path}': {e}")
         return True
-        
+
+# TODO: remove and use _is_portrait    
 def _infer_layout_from_orientation(thumb_path: Path) -> str:
     return "row" if _is_portrait(thumb_path) else "column"
     
@@ -149,7 +156,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
 
             all_projects.append({
                 "title": project["title"],
-                "url": f"{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
+                "url": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
                 "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
                 "creator_name": creator["name"],
                 "search_text": _build_project_search_text(project)
@@ -259,7 +266,7 @@ def _get_audio_duration_seconds(file_path: Path) -> int:
         print(f"Warning: could not read duration for {file_path}: {e}")
     return 0
     
-def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_path: Path) -> List[Dict[str, Any]]:  
+def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> List[Dict[str, Any]]:  
     media_groups_context = []
 
     for media_group in media_groups:
@@ -271,8 +278,8 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
         
         images = [
             {
-                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), base_path),
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
+                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
@@ -280,7 +287,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         videos = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
                 "title": Path(rel).stem.title()
             }
             for rel in video_rel_paths
@@ -288,7 +295,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         tracks = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
                 "title": Path(rel).stem,
                 "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
@@ -297,7 +304,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List, base_
 
         documents = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), base_path),
+                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
                 "title": Path(rel).stem.title()
             }
             for rel in document_rel_paths
@@ -359,8 +366,8 @@ def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 
     return {
         "name": creator["name"],
-        "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
-        "portrait_url": get_relative_path(thumb_path, ctx.projects_dir),
+        "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
+        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
     }
 
 def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
@@ -379,11 +386,11 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
     project_context = {
         "title": project["title"],
         "release_date": project["release_date"],
-        "thumbnail_url": get_relative_path(thumb_path, ctx.projects_dir),
+        "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
-        "media_groups": _build_media_groups_context(ctx, project["media_groups"], ctx.projects_dir),
+        "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
     }
     
     if creator["is_collaboration"]:
@@ -395,18 +402,19 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
     return project_context
 
 def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]):
-    slug = _get_project_slug(creator, project)
-    print(f"Building project page: {slug}.html")
+    print(f"Building project page: {creator['name']} - {project['title']}")
     
     template = env.get_template("project.html.j2")
     
     output_html = template.render(
         html_settings=ctx.html_settings,
         project=_collect_project_context(ctx, creator, project, creators),
-        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY),
+        path_to_root=HTML_PATH_TO_ROOT
     )
 
-    page_path = ctx.projects_dir / f"{slug}.html"
+    page_path = ctx.html_dir / _build_rel_project_path(creator, project)
+    page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
     
@@ -452,8 +460,8 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
 
         project_entries.append({
             "title": project["title"],
-            "url": f"../{PROJECTS_DIRNAME}/{_get_project_slug(creator, project)}.html",
-            "thumbnail_url": get_relative_path(thumb_path, ctx.creators_dir),
+            "url": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
+            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
         })
 
     return project_entries
@@ -489,19 +497,18 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "aliases": creator["aliases"],
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
-        "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
+        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
         "collaborations": _build_collaboration_entries(ctx, creator, creators),
-        "media_groups": _build_media_groups_context(ctx, creator["media_groups"], ctx.creators_dir),
+        "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
 def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
-    slug = _get_creator_slug(creator)
-    print(f"Building creator page: {slug}.html")
+    print(f"Building creator page: {creator['name']}")
     
     template = env.get_template("creator.html.j2")
 
@@ -509,10 +516,12 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(ctx, creator, creators),
         project_thumb_max_height=ctx.thumb_height(ThumbType.GALLERY),
-        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY),
+        path_to_root=HTML_PATH_TO_ROOT
     )
 
-    page_path = ctx.creators_dir / f"{slug}.html"
+    page_path = ctx.html_dir / _build_rel_creator_path(creator)
+    page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
         
@@ -536,8 +545,8 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
 
         member_links.append({
             "name": member_name,
-            "url": f"../{CREATORS_DIRNAME}/{_get_creator_slug(member)}.html",
-            "thumbnail_url": get_relative_path(thumb_path, ctx.creators_dir)
+            "url": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
+            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir)
         })
 
     return member_links
@@ -556,17 +565,16 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "founded": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
-        "portrait_url": get_relative_path(thumb_path, ctx.creators_dir),
+        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
-        "media_groups": _build_media_groups_context(ctx, creator["media_groups"], ctx.creators_dir),
+        "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
 def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: list):
-    slug = _get_creator_slug(creator)
-    print(f"Building collaboration page: {slug}.html")
+    print(f"Building collaboration page: {creator['name']}")
 
     template = env.get_template("collaboration.html.j2")
 
@@ -575,10 +583,12 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         creator=_collect_collaboration_context(ctx, creator, creators),
         member_thumb_max_height=ctx.thumb_height(ThumbType.THUMB),
         project_thumb_max_height=ctx.thumb_height(ThumbType.GALLERY),
-        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY)
+        gallery_image_max_height=ctx.thumb_height(ThumbType.GALLERY),
+        path_to_root=HTML_PATH_TO_ROOT
     )
 
-    page_path = ctx.creators_dir / f"{slug}.html"
+    page_path = ctx.html_dir / _build_rel_creator_path(creator)
+    page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
     
@@ -616,7 +626,7 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
 
         creator_entries.append({
             "name": creator["name"],
-            "url": f"{CREATORS_DIRNAME}/{_get_creator_slug(creator)}.html",
+            "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
             "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
             "search_text": _build_creator_search_text(creator),
         })
@@ -660,6 +670,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
 
     return creators
         
+# TODO: Take aspect ratio and name from html_settings
 def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
     shutil.copytree(constants.CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
     print(f"Copied {constants.CR4TE_CSS_DIR.name} to {ctx.css_dir}")
@@ -677,8 +688,7 @@ def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
     
 def _prepare_output_dirs(ctx: HtmlBuildContext) -> None:
     ctx.output_dir.mkdir(parents=True, exist_ok=True)
-    ctx.creators_dir.mkdir(parents=True, exist_ok=True)
-    ctx.projects_dir.mkdir(parents=True, exist_ok=True)
+    ctx.html_dir.mkdir(parents=True, exist_ok=True)
     ctx.thumbs_dir.mkdir(parents=True, exist_ok=True)
     
 def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> Path:

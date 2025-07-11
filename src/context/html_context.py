@@ -13,8 +13,6 @@ from constants import (
 )
 
 # === Output folder names ===
-CREATORS_DIRNAME = "creators"
-PROJECTS_DIRNAME = "projects"
 THUMBNAILS_DIRNAME = "thumbnails"
 
 @dataclass
@@ -39,12 +37,8 @@ class HtmlBuildContext(BaseContext):
         return self.output_dir / THUMBNAILS_DIRNAME
 
     @property
-    def creators_dir(self) -> Path:
-        return self.output_dir / CREATORS_DIRNAME
-
-    @property
-    def projects_dir(self) -> Path:
-        return self.output_dir / PROJECTS_DIRNAME
+    def html_dir(self) -> Path:
+        return self.output_dir / "html"
 
     @property
     def symlinks_dir(self) -> Path:
@@ -86,6 +80,7 @@ class HtmlBuildContext(BaseContext):
     def image_captions_visible(self) -> bool:
         return self.html_settings["project_page_image_gallery_captions_visible"]
 
+    # TODO: rename to get_thumb_default_filename
     def thumb_default(self, thumb_type: ThumbType) -> Path:
         return self.defaults_dir / {
             ThumbType.THUMB: "thumb.png",
@@ -94,6 +89,7 @@ class HtmlBuildContext(BaseContext):
             ThumbType.GALLERY: "thumb.png",
         }[thumb_type]
         
+    # TODO: rename to get_thumb_height_in_px
     def thumb_height(self, thumb_type: ThumbType) -> int:
         return {
             ThumbType.THUMB: 350,

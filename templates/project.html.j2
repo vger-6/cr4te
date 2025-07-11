@@ -7,9 +7,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ project.title }}</title>
-  <link rel="stylesheet" href="../assets/css/base.css">
-  <link rel="stylesheet" href="../assets/css/theme.css">
-  <link rel="stylesheet" href="../assets/css/two-column-layout.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/base.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/theme.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/two-column-layout.css">
 </head>
 <body>
 
@@ -18,10 +18,10 @@
 <div class="page-container">
   <div class="page-header">
     <div class="top-link">
-      <a href="../index.html">{{ html_settings.nav_creators_label }}</a> &middot;
-      <a href="../projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
-      <a href="../tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
-      <a href="{{ creator_base.url }}">{{ creator_base.name }}</a>
+      <a href="{{ path_to_root }}index.html">{{ html_settings.nav_creators_label }}</a> &middot;
+      <a href="{{ path_to_root }}projects.html">{{ html_settings.nav_projects_label }}</a> &middot;
+      <a href="{{ path_to_root }}tags.html">{{ html_settings.nav_tags_label }}</a> &middot;
+      <a href="{{ path_to_root }}{{ creator_base.url }}">{{ creator_base.name }}</a>
       {% include "partials/_theme_dropdown.html.j2" %}
     </div>
 
@@ -37,8 +37,8 @@
         <hr>
         <div class="section-content markdown">
           <div class="info-block info-block--{{ project.info_layout }}">
-            <a href="{{ project.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
-              <img src="{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
+            <a href="{{ path_to_root }}{{ project.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
+              <img src="{{ path_to_root }}{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
             </a>
             <div>
               {% if 'title' in html_settings.project_page_visible_project_fields %}
@@ -72,12 +72,12 @@
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+                  <a href="{{ path_to_root }}{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ path_to_root }}{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ creator.url }}">{{ creator.name }}</a></p>
+                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ creator.url }}">{{ creator.name }}</a></p>
                   {% if creator.age_at_release %}
                     <p><strong>At Age:</strong> {{ creator.age_at_release }}</p>
                   {% endif %}
@@ -98,12 +98,12 @@
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ collaboration.portrait_url }}" alt="Portrait of {{ collaboration.name }}">
+                  <a href="{{ path_to_root }}{{ collaboration.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ path_to_root }}{{ collaboration.portrait_url }}" alt="Portrait of {{ collaboration.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ collaboration.url }}">{{ collaboration.name }}</a></p>
+                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ collaboration.url }}">{{ collaboration.name }}</a></p>
                 </div>
               </div>
             </div>
@@ -120,12 +120,12 @@
               <div class="section-content">
                 <div class="info-block info-block--row">
                   {% if not html_settings.hide_portraits %}
-                    <a href="{{ participant.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                      <img src="{{ participant.portrait_url}}" alt="Portrait of {{ participant.name }}">
+                    <a href="{{ path_to_root }}{{ participant.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
+                      <img src="{{ path_to_root }}{{ participant.portrait_url}}" alt="Portrait of {{ participant.name }}">
                     </a>
                   {% endif %}
                   <div>
-                    <p><strong>Name:</strong> <a href="{{ participant.url }}">{{ participant.name }}</a></p>
+                    <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ participant.url }}">{{ participant.name }}</a></p>
                     {% if participant.age_at_release %}
                       <p><strong>At Age:</strong> {{ participant.age_at_release }}</p>
                     {% endif %}
@@ -171,14 +171,14 @@
   </div>
 </div>
 
-<script src="../assets/js/utils.js" defer></script>
-<script src="../assets/js/theme_selector.js" defer></script>
-<script src="../assets/js/justified_gallery_builder.js" defer></script>
-<script src="../assets/js/pagination.js" defer></script>
-<script src="../assets/js/audio_player.js" defer></script>
-<script src="../assets/js/video_player.js" defer></script>
-<script src="../assets/js/lightbox.js" defer></script>
-<script src="../assets/js/responsive_content_mover.js" defer></script>
+<script src="{{ path_to_root }}assets/js/utils.js" defer></script>
+<script src="{{ path_to_root }}assets/js/theme_selector.js" defer></script>
+<script src="{{ path_to_root }}assets/js/justified_gallery_builder.js" defer></script>
+<script src="{{ path_to_root }}assets/js/pagination.js" defer></script>
+<script src="{{ path_to_root }}assets/js/audio_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/video_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/lightbox.js" defer></script>
+<script src="{{ path_to_root }}assets/js/responsive_content_mover.js" defer></script>
 
 </body>
 </html>
