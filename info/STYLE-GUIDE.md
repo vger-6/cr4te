@@ -1,4 +1,4 @@
-# Style Guide
+# Python Code Style Guide
 
 This document provides a consistent and comprehensive guide for naming, formatting, and organizing Python code. The goal is to improve code readability, maintainability, and team collaboration.
 
@@ -49,23 +49,24 @@ This section outlines consistent naming conventions for variables and functions 
 
 ### General Principles
 
-* Use `path` in variable names for `Path` objects.
-* Use `*_str` suffix if you need to distinguish a string path from a `Path` object.
-* Use `abs_` / `rel_` prefixes to denote absolute or relative paths.
-* Use `dir_` / `file_` prefixes to differentiate between directories and files.
-* Use `*_name` for names only (not full paths).
-* Use nouns for variables and verbs for functions.
+* Use `path` in variable names for `Path` objects (e.g., `file_path`, `output_path`).
+* Use the `*_str` suffix only if you need to distinguish a raw string path from a `Path` object.
+* **Treat absolute or resolved paths as the default** — no prefix is needed (e.g., `output_dir`, `thumb_path`).
+* Use a `rel_` prefix only for relative paths (e.g., `rel_file_path`, `rel_assets_dir`).
+* Use `dir_` / `file_` prefixes to distinguish between directories and files when not obvious from context.
+* Use `*_name` only for names without any path components (e.g., `thumb_file_name`).
+* Use nouns for variables and verbs for functions and methods.
 
 ### Variable Naming Conventions
 
 | Description             | Example Value                 | Suggested Variable Name        |
 | ----------------------- | ----------------------------- | ------------------------------ |
-| File name only (string) | "thumb.png"                   | `filename`, `file_name`        |
-| Directory name (string) | "html"                        | `dirname`, `dir_name`          |
+| File name only (string) | "thumb.png"                   | `thumb_file_name`              |
+| Directory name (string) | "html"                        | `html_dir_name`                |
 | Relative file path      | "images/thumb.png"            | `rel_file_path`                |
-| Absolute file path      | "/home/user/images/thumb.png" | `abs_file_path`                |
+| Absolute file path      | "/home/user/images/thumb.png" | `file_path`                    |
 | Relative directory path | "images/new"                  | `rel_dir_path`                 |
-| Absolute directory path | "/home/user/images/new"       | `abs_dir_path`                 |
+| Absolute directory path | "/home/user/images/new"       | `images_dir`                   |
 | Path object             | `Path("images/thumb.png")`    | `image_path`, `rel_image_path` |
 
 ### Function Naming Conventions
@@ -73,13 +74,13 @@ This section outlines consistent naming conventions for variables and functions 
 | Function Purpose                  | Suggested Function Name    |
 | --------------------------------- | -------------------------- |
 | Build relative path to image file | `build_rel_image_path()`   |
-| Build absolute path to asset file | `build_abs_asset_path()`   |
+| Build absolute path to asset file | `build_image_path()`       |
 | Join base path with subdirectory  | `join_base_with_subdir()`  |
 | Extract file name from a path     | `get_filename_from_path()` |
 
 ### Additional Tips
 
-* Prefer clarity over brevity: `abs_dir_path` is better than `adp`.
+* Prefer clarity over brevity: `images_dir` is better than `imgD`.
 * Be consistent across your codebase.
 * Avoid mixing `file` and `dir` semantics in a single variable name.
 * Document any exceptions clearly.
