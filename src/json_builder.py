@@ -113,16 +113,14 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
         "is_root": False
     })
     
-    max_depth = ctx.max_depth
-
     # Helper to check max depth
-    def is_within_max_depth(path: Path) -> bool:
-        return max_depth is None or len(path.relative_to(media_folder).parts) <= max_depth
+    def is_within_search_depth(path: Path) -> bool:
+        return ctx.max_search_depth is None or len(path.relative_to(media_folder).parts) <= ctx.max_search_depth
 
     for file in media_folder.rglob("*"):
         if not file.is_file():
             continue
-        if not is_within_max_depth(file):
+        if not is_within_search_depth(file):
             continue
         if file.name.startswith(ctx.global_exclude_prefix):
             continue
@@ -141,7 +139,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
             media_map[folder_key]["documents"].append(str(rel_to_input))
-        elif suffix in TEXT_EXTS and file.name.lower() != ctx.readme_filename.lower():
+        elif suffix in TEXT_EXTS and file.name.lower() != ctx.readme_file_name.lower():
             media_map[folder_key]["texts"].append(str(rel_to_input))
 
         media_map[folder_key]["is_root"] = is_root
@@ -190,7 +188,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
             "title": project_title,
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
-            "info": utils.read_text(project_dir / ctx.readme_filename) or existing_project.get("info", ""),
+            "info": utils.read_text(project_dir / ctx.readme_file_name) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(ctx, project_dir, existing_project.get("media_groups", [])),
             "tags": existing_project.get("tags", [])
         }
@@ -248,7 +246,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
-        "info": utils.read_text(creator_path / ctx.readme_filename) or existing_creator.get("info", ""),
+        "info": utils.read_text(creator_path / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_path, existing_creator),
         "media_groups": _build_creator_media_groups(ctx, creator_path, existing_creator.get("media_groups", [])),

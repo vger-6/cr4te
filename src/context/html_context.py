@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from enum import Enum
 
 from enums.thumb_type import ThumbType
@@ -73,7 +73,7 @@ class HtmlBuildContext(BaseContext):
         return self.html_settings["image_gallery_sample_strategy"]
 
     @property
-    def media_type_order(self) -> list:
+    def media_type_order(self) -> List[str]:
         return self.html_settings["media_type_order"]
 
     @property

@@ -84,7 +84,7 @@ class HtmlSettings(BaseModel):
 
 # Media rules schema
 class MediaRules(BaseModel):
-    max_depth: conint(ge=0)
+    max_search_depth: conint(ge=0)
     global_exclude_prefix: str
     metadata_folder_name: str
     collaboration_separators: List[str]

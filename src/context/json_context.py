@@ -1,26 +1,26 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from context.base_context import BaseContext
 
-README_FILENAME = "README.md"
+README_FILE_NAME = "README.md"
 
 @dataclass
 class JsonBuildContext(BaseContext):
     media_rules: Dict
 
     @property
-    def readme_filename(self) -> str:
-        return README_FILENAME
+    def readme_file_name(self) -> str:
+        return README_FILE_NAME
 
     @property
     def global_exclude_prefix(self) -> str:
         return self.media_rules["global_exclude_prefix"]
         
     @property
-    def max_depth(self) -> str:
-        return self.media_rules["max_depth"]
+    def max_search_depth(self) -> int:
+        return self.media_rules["max_search_depth"]
         
     @property
     def cover_basename(self) -> str:
@@ -31,7 +31,7 @@ class JsonBuildContext(BaseContext):
         return self.media_rules["portrait_basename"]
         
     @property
-    def auto_find_portrait(self) -> str:
+    def auto_find_portrait(self) -> bool:
         return self.media_rules["auto_find_portraits"]
         
     @property
@@ -39,6 +39,6 @@ class JsonBuildContext(BaseContext):
         return self.media_rules["metadata_folder_name"]
         
     @property
-    def collaboration_separators(self) -> str:
+    def collaboration_separators(self) -> List[str]:
         return self.media_rules["collaboration_separators"]
 

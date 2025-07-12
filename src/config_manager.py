@@ -79,7 +79,7 @@ DEFAULT_CONFIG = {
         "hide_portraits": False,
     },
     "media_rules": {   
-        "max_depth": 5,
+        "max_search_depth": 5,
         
         "global_exclude_prefix": "_",
         
