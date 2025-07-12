@@ -92,7 +92,7 @@
 
     <div class="right-column">
       
-      {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
+      {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, html_settings.project_gallery_building_strategy) %}
       {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
 
       {% if creator.projects %}
@@ -100,7 +100,7 @@
         <div class="section-title">{{ html_settings.creator_page_projects_title }}</div>
         <hr>
         <div class="section-content">
-          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
+          <div class="{{ image_gallery_class }}"
                data-lightbox="false"
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">
@@ -124,7 +124,7 @@
         <div class="section-title">{{ html_settings.creator_page_projects_title }} with {{ collab.label }}</div>
         <hr>
         <div class="section-content">
-          <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
+          <div class="{{ image_gallery_class }}"
                data-lightbox="false"
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">

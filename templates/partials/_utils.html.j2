@@ -15,3 +15,11 @@
     info-block--column
   {% endif %}
 {% endmacro %}
+
+{% macro get_image_gallery_class(ImageGalleryBuildingStrategy, strategy) %}
+  {% if ImageGalleryBuildingStrategy.ASPECT == strategy %}
+    image-gallery--aspect
+  {% else %}
+    image-gallery--justified
+  {% endif %}
+{% endmacro %}

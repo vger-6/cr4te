@@ -1,3 +1,5 @@
+{% import "partials/_utils.html.j2" as utils %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,12 +30,12 @@
 
   <div class="overview-layout">
 
-    {% set is_aspect = html_settings.project_gallery_building_strategy == 'aspect' %}
+    {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, html_settings.project_gallery_building_strategy) %}
     {% set aspect_ratio = html_settings.project_gallery_aspect_ratio or '1/1' %}
 
     <div class="section-box">
       <div class="section-content">
-        <div class="image-gallery--{% if is_aspect %}aspect{% else %}justified{% endif %}"
+        <div class="{{ image_gallery_class }}"
              id="imageGallery"
              data-image-max-height="{{ gallery_image_max_height }}"
              data-page-size="{{ html_settings.project_overview_page_project_gallery_page_size }}"

@@ -17,6 +17,7 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
+from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from enums.orientation import Orientation
 from utils import build_unique_path, get_path_to_root, tag_path, relative_path_from, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
@@ -172,6 +173,7 @@ def _build_project_overview_page(ctx: HtmlBuildContext, creators: list):
         projects=_collect_all_projects(ctx, creators),
         html_settings=ctx.html_settings,
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.THUMB),
+        ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
     with open(ctx.projects_html_path, "w", encoding="utf-8") as f:
@@ -520,6 +522,7 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         path_to_root=HTML_PATH_TO_ROOT,
         Orientation=Orientation,
+        ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
     page_path = ctx.html_dir / _build_rel_creator_path(creator)
@@ -588,6 +591,7 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         path_to_root=HTML_PATH_TO_ROOT,
         Orientation=Orientation,
+        ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
     page_path = ctx.html_dir / _build_rel_creator_path(creator)
@@ -644,7 +648,8 @@ def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator_entries=_build_creator_entries(ctx, creators),
-        gallery_image_max_height=ctx.get_thumb_height(ThumbType.THUMB)
+        gallery_image_max_height=ctx.get_thumb_height(ThumbType.THUMB),
+        ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
     with open(ctx.index_html_path, 'w', encoding='utf-8') as f:
