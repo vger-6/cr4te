@@ -206,7 +206,7 @@ def _build_creator_media_groups(ctx: JsonBuildContext, creator_path: Path, exist
         media_groups = _build_media_groups(ctx, metadata_path, existing_media_groups)
 
     # Root-level media (shallow only)
-    shallow_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_depth": 1})
+    shallow_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_search_depth": 1})
     media_groups.extend(_build_media_groups(shallow_ctx, creator_path, existing_media_groups))
 
     return media_groups

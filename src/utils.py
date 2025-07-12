@@ -13,11 +13,11 @@ def slugify(text: str) -> str:
 
     return re.sub(r'[^\w]+', '_', text.lower()).strip('_')  # \w includes a-zA-Z0-9_
     
-def get_relative_path(file_path: Path, base_path: Path) -> str:
-    if not isinstance(file_path, Path) or not isinstance(base_path, Path):
-        raise TypeError("Both file_path and base_path must be pathlib.Path objects")
+def relative_path_from(file_path: Path, base_path: Path) -> Path: 
+    file_path = file_path.resolve()
+    base_path = base_path.resolve()
 
-    return Path(os.path.relpath(file_path, base_path)).as_posix()
+    return Path(os.path.relpath(file_path, base_path))
     
 def read_text(text_path: Path) -> str:
     if text_path.exists() and text_path.is_file():
@@ -28,30 +28,12 @@ def load_json(json_path: Path) -> Dict:
     with open(json_path, 'r', encoding='utf-8') as f:
         return json.load(f)
         
-#def build_unique_path(target_dir: Path, relative_path: Path) -> Path:
-#    def short_hash(path: str, length: int = 8) -> str:
-#        return hashlib.sha1(path.encode('utf-8')).hexdigest()[:length]
-#
-#    # Slugify directory parts
-#    slugified_parts = [slugify(part) for part in relative_path.parent.parts]
-#    
-#    # Slugify filename and extension
-#    basename = slugify(relative_path.stem)
-#    extension = relative_path.suffix.lower()  # Includes the dot (e.g., ".jpg")
-#
-#    # Generate short hash
-#    hash_suffix = short_hash(str(relative_path))
-#
-#    final_name = f"{basename}_{hash_suffix}{extension}"
-#
-#    return target_dir.joinpath(*slugified_parts, final_name)
-        
-def build_unique_path(relative_path: Path, depth: int = 4) -> Path:
+def build_unique_path(input_path: Path, depth: int = 4) -> Path:
     """
     Build a unique path based on a SHA-1 hash of the input path.
 
     Parameters:
-        relative_path (Path): The original relative path.
+        input_path (Path): The original relative path.
         depth (int): Number of directory levels (each 2 characters). Must be 1–20.
 
     Returns:
@@ -60,8 +42,8 @@ def build_unique_path(relative_path: Path, depth: int = 4) -> Path:
     if not (1 <= depth <= 20):
         raise ValueError("depth must be between 1 and 20 (inclusive)")
 
-    original_suffix = relative_path.suffix
-    sha1 = hashlib.sha1(str(relative_path).encode("utf-8")).hexdigest()
+    original_suffix = input_path.suffix
+    sha1 = hashlib.sha1(str(input_path).encode("utf-8")).hexdigest()
 
     chunks = [sha1[i * 2: i * 2 + 2] for i in range(depth)]
     remaining = sha1[depth * 2:] + original_suffix

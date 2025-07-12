@@ -17,7 +17,7 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
-from utils import slugify, build_unique_path, get_path_to_root, tag_path, get_relative_path, read_text, load_json, create_centered_text_image
+from utils import build_unique_path, get_path_to_root, tag_path, relative_path_from, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -157,7 +157,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
             all_projects.append({
                 "title": project["title"],
                 "url": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
-                "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
+                "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
                 "creator_name": creator["name"],
                 "search_text": _build_project_search_text(project)
             })  
@@ -278,8 +278,8 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
         
         images = [
             {
-                "thumb_url": get_relative_path(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir),
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
+                "thumb_url": relative_path_from(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir).as_posix(),
+                "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "caption": Path(rel).stem
             }
             for rel in image_rel_paths
@@ -287,7 +287,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         videos = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
+                "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
             for rel in video_rel_paths
@@ -295,7 +295,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         tracks = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
+                "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem,
                 "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
@@ -304,7 +304,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         documents = [
             {
-                "full_url": get_relative_path(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir),
+                "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
             for rel in document_rel_paths
@@ -367,7 +367,7 @@ def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
     return {
         "name": creator["name"],
         "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
-        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
+        "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
     }
 
 def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
@@ -386,7 +386,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
     project_context = {
         "title": project["title"],
         "release_date": project["release_date"],
-        "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
+        "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
@@ -461,7 +461,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
         project_entries.append({
             "title": project["title"],
             "url": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
-            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
+            "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         })
 
     return project_entries
@@ -497,7 +497,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "aliases": creator["aliases"],
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
-        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
+        "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator["info"]),
@@ -546,7 +546,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
         member_links.append({
             "name": member_name,
             "url": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
-            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir)
+            "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix()
         })
 
     return member_links
@@ -565,7 +565,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "founded": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
-        "portrait_url": get_relative_path(thumb_path, ctx.output_dir),
+        "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "info_layout": _infer_layout_from_orientation(thumb_path),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -627,7 +627,7 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
         creator_entries.append({
             "name": creator["name"],
             "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
-            "thumbnail_url": get_relative_path(thumb_path, ctx.output_dir),
+            "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
             "search_text": _build_creator_search_text(creator),
         })
 
