@@ -3,7 +3,13 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-__all__ = ["create_centered_text_image"]
+__all__ = ["generate_thumbnail", "create_centered_text_image"]
+
+def generate_thumbnail(source_path: Path, target_height: int) -> Image:
+    with Image.open(source_path) as img:
+        aspect_ratio = img.width / img.height
+        target_width = int(target_height * aspect_ratio)
+        return img.resize((target_width, target_height), Image.LANCZOS)
 
 def create_centered_text_image(width: int, height: int, text: str, output_path: Path)->None:
     # Create an image with grey background

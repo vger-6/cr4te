@@ -59,23 +59,16 @@ def _is_portrait(image_path : Path) -> bool:
   
 def _infer_image_orientation(image_path: Path) -> Orientation:
     return Orientation.PORTRAIT if _is_portrait(image_path) else Orientation.LANDSCAPE
-
-# TODO: Only generate the image and return it, saving the image is an extra responsibility. Move to image_utils.py
-def _generate_thumbnail(source_path: Path, target_path: Path, target_height: int) -> None:
-    with Image.open(source_path) as img:
-        aspect_ratio = img.width / img.height
-        target_width = int(target_height * aspect_ratio)
-        resized = img.resize((target_width, target_height), Image.LANCZOS)
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        resized.save(target_path, format='JPEG')
-               
+          
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
     thumb_path = ctx.thumbs_dir / path_utils.build_unique_path(rel_image_path)
     thumb_path = path_utils.tag_path(thumb_path, thumb_type.value)
 
     if not thumb_path.exists():
         try:
-            _generate_thumbnail(ctx.input_dir / rel_image_path, thumb_path, ctx.get_thumb_height(thumb_type))
+            thumb = image_utils.generate_thumbnail(ctx.input_dir / rel_image_path, ctx.get_thumb_height(thumb_type))
+            thumb_path.parent.mkdir(parents=True, exist_ok=True)
+            thumb.save(thumb_path, format='JPEG')
         except Exception as e:
             print(f"Error creating thumbnail for {rel_image_path}: {e}")
 
