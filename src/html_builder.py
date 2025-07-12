@@ -48,26 +48,24 @@ def _parse_date(date_str: str) -> Optional[datetime]:
         print(f"Failed to parse date '{date_str}': {e}")
         return None
 
-# TODO: return Optional[int]   
-def _calculate_age(dob: datetime, date: datetime) -> str:
+def _calculate_age(dob: datetime, date: datetime) -> Optional[int]:
     try:
         age = date.year - dob.year - ((date.month, date.day) < (dob.month, dob.day))
         return str(age)
     except Exception as e:
         print(f"Error calculating age: {e}")
-        return ""
-
-# TODO: return Optional[int]      
-def _calculate_age_from_strings(date_of_birth_str: str, reference_date_str: str) -> str:
+        return None
+   
+def _calculate_age_from_strings(date_of_birth_str: str, reference_date_str: str) -> Optional[int]:
     """
-    Safely parses two date strings and returns age as string.
-    Returns empty string if either date is missing or invalid.
+    Safely parses two date strings and returns age as int.
+    Returns None if either date is missing or invalid.
     """
     dob = _parse_date(date_of_birth_str)
     ref = _parse_date(reference_date_str)
     if dob and ref:
         return _calculate_age(dob, ref)
-    return ""
+    return None
 
 def _build_rel_creator_path(creator: Dict) -> Path:
     return build_unique_path(Path(creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
@@ -345,11 +343,11 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
     return media_groups_context
 
-def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
+def _calculate_age_at_release(creator: Dict, project: Dict) -> Optional[int]:
     born_or_founded = creator["born_or_founded"]
     release_date = project["release_date"]
     if not born_or_founded or not release_date:
-        return ""
+        return None
         
     return _calculate_age_from_strings(born_or_founded, release_date)
     
@@ -440,13 +438,13 @@ def _get_collaboration_label(collab: Dict, creator_name: str) -> str:
         return " ".join(others)
     return collab["name"]
     
-def _calculate_debut_age(creator: Dict) -> str:
+def _calculate_debut_age(creator: Dict) -> Optional[int]:
     born_or_founded = creator["born_or_founded"]
     active_since = creator["active_since"]
     release_dates = [p["release_date"] for p in creator["projects"] if p["release_date"]]
 
     if not born_or_founded or (not active_since and not release_dates):
-        return ""
+        return None
 
     if active_since:
         return _calculate_age_from_strings(born_or_founded, active_since)
@@ -456,7 +454,7 @@ def _calculate_debut_age(creator: Dict) -> str:
         earliest = min(valid_release_dates, key=lambda d: _parse_date(d))
         return _calculate_age_from_strings(born_or_founded, earliest)
 
-    return ""
+    return None
     
 def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, str]]:
     """
