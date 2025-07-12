@@ -29,8 +29,8 @@ FLAG_FORCE = "--force"
 FLAG_CLEAN = "--clean"
 FLAG_PRINT_CONFIG_ONLY = "--print-config-only"
 
-def _load_config(config_path_arg: str) -> Dict[str, Any]:
-    config_path = Path(config_path_arg).resolve() if config_path_arg else None
+def _load_config(rel_config_path_arg: str) -> Dict[str, Any]:
+    config_path = Path(rel_config_path_arg).resolve() if rel_config_path_arg else None
     return cfg.load_config(config_path)
 
 def main():
@@ -130,11 +130,11 @@ def main():
         build_creator_json_files(input_path, config["media_rules"])
         
         print("Building HTML site...")
-        html_index_path = build_html_pages(input_path, output_path, config["html_settings"])
+        index_html_path = build_html_pages(input_path, output_path, config["html_settings"])
         
         if args.open:
             print("Opening index.html...")
-            webbrowser.open(f"file://{html_index_path.resolve()}")
+            webbrowser.open(f"file://{index_html_path.resolve()}")
         
     elif args.command == "clean-json":
         input_path = Path(args.input).resolve()
