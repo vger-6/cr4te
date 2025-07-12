@@ -2,7 +2,7 @@
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_video_player.html.j2" as video_player %}
 
-{% macro render_media_groups(media_groups, html_settings, gallery_image_max_height, page_size) %}
+{% macro render_media_groups(path_to_root, media_groups, html_settings, gallery_image_max_height, page_size) %}
   {% for group in media_groups %}
     {% for section in group.sections %}
       {% if section.type == MediaType.VIDEO.value %}
@@ -13,7 +13,7 @@
             <div class="section-title">{{ section.videos[0].title }}</div>
             <hr>
             <div class="section-content">
-              {{ video_player.render(section.videos[0]) }}
+              {{ video_player.render(path_to_root, section.videos[0]) }}
             </div>
           </div>
 
@@ -32,7 +32,7 @@
                   <div class="section-title">{{ video.title }}</div>
                   <hr>
                   <div class="section-content">
-                    {{ video_player.render(video) }}
+                    {{ video_player.render(path_to_root, video) }}
                   </div>
                 </div>
               {% endif %}
@@ -49,7 +49,7 @@
                 <ul id="track-list-{{ loop.index }}">
                   {% for track in section.tracks %}
                     <li 
-                      data-src="../../../../../{{ track.full_url }}" 
+                      data-src="{{ path_to_root }}{{ track.full_url }}" 
                       onclick="playSelectedTrack(this)"
                       class="track-title">
                       <span class="track-title-text">{{ track.title }}</span>
@@ -99,8 +99,8 @@
               <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
                 {% for image in section.images %}
                   <div class="image-wrapper">
-                    <a href="../../../../../{{ image.full_url }}" target="_blank">
-                      <img src="../../../../../{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
+                    <a href="{{ path_to_root }}{{ image.full_url }}" target="_blank">
+                      <img src="{{ path_to_root }}{{ image.thumb_url }}" alt="Image for {{ group.image_label }}">
                       {% if html_settings.project_page_image_gallery_captions_visible %}
                         <div class=image-caption>
                           <span>{{ image.caption }}</span>
@@ -118,13 +118,13 @@
           <div class="section-box">
             <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
               <span>{{ document.title }}</span>
-              <a href="../../../../../{{ document.full_url }}" target="_blank" title="Open fullscreen" style="display: flex; align-items: center; line-height: 0;">
+              <a href="{{ path_to_root }}{{ document.full_url }}" target="_blank" title="Open fullscreen" style="display: flex; align-items: center; line-height: 0;">
                 {{ icons.fullscreen_icon() | safe }}
               </a>
             </div>
             <hr>
             <div class="section-content" style="padding: 0">
-              <iframe src="../../../../../{{ document.full_url }}#toolbar=0&navpanes=0&scrollbar=0" style="width: 100%; height: calc(100vh - 16.5rem); border: none;"></iframe>
+              <iframe src="{{ path_to_root }}{{ document.full_url }}#toolbar=0&navpanes=0&scrollbar=0" style="width: 100%; height: calc(100vh - 16.5rem); border: none;"></iframe>
             </div>
           </div>
         {% endfor %}

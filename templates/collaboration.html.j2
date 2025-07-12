@@ -101,7 +101,7 @@
             <div class="tag-category">
               <strong>{{ category }}:</strong>
               {% for tag in tags %}
-                <a class="tag" href="../index.html?tag={{ tag }}">{{ tag }}</a>
+                <a class="tag" href="{{ path_to_root }}index.html?tag={{ tag }}">{{ tag }}</a>
               {% endfor %}
             </div>
             {% endfor %}
@@ -142,7 +142,7 @@
       </div>
       {% endif %}
         
-      {{ media_macros.render_media_groups(creator.media_groups, html_settings, gallery_image_max_height) }}
+      {{ media_macros.render_media_groups(path_to_root, creator.media_groups, html_settings, gallery_image_max_height) }}
       
       <div class="mobile-placeholder" data-mobile-target="1"></div>
       <div class="mobile-placeholder" data-mobile-target="2"></div>
