@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
-from enum import Enum
 
 from enums.thumb_type import ThumbType
 from context.base_context import BaseContext

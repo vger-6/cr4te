@@ -1,15 +1,11 @@
 import shutil
-import json
 import os
-import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Iterable, Set
 from datetime import datetime
 from collections import defaultdict
 
-import markdown
 from PIL import Image
-from mutagen import File as MutagenFile
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import ValidationError
 
@@ -19,7 +15,12 @@ from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from enums.orientation import Orientation
-from utils import build_unique_path, get_path_to_root, tag_path, relative_path_from, read_text, load_json, create_centered_text_image
+from utils.path_utils import build_unique_path, get_path_to_root, tag_path, relative_path_from
+from utils.text_utils import markdown_to_html, read_text
+from utils.image_utils import create_centered_text_image
+from utils.date_utils import parse_date, calculate_age_from_strings
+from utils.json_utils import load_json
+from utils.audio_utils import get_audio_duration_seconds
 from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -37,35 +38,6 @@ FILE_TREE_DEPTH = 4
 # HTML files live inside: output_dir/html/<depth levels>/<file.html>
 # So to get back to output_dir, we need (depth + 1) "../" segments
 HTML_PATH_TO_ROOT = get_path_to_root(FILE_TREE_DEPTH + 1)
-
-def _render_markdown(text: str) -> str:
-    return markdown.markdown(text, extensions=["nl2br"])
-    
-def _parse_date(date_str: str) -> Optional[datetime]:
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d")
-    except (TypeError, ValueError) as e:
-        print(f"Failed to parse date '{date_str}': {e}")
-        return None
-
-def _calculate_age(dob: datetime, date: datetime) -> Optional[int]:
-    try:
-        age = date.year - dob.year - ((date.month, date.day) < (dob.month, dob.day))
-        return str(age)
-    except Exception as e:
-        print(f"Error calculating age: {e}")
-        return None
-   
-def _calculate_age_from_strings(date_of_birth_str: str, reference_date_str: str) -> Optional[int]:
-    """
-    Safely parses two date strings and returns age as int.
-    Returns None if either date is missing or invalid.
-    """
-    dob = _parse_date(date_of_birth_str)
-    ref = _parse_date(reference_date_str)
-    if dob and ref:
-        return _calculate_age(dob, ref)
-    return None
 
 def _build_rel_creator_path(creator: Dict) -> Path:
     return build_unique_path(Path(creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
@@ -88,7 +60,7 @@ def _is_portrait(image_path : Path) -> bool:
 def _infer_image_orientation(image_path: Path) -> Orientation:
     return Orientation.PORTRAIT if _is_portrait(image_path) else Orientation.LANDSCAPE
 
-# TODO: Only generate the image and return it, saving the image is an extra responsibility   
+# TODO: Only generate the image and return it, saving the image is an extra responsibility. Move to image_utils.py
 def _generate_thumbnail(source_path: Path, target_path: Path, target_height: int) -> None:
     with Image.open(source_path) as img:
         aspect_ratio = img.width / img.height
@@ -105,7 +77,7 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
         try:
             _generate_thumbnail(ctx.input_dir / rel_image_path, thumb_path, ctx.get_thumb_height(thumb_type))
         except Exception as e:
-            print(f"Error creating thumbnail for {relative_image_path}: {e}")
+            print(f"Error creating thumbnail for {rel_image_path}: {e}")
 
     return thumb_path
     
@@ -140,7 +112,7 @@ def _sample_images(rel_image_paths: List[str], max_images: int, strategy: ImageS
 def _sort_project(project: Dict) -> tuple:
     release_date = project["release_date"]
     has_date = bool(release_date)
-    date_value = _parse_date(release_date) if has_date else datetime.max
+    date_value = parse_date(release_date) if has_date else datetime.max
     title = project["title"].lower()
     return (not has_date, date_value, title)
     
@@ -257,19 +229,6 @@ def _get_section_titles(media_group: Dict, audio_section_title: str, image_secti
         "image_section_title": image_section_title,
     }
     
-def _get_audio_duration_seconds(audio_path: Path) -> int:
-    """
-    Returns the duration of the given audio file in seconds,
-    or 0 if the duration cannot be determined.
-    """
-    try:
-        audio = MutagenFile(str(audio_path))
-        if audio and audio.info:
-            return int(audio.info.length)
-    except Exception as e:
-        print(f"Warning: could not read duration for {audio_path}: {e}")
-    return 0
-    
 def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> List[Dict[str, Any]]:  
     media_groups_context = []
 
@@ -301,7 +260,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
             {
                 "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem,
-                "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
+                "duration_seconds": get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
             for rel in rel_track_paths
         ]
@@ -316,7 +275,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
         
         texts = [
             {
-                "content": _render_markdown(read_text(ctx.input_dir / Path(rel))),
+                "content": markdown_to_html(read_text(ctx.input_dir / Path(rel))),
                 "title": Path(rel).stem.title()
             }
             for rel in rel_text_paths
@@ -343,13 +302,13 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
     return media_groups_context
 
-def _calculate_age_at_release(creator: Dict, project: Dict) -> Optional[int]:
+def calculate_age_at_release(creator: Dict, project: Dict) -> Optional[int]:
     born_or_founded = creator["born_or_founded"]
     release_date = project["release_date"]
     if not born_or_founded or not release_date:
         return None
         
-    return _calculate_age_from_strings(born_or_founded, release_date)
+    return calculate_age_from_strings(born_or_founded, release_date)
     
 def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
@@ -378,7 +337,7 @@ def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
     entries = _collect_creator_base_entries(ctx, creator)
     
-    entries["age_at_release"] = _calculate_age_at_release(creator, project)
+    entries["age_at_release"] = calculate_age_at_release(creator, project)
 
     return entries
     
@@ -394,7 +353,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "release_date": project["release_date"],
         "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "thumbnail_orientation": _infer_image_orientation(thumb_path),
-        "info_html": _render_markdown(project["info"]),
+        "info_html": markdown_to_html(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
     }
@@ -447,12 +406,12 @@ def _calculate_debut_age(creator: Dict) -> Optional[int]:
         return None
 
     if active_since:
-        return _calculate_age_from_strings(born_or_founded, active_since)
+        return calculate_age_from_strings(born_or_founded, active_since)
     
-    valid_release_dates = [d for d in release_dates if _parse_date(d)]
+    valid_release_dates = [d for d in release_dates if parse_date(d)]
     if valid_release_dates:
-        earliest = min(valid_release_dates, key=lambda d: _parse_date(d))
-        return _calculate_age_from_strings(born_or_founded, earliest)
+        earliest = min(valid_release_dates, key=lambda d: parse_date(d))
+        return calculate_age_from_strings(born_or_founded, earliest)
 
     return None
     
@@ -509,7 +468,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": _infer_image_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
-        "info_html": _render_markdown(creator["info"]),
+        "info_html": markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
         "collaborations": _build_collaboration_entries(ctx, creator, creators),
@@ -580,7 +539,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "active_since": creator["active_since"],
         "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": _infer_image_orientation(thumb_path),
-        "info_html": _render_markdown(creator["info"]),
+        "info_html": markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),

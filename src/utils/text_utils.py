@@ -1,0 +1,19 @@
+import re
+import markdown
+from pathlib import Path
+
+__all__ = ["markdown_to_html", "read_text", "slugify"]
+
+def markdown_to_html(text: str) -> str:
+    return markdown.markdown(text, extensions=["nl2br"])
+    
+def read_text(text_path: Path) -> str:
+    if text_path.exists() and text_path.is_file():
+        return text_path.read_text(encoding='utf-8').strip()
+    return ""
+    
+def slugify(text: str) -> str:
+    if not isinstance(text, str):
+        raise ValueError("slugify expects a string")
+
+    return re.sub(r'[^\w]+', '_', text.lower()).strip('_')  # \w includes a-zA-Z0-9_

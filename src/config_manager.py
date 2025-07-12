@@ -1,6 +1,4 @@
-import json
 import copy
-from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -97,7 +95,7 @@ def _validate_config(config: Dict) -> None:
     try:
         AppConfig(**config)
     except ValidationError as e:
-        error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
+        error_lines = [f"[AppConfig] {' > '.join(map(str, err['loc']))}: {err['msg']}" for err in e.errors()]
         formatted = "\n".join(error_lines)
         raise ValueError(f"Validation failed for config:\n{formatted}")      
     

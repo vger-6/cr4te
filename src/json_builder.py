@@ -9,7 +9,8 @@ from collections import defaultdict
 from PIL import Image
 from pydantic import ValidationError
 
-import utils
+import utils.json_utils as json_utils
+import utils.text_utils as text_utils
 import constants
 from context.json_context import JsonBuildContext
 from validators.cr4te_schema import Creator as CreatorSchema
@@ -149,10 +150,10 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
 def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_media_groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     media_groups = []
     media_map = _build_media_map(ctx, media_folder)
-    existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
+    #existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
 
     for folder_path, media in media_map.items():
-        existing_media_group = existing_media_groups_by_name.get(folder_path, {})
+        #existing_media_group = existing_media_groups_by_name.get(folder_path, {})
 
         media_group = {
             "is_root": media["is_root"],
@@ -188,7 +189,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
             "title": project_title,
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
-            "info": utils.read_text(project_dir / ctx.readme_file_name) or existing_project.get("info", ""),
+            "info": text_utils.read_text(project_dir / ctx.readme_file_name) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(ctx, project_dir, existing_project.get("media_groups", [])),
             "tags": existing_project.get("tags", [])
         }
@@ -218,7 +219,7 @@ def _is_collaboration(name: str, separators: Optional[List[str]]) -> bool:
     
 def _load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
-        return utils.load_json(json_path)
+        return json_utils.load_json(json_path)
     return {}
 
 def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
@@ -246,7 +247,7 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
-        "info": utils.read_text(creator_path / ctx.readme_file_name) or existing_creator.get("info", ""),
+        "info": text_utils.read_text(creator_path / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_path, existing_creator),
         "media_groups": _build_creator_media_groups(ctx, creator_path, existing_creator.get("media_groups", [])),
