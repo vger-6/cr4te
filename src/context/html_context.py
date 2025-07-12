@@ -80,8 +80,7 @@ class HtmlBuildContext(BaseContext):
     def image_captions_visible(self) -> bool:
         return self.html_settings["project_page_image_gallery_captions_visible"]
 
-    # TODO: rename to get_thumb_default_filename
-    def thumb_default(self, thumb_type: ThumbType) -> Path:
+    def get_default_thumb_path(self, thumb_type: ThumbType) -> Path:
         return self.defaults_dir / {
             ThumbType.THUMB: "thumb.png",
             ThumbType.PORTRAIT: "portrait.png",
@@ -89,8 +88,7 @@ class HtmlBuildContext(BaseContext):
             ThumbType.GALLERY: "thumb.png",
         }[thumb_type]
         
-    # TODO: rename to get_thumb_height_in_px
-    def thumb_height(self, thumb_type: ThumbType) -> int:
+    def get_thumb_height(self, thumb_type: ThumbType) -> int:
         return {
             ThumbType.THUMB: 350,
             ThumbType.PORTRAIT: 720,
