@@ -1,4 +1,5 @@
 {% import "partials/_media_sections.html.j2" as media_macros %}
+{% import "partials/_utils.html.j2" as utils %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -36,7 +37,7 @@
         <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
         <hr>
         <div class="section-content markdown">
-          <div class="info-block info-block--{{ project.info_layout }}">
+          <div class="info-block {{ utils.get_info_block_layout(Orientation, project.thumbnail_orientation) }}">
             <a href="{{ path_to_root }}{{ project.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
               <img src="{{ path_to_root }}{{ project.thumbnail_url }}" alt="Preview of {{ project.title }}">
             </a>

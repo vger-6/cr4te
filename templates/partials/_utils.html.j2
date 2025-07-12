@@ -7,3 +7,11 @@
     {{ ("%02d:%02d") % (seconds // 60, seconds % 60) }}
   {% endif %}
 {% endmacro %}
+
+{% macro get_info_block_layout(Orientation, orientation) %}
+  {% if Orientation.PORTRAIT == orientation %}
+    info-block--row
+  {% else %}
+    info-block--column
+  {% endif %}
+{% endmacro %}

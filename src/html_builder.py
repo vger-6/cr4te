@@ -17,6 +17,7 @@ import constants
 from enums.media_type import MediaType
 from enums.thumb_type import ThumbType
 from enums.image_sample_strategy import ImageSampleStrategy
+from enums.orientation import Orientation
 from utils import build_unique_path, get_path_to_root, tag_path, relative_path_from, read_text, load_json, create_centered_text_image
 from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
@@ -82,10 +83,9 @@ def _is_portrait(image_path : Path) -> bool:
     except Exception as e:
         print(f"Could not open image '{image_path}': {e}")
         return True
-
-# TODO: remove and use _is_portrait    
-def _infer_layout_from_orientation(thumb_path: Path) -> str:
-    return "row" if _is_portrait(thumb_path) else "column"
+  
+def _infer_image_orientation(thumb_path: Path) -> str:
+    return Orientation.PORTRAIT if _is_portrait(thumb_path) else Orientation.LANDSCAPE
     
 def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) -> None:
     with Image.open(source_path) as img:
@@ -387,7 +387,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "title": project["title"],
         "release_date": project["release_date"],
         "thumbnail_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "info_layout": _infer_layout_from_orientation(thumb_path),
+        "thumbnail_orientation": _infer_image_orientation(thumb_path),
         "info_html": _render_markdown(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
@@ -410,7 +410,8 @@ def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, cre
         html_settings=ctx.html_settings,
         project=_collect_project_context(ctx, creator, project, creators),
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT
+        path_to_root=HTML_PATH_TO_ROOT,
+        Orientation=Orientation,
     )
 
     page_path = ctx.html_dir / _build_rel_project_path(creator, project)
@@ -498,7 +499,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "info_layout": _infer_layout_from_orientation(thumb_path),
+        "portrait_orientation": _infer_image_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -517,7 +518,8 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
         creator=_collect_creator_context(ctx, creator, creators),
         project_thumb_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT
+        path_to_root=HTML_PATH_TO_ROOT,
+        Orientation=Orientation,
     )
 
     page_path = ctx.html_dir / _build_rel_creator_path(creator)
@@ -566,7 +568,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
         "portrait_url": relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "info_layout": _infer_layout_from_orientation(thumb_path),
+        "portrait_orientation": _infer_image_orientation(thumb_path),
         "info_html": _render_markdown(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
@@ -584,7 +586,8 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         member_thumb_max_height=ctx.get_thumb_height(ThumbType.THUMB),
         project_thumb_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT
+        path_to_root=HTML_PATH_TO_ROOT,
+        Orientation=Orientation,
     )
 
     page_path = ctx.html_dir / _build_rel_creator_path(creator)
