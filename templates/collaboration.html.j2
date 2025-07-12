@@ -36,8 +36,8 @@
         <div class="section-content markdown">
           <div class="info-block {{ utils.get_info_block_layout(Orientation, creator.portrait_orientation) }}">
             {% if not html_settings.hide_portraits %}
-              <a href="{{ path_to_root }}{{ creator.portrait_url }}" class="single-lightbox" data-lightbox-single="true">
-                <img src="{{ path_to_root }}{{ creator.portrait_url }}" alt="Portrait of {{ creator.name }}">
+              <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox" data-lightbox-single="true">
+                <img src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
               </a>
             {% endif %}
             <div>
@@ -79,12 +79,12 @@
             <div class="section-content">
               <div class="info-block info-block--row">
                 {% if not html_settings.hide_portraits %}
-                  <a href="{{ path_to_root }}{{ member.thumbnail_url }}" class="single-lightbox" data-lightbox-single="true">
-                    <img src="{{ path_to_root }}{{ member.thumbnail_url }}" alt="Portrait of {{ member.name }}">
+                  <a href="{{ path_to_root }}{{ member.rel_thumbnail_path }}" class="single-lightbox" data-lightbox-single="true">
+                    <img src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="Portrait of {{ member.name }}">
                   </a>
                 {% endif %}
                 <div>
-                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ member.url }}">{{ member.name }}</a></p>
+                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ member.rel_html_path }}">{{ member.name }}</a></p>
                 </div>
               </div>
             </div>
@@ -130,8 +130,8 @@
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
             <div class="image-wrapper image-card">
-              <a href="{{ path_to_root }}{{ project.url }}" title="{{ project.title }}">
-                <img src="{{ path_to_root }}{{ project.thumbnail_url }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+              <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
+                <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
                 <div class=image-caption>
                   <span>{{ project.title }}</span>
                 </div>

@@ -121,11 +121,10 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
         for project in creator["projects"]: 
             thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.GALLERY)
 
-            # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
             all_projects.append({
                 "title": project["title"],
-                "url": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
-                "thumbnail_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+                "rel_html_path": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
+                "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
                 "creator_name": creator["name"],
                 "search_text": _build_project_search_text(project)
             })  
@@ -234,8 +233,8 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
         
         images = [
             {
-                "thumb_url": path_utils.relative_path_from(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir).as_posix(),
-                "full_url": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
+                "rel_thumbnail_path": path_utils.relative_path_from(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir).as_posix(),
+                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "caption": Path(rel).stem
             }
             for rel in rel_image_paths
@@ -243,7 +242,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         videos = [
             {
-                "full_url": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
+                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
             for rel in rel_video_paths
@@ -251,7 +250,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         tracks = [
             {
-                "full_url": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
+                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem,
                 "duration_seconds": audio_utils.get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
@@ -260,7 +259,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         documents = [
             {
-                "full_url": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
+                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
             for rel in rel_document_paths
@@ -320,11 +319,10 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
 def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[str, str]:
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
-    # TODO: rename url to rel_html_path and portrait_url to rel_portrait_path
     return {
         "name": creator["name"],
-        "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
-        "portrait_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
+        "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
     }
 
 def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
@@ -340,11 +338,10 @@ def _collect_collaborator_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
     thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
-    # TODO: rename thumbnail_url to rel_thumbnail_path and info_html to info_text
     project_context = {
         "title": project["title"],
         "release_date": project["release_date"],
-        "thumbnail_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "thumbnail_orientation": _infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
@@ -411,17 +408,16 @@ def _calculate_debut_age(creator: Dict) -> Optional[int]:
 def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries with metadata for each project of a creator,
-    including title, URL, and cover URL.
+    including title, html path, and thumbnail path.
     """
     project_entries = []
     for project in sorted(creator["projects"], key=_sort_project):
         thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.GALLERY)
 
-        # TODO: rename thumbnail_url to rel_thumbnail_path and url to rel_html_path
         project_entries.append({
             "title": project["title"],
-            "url": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
-            "thumbnail_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+            "rel_html_path": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
+            "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         })
 
     return project_entries
@@ -452,13 +448,12 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     """
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
     
-    # TODO: rename portrait_url to rel_portrait_path and info_html to info_text
     return {
         "name": creator["name"],
         "aliases": creator["aliases"],
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
-        "portrait_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": _infer_image_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": text_utils.markdown_to_html(creator["info"]),
@@ -491,7 +486,7 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
 def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[Dict]) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries representing links to member creators
-    in a collaboration, including name, URL, and thumbnail URL.
+    in a collaboration, including name, html path, and thumbnail path.
     """
     if not creator["is_collaboration"]:
         return []
@@ -506,11 +501,10 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
 
         thumb_path = _resolve_thumbnail_or_default(ctx, member["portrait"], ThumbType.THUMB)
 
-        # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
         member_links.append({
             "name": member_name,
-            "url": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
-            "thumbnail_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
+            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
+            "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
         })
 
     return member_links
@@ -522,7 +516,6 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
     """
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
-    # TODO: rename portrait_url to rel_portrait_path and info_html to info_text
     return {
         "name": creator["name"],
         "member_names": creator["members"],
@@ -530,7 +523,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "founded": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
-        "portrait_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": _infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -586,17 +579,16 @@ def _build_creator_search_text(creator: Dict) -> str:
 def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[Dict[str, str]]:
     """
     Builds a list of dictionaries containing metadata for each creator,
-    including name, thumbnail URL, profile URL, and search text.
+    including name, thumbnail path, and search text.
     """
     creator_entries = []
     for creator in creators:
         thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.THUMB)
 
-        # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
         creator_entries.append({
             "name": creator["name"],
-            "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
-            "thumbnail_url": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
+            "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
             "search_text": _build_creator_search_text(creator),
         })
 

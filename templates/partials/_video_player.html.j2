@@ -3,7 +3,7 @@
 {% macro render(path_to_root, video) %}
   <div class="video-wrapper">
     <video preload="metadata">
-      <source src="{{ path_to_root }}{{ video.full_url }}" type="video/mp4">
+      <source src="{{ path_to_root }}{{ video.rel_path }}" type="video/mp4">
       Your browser does not support the video tag.
     </video>
     <div class="video-controls">
