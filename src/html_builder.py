@@ -47,7 +47,8 @@ def _parse_date(date_str: str) -> Optional[datetime]:
     except (TypeError, ValueError) as e:
         print(f"Failed to parse date '{date_str}': {e}")
         return None
-    
+
+# TODO: return Optional[int]   
 def _calculate_age(dob: datetime, date: datetime) -> str:
     try:
         age = date.year - dob.year - ((date.month, date.day) < (dob.month, dob.day))
@@ -55,22 +56,23 @@ def _calculate_age(dob: datetime, date: datetime) -> str:
     except Exception as e:
         print(f"Error calculating age: {e}")
         return ""
-        
-def _calculate_age_from_strings(birth_date_str: str, reference_date_str: str) -> str:
+
+# TODO: return Optional[int]      
+def _calculate_age_from_strings(date_of_birth_str: str, reference_date_str: str) -> str:
     """
     Safely parses two date strings and returns age as string.
     Returns empty string if either date is missing or invalid.
     """
-    dob = _parse_date(birth_date_str)
+    dob = _parse_date(date_of_birth_str)
     ref = _parse_date(reference_date_str)
     if dob and ref:
         return _calculate_age(dob, ref)
     return ""
 
-def _build_rel_creator_path(creator: Dict) -> str:
+def _build_rel_creator_path(creator: Dict) -> Path:
     return build_unique_path(Path(creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
     
-def _build_rel_project_path(creator: Dict, project: Dict) -> str:
+def _build_rel_project_path(creator: Dict, project: Dict) -> Path:
     return build_unique_path(Path(creator['name'], project['title']).with_suffix(".html"), FILE_TREE_DEPTH)
      
 def _is_portrait(image_path : Path) -> bool:
@@ -85,56 +87,57 @@ def _is_portrait(image_path : Path) -> bool:
         print(f"Could not open image '{image_path}': {e}")
         return True
   
-def _infer_image_orientation(thumb_path: Path) -> str:
-    return Orientation.PORTRAIT if _is_portrait(thumb_path) else Orientation.LANDSCAPE
-    
-def _generate_thumbnail(source_path: Path, dest_path: Path, target_height: int) -> None:
+def _infer_image_orientation(image_path: Path) -> Orientation:
+    return Orientation.PORTRAIT if _is_portrait(image_path) else Orientation.LANDSCAPE
+
+# TODO: Only generate the image and return it, saving the image is an extra responsibility   
+def _generate_thumbnail(source_path: Path, target_path: Path, target_height: int) -> None:
     with Image.open(source_path) as img:
         aspect_ratio = img.width / img.height
         target_width = int(target_height * aspect_ratio)
         resized = img.resize((target_width, target_height), Image.LANCZOS)
-        dest_path.parent.mkdir(parents=True, exist_ok=True)
-        resized.save(dest_path, format='JPEG')
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        resized.save(target_path, format='JPEG')
                
-def _get_or_create_thumbnail(ctx: HtmlBuildContext, relative_image_path: Path, thumb_type: ThumbType) -> Path:
-    thumb_path = ctx.thumbs_dir / build_unique_path(relative_image_path)
+def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
+    thumb_path = ctx.thumbs_dir / build_unique_path(rel_image_path)
     thumb_path = tag_path(thumb_path, thumb_type.value)
 
     if not thumb_path.exists():
         try:
-            _generate_thumbnail(ctx.input_dir / relative_image_path, thumb_path, ctx.get_thumb_height(thumb_type))
+            _generate_thumbnail(ctx.input_dir / rel_image_path, thumb_path, ctx.get_thumb_height(thumb_type))
         except Exception as e:
             print(f"Error creating thumbnail for {relative_image_path}: {e}")
 
     return thumb_path
     
-def _resolve_thumbnail_or_default(ctx: HtmlBuildContext, relative_image_path: Optional[str], thumb_type: ThumbType) -> Path:
+def _resolve_thumbnail_or_default(ctx: HtmlBuildContext, rel_image_path: Optional[str], thumb_type: ThumbType) -> Path:
     """
     Returns the resolved thumbnail path for a given relative image path,
     falling back to a default image if the input is None or missing.
     """
-    if relative_image_path:
-        return _get_or_create_thumbnail(ctx, Path(relative_image_path), thumb_type)
+    if rel_image_path:
+        return _get_or_create_thumbnail(ctx, Path(rel_image_path), thumb_type)
     return ctx.get_default_thumb_path(thumb_type)
     
-def _sample_images(images: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
+def _sample_images(rel_image_paths: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
     if max_images <= 0:
         return []
 
-    sorted_images = sorted(images)
+    sorted_paths = sorted(rel_image_paths)
 
     match strategy:
         case ImageSampleStrategy.ALL:
-            return sorted_images
-        case _ if len(sorted_images) <= max_images:
-            return sorted_images
+            return sorted_paths
+        case _ if len(sorted_paths) <= max_images:
+            return sorted_paths
         case ImageSampleStrategy.HEAD:
-            return sorted_images[:max_images]
+            return sorted_paths[:max_images]
         case ImageSampleStrategy.SPREAD:
-            step = len(sorted_images) / max_images
-            return [sorted_images[int(i * step)] for i in range(max_images)]
+            step = len(sorted_paths) / max_images
+            return [sorted_paths[int(i * step)] for i in range(max_images)]
         case _:
-            return sorted_images  # fallback
+            return sorted_paths  # fallback
 
 def _sort_project(project: Dict) -> tuple:
     release_date = project["release_date"]
@@ -155,6 +158,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
         for project in creator["projects"]: 
             thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.GALLERY)
 
+            # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
             all_projects.append({
                 "title": project["title"],
                 "url": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
@@ -164,7 +168,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
     
-def _build_project_overview_page(ctx: HtmlBuildContext, creators: list):
+def _build_project_overview_page(ctx: HtmlBuildContext, creators: List):
     print("Generating project overview page...")
 
     template = env.get_template("project_overview.html.j2")
@@ -223,19 +227,19 @@ def _build_tags_page(ctx: HtmlBuildContext, creators: list):
     with open(ctx.tags_html_path, "w", encoding="utf-8") as f:
         f.write(output_html)
         
-def _create_symlink(input_dir: Path, relative_path: Path, target_dir: Path) -> Path:
-    source_file = (input_dir / relative_path).resolve()
+def _create_symlink(input_dir: Path, rel_source_path: Path, target_dir: Path) -> Path:
+    source_path = (input_dir / rel_source_path).resolve()
     
-    dest_file = target_dir / build_unique_path(relative_path)
+    target_path = target_dir / build_unique_path(rel_source_path)
     
-    dest_file.parent.mkdir(parents=True, exist_ok=True)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if not source_file.exists():
-        print(f"[Warning] Cannot create symlink: source file not found: {source_file}")
-    elif not dest_file.exists():
-        os.symlink(source_file, dest_file)
+    if not source_path.exists():
+        print(f"[Warning] Cannot create symlink: source file not found: {source_path}")
+    elif not target_path.exists():
+        os.symlink(source_path, target_path)
 
-    return dest_file
+    return target_path
     
 def _sort_sections_by_type(sections: List[Dict], media_type_order: List[str]) -> List[Dict]:
     order_map = {t: i for i, t in enumerate(dict.fromkeys(media_type_order))}
@@ -255,28 +259,28 @@ def _get_section_titles(media_group: Dict, audio_section_title: str, image_secti
         "image_section_title": image_section_title,
     }
     
-def _get_audio_duration_seconds(file_path: Path) -> int:
+def _get_audio_duration_seconds(audio_path: Path) -> int:
     """
     Returns the duration of the given audio file in seconds,
     or 0 if the duration cannot be determined.
     """
     try:
-        audio = MutagenFile(str(file_path))
+        audio = MutagenFile(str(audio_path))
         if audio and audio.info:
             return int(audio.info.length)
     except Exception as e:
-        print(f"Warning: could not read duration for {file_path}: {e}")
+        print(f"Warning: could not read duration for {audio_path}: {e}")
     return 0
     
 def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> List[Dict[str, Any]]:  
     media_groups_context = []
 
     for media_group in media_groups:
-        image_rel_paths = _sample_images(media_group["images"], ctx.image_gallery_max, ctx.image_gallery_sample_strategy)
-        video_rel_paths = media_group["videos"]
-        track_rel_paths = media_group["tracks"]
-        document_rel_paths = media_group["documents"]
-        text_rel_paths = media_group["texts"]
+        rel_image_paths = _sample_images(media_group["images"], ctx.image_gallery_max, ctx.image_gallery_sample_strategy)
+        rel_video_paths = media_group["videos"]
+        rel_track_paths = media_group["tracks"]
+        rel_document_paths = media_group["documents"]
+        rel_text_paths = media_group["texts"]
         
         images = [
             {
@@ -284,7 +288,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
                 "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "caption": Path(rel).stem
             }
-            for rel in image_rel_paths
+            for rel in rel_image_paths
         ]
 
         videos = [
@@ -292,7 +296,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
                 "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
-            for rel in video_rel_paths
+            for rel in rel_video_paths
         ]
 
         tracks = [
@@ -301,7 +305,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
                 "title": Path(rel).stem,
                 "duration_seconds": _get_audio_duration_seconds(ctx.input_dir / Path(rel))
             }
-            for rel in track_rel_paths
+            for rel in rel_track_paths
         ]
 
         documents = [
@@ -309,7 +313,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
                 "full_url": relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "title": Path(rel).stem.title()
             }
-            for rel in document_rel_paths
+            for rel in rel_document_paths
         ]
         
         texts = [
@@ -317,7 +321,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
                 "content": _render_markdown(read_text(ctx.input_dir / Path(rel))),
                 "title": Path(rel).stem.title()
             }
-            for rel in text_rel_paths
+            for rel in rel_text_paths
         ]
 
         section_titles = _get_section_titles(
@@ -340,14 +344,14 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
         })
 
     return media_groups_context
-    
+
 def _calculate_age_at_release(creator: Dict, project: Dict) -> str:
-    dob = creator["born_or_founded"]
+    born_or_founded = creator["born_or_founded"]
     release_date = project["release_date"]
-    if not dob or not release_date:
+    if not born_or_founded or not release_date:
         return ""
         
-    return _calculate_age_from_strings(dob, release_date)
+    return _calculate_age_from_strings(born_or_founded, release_date)
     
 def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
@@ -366,6 +370,7 @@ def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: 
 def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[str, str]:
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
+    # TODO: rename url to rel_html_path and portrait_url to rel_portrait_path
     return {
         "name": creator["name"],
         "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
@@ -385,6 +390,7 @@ def _collect_collaborator_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> Dict: 
     thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
+    # TODO: rename thumbnail_url to rel_thumbnail_path and info_html to info_text
     project_context = {
         "title": project["title"],
         "release_date": project["release_date"],
@@ -435,20 +441,20 @@ def _get_collaboration_label(collab: Dict, creator_name: str) -> str:
     return collab["name"]
     
 def _calculate_debut_age(creator: Dict) -> str:
-    dob = creator["born_or_founded"]
+    born_or_founded = creator["born_or_founded"]
     active_since = creator["active_since"]
     release_dates = [p["release_date"] for p in creator["projects"] if p["release_date"]]
 
-    if not dob or (not active_since and not release_dates):
+    if not born_or_founded or (not active_since and not release_dates):
         return ""
 
     if active_since:
-        return _calculate_age_from_strings(dob, active_since)
+        return _calculate_age_from_strings(born_or_founded, active_since)
     
     valid_release_dates = [d for d in release_dates if _parse_date(d)]
     if valid_release_dates:
         earliest = min(valid_release_dates, key=lambda d: _parse_date(d))
-        return _calculate_age_from_strings(dob, earliest)
+        return _calculate_age_from_strings(born_or_founded, earliest)
 
     return ""
     
@@ -461,6 +467,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
     for project in sorted(creator["projects"], key=_sort_project):
         thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.GALLERY)
 
+        # TODO: rename thumbnail_url to rel_thumbnail_path and url to rel_html_path
         project_entries.append({
             "title": project["title"],
             "url": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
@@ -495,6 +502,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     """
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
     
+    # TODO: rename portrait_url to rel_portrait_path and info_html to info_text
     return {
         "name": creator["name"],
         "aliases": creator["aliases"],
@@ -548,6 +556,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
 
         thumb_path = _resolve_thumbnail_or_default(ctx, member["portrait"], ThumbType.THUMB)
 
+        # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
         member_links.append({
             "name": member_name,
             "url": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
@@ -555,7 +564,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
         })
 
     return member_links
-        
+    
 def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creators: List[Dict]) -> Dict[str, Any]:
     """
     Builds the context dictionary for rendering a collaboration page,
@@ -563,6 +572,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
     """
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
+    # TODO: rename portrait_url to rel_portrait_path and info_html to info_text
     return {
         "name": creator["name"],
         "member_names": creator["members"],
@@ -598,7 +608,8 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
-    
+
+# TODO: join creator and collaboration page creation
 def _build_creator_pages(ctx: HtmlBuildContext, creators: List[Dict]):
     print("Generating creator pages...")
     
@@ -631,6 +642,7 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
     for creator in creators:
         thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.THUMB)
 
+        # TODO: rename url to rel_html_path and thumbnail_url to rel_thumbnail_path
         creator_entries.append({
             "name": creator["name"],
             "url": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
