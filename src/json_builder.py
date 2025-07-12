@@ -225,7 +225,7 @@ def _load_existing_json(json_path: Path) -> Dict:
 
 def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
     creator_name = creator_path.name
-    existing_creator = _load_existing_json(creator_path / constants.CR4TE_JSON_FILENAME)
+    existing_creator = _load_existing_json(creator_path / constants.CR4TE_JSON_FILE_NAME)
     
     # Find portrait
     all_images = _find_all_images(creator_path, ctx.global_exclude_prefix)
@@ -286,7 +286,7 @@ def _write_json_files(creators: List[Dict], base_path: Path) -> None:
     Writes each creator's JSON data to <base_path>/<creator_name>/cr4te.json.
     """
     for creator in creators:
-        json_path = base_path / creator["name"] / constants.CR4TE_JSON_FILENAME
+        json_path = base_path / creator["name"] / constants.CR4TE_JSON_FILE_NAME
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator, f, indent=2)
             
@@ -318,7 +318,7 @@ def clean_creator_json_files(input_path: Path, dry_run: bool = False) -> None:
         if not creator.is_dir():
             continue
 
-        json_path = creator / constants.CR4TE_JSON_FILENAME
+        json_path = creator / constants.CR4TE_JSON_FILE_NAME
         if json_path.exists():
             total += 1
             print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
@@ -333,7 +333,7 @@ def clean_creator_json_files(input_path: Path, dry_run: bool = False) -> None:
             continue
 
     print("\nSummary:")
-    print(f"\tTotal {constants.CR4TE_JSON_FILENAME} files found: {total}")
+    print(f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}")
     print(f"\tDeleted: {deleted}")
     print(f"\tSkipped/errors: {skipped}")
     if dry_run:
