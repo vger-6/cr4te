@@ -39,11 +39,11 @@ FILE_TREE_DEPTH = 4
 # So to get back to output_dir, we need (depth + 1) "../" segments
 HTML_PATH_TO_ROOT = path_utils.get_path_to_root(FILE_TREE_DEPTH + 1)
 
-def _build_rel_creator_path(creator: Dict) -> Path:
-    return path_utils.build_unique_path(Path(creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
+def _build_rel_creator_html_path(creator: Dict) -> Path:
+    return path_utils.build_unique_path(Path('creator', creator['name']).with_suffix(".html"), FILE_TREE_DEPTH)
     
-def _build_rel_project_path(creator: Dict, project: Dict) -> Path:
-    return path_utils.build_unique_path(Path(creator['name'], project['title']).with_suffix(".html"), FILE_TREE_DEPTH)
+def _build_rel_project_html_path(creator: Dict, project: Dict) -> Path:
+    return path_utils.build_unique_path(Path('project', creator['name'], project['title']).with_suffix(".html"), FILE_TREE_DEPTH)
            
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
     thumb_path = ctx.thumbs_dir / path_utils.build_unique_path(rel_image_path)
@@ -108,7 +108,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
 
             all_projects.append({
                 "title": project["title"],
-                "rel_html_path": (Path(ctx.html_dir.name) / _build_rel_project_path(creator, project)).as_posix(),
+                "rel_html_path": (Path(ctx.html_dir.name) / _build_rel_project_html_path(creator, project)).as_posix(),
                 "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
                 "creator_name": creator["name"],
                 "search_text": _build_project_search_text(project)
@@ -161,7 +161,7 @@ def _collect_all_tags(creators: List[Dict]) -> Dict[str, List[str]]:
         all_tags.extend(_collect_tags_from_creator(creator))
     return _group_tags_by_category(all_tags)
 
-def _build_tags_page(ctx: HtmlBuildContext, creators: list):
+def _build_tags_page(ctx: HtmlBuildContext, creators: List):
     print("Generating tags page...")
 
     template = env.get_template("tags.html.j2")
@@ -176,14 +176,12 @@ def _build_tags_page(ctx: HtmlBuildContext, creators: list):
         
 def _create_symlink(input_dir: Path, rel_source_path: Path, target_dir: Path) -> Path:
     source_path = (input_dir / rel_source_path).resolve()
-    
     target_path = target_dir / path_utils.build_unique_path(rel_source_path)
     
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-
     if not source_path.exists():
         print(f"[Warning] Cannot create symlink: source file not found: {source_path}")
     elif not target_path.exists():
+        target_path.parent.mkdir(parents=True, exist_ok=True)
         os.symlink(source_path, target_path)
 
     return target_path
@@ -306,7 +304,7 @@ def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 
     return {
         "name": creator["name"],
-        "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
+        "rel_html_path": (ctx.html_dir.name / _build_rel_creator_html_path(creator)).as_posix(),
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
     }
 
@@ -354,7 +352,7 @@ def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, cre
         Orientation=Orientation,
     )
 
-    page_path = ctx.html_dir / _build_rel_project_path(creator, project)
+    page_path = ctx.html_dir / _build_rel_project_html_path(creator, project)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
@@ -401,7 +399,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
 
         project_entries.append({
             "title": project["title"],
-            "rel_html_path": (ctx.html_dir.name / _build_rel_project_path(creator, project)).as_posix(),
+            "rel_html_path": (ctx.html_dir.name / _build_rel_project_html_path(creator, project)).as_posix(),
             "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         })
 
@@ -448,7 +446,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
-def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
+def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: List):
     print(f"Building creator page: {creator['name']}")
     
     template = env.get_template("creator.html.j2")
@@ -463,7 +461,7 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: list):
         ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
-    page_path = ctx.html_dir / _build_rel_creator_path(creator)
+    page_path = ctx.html_dir / _build_rel_creator_html_path(creator)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
@@ -488,7 +486,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
 
         member_links.append({
             "name": member_name,
-            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(member)).as_posix(),
+            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_html_path(member)).as_posix(),
             "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
         })
 
@@ -516,7 +514,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
-def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: list):
+def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: List):
     print(f"Building collaboration page: {creator['name']}")
 
     template = env.get_template("collaboration.html.j2")
@@ -532,7 +530,7 @@ def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: li
         ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
 
-    page_path = ctx.html_dir / _build_rel_creator_path(creator)
+    page_path = ctx.html_dir / _build_rel_creator_html_path(creator)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
         f.write(output_html)
@@ -572,14 +570,14 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
 
         creator_entries.append({
             "name": creator["name"],
-            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_path(creator)).as_posix(),
+            "rel_html_path": (ctx.html_dir.name / _build_rel_creator_html_path(creator)).as_posix(),
             "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
             "search_text": _build_creator_search_text(creator),
         })
 
     return creator_entries
     
-def _build_creator_overview_page(ctx: HtmlBuildContext, creators: list):
+def _build_creator_overview_page(ctx: HtmlBuildContext, creators: List):
     print("Generating overview page...")
 
     template = env.get_template("creator_overview.html.j2")
