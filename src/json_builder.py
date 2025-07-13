@@ -80,7 +80,7 @@ def _find_image_by_orientation(image_paths: List[Path], orientation: Orientation
             return image_path
     return None
     
-def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dict]:
+def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
     media_map = defaultdict(lambda: {
         "videos": [],
         "tracks": [],
@@ -92,10 +92,10 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
     
     # Helper to check max depth
     def is_within_search_depth(path: Path) -> bool:
-        return ctx.max_search_depth is None or len(path.relative_to(media_folder).parts) <= ctx.max_search_depth
+        return ctx.max_search_depth is None or len(path.relative_to(media_dir).parts) <= ctx.max_search_depth
 
     for media_path in (
-        p for p in media_folder.rglob("*")
+        p for p in media_dir.rglob("*")
         if p.is_file()
         and is_within_search_depth(p)
         and not p.name.startswith(ctx.global_exclude_prefix)
@@ -103,30 +103,30 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
         suffix = media_path.suffix.lower()
         stem = media_path.stem.lower()
         rel_to_input = media_path.relative_to(ctx.input_dir)
-        is_root = media_path.parent.resolve() == media_folder.resolve()
-        folder_key = str(media_path.parent.relative_to(ctx.input_dir)) or media_folder.name
+        is_root = media_path.parent.resolve() == media_dir.resolve()
+        rel_dir_key = str(media_path.parent.relative_to(ctx.input_dir)) or media_dir.name
 
         if suffix in VIDEO_EXTS:
-            media_map[folder_key]["videos"].append(str(rel_to_input))
+            media_map[rel_dir_key]["videos"].append(str(rel_to_input))
         elif suffix in AUDIO_EXTS:
-            media_map[folder_key]["tracks"].append(str(rel_to_input))
+            media_map[rel_dir_key]["tracks"].append(str(rel_to_input))
         elif suffix in IMAGE_EXTS and stem not in (ctx.cover_basename, ctx.portrait_basename):
-            media_map[folder_key]["images"].append(str(rel_to_input))
+            media_map[rel_dir_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
-            media_map[folder_key]["documents"].append(str(rel_to_input))
+            media_map[rel_dir_key]["documents"].append(str(rel_to_input))
         elif suffix in TEXT_EXTS and media_path.name.lower() != ctx.readme_file_name.lower():
-            media_map[folder_key]["texts"].append(str(rel_to_input))
+            media_map[rel_dir_key]["texts"].append(str(rel_to_input))
 
-        media_map[folder_key]["is_root"] = is_root
+        media_map[rel_dir_key]["is_root"] = is_root
 
     return media_map
     
-def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_media_groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _build_media_groups(ctx: JsonBuildContext, media_dir: Path, existing_media_groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     media_groups = []
-    media_map = _build_media_map(ctx, media_folder)
+    media_map = _build_media_map(ctx, media_dir)
     #existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
 
-    for folder_path, media in media_map.items():
+    for rel_dir_path, media in media_map.items():
         #existing_media_group = existing_media_groups_by_name.get(folder_path, {})
 
         media_group = {
@@ -136,7 +136,7 @@ def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_medi
             "images": sorted(media["images"]),
             "documents": sorted(media["documents"]),
             "texts": sorted(media["texts"]),
-            "folder_path": folder_path
+            "folder_path": rel_dir_path
         }
 
         media_groups.append(media_group)
