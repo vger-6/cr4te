@@ -282,16 +282,16 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
 
     _write_json_files(creators, ctx.input_dir)
     
-def clean_creator_json_files(input_path: Path, dry_run: bool = False) -> None:
+def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
     total = 0
     deleted = 0
     skipped = 0
 
-    for creator in input_path.iterdir():
-        if not creator.is_dir():
+    for creator_dir in input_dir.iterdir():
+        if not creator_dir.is_dir():
             continue
 
-        json_path = creator / constants.CR4TE_JSON_FILE_NAME
+        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
         if json_path.exists():
             total += 1
             print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
