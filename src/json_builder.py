@@ -24,16 +24,8 @@ VIDEO_EXTS = (".mp4", ".m4v")
 AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)
-    
-def _split(text: str, separators: List[str]) -> List[str]:
-    """
-    Splits the input text using any of the provided multi-character separators.
-    """
-    if not separators:
-        return [text]  # fallback: no split
-    pattern = "|".join(re.escape(sep) for sep in separators)
-    return [part for part in re.split(pattern, text) if part]
-    
+
+# TODO: improve this method and move it to date_utils.py
 def _validate_date_string(date_str: str) -> str:
     """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
     if not date_str or not isinstance(date_str, str):
@@ -59,13 +51,13 @@ def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
         if p.suffix.lower() in IMAGE_EXTS and not p.name.startswith(exclude_prefix)
     ]
     
-def _find_image_by_name(images: List[Path], image_name: str) -> Optional[Path]:
-    for image in images:
-        if image.stem.lower() == image_name.lower():
-            return image
+def _find_image_by_name(image_paths: List[Path], name: str) -> Optional[Path]:
+    for image_path in image_paths:
+        if image_path.stem.lower() == name.lower():
+            return image_path
     return None
     
-def _select_best_image(images: List[Path], image_name: str, orientation_fallback: Orientation) -> Optional[Path]:
+def _select_best_image(image_paths: List[Path], name: str, orientation_fallback: Orientation) -> Optional[Path]:
     """
     Selects the best image from a list:
     - First, tries to find an image matching the given name.
@@ -73,24 +65,19 @@ def _select_best_image(images: List[Path], image_name: str, orientation_fallback
     - If both fail, returns the first image in the list.
     - Returns None if the image list is empty.
     """
-    if not images:
+    if not image_paths:
         return None
 
-    image = _find_image_by_name(images, image_name)
-    if image:
-        return image
-
-    image = _find_image_by_orientation(images, orientation_fallback)
-    if image:
-        return image
-
-    return images[0]
+    return (
+        _find_image_by_name(image_paths, name)
+        or _find_image_by_orientation(image_paths, orientation_fallback)
+        or image_paths[0]
+    )
 
 def _find_image_by_orientation(image_paths: List[Path], orientation: Orientation) -> Optional[Path]:
     for image_path in sorted(image_paths, key=lambda x: x.name):
         if orientation == image_utils.infer_image_orientation(image_path):
             return image_path
-
     return None
     
 def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dict]:
@@ -107,19 +94,17 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
     def is_within_search_depth(path: Path) -> bool:
         return ctx.max_search_depth is None or len(path.relative_to(media_folder).parts) <= ctx.max_search_depth
 
-    for file in media_folder.rglob("*"):
-        if not file.is_file():
-            continue
-        if not is_within_search_depth(file):
-            continue
-        if file.name.startswith(ctx.global_exclude_prefix):
-            continue
-
-        suffix = file.suffix.lower()
-        stem = file.stem.lower()
-        rel_to_input = file.relative_to(ctx.input_dir)
-        is_root = file.parent.resolve() == media_folder.resolve()
-        folder_key = str(file.parent.relative_to(ctx.input_dir)) or media_folder.name
+    for media_path in (
+        p for p in media_folder.rglob("*")
+        if p.is_file()
+        and is_within_search_depth(p)
+        and not p.name.startswith(ctx.global_exclude_prefix)
+    ):
+        suffix = media_path.suffix.lower()
+        stem = media_path.stem.lower()
+        rel_to_input = media_path.relative_to(ctx.input_dir)
+        is_root = media_path.parent.resolve() == media_folder.resolve()
+        folder_key = str(media_path.parent.relative_to(ctx.input_dir)) or media_folder.name
 
         if suffix in VIDEO_EXTS:
             media_map[folder_key]["videos"].append(str(rel_to_input))
@@ -129,7 +114,7 @@ def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dic
             media_map[folder_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
             media_map[folder_key]["documents"].append(str(rel_to_input))
-        elif suffix in TEXT_EXTS and file.name.lower() != ctx.readme_file_name.lower():
+        elif suffix in TEXT_EXTS and media_path.name.lower() != ctx.readme_file_name.lower():
             media_map[folder_key]["texts"].append(str(rel_to_input))
 
         media_map[folder_key]["is_root"] = is_root
@@ -158,11 +143,11 @@ def _build_media_groups(ctx: JsonBuildContext, media_folder: Path, existing_medi
 
     return media_groups
 
-def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator: Dict) -> List[Dict]:
+def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in creator.get("projects", []) if "title" in p}
     
     projects = []
-    for project_dir in sorted(creator_path.iterdir()):
+    for project_dir in sorted(creator_dir.iterdir()):
         if not project_dir.is_dir() or project_dir.name.startswith((ctx.global_exclude_prefix, ctx.metadata_folder_name)):
             continue
 
@@ -187,17 +172,17 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_path: Path, creator
 
     return projects
     
-def _build_creator_media_groups(ctx: JsonBuildContext, creator_path: Path, existing_media_groups: List[Dict]) -> List[Dict]:
+def _build_creator_media_groups(ctx: JsonBuildContext, creator_dir: Path, existing_media_groups: List[Dict]) -> List[Dict]:
     media_groups = []
 
     # Metadata folder media
-    metadata_path = creator_path / ctx.metadata_folder_name
-    if metadata_path.exists():
-        media_groups = _build_media_groups(ctx, metadata_path, existing_media_groups)
+    metadata_dir = creator_dir / ctx.metadata_folder_name
+    if metadata_dir.exists():
+        media_groups = _build_media_groups(ctx, metadata_dir, existing_media_groups)
 
     # Root-level media (shallow only)
     shallow_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_search_depth": 1})
-    media_groups.extend(_build_media_groups(shallow_ctx, creator_path, existing_media_groups))
+    media_groups.extend(_build_media_groups(shallow_ctx, creator_dir, existing_media_groups))
 
     return media_groups
         
@@ -211,12 +196,12 @@ def _load_existing_json(json_path: Path) -> Dict:
         return json_utils.load_json(json_path)
     return {}
 
-def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
-    creator_name = creator_path.name
-    existing_creator = _load_existing_json(creator_path / constants.CR4TE_JSON_FILE_NAME)
+def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
+    creator_name = creator_dir.name
+    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_FILE_NAME)
     
     # Find portrait
-    all_images = _find_all_images(creator_path, ctx.global_exclude_prefix)
+    all_images = _find_all_images(creator_dir, ctx.global_exclude_prefix)
     portrait = (
         _select_best_image(all_images, ctx.portrait_basename, Orientation.PORTRAIT) 
         if ctx.auto_find_portrait 
@@ -236,15 +221,15 @@ def _build_creator(ctx: JsonBuildContext, creator_path: Path) -> Dict[str, Any]:
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
-        "info": text_utils.read_text(creator_path / ctx.readme_file_name) or existing_creator.get("info", ""),
+        "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
-        "projects": _collect_creator_projects(ctx, creator_path, existing_creator),
-        "media_groups": _build_creator_media_groups(ctx, creator_path, existing_creator.get("media_groups", [])),
+        "projects": _collect_creator_projects(ctx, creator_dir, existing_creator),
+        "media_groups": _build_creator_media_groups(ctx, creator_dir, existing_creator.get("media_groups", [])),
         "collaborations": [],
     }
     
     if is_collab:
-        members = [name.strip() for name in _split(creator_name, separators)]
+        members = [name.strip() for name in text_utils.multi_split(creator_name, separators)]
         creator["members"] = existing_creator.get("members", members)
     else:
         creator["members"] = []
@@ -283,11 +268,11 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
 
     creators = []
 
-    for creator_path in sorted(ctx.input_dir.iterdir()):
-        if not creator_path.is_dir() or creator_path.name.startswith(ctx.global_exclude_prefix):
+    for creator_dir in sorted(ctx.input_dir.iterdir()):
+        if not creator_dir.is_dir() or creator_dir.name.startswith(ctx.global_exclude_prefix):
             continue
-        print(f"Processing creator: {creator_path.name}")
-        creator = _build_creator(ctx, creator_path)
+        print(f"Processing creator: {creator_dir.name}")
+        creator = _build_creator(ctx, creator_dir)
         creators.append(creator)
 
     _resolve_creator_collaborations(creators)
