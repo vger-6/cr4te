@@ -32,6 +32,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("search-input");
+    const clearBtn = document.getElementById("clear-search");
     const { gallery, allWrappers } = getAllWrappers("#imageGallery");
 
     function filter() {
@@ -41,19 +42,31 @@
         return terms.every(term => searchText.includes(term));
       });
 
+      clearBtn.style.display = input.value ? "block" : "none";
       filterAndPaginate(gallery, visible);
     }
 
-    // Set search from query param
     const params = new URLSearchParams(window.location.search);
     const tag = params.get('tag');
     if (tag && input) {
       input.value = tag;
-      
       window.utils.clearUrlParam('tag');
     }
 
     input.addEventListener("input", filter);
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      input.focus();
+      filter();
+    });
+    
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        input.value = "";
+        input.dispatchEvent(new Event("input")); // re-trigger filtering
+      }
+    });
 
     // Initial run
     filter();
