@@ -373,20 +373,25 @@ def _get_collaboration_label(collab: Dict, creator_name: str) -> str:
 def _calculate_debut_age(creator: Dict) -> Optional[int]:
     born_or_founded = creator["born_or_founded"]
     active_since = creator["active_since"]
-    release_dates = [p["release_date"] for p in creator["projects"] if p["release_date"]]
+    projects = creator["projects"]
 
-    if not born_or_founded or (not active_since and not release_dates):
+    if not born_or_founded:
         return None
 
     if active_since:
         return date_utils.calculate_age_from_strings(born_or_founded, active_since)
-    
-    valid_release_dates = [d for d in release_dates if date_utils.parse_date(d)]
-    if valid_release_dates:
-        earliest = min(valid_release_dates, key=lambda d: date_utils.parse_date(d))
-        return date_utils.calculate_age_from_strings(born_or_founded, earliest)
 
-    return None
+    release_dates = [
+        p["release_date"] for p in projects
+        if date_utils.parse_date(p["release_date"])
+    ]
+
+    if not release_dates:
+        return None
+
+    earliest = min(release_dates, key=lambda d: date_utils.parse_date(d))
+    return date_utils.calculate_age_from_strings(born_or_founded, earliest)
+
     
 def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, str]]:
     """
