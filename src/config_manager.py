@@ -30,15 +30,10 @@ DEFAULT_CONFIG = {
         "creator_page_profile_title": "Profile",
         "creator_page_about_title": "About",
         "creator_page_tags_title": "Tags",
+        "creator_page_members_title": "Members",
         "creator_page_projects_title": "Works",
         "creator_page_collabs_title_prefix": "With",
-        
-        "collaboration_page_profile_title": "Profile",
-        "collaboration_page_about_title": "About",
-        "collaboration_page_tags_title": "Tags",
-        "collaboration_page_members_title": "Members",
-        "collaboration_page_projects_title": "Works",
-        
+              
         "project_page_overview_title": "Overview",
         "project_page_description_title": "Description",
         "project_page_tags_title": "Tags",
@@ -64,10 +59,9 @@ DEFAULT_CONFIG = {
         "project_overview_page_project_gallery_page_size": 100,
         
         "creator_page_visible_creator_fields": [f for f in CreatorField],
+        "creator_page_visible_collaboration_fields": [f for f in CollaborationField],
         "creator_page_image_gallery_page_size" : 15,
-        
-        "collaboration_page_visible_collaboration_fields": [f for f in CollaborationField],
-        
+
         "project_page_visible_project_fields": [f for f in ProjectField],
         "project_page_image_gallery_page_size" : 15,
         "project_page_image_gallery_captions_visible": False,
@@ -152,7 +146,6 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "creator_page_projects_title": "Movies",
                     "project_page_audio_section_base_title": "Soundtrack",
                     "creator_page_collabs_title_prefix": "Codirected with",
-                    "collaboration_page_projects_title": "Movies",
                     "project_page_creator_profile_title": "Profile",
                     "project_gallery_aspect_ratio": "2/3",
                  },
@@ -169,7 +162,6 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "project_overview_page_search_placeholder": "Search albums, tags...",
                     "creator_page_projects_title": "Albums",
                     "creator_page_collabs_title_prefix": "With",
-                    "collaboration_page_projects_title": "Albums",
                     "project_page_creator_profile_title": "Profile",
                     "project_page_audio_section_base_title": "Tracks",
                     "media_type_order": [MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.VIDEO],
@@ -192,7 +184,6 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "creator_page_projects_title": "Books",
                     "project_page_audio_section_base_title": "Audio",
                     "creator_page_collabs_title_prefix": "With",
-                    "collaboration_page_projects_title": "Books",
                     "project_page_creator_profile_title": "Profile",
                     "media_type_order": [MediaType.DOCUMENT, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.VIDEO],
                     "project_gallery_building_strategy": ImageGalleryBuildingStrategy.ASPECT,
@@ -211,8 +202,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                     "project_overview_page_search_placeholder": "Search scenes, tags...",
                     "creator_page_projects_title": "Scenes",
                     "creator_page_collabs_title_prefix": "Scenes with",
-                    "collaboration_page_members_title": "Featuring",
-                    "collaboration_page_projects_title": "Scenes",
+                    "creator_page_members_title": "Featuring",
                     "project_page_creator_profile_title": "Model Profile",
                     "media_type_order": [MediaType.VIDEO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT, MediaType.AUDIO],
                 },

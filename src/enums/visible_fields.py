@@ -7,7 +7,6 @@ class CreatorField(str, Enum):
     DEBUT_AGE = "debut_age"
 
 class CollaborationField(str, Enum):
-    NAME = "name"
     MEMBERS = "members"
     FOUNDED = "founded"
     NATIONALITY = "nationality"

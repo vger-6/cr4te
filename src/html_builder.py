@@ -431,21 +431,30 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     """
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
     
-    return {
+    creator_context = {
         "name": creator["name"],
         "aliases": creator["aliases"],
-        "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
-        "debut_age": _calculate_debut_age(creator),
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
-        "collaborations": _build_collaboration_entries(ctx, creator, creators),
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
+    if creator["is_collaboration"]:
+        creator_context["members"] = _collect_member_links(ctx, creator, creators)
+        creator_context["member_names"] = creator["members"]
+        creator_context["founded"] = creator["born_or_founded"]
+        creator_context["active_since"] = creator["active_since"]
+    else:
+        creator_context["date_of_birth"] = creator["born_or_founded"]
+        creator_context["debut_age"] =  _calculate_debut_age(creator) or ""
+        creator_context["collaborations"] = _build_collaboration_entries(ctx, creator, creators)
+        
+    return creator_context
+
 def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: List):
     print(f"Building creator page: {creator['name']}")
     
@@ -454,13 +463,14 @@ def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: List):
     output_html = template.render(
         html_settings=ctx.html_settings,
         creator=_collect_creator_context(ctx, creator, creators),
+        member_thumb_max_height=ctx.get_thumb_height(ThumbType.THUMB),
         project_thumb_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         path_to_root=HTML_PATH_TO_ROOT,
         Orientation=Orientation,
         ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
     )
-
+    
     page_path = ctx.html_dir / _build_rel_creator_html_path(creator)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as f:
@@ -492,58 +502,11 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
 
     return member_links
     
-def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creators: List[Dict]) -> Dict[str, Any]:
-    """
-    Builds the context dictionary for rendering a collaboration page,
-    including metadata, portrait, members, projects, and tags.
-    """
-    thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
-
-    return {
-        "name": creator["name"],
-        "member_names": creator["members"],
-        "members": _collect_member_links(ctx, creator, creators),
-        "founded": creator["born_or_founded"],
-        "nationality": creator["nationality"],
-        "active_since": creator["active_since"],
-        "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
-        "info_html": text_utils.markdown_to_html(creator["info"]),
-        "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
-        "projects": _build_project_entries(ctx, creator),
-        "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
-    }
-    
-def _build_collaboration_page(ctx: HtmlBuildContext, creator: dict, creators: List):
-    print(f"Building collaboration page: {creator['name']}")
-
-    template = env.get_template("collaboration.html.j2")
-
-    output_html = template.render(
-        html_settings=ctx.html_settings,
-        creator=_collect_collaboration_context(ctx, creator, creators),
-        member_thumb_max_height=ctx.get_thumb_height(ThumbType.THUMB),
-        project_thumb_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
-        gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT,
-        Orientation=Orientation,
-        ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
-    )
-
-    page_path = ctx.html_dir / _build_rel_creator_html_path(creator)
-    page_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(page_path, "w", encoding="utf-8") as f:
-        f.write(output_html)
-
-# TODO: join creator and collaboration page creation
 def _build_creator_pages(ctx: HtmlBuildContext, creators: List[Dict]):
     print("Generating creator pages...")
     
     for creator in creators:
-        if not creator["is_collaboration"]:
-            _build_creator_page(ctx, creator, creators)
-        else:
-            _build_collaboration_page(ctx, creator, creators)
+        _build_creator_page(ctx, creator, creators)
     
 def _build_creator_search_text(creator: Dict) -> str:
     """
