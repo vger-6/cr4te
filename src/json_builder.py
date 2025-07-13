@@ -9,9 +9,11 @@ from collections import defaultdict
 from PIL import Image
 from pydantic import ValidationError
 
+import constants
 import utils.json_utils as json_utils
 import utils.text_utils as text_utils
-import constants
+import utils.image_utils as image_utils
+from enums.orientation import Orientation
 from context.json_context import JsonBuildContext
 from validators.cr4te_schema import Creator as CreatorSchema
 
@@ -22,10 +24,6 @@ VIDEO_EXTS = (".mp4", ".m4v")
 AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)
-
-class Orientation(Enum):
-    PORTRAIT = "portrait"
-    LANDSCAPE = "landscape"
     
 def _split(text: str, separators: List[str]) -> List[str]:
     """
@@ -88,20 +86,11 @@ def _select_best_image(images: List[Path], image_name: str, orientation_fallback
 
     return images[0]
 
+def _find_image_by_orientation(image_paths: List[Path], orientation: Orientation) -> Optional[Path]:
+    for image_path in sorted(image_paths, key=lambda x: x.name):
+        if orientation == image_utils.infer_image_orientation(image_path):
+            return image_path
 
-def _find_image_by_orientation(images: List[Path], orientation: Orientation = Orientation.PORTRAIT) -> Optional[Path]:
-    for img_path in sorted(images, key=lambda x: x.name):
-        try:
-            with Image.open(img_path) as img:
-                match orientation:
-                    case Orientation.PORTRAIT:
-                        if img.height > img.width:
-                            return img_path
-                    case Orientation.LANDSCAPE:
-                        if img.width > img.height:
-                            return img_path
-        except Exception as e:
-            print(f"Error checking image orientation for {img_path}: {e}")
     return None
     
 def _build_media_map(ctx: JsonBuildContext, media_folder: Path) -> Dict[str, Dict]:

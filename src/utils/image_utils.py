@@ -3,7 +3,25 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-__all__ = ["generate_thumbnail", "create_centered_text_image"]
+from enums.orientation import Orientation
+
+__all__ = ["infer_image_orientation", "generate_thumbnail", "create_centered_text_image"]
+
+def _is_portrait(image_path : Path) -> bool:
+    try:
+        with Image.open(image_path) as img:
+            width, height = img.size
+
+        # consider portrait if height/width > 1.2 (approx. 4:3 with tolerance)
+        return height / width > 1.2
+
+    except Exception as e:
+        print(f"Could not open image '{image_path}': {e}")
+        return False
+
+# TODO: return Optional[Orientation]
+def infer_image_orientation(image_path: Path) -> Orientation:
+    return Orientation.PORTRAIT if _is_portrait(image_path) else Orientation.LANDSCAPE
 
 def generate_thumbnail(source_path: Path, target_height: int) -> Image:
     with Image.open(source_path) as img:

@@ -44,22 +44,7 @@ def _build_rel_creator_path(creator: Dict) -> Path:
     
 def _build_rel_project_path(creator: Dict, project: Dict) -> Path:
     return path_utils.build_unique_path(Path(creator['name'], project['title']).with_suffix(".html"), FILE_TREE_DEPTH)
-     
-def _is_portrait(image_path : Path) -> bool:
-    try:
-        with Image.open(image_path) as img:
-            width, height = img.size
-
-        # consider portrait if height/width > 1.2 (approx. 4:3 with tolerance)
-        return height / width > 1.2
-
-    except Exception as e:
-        print(f"Could not open image '{image_path}': {e}")
-        return True
-  
-def _infer_image_orientation(image_path: Path) -> Orientation:
-    return Orientation.PORTRAIT if _is_portrait(image_path) else Orientation.LANDSCAPE
-          
+           
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
     thumb_path = ctx.thumbs_dir / path_utils.build_unique_path(rel_image_path)
     thumb_path = path_utils.tag_path(thumb_path, thumb_type.value)
@@ -342,7 +327,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "title": project["title"],
         "release_date": project["release_date"],
         "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "thumbnail_orientation": _infer_image_orientation(thumb_path),
+        "thumbnail_orientation": image_utils.infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(project["info"]),
         "tag_map": _group_tags_by_category(project["tags"]),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
@@ -454,7 +439,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "date_of_birth": creator["born_or_founded"],
         "nationality": creator["nationality"],
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "portrait_orientation": _infer_image_orientation(thumb_path),
+        "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
         "debut_age": _calculate_debut_age(creator),
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
@@ -524,7 +509,7 @@ def _collect_collaboration_context(ctx: HtmlBuildContext, creator: Dict, creator
         "nationality": creator["nationality"],
         "active_since": creator["active_since"],
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-        "portrait_orientation": _infer_image_orientation(thumb_path),
+        "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
