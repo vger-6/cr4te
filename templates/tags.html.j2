@@ -32,7 +32,8 @@
         <div class="tag-category" id="{{ category | lower | replace(' ', '-') }}">
           <strong>{{ category }}:</strong>
           {% for tag in tag_list %}
-            <a class="tag" href="index.html?tag={{ tag }}">{{ tag }}</a>
+            {% set is_generic_tag = category.lower() == 'tag' %}
+            <a class="tag" href="index.html?tag={{ (tag if is_generic_tag else category ~ ':' ~ tag) }}">{{ tag }}</a>
           {% endfor %}
         </div>
         {% endfor %}

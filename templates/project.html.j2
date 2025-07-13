@@ -148,7 +148,8 @@
                 <div class="tag-category">
                   <strong>{{ category }}:</strong>
                   {% for tag in tags %}
-                    <a class="tag" href="{{ path_to_root }}projects.html?tag={{ tag }}">{{ tag }}</a>
+                    {% set is_generic_tag = category.lower() == 'tag' %}
+                    <a class="tag" href="{{ path_to_root }}projects.html?tag={{ (tag if is_generic_tag else category ~ ':' ~ tag) }}">{{ tag }}</a>
                   {% endfor %}
                 </div>
               {% endfor %}
