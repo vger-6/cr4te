@@ -2,7 +2,7 @@ import json
 import re
 from enum import Enum
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime
 from collections import defaultdict
 
@@ -254,33 +254,32 @@ def _resolve_creator_collaborations(creators: List[Dict]) -> None:
             manual_collabs = creator.get("collaborations", [])
             creator["collaborations"] = sorted(set(auto_collabs + manual_collabs))
             
-def _write_json_files(creators: List[Dict], base_path: Path) -> None:
+def _write_json_files(creator_records: List[Tuple[Path, Dict]]) -> None:
     """
-    Writes each creator's JSON data to <base_path>/<creator_name>/cr4te.json.
+    Writes each creator's JSON data to <creator_dir>/cr4te.json.
     """
-    for creator in creators:
-        json_path = base_path / creator["name"] / constants.CR4TE_JSON_FILE_NAME
+    for creator_dir, creator_data in creator_records:
+        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(creator, f, indent=2)
+            json.dump(creator_data, f, indent=2)
             
 def build_creator_json_files(input_dir: Path, media_rules: Dict):
     ctx = JsonBuildContext(input_dir, media_rules)
 
-    creators = []
-
+    creator_records = []
     for creator_dir in sorted(ctx.input_dir.iterdir()):
         if not creator_dir.is_dir() or creator_dir.name.startswith(ctx.global_exclude_prefix):
             continue
         print(f"Processing creator: {creator_dir.name}")
-        creator = _build_creator(ctx, creator_dir)
-        creators.append(creator)
+        creator_data = _build_creator(ctx, creator_dir)
+        creator_records.append((creator_dir, creator_data))
 
-    _resolve_creator_collaborations(creators)
+    _resolve_creator_collaborations([creator_data for _, creator_data in creator_records])
     
-    for creator in creators:
-        _validate_creator(creator)
+    for _, creator_data in creator_records:
+        _validate_creator(creator_data)
 
-    _write_json_files(creators, ctx.input_dir)
+    _write_json_files(creator_records)
     
 def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
     total = 0
