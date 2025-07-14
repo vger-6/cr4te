@@ -29,7 +29,7 @@ FLAG_OUTPUT = "--output"
 FLAG_OPEN = "--open"
 FLAG_FORCE = "--force"
 FLAG_CLEAN = "--clean"
-FLAG_PRINT_CONFIG_ONLY = "--print-config-only"
+FLAG_PRINT_CONFIG = "--print-config"
 
 def _validate_input_dir(path_str: str) -> Optional[Path]:
     input_dir = Path(path_str).resolve()
@@ -62,7 +62,7 @@ def main():
     build_parser.add_argument(FLAG_OPEN, action='store_true', help="Open index.html in the default browser after building.")
     build_parser.add_argument(FLAG_FORCE, action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     build_parser.add_argument(FLAG_CLEAN, action="store_true", help=f"Also delete the thumbnails folder (only valid with {FLAG_FORCE})")
-    build_parser.add_argument(FLAG_PRINT_CONFIG_ONLY, action="store_true", help="Print adjusted configuration and exit (no file operations or build)")
+    build_parser.add_argument(FLAG_PRINT_CONFIG, action="store_true", help="Print adjusted configuration and exit (no file operations or build)")
     
     # clean-json
     clean_parser = subparsers.add_parser("clean-json", help="Delete cr4te.json files from all creator folders")
@@ -73,13 +73,13 @@ def main():
     args = parser.parse_args()
     
     if args.command == "build":
-        if not args.print_config_only:
+        if not args.print_config:
             if not args.input:
-                parser.error(f"argument {FLAG_INPUT_SHORT}/{FLAG_INPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
+                parser.error(f"argument {FLAG_INPUT_SHORT}/{FLAG_INPUT} is required unless {FLAG_PRINT_CONFIG} is used")
             if not args.output:
-                parser.error(f"argument {FLAG_OUTPUT_SHORT}/{FLAG_OUTPUT} is required unless {FLAG_PRINT_CONFIG_ONLY} is used")
+                parser.error(f"argument {FLAG_OUTPUT_SHORT}/{FLAG_OUTPUT} is required unless {FLAG_PRINT_CONFIG} is used")
         
-        if not args.print_config_only or sys.stdout.isatty():
+        if not args.print_config or sys.stdout.isatty():
             if args.auto_find_portraits and args.hide_portraits:
                 print(f"[Warning] Both {FLAG_AUTO_FIND_PORTRAITS} and {FLAG_HIDE_PORTRAITS} are set. "
                       "Automatic portrait finding will still run, but portraits will not be shown in the output.",
@@ -96,7 +96,7 @@ def main():
             domain=Domain(args.domain) if args.domain else None
         )
 
-        if args.print_config_only:
+        if args.print_config:
             # Only warn if output is not redirected
             if sys.stdout.isatty():
                 ignored_flags = []
