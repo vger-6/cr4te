@@ -6,7 +6,7 @@ from typing import List
 __all__ = ["markdown_to_html", "read_text", "slugify", "multi_split"]
 
 def markdown_to_html(text: str) -> str:
-    return markdown.markdown(text, extensions=["nl2br"])
+    return markdown.markdown(text, extensions=["nl2br", "tables"])
     
 def read_text(text_path: Path) -> str:
     if text_path.exists() and text_path.is_file():

@@ -120,6 +120,17 @@ h1 {
   list-style: disc;
 }
 
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown th,
+.markdown td {
+  padding-right: 1rem;
+  text-align: left;
+}
+
 a {
   color: var(--link-color);
   text-decoration: none;
@@ -326,6 +337,7 @@ a:focus {
   padding: 0.5rem 1rem;
   background-color: var(--track-odd);
   color: var(--text-color);
+  transition: color 0.2s, background-color 0.2s;
 }
 
 .audio-gallery li:nth-child(even) {
