@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import config_manager as cfg
 from enums.image_sample_strategy import ImageSampleStrategy
-from enums.domain_preset import DomainPreset
+from enums.domain import Domain
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import build_creator_json_files, clean_creator_json_files
 
@@ -54,7 +54,7 @@ def main():
     build_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, help="Path to the Creators folder")
     build_parser.add_argument(FLAG_OUTPUT_SHORT, FLAG_OUTPUT, help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
-    build_parser.add_argument("--domain-preset", choices=[m.value for m in DomainPreset], help="Apply a common domain preset")
+    build_parser.add_argument("--domain", choices=[m.value for m in Domain], help="Apply a domain-specific configuration preset")
     build_parser.add_argument("--max-images", type=int, help="Maximum number of images to include per media group")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
     build_parser.add_argument(FLAG_AUTO_FIND_PORTRAITS, action="store_true", help="Search folders recursively to find a fitting portrait")
@@ -93,7 +93,7 @@ def main():
             image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
             auto_find_portraits=args.auto_find_portraits,
             hide_portraits=args.hide_portraits,
-            domain_preset=DomainPreset(args.domain_preset) if args.domain_preset else None
+            domain=Domain(args.domain) if args.domain else None
         )
 
         if args.print_config_only:

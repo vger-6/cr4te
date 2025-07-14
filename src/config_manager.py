@@ -9,7 +9,7 @@ from validators.config_schema import AppConfig
 from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
 from enums.media_type import MediaType
-from enums.domain_preset import DomainPreset
+from enums.domain import Domain
 from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 
 __all__ = ["load_config", "apply_cli_overrides"]
@@ -110,11 +110,11 @@ def load_config(user_config_path: Path = None) -> Dict:
 
     return config
        
-def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain_preset: Optional[DomainPreset] = None) -> Dict:
-    if domain_preset is not None:
-        overrides = _get_domain_presets(domain_preset)
-        config["html_settings"].update(overrides["html_settings"])
-        config["media_rules"].update(overrides["media_rules"])
+def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain: Optional[Domain] = None) -> Dict:
+    if domain is not None:
+        preset = _get_preset(domain)
+        config["html_settings"].update(preset["html_settings"])
+        config["media_rules"].update(preset["media_rules"])
     if image_gallery_max is not None:
         config["html_settings"]["image_gallery_max"] = image_gallery_max
     if image_sample_strategy is not None:
@@ -128,13 +128,13 @@ def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, i
 
     return config
  
-def _get_domain_presets(preset: DomainPreset) -> Dict:
+def _get_preset(domain: Domain) -> Dict:
     """
-    Returns all config overrides for the selected domain preset, 
+    Returns all config overrides for the selected domain, 
     including labels, media ordering, and gallery settings.
     """
-    match preset:
-        case DomainPreset.FILM:
+    match domain:
+        case Domain.FILM:
             return {
                 "html_settings": {
                     "nav_creators_label": "Directors",
@@ -151,7 +151,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                  },
                "media_rules": {},
             }
-        case DomainPreset.MUSIC:
+        case Domain.MUSIC:
             return {
                 "html_settings": {
                     "nav_creators_label": "Musicians",
@@ -170,9 +170,9 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                 },
                "media_rules": {},
             }
-        case DomainPreset.ART:
+        case Domain.ART:
             return {"html_settings": {}, "media_rules": {}}
-        case DomainPreset.BOOK:
+        case Domain.BOOK:
             return {
                 "html_settings": {
                     "nav_creators_label": "Author",
@@ -191,7 +191,7 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                 },
                "media_rules": {},
             }
-        case DomainPreset.MODEL:
+        case Domain.MODEL:
             return {
                 "html_settings": {
                     "nav_creators_label": "Models",
@@ -209,5 +209,5 @@ def _get_domain_presets(preset: DomainPreset) -> Dict:
                "media_rules": {},
             }
         case _:
-            raise ValueError(f"Unknown preset: {preset}")
+            raise ValueError(f"Unknown domain: {domain}")
 
