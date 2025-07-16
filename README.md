@@ -97,7 +97,7 @@ python cr4te.py build -i <input_folder> -o <output_folder> --config path/to/my_c
 ### Optional: Apply a Domain Preset
 
 ```bash
-python cr4te.py build -i <input_folder> -o <output_folder> --domain-preset film
+python cr4te.py build -i <input_folder> -o <output_folder> --domain film
 ```
 
 Available presets:
@@ -111,22 +111,22 @@ If `--config` is not specified, cr4te uses internal defaults.
 
 Additional options:
 
-* `--max-images` — Set maximum images per media group (overrides config). The default is 20
+* `--image-sample-max` — Set maximum images per media group (overrides config). The default is 20
 * `--image-sample-strategy` — Image selection strategy: `spread`, `head`, `all`
   * `spread` (default): even sampling throughout the list
   * `head`: take the first N images
   * `all`: take all images
 
-If `--image-sample-strategy all` is used `--max-images` has no effect.
+If `--image-sample-strategy all` is used `--image-sample-max` has no effect.
 
 ---
 
 ## Configuration
 
-Your configuration file should be in JSON format and can override labels and media matching rules. Use the `--print-config-only` flag to print a config file on screen or redirect it to a json file for further adjustment and later use.
+Your configuration file should be in JSON format and can override labels and media matching rules. Use the `--print-config` flag to print a config file on screen or redirect it to a json file for further adjustment and later use.
 
 ```bash
-python cr4te.py build [options] --print-config-only > my_config.json
+python cr4te.py build [options] --print-config > my_config.json
 ```
 
 ---
@@ -159,11 +159,9 @@ See this [`cr4te.json`](https://github.com/vger-6/cr4te/blob/main/data/example/A
 
 * `index.html` — Overview page
 * `projects.html` — Projects overview page
-* `creators/<creator>.html` — Individual profile pages
-* `projects/<project>.html` — Individual project pages
 * `tags.html` — Browse by tags
 
-Thumbnails are automatically generated into `/thumbnails/`.
+Thumbnails and HTML pages are automatically generated into `/thumbnails/` and `/html/` repectively.
 
 ---
 
@@ -206,12 +204,6 @@ Also, ensure:
 
 ## Versioning
 Current version: 0.0.1
-
-This project follows Semantic Versioning principles:
-
-* Major (X): Breaking changes
-* Minor (Y): Backwards-compatible new features
-* Patch (Z): Bug fixes and minor improvements
 
 ## License
 
