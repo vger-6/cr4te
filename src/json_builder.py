@@ -89,17 +89,25 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
         "texts": [],
         "is_root": False
     })
-    
+
     # Helper to check max depth
     def is_within_search_depth(path: Path) -> bool:
         return ctx.max_search_depth is None or len(path.relative_to(media_dir).parts) <= ctx.max_search_depth
 
-    for media_path in (
-        p for p in media_dir.rglob("*")
-        if p.is_file()
-        and is_within_search_depth(p)
-        and not p.name.startswith(ctx.global_exclude_prefix)
-    ):
+    # Helper to check whether a file or any of its parents are excluded
+    def is_excluded(path: Path) -> bool:
+        if path.name.startswith(ctx.global_exclude_prefix):
+            return True
+        return any(parent.name.startswith(ctx.global_exclude_prefix) for parent in path.parents)
+
+    for media_path in media_dir.rglob("*"):
+        if not media_path.is_file():
+            continue
+        if is_excluded(media_path):
+            continue
+        if not is_within_search_depth(media_path):
+            continue
+
         suffix = media_path.suffix.lower()
         stem = media_path.stem.lower()
         rel_to_input = media_path.relative_to(ctx.input_dir)
