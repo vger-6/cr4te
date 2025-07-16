@@ -36,7 +36,7 @@ class HtmlSettings(BaseModel):
 
     tags_page_title: str
     
-    image_gallery_max: conint(ge=0)
+    image_gallery_sample_max: conint(ge=0)
     image_gallery_sample_strategy: ImageSampleStrategy
     
     media_type_order: List[MediaType]

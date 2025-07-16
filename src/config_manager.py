@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
         
         "tags_page_title": "Tags",
         
-        "image_gallery_max": 20,
+        "image_gallery_sample_max": 20,
         "image_gallery_sample_strategy": ImageSampleStrategy.SPREAD,
         
         "media_type_order": [MediaType.VIDEO, MediaType.AUDIO, MediaType.IMAGE, MediaType.TEXT, MediaType.DOCUMENT],
@@ -110,13 +110,13 @@ def load_config(user_config_path: Path = None) -> Dict:
 
     return config
        
-def apply_cli_overrides(config: Dict, image_gallery_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain: Optional[Domain] = None) -> Dict:
+def apply_cli_overrides(config: Dict, image_sample_max: Optional[int] = None, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain: Optional[Domain] = None) -> Dict:
     if domain is not None:
         preset = _get_preset(domain)
         config["html_settings"].update(preset["html_settings"])
         config["media_rules"].update(preset["media_rules"])
-    if image_gallery_max is not None:
-        config["html_settings"]["image_gallery_max"] = image_gallery_max
+    if image_sample_max is not None:
+        config["html_settings"]["image_gallery_sample_max"] = image_sample_max
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
     if auto_find_portraits is True:

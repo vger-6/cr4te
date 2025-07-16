@@ -55,7 +55,7 @@ def main():
     build_parser.add_argument(FLAG_OUTPUT_SHORT, FLAG_OUTPUT, help="Path to the HTML output folder")
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
     build_parser.add_argument("--domain", choices=[m.value for m in Domain], help="Apply a domain-specific configuration preset")
-    build_parser.add_argument("--max-images", type=int, help="Maximum number of images to include per media group")
+    build_parser.add_argument("--image-sample-max", type=int, help="Maximum number of images to include per folder")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
     build_parser.add_argument(FLAG_AUTO_FIND_PORTRAITS, action="store_true", help="Search folders recursively to find a fitting portrait")
     build_parser.add_argument(FLAG_HIDE_PORTRAITS, action="store_true", help="Hide portraits on all pages")
@@ -89,7 +89,7 @@ def main():
         
         config = cfg.apply_cli_overrides(
             config,
-            image_gallery_max=args.max_images,
+            image_sample_max=args.image_sample_max,
             image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
             auto_find_portraits=args.auto_find_portraits,
             hide_portraits=args.hide_portraits,

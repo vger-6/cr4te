@@ -64,8 +64,8 @@ class HtmlBuildContext(BaseContext):
         return self.html_settings["project_page_image_section_base_title"]
 
     @property
-    def image_gallery_max(self) -> int:
-        return self.html_settings["image_gallery_max"]
+    def image_gallery_sample_max(self) -> int:
+        return self.html_settings["image_gallery_sample_max"]
 
     @property
     def image_gallery_sample_strategy(self) -> str:

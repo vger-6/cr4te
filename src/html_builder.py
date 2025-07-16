@@ -208,7 +208,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
     media_groups_context = []
 
     for media_group in media_groups:
-        rel_image_paths = _sample_images(media_group["images"], ctx.image_gallery_max, ctx.image_gallery_sample_strategy)
+        rel_image_paths = _sample_images(media_group["images"], ctx.image_gallery_sample_max, ctx.image_gallery_sample_strategy)
         rel_video_paths = media_group["videos"]
         rel_track_paths = media_group["tracks"]
         rel_document_paths = media_group["documents"]
