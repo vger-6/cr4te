@@ -53,7 +53,18 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
         try:
             thumb = image_utils.generate_thumbnail(ctx.input_dir / rel_image_path, ctx.get_thumb_height(thumb_type))
             thumb_path.parent.mkdir(parents=True, exist_ok=True)
-            thumb.save(thumb_path, format='JPEG')
+
+            thumb_ext = thumb_path.suffix.lower()
+            match thumb_ext:
+                case '.jpg' | '.jpeg':
+                    format = 'JPEG'
+                case '.png':
+                    format = 'PNG'
+                case _:
+                    raise ValueError(f"Unsupported thumbnail extension: {thumb_ext}")
+
+            thumb.save(thumb_path, format=format)
+
         except Exception as e:
             print(f"Error creating thumbnail for {rel_image_path}: {e}")
 
