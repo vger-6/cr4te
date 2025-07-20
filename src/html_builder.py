@@ -205,7 +205,7 @@ def _sort_sections_by_type(sections: List[Dict], media_type_order: List[str]) ->
     
 def _get_section_titles(media_group: Dict, audio_section_title: str, image_section_title: str) -> Dict[str, str]:
     if not media_group["is_root"]:
-        title = Path(media_group["folder_path"]).name.title()
+        title = Path(media_group["rel_dir_path"]).name.title()
 
         audio_section_title = title
         image_section_title = title
@@ -585,7 +585,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
     for creator_path in sorted(input_dir.iterdir()):
         if not creator_path.is_dir():
             continue
-        json_path = creator_path / constants.CR4TE_JSON_FILE_NAME
+        json_path = creator_path / constants.CR4TE_JSON_REL_PATH
         if json_path.exists():
             raw_data = json_utils.load_json(json_path)
             # Validate and normalize structure

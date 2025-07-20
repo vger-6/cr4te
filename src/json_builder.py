@@ -1,5 +1,8 @@
 import json
 import re
+import os
+import shutil
+import hashlib
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Tuple
@@ -36,14 +39,24 @@ def _validate_date_string(date_str: str) -> str:
     except ValueError:
         return ""
         
-def _validate_creator(creator: Dict) -> None:
+def _run_creator_validation(creator: Dict) -> Tuple[bool, Optional[str]]:
     try:
         CreatorSchema(**creator)
+        return True, None
     except ValidationError as e:
         name = creator.get("name", "<unknown>")
         error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
         formatted = "\n".join(error_lines)
-        raise ValueError(f"Validation failed for creator '{name}':\n{formatted}")
+        return False, f"Validation failed for creator '{name}':\n{formatted}"
+        
+def _validate_creator(creator: Dict) -> None:
+    is_valid, error_message = _run_creator_validation(creator)
+    if not is_valid:
+        raise ValueError(error_message)
+        
+def _is_valid_creator(creator: Dict) -> bool:
+    is_valid, _ = _run_creator_validation(creator)
+    return is_valid
     
 def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
     return [
@@ -98,7 +111,7 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
     def is_excluded(path: Path) -> bool:
         if path.name.startswith(ctx.global_exclude_prefix):
             return True
-        return any(parent.name.startswith(ctx.global_exclude_prefix) for parent in path.parents)
+        return any(parent.name.startswith((ctx.global_exclude_prefix, '.')) for parent in path.parents)
 
     for media_path in media_dir.rglob("*"):
         if not media_path.is_file():
@@ -129,14 +142,11 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
 
     return media_map
     
-def _build_media_groups(ctx: JsonBuildContext, media_dir: Path, existing_media_groups: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def _build_media_groups(ctx: JsonBuildContext, media_dir: Path) -> List[Dict[str, Any]]:
     media_groups = []
     media_map = _build_media_map(ctx, media_dir)
-    #existing_media_groups_by_name = {g["folder_path"]: g for g in existing_media_groups if "folder_path" in g}
 
     for rel_dir_path, media in media_map.items():
-        #existing_media_group = existing_media_groups_by_name.get(folder_path, {})
-
         media_group = {
             "is_root": media["is_root"],
             "videos": sorted(media["videos"]),
@@ -144,7 +154,7 @@ def _build_media_groups(ctx: JsonBuildContext, media_dir: Path, existing_media_g
             "images": sorted(media["images"]),
             "documents": sorted(media["documents"]),
             "texts": sorted(media["texts"]),
-            "folder_path": rel_dir_path
+            "rel_dir_path": rel_dir_path
         }
 
         media_groups.append(media_group)
@@ -156,7 +166,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
     
     projects = []
     for project_dir in sorted(creator_dir.iterdir()):
-        if not project_dir.is_dir() or project_dir.name.startswith((ctx.global_exclude_prefix, ctx.metadata_folder_name)):
+        if not project_dir.is_dir() or project_dir.name.startswith((ctx.global_exclude_prefix, ctx.metadata_folder_name, '.')):
             continue
 
         project_title = project_dir.name.strip()
@@ -172,7 +182,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
             "release_date": _validate_date_string(existing_project.get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
             "info": text_utils.read_text(project_dir / ctx.readme_file_name) or existing_project.get("info", ""),
-            "media_groups": _build_media_groups(ctx, project_dir, existing_project.get("media_groups", [])),
+            "media_groups": _build_media_groups(ctx, project_dir),
             "tags": existing_project.get("tags", [])
         }
         
@@ -180,17 +190,17 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
 
     return projects
     
-def _build_creator_media_groups(ctx: JsonBuildContext, creator_dir: Path, existing_media_groups: List[Dict]) -> List[Dict]:
+def _build_creator_media_groups(ctx: JsonBuildContext, creator_dir: Path) -> List[Dict]:
     media_groups = []
 
     # Metadata folder media
     metadata_dir = creator_dir / ctx.metadata_folder_name
     if metadata_dir.exists():
-        media_groups = _build_media_groups(ctx, metadata_dir, existing_media_groups)
+        media_groups = _build_media_groups(ctx, metadata_dir)
 
     # Root-level media (shallow only)
     shallow_ctx = JsonBuildContext(input_dir=ctx.input_dir, media_rules={**ctx.media_rules, "max_search_depth": 1})
-    media_groups.extend(_build_media_groups(shallow_ctx, creator_dir, existing_media_groups))
+    media_groups.extend(_build_media_groups(shallow_ctx, creator_dir))
 
     return media_groups
         
@@ -203,10 +213,38 @@ def _load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
         return json_utils.load_json(json_path)
     return {}
+    
+def _folder_digest(path: Path) -> str:
+    """Compute a hash representing the state of a folder's contents.
+    
+    Includes relative file paths, mtimes, and sizes — but not file content.
+    """
+    h = hashlib.sha256()
+    
+    for file_path in sorted(path.rglob("*")):
+        if any(parent.name.startswith('.') for parent in file_path.parents):
+            continue
+        if file_path.is_file():
+            rel_path = file_path.relative_to(path)
+            stat = file_path.stat()
+            h.update(str(rel_path).encode()) 
+            h.update(str(stat.st_mtime_ns).encode())
+            h.update(str(stat.st_size).encode())
+            
+    return h.hexdigest()
 
 def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     creator_name = creator_dir.name
-    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_FILE_NAME)
+    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_REL_PATH)
+    
+    folder_digest = _folder_digest(creator_dir)
+    
+    if _is_valid_creator(existing_creator):
+        if folder_digest == existing_creator.get('folder_digest', ''):
+            print("\tNo change detected.")
+            return existing_creator
+    else:
+        print("\tUpgrade required.")
     
     # Find portrait
     all_images = _find_all_images(creator_dir, ctx.global_exclude_prefix)
@@ -232,8 +270,9 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": _collect_creator_projects(ctx, creator_dir, existing_creator),
-        "media_groups": _build_creator_media_groups(ctx, creator_dir, existing_creator.get("media_groups", [])),
+        "media_groups": _build_creator_media_groups(ctx, creator_dir),
         "collaborations": [],
+        "folder_digest": folder_digest,
     }
     
     if is_collab:
@@ -267,7 +306,13 @@ def _write_json_files(creator_records: List[Tuple[Path, Dict]]) -> None:
     Writes each creator's JSON data to <creator_dir>/cr4te.json.
     """
     for creator_dir, creator_data in creator_records:
-        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+        json_path = creator_dir / constants.CR4TE_JSON_REL_PATH
+        
+        existing_creator = _load_existing_json(json_path)
+        if existing_creator == creator_data:
+            # print(f"Skipped writing unchanged JSON file for: {creator_data['name']}")
+            continue
+        
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(creator_data, f, indent=2)
             
@@ -276,9 +321,11 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
 
     creator_records = []
     for creator_dir in sorted(ctx.input_dir.iterdir()):
-        if not creator_dir.is_dir() or creator_dir.name.startswith(ctx.global_exclude_prefix):
+        if not creator_dir.is_dir() or creator_dir.name.startswith((ctx.global_exclude_prefix, '.')):
             continue
-        print(f"Processing creator: {creator_dir.name}")
+        print(f"Processing: {creator_dir.name}")
+        json_path = creator_dir / constants.CR4TE_JSON_REL_PATH
+        json_path.parent.mkdir(parents=True, exist_ok=True)
         creator_data = _build_creator(ctx, creator_dir)
         creator_records.append((creator_dir, creator_data))
 
@@ -298,22 +345,22 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
         if not creator_dir.is_dir():
             continue
 
-        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
-        if json_path.exists():
+        cr4te_dir = (creator_dir / constants.CR4TE_JSON_REL_PATH).parent
+        if cr4te_dir.exists() and cr4te_dir.is_dir():
             total += 1
-            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
+            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {cr4te_dir}")
             if not dry_run:
                 try:
-                    json_path.unlink()
+                    shutil.rmtree(cr4te_dir)
                     deleted += 1
                 except Exception as e:
-                    print(f"Error deleting {json_path}: {e}")
+                    print(f"Error deleting {cr4te_dir}: {e}")
                     skipped += 1
         else:
             continue
 
     print("\nSummary:")
-    print(f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}")
+    print(f"\tTotal {constants.CR4TE_JSON_REL_PATH} files found: {total}")
     print(f"\tDeleted: {deleted}")
     print(f"\tSkipped/errors: {skipped}")
     if dry_run:

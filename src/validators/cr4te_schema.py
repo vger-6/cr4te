@@ -16,7 +16,10 @@ class MediaGroup(BaseModel):
     images: List[str]
     documents: List[str]
     texts: List[str]
-    folder_path: str
+    rel_dir_path: str
+    
+    class Config:
+        extra = "forbid"
 
 class Project(BaseModel):
     title: str
@@ -29,6 +32,9 @@ class Project(BaseModel):
     @validator("release_date")
     def validate_release_date(cls, v):
         return validate_optional_iso_date(v)
+        
+    class Config:
+        extra = "forbid"
 
 class Creator(BaseModel):
     name: str
@@ -44,8 +50,12 @@ class Creator(BaseModel):
     media_groups: List[MediaGroup]
     members: List[str]
     collaborations: List[str]
+    folder_digest: str
 
     @validator("born_or_founded", "active_since")
     def validate_optional_dates(cls, v):
         return validate_optional_iso_date(v)
+        
+    class Config:
+        extra = "forbid"
 
