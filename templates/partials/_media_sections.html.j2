@@ -100,7 +100,7 @@
                 {% for image in section.images %}
                   <div class="image-wrapper">
                     <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank">
-                      <img src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}">
+                      <img src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}" loading="lazy">
                       {% if html_settings.project_page_image_gallery_captions_visible %}
                         <div class=image-caption>
                           <span>{{ image.caption }}</span>

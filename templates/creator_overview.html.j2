@@ -45,7 +45,7 @@
                data-search-text="{{ creator.search_text }}">
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
               {% if not html_settings.hide_portraits %}
-                <img src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}">
+                <img src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">
               {% endif %}
               <div class=image-caption>
                 <span>{{ creator.name }}</span>

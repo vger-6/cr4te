@@ -44,7 +44,7 @@
           <div class="image-wrapper image-card"
                data-search-text="{{ project.search_text | default('') }}">
             <a href="{{ project.rel_html_path }}" title="{{ project.title }}">
-              <img src="{{ project.rel_thumbnail_path }}" alt="Poster for {{ project.title }}">
+              <img src="{{ project.rel_thumbnail_path }}" alt="Poster for {{ project.title }}" loading="lazy">
               <div class=image-caption>
                 <span>{{ project.title }}</span><br>
                 <span><small>{{ project.creator_name }}</small></span>
