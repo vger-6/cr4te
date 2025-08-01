@@ -241,10 +241,8 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     
     if _is_valid_creator(existing_creator):
         if folder_digest == existing_creator.get('folder_digest', ''):
-            print("\tNo change detected.")
+            #print("\tNo change detected.")
             return existing_creator
-    else:
-        print("\tUpgrade required.")
     
     # Find portrait
     all_images = _find_all_images(creator_dir, ctx.global_exclude_prefix)
