@@ -39,6 +39,9 @@ def _validate_date_string(date_str: str) -> str:
     except ValueError:
         return ""
         
+def _is_excluded_path(path: Path, exclude_prefix: str) -> bool:
+    return any(part.startswith(exclude_prefix) or part.startswith('.') for part in path.parts)
+        
 def _run_creator_validation(creator: Dict) -> Tuple[bool, Optional[str]]:
     try:
         CreatorSchema(**creator)
@@ -61,7 +64,7 @@ def _is_valid_creator(creator: Dict) -> bool:
 def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
     return [
         p for p in root.rglob("*")
-        if p.suffix.lower() in IMAGE_EXTS and not p.name.startswith(exclude_prefix)
+        if p.suffix.lower() in IMAGE_EXTS and not _is_excluded_path(p, exclude_prefix)
     ]
     
 def _find_image_by_name(image_paths: List[Path], name: str) -> Optional[Path]:
@@ -107,16 +110,10 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
     def is_within_search_depth(path: Path) -> bool:
         return ctx.max_search_depth is None or len(path.relative_to(media_dir).parts) <= ctx.max_search_depth
 
-    # Helper to check whether a file or any of its parents are excluded
-    def is_excluded(path: Path) -> bool:
-        if path.name.startswith(ctx.global_exclude_prefix):
-            return True
-        return any(parent.name.startswith((ctx.global_exclude_prefix, '.')) for parent in path.parents)
-
     for media_path in media_dir.rglob("*"):
         if not media_path.is_file():
             continue
-        if is_excluded(media_path):
+        if _is_excluded_path(media_path, ctx.global_exclude_prefix):
             continue
         if not is_within_search_depth(media_path):
             continue
@@ -166,7 +163,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
     
     projects = []
     for project_dir in sorted(creator_dir.iterdir()):
-        if not project_dir.is_dir() or project_dir.name.startswith((ctx.global_exclude_prefix, ctx.metadata_folder_name, '.')):
+        if not project_dir.is_dir() or _is_excluded_path(project_dir, ctx.global_exclude_prefix):
             continue
 
         project_title = project_dir.name.strip()
@@ -214,7 +211,7 @@ def _load_existing_json(json_path: Path) -> Dict:
         return json_utils.load_json(json_path)
     return {}
     
-def _folder_digest(path: Path) -> str:
+def _folder_digest(path: Path, exclude_prefix: str) -> str:
     """Compute a hash representing the state of a folder's contents.
     
     Includes relative file paths, mtimes, and sizes — but not file content.
@@ -222,7 +219,7 @@ def _folder_digest(path: Path) -> str:
     h = hashlib.sha256()
     
     for file_path in sorted(path.rglob("*")):
-        if any(parent.name.startswith('.') for parent in file_path.parents):
+        if _is_excluded_path(file_path, exclude_prefix):
             continue
         if file_path.is_file():
             rel_path = file_path.relative_to(path)
@@ -237,7 +234,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     creator_name = creator_dir.name
     existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_REL_PATH)
     
-    folder_digest = _folder_digest(creator_dir)
+    folder_digest = _folder_digest(creator_dir, ctx.global_exclude_prefix)
     
     if _is_valid_creator(existing_creator):
         if folder_digest == existing_creator.get('folder_digest', ''):
@@ -319,7 +316,7 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
 
     creator_records = []
     for creator_dir in sorted(ctx.input_dir.iterdir()):
-        if not creator_dir.is_dir() or creator_dir.name.startswith((ctx.global_exclude_prefix, '.')):
+        if not creator_dir.is_dir() or _is_excluded_path(creator_dir, ctx.global_exclude_prefix):
             continue
         print(f"Processing: {creator_dir.name}")
         json_path = creator_dir / constants.CR4TE_JSON_REL_PATH
