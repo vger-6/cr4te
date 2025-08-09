@@ -585,7 +585,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
     for creator_path in sorted(input_dir.iterdir()):
         if not creator_path.is_dir():
             continue
-        json_path = creator_path / constants.CR4TE_JSON_REL_PATH
+        json_path = creator_path / constants.CR4TE_JSON_FILE_NAME
         if json_path.exists():
             raw_data = json_utils.load_json(json_path)
             # Validate and normalize structure

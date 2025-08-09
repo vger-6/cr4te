@@ -50,7 +50,6 @@ class Creator(BaseModel):
     media_groups: List[MediaGroup]
     members: List[str]
     collaborations: List[str]
-    folder_digest: str
 
     @validator("born_or_founded", "active_since")
     def validate_optional_dates(cls, v):

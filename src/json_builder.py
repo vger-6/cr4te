@@ -1,8 +1,5 @@
 import json
 import re
-import os
-import shutil
-import hashlib
 from enum import Enum
 from pathlib import Path
 from typing import List, Dict, Optional, Any, Tuple
@@ -39,32 +36,23 @@ def _validate_date_string(date_str: str) -> str:
     except ValueError:
         return ""
         
-def _is_excluded_path(path: Path, exclude_prefix: str) -> bool:
-    return any(part.startswith(exclude_prefix) or part.startswith('.') for part in path.parts)
+def _is_excluded_path(path: Path, exclude_prefixes: tuple[str, ...]) -> bool:
+    return any(part.startswith(exclude_prefixes) or part.startswith('.') for part in path.parts)
         
-def _run_creator_validation(creator: Dict) -> Tuple[bool, Optional[str]]:
+def _validate_creator(creator: Dict) -> None:
     try:
         CreatorSchema(**creator)
-        return True, None
+
     except ValidationError as e:
         name = creator.get("name", "<unknown>")
         error_lines = [f"[{name}] {err['loc'][0]}: {err['msg']}" for err in e.errors()]
         formatted = "\n".join(error_lines)
-        return False, f"Validation failed for creator '{name}':\n{formatted}"
-        
-def _validate_creator(creator: Dict) -> None:
-    is_valid, error_message = _run_creator_validation(creator)
-    if not is_valid:
-        raise ValueError(error_message)
-        
-def _is_valid_creator(creator: Dict) -> bool:
-    is_valid, _ = _run_creator_validation(creator)
-    return is_valid
+        raise ValueError(f"Validation failed for creator '{name}':\n{formatted}")
     
-def _find_all_images(root: Path, exclude_prefix: str) -> List[Path]:
+def _find_all_images(root: Path, exclude_prefixes: tuple[str, ...]) -> List[Path]:
     return [
         p for p in root.rglob("*")
-        if p.suffix.lower() in IMAGE_EXTS and not _is_excluded_path(p, exclude_prefix)
+        if p.suffix.lower() in IMAGE_EXTS and not _is_excluded_path(p, exclude_prefixes)
     ]
     
 def _find_image_by_name(image_paths: List[Path], name: str) -> Optional[Path]:
@@ -113,7 +101,7 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
     for media_path in media_dir.rglob("*"):
         if not media_path.is_file():
             continue
-        if _is_excluded_path(media_path, ctx.global_exclude_prefix):
+        if _is_excluded_path(media_path, (ctx.global_exclude_prefix,)):
             continue
         if not is_within_search_depth(media_path):
             continue
@@ -163,7 +151,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
     
     projects = []
     for project_dir in sorted(creator_dir.iterdir()):
-        if not project_dir.is_dir() or _is_excluded_path(project_dir, ctx.global_exclude_prefix):
+        if not project_dir.is_dir() or _is_excluded_path(project_dir, (ctx.global_exclude_prefix, ctx.metadata_folder_name)):
             continue
 
         project_title = project_dir.name.strip()
@@ -171,7 +159,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
         existing_project = existing_projects.get(project_title, {})
 
         # Find cover
-        all_images = _find_all_images(project_dir, ctx.global_exclude_prefix)
+        all_images = _find_all_images(project_dir, (ctx.global_exclude_prefix,))
         cover = _select_best_image(all_images, ctx.cover_basename, Orientation.LANDSCAPE)
 
         project = {
@@ -210,39 +198,13 @@ def _load_existing_json(json_path: Path) -> Dict:
     if json_path.exists():
         return json_utils.load_json(json_path)
     return {}
-    
-def _folder_digest(path: Path, exclude_prefix: str) -> str:
-    """Compute a hash representing the state of a folder's contents.
-    
-    Includes relative file paths, mtimes, and sizes — but not file content.
-    """
-    h = hashlib.sha256()
-    
-    for file_path in sorted(path.rglob("*")):
-        if _is_excluded_path(file_path, exclude_prefix):
-            continue
-        if file_path.is_file():
-            rel_path = file_path.relative_to(path)
-            stat = file_path.stat()
-            h.update(str(rel_path).encode()) 
-            h.update(str(stat.st_mtime_ns).encode())
-            h.update(str(stat.st_size).encode())
-            
-    return h.hexdigest()
 
 def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     creator_name = creator_dir.name
-    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_REL_PATH)
-    
-    folder_digest = _folder_digest(creator_dir, ctx.global_exclude_prefix)
-    
-    if _is_valid_creator(existing_creator):
-        if folder_digest == existing_creator.get('folder_digest', ''):
-            #print("\tNo change detected.")
-            return existing_creator
+    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_FILE_NAME)
     
     # Find portrait
-    all_images = _find_all_images(creator_dir, ctx.global_exclude_prefix)
+    all_images = _find_all_images(creator_dir, (ctx.global_exclude_prefix,))
     portrait = (
         _select_best_image(all_images, ctx.portrait_basename, Orientation.PORTRAIT) 
         if ctx.auto_find_portrait 
@@ -267,7 +229,6 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "projects": _collect_creator_projects(ctx, creator_dir, existing_creator),
         "media_groups": _build_creator_media_groups(ctx, creator_dir),
         "collaborations": [],
-        "folder_digest": folder_digest,
     }
     
     if is_collab:
@@ -301,11 +262,10 @@ def _write_json_files(creator_records: List[Tuple[Path, Dict]]) -> None:
     Writes each creator's JSON data to <creator_dir>/cr4te.json.
     """
     for creator_dir, creator_data in creator_records:
-        json_path = creator_dir / constants.CR4TE_JSON_REL_PATH
+        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
         
-        existing_creator = _load_existing_json(json_path)
-        if existing_creator == creator_data:
-            # print(f"Skipped writing unchanged JSON file for: {creator_data['name']}")
+        existing = _load_existing_json(json_path)
+        if existing == creator_data:
             continue
         
         with open(json_path, 'w', encoding='utf-8') as f:
@@ -316,11 +276,10 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
 
     creator_records = []
     for creator_dir in sorted(ctx.input_dir.iterdir()):
-        if not creator_dir.is_dir() or _is_excluded_path(creator_dir, ctx.global_exclude_prefix):
+        if not creator_dir.is_dir() or _is_excluded_path(creator_dir, (ctx.global_exclude_prefix,)):
             continue
         print(f"Processing: {creator_dir.name}")
-        json_path = creator_dir / constants.CR4TE_JSON_REL_PATH
-        json_path.parent.mkdir(parents=True, exist_ok=True)
+
         creator_data = _build_creator(ctx, creator_dir)
         creator_records.append((creator_dir, creator_data))
 
@@ -340,22 +299,22 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
         if not creator_dir.is_dir():
             continue
 
-        cr4te_dir = (creator_dir / constants.CR4TE_JSON_REL_PATH).parent
-        if cr4te_dir.exists() and cr4te_dir.is_dir():
+        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+        if json_path.exists():
             total += 1
-            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {cr4te_dir}")
+            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
             if not dry_run:
                 try:
-                    shutil.rmtree(cr4te_dir)
+                    json_path.unlink()
                     deleted += 1
                 except Exception as e:
-                    print(f"Error deleting {cr4te_dir}: {e}")
+                    print(f"Error deleting {json_path}: {e}")
                     skipped += 1
         else:
             continue
 
     print("\nSummary:")
-    print(f"\tTotal {constants.CR4TE_JSON_REL_PATH} files found: {total}")
+    print(f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}")
     print(f"\tDeleted: {deleted}")
     print(f"\tSkipped/errors: {skipped}")
     if dry_run:
