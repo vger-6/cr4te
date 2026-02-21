@@ -25,16 +25,30 @@ AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)
 
-# TODO: improve this method and move it to date_utils.py
 def _validate_date_string(date_str: str) -> str:
-    """Ensures the date is in yyyy-mm-dd format, or returns empty string if invalid."""
-    if not date_str or not isinstance(date_str, str):
+    """
+    Validates and normalizes a date string.
+    Accepts:
+        - YYYY
+        - YYYY-MM
+        - YYYY-MM-DD
+    Returns normalized string if valid, otherwise "".
+    """
+    if not isinstance(date_str, str):
         return ""
-    try:
-        parsed_date = datetime.strptime(date_str.strip(), "%Y-%m-%d")
-        return parsed_date.strftime("%Y-%m-%d")  # Normalize
-    except ValueError:
+
+    date_str = date_str.strip()
+    if not date_str:
         return ""
+        
+    for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+        try:
+            parsed = datetime.strptime(date_str, fmt)
+            return parsed.strftime(fmt)
+        except ValueError:
+            continue
+
+    return ""
         
 def _is_excluded_path(path: Path, exclude_prefixes: tuple[str, ...]) -> bool:
     return any(part.startswith(exclude_prefixes) or part.startswith('.') for part in path.parts)

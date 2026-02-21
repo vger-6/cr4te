@@ -6,11 +6,20 @@ from typing import Optional
 __all__ = ["parse_date", "calculate_age", "calculate_age_from_strings"]
 
 def parse_date(date_str: str) -> Optional[datetime]:
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d")
-    except (TypeError, ValueError) as e:
-        print(f"Failed to parse date '{date_str}': {e}")
+    if not isinstance(date_str, str):
         return None
+
+    date_str = date_str.strip()
+    if not date_str:
+        return None
+    for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+
+    print(f"Failed to parse date '{date_str}'")
+    return None
 
 def calculate_age(dob: datetime, date: datetime) -> Optional[int]:
     try:

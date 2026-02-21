@@ -5,9 +5,19 @@ import re
 def validate_optional_iso_date(v: str) -> str:
     if not v:
         return v
+
+    v = v.strip()
+
+    if re.fullmatch(r"\d{4}", v):
+        return v
+
+    if re.fullmatch(r"\d{4}-\d{2}", v):
+        return v
+
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
         return v
-    raise ValueError("must be in yyyy-mm-dd format or empty")
+
+    raise ValueError("must be in yyyy, yyyy-mm, yyyy-mm-dd format or empty")
 
 class MediaGroup(BaseModel):
     is_root: bool
