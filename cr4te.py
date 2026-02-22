@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import config_manager as cfg
 from enums.image_sample_strategy import ImageSampleStrategy
+from enums.portrait_strategy import PortraitStrategy
 from enums.domain import Domain
 from html_builder import clear_output_folder, build_html_pages
 from json_builder import build_creator_json_files, clean_creator_json_files
@@ -22,8 +23,6 @@ FLAG_INPUT_SHORT = "-i"
 FLAG_OUTPUT_SHORT = "-o"
 
 # Long Flags
-FLAG_AUTO_FIND_PORTRAITS = "--auto-find-portraits"
-FLAG_HIDE_PORTRAITS = "--hide-portraits"
 FLAG_INPUT = "--input"
 FLAG_OUTPUT = "--output"
 FLAG_OPEN = "--open"
@@ -56,8 +55,7 @@ def main():
     build_parser.add_argument("--config", help="Path to configuration file (optional)")
     build_parser.add_argument("--domain", choices=[m.value for m in Domain], help="Apply a domain-specific configuration preset")
     build_parser.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
-    build_parser.add_argument(FLAG_AUTO_FIND_PORTRAITS, action="store_true", help="Search folders recursively to find a fitting portrait")
-    build_parser.add_argument(FLAG_HIDE_PORTRAITS, action="store_true", help="Hide portraits on all pages")
+    build_parser.add_argument("--portrait-strategy", choices=[s.value for s in PortraitStrategy], help="Strategy to find portraits")
     build_parser.add_argument(FLAG_OPEN, action='store_true', help="Open index.html in the default browser after building.")
     build_parser.add_argument(FLAG_FORCE, action="store_true", help="Delete the output folder and its contents (except thumbnails) without confirmation")
     build_parser.add_argument(FLAG_CLEAN, action="store_true", help=f"Also delete the thumbnails folder (only valid with {FLAG_FORCE})")
@@ -77,20 +75,13 @@ def main():
                 parser.error(f"argument {FLAG_INPUT_SHORT}/{FLAG_INPUT} is required unless {FLAG_PRINT_CONFIG} is used")
             if not args.output:
                 parser.error(f"argument {FLAG_OUTPUT_SHORT}/{FLAG_OUTPUT} is required unless {FLAG_PRINT_CONFIG} is used")
-        
-        if not args.print_config or sys.stdout.isatty():
-            if args.auto_find_portraits and args.hide_portraits:
-                print(f"[Warning] Both {FLAG_AUTO_FIND_PORTRAITS} and {FLAG_HIDE_PORTRAITS} are set. "
-                      "Automatic portrait finding will still run, but portraits will not be shown in the output.",
-                      file=sys.stderr)
                 
         config = _load_config(args.config)
         
         config = cfg.apply_cli_overrides(
             config,
             image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-            auto_find_portraits=args.auto_find_portraits,
-            hide_portraits=args.hide_portraits,
+            portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
             domain=Domain(args.domain) if args.domain else None
         )
 

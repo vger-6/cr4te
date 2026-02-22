@@ -8,6 +8,7 @@ import utils
 from validators.config_schema import AppConfig
 from enums.visible_fields import CreatorField, CollaborationField, ProjectField
 from enums.image_sample_strategy import ImageSampleStrategy
+from enums.portrait_strategy import PortraitStrategy
 from enums.media_type import MediaType
 from enums.domain import Domain
 from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
@@ -107,17 +108,24 @@ def load_config(user_config_path: Path = None) -> Dict:
 
     return config
        
-def apply_cli_overrides(config: Dict, image_sample_strategy: Optional[ImageSampleStrategy] = None, auto_find_portraits = False, hide_portraits = False, domain: Optional[Domain] = None) -> Dict:
+def apply_cli_overrides(config: Dict, image_sample_strategy: Optional[ImageSampleStrategy] = None, portrait_strategy: Optional[PortraitStrategy] = PortraitStrategy.NAMED , domain: Optional[Domain] = None) -> Dict:
     if domain is not None:
         preset = _get_preset(domain)
         config["html_settings"].update(preset["html_settings"])
         config["media_rules"].update(preset["media_rules"])
     if image_sample_strategy is not None:
         config["html_settings"]["image_gallery_sample_strategy"] = image_sample_strategy
-    if auto_find_portraits is True:
-        config["media_rules"]["auto_find_portraits"] = True
-    if hide_portraits is True:
-        config["html_settings"]["hide_portraits"] = True
+      
+    match portrait_strategy:
+        case PortraitStrategy.NONE:
+            config["media_rules"]["auto_find_portraits"] = False
+            config["html_settings"]["hide_portraits"] = True
+        case PortraitStrategy.NAMED:
+            config["media_rules"]["auto_find_portraits"] = False
+            config["html_settings"]["hide_portraits"] = False
+        case PortraitStrategy.AUTO:
+            config["media_rules"]["auto_find_portraits"] = True
+            config["html_settings"]["hide_portraits"] = False
     
     _validate_config(config)
 
