@@ -40,28 +40,59 @@
                 <img src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
               </a>
             {% endif %}
-            <div>
-              <p><strong>Name:</strong> {{ creator.name }}</p>
+            <div class="meta-list">
+              <div class="meta-row">
+                <div class="meta-label">Name:</div>
+                <div>{{ creator.name }}</div>
+              </div>
+
               {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
-              <p><strong>Aliases:</strong> {{ creator.aliases | join(', ') }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Aliases:</div>
+                <div>{{ creator.aliases | join(', ') }}</div>
+              </div>
               {% endif %}
+
               {% if 'members' in html_settings.creator_page_visible_collaboration_fields and creator.member_names %}
-              <p><strong>{{ html_settings.creator_page_members_title }}:</strong> {{ creator.member_names | join(', ') }}</p>
+              <div class="meta-row">
+                <div class="meta-label">{{ html_settings.creator_page_members_title }}:</div>
+                <div>{{ creator.member_names | join(', ') }}</div>
+              </div>
               {% endif %}
+
               {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
-              <p><strong>Date of Birth:</strong> {{ creator.date_of_birth }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Date of Birth:</div>
+                <div>{{ creator.date_of_birth }}</div>
+              </div>
               {% endif %}
+
               {% if 'founded' in html_settings.creator_page_visible_collaboration_fields and creator.founded %}
-              <p><strong>Founded:</strong> {{ creator.founded }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Founded:</div>
+                <div>{{ creator.founded }}</div>
+              </div>
               {% endif %}
+
               {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
-              <p><strong>Nationality:</strong> {{ creator.nationality }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Nationality:</div>
+                <div>{{ creator.nationality }}</div>
+              </div>
               {% endif %}
+
               {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
-              <p><strong>Debut Age:</strong> {{ creator.debut_age }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Debut Age:</div>
+                <div>{{ creator.debut_age }}</div>
+              </div>
               {% endif %}
+
               {% if 'active_since' in html_settings.creator_page_visible_collaboration_fields and creator.active_since %}
-              <p><strong>Active Since:</strong> {{ creator.active_since }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Active Since:</div>
+                <div>{{ creator.active_since }}</div>
+              </div>
               {% endif %}
             </div>
           </div>

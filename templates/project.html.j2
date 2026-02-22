@@ -41,12 +41,19 @@
             <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox" data-lightbox-single="true">
               <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Preview of {{ project.title }}">
             </a>
-            <div>
+            <div class="meta-list">
               {% if 'title' in html_settings.project_page_visible_project_fields %}
-                <p><strong>Title:</strong> {{ project.title }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Title:</div>
+                <div>{{ project.title }}</div>
+              </div>
               {% endif %}
+
               {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
-                <p><strong>Release Date:</strong> {{ project.release_date }}</p>
+              <div class="meta-row">
+                <div class="meta-label">Release Date:</div>
+                <div>{{ project.release_date }}</div>
+              </div>
               {% endif %}
             </div>
           </div>
