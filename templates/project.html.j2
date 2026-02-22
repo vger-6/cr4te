@@ -97,7 +97,7 @@
       </div>
       
       <div class="original-placeholder" data-mobile-target="2">
-        {% if project.collaboration and html_settings.project_page_collaboration_profile_visible %}
+        {% if project.collaboration %}
         
           {% set collaboration = project.collaboration%}
           <div class="section-box">
@@ -120,7 +120,6 @@
       </div>
 
       <div class="original-placeholder" data-mobile-target="3">
-        {% if html_settings.project_page_participant_profiles_visible %}
           {% for participant in project.participants %}
             <div class="section-box">
               <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
@@ -142,7 +141,6 @@
               </div>
             </div>
           {% endfor %}
-        {% endif %}
       </div>
 
       <div class="original-placeholder" data-mobile-target="4">

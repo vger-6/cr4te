@@ -57,8 +57,6 @@ class HtmlSettings(BaseModel):
     
     project_page_visible_project_fields: List[ProjectField]
     project_page_image_gallery_page_size: conint(ge=0)
-    project_page_collaboration_profile_visible: bool
-    project_page_participant_profiles_visible: bool
     
     hide_portraits: bool
     
