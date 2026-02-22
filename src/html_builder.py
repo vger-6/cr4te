@@ -86,6 +86,8 @@ def _sample_images(rel_image_paths: List[str], max_images: int, strategy: ImageS
     sorted_paths = sorted(rel_image_paths)
 
     match strategy:
+        case ImageSampleStrategy.NONE:
+            return []
         case ImageSampleStrategy.ALL:
             return sorted_paths
         case _ if len(sorted_paths) <= max_images:
