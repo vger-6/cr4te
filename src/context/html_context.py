@@ -75,10 +75,6 @@ class HtmlBuildContext(BaseContext):
     def media_type_order(self) -> List[str]:
         return self.html_settings["media_type_order"]
 
-    @property
-    def image_captions_visible(self) -> bool:
-        return self.html_settings["project_page_image_gallery_captions_visible"]
-
     def get_default_thumb_path(self, thumb_type: ThumbType) -> Path:
         return self.defaults_dir / {
             ThumbType.THUMB: "thumb.png",

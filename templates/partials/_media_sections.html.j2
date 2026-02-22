@@ -92,8 +92,20 @@
         {% endif %}
       {% elif section.type == MediaType.IMAGE.value %}
         {% if section.images %}
-          <div class="section-box">
-            <div class="section-title">{{ group.image_section_title }}</div>
+          <div class="section-box image-caption-section no-captions">
+            <div class="section-title">
+              <span>{{ group.image_section_title }}</span>
+              <div class="title-actions">
+                <button class="section-action-btn caption-toggle-btn">
+                  <span class="icon-on">
+                    {{ icons.captions_on_icon() }}
+                  </span>
+                  <span class="icon-off">
+                    {{ icons.captions_off_icon() }}
+                  </span>
+                </button>
+              </div>
+            </div>
             <hr>
             <div class="section-content">
               <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
@@ -101,11 +113,9 @@
                   <div class="image-wrapper">
                     <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank">
                       <img src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}" loading="lazy">
-                      {% if html_settings.project_page_image_gallery_captions_visible %}
-                        <div class=image-caption>
-                          <span>{{ image.caption }}</span>
-                        </div>
-                      {% endif %}
+                      <div class=image-caption>
+                        <span>{{ image.caption }}</span>
+                      </div>
                     </a>
                   </div>
                 {% endfor %}
@@ -116,11 +126,13 @@
       {% elif section.type == MediaType.DOCUMENT.value %}
         {% for document in section.documents %}
           <div class="section-box">
-            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <div class="section-title">
               <span>{{ document.title }}</span>
-              <a href="{{ path_to_root }}{{ document.rel_path }}" target="_blank" title="Open fullscreen" style="display: flex; align-items: center; line-height: 0;">
-                {{ icons.fullscreen_icon() | safe }}
-              </a>
+              <div class="title-actions">
+                <a href="{{ path_to_root }}{{ document.rel_path }}" target="_blank" title="Open fullscreen" style="display: flex; align-items: center; line-height: 0;">
+                  {{ icons.fullscreen_icon() | safe }}
+                </a>
+              </div>
             </div>
             <hr>
             <div class="section-content" style="padding: 0">

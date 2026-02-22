@@ -210,6 +210,14 @@ a:focus {
   padding: 0.5rem 1rem;
   font-weight: bold;
   font-size: var(--h3-font-size);
+  display: flex;
+  align-items: center;
+}
+
+.title-actions {
+  margin-left: auto;          
+  display: flex;
+  gap: 0.5rem; 
 }
 
 .section-box hr {
@@ -283,6 +291,31 @@ a:focus {
   margin-top: 0.5rem;
   margin-left: 0.5rem;
   display: block;
+}
+
+.section-action-btn {
+  background: none;
+  border: none;
+  color: var(--link-color);
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.icon-off {
+  display: none;
+}
+
+.section-box.no-captions .image-caption {
+  display: none;
+}
+
+.section-box.no-captions .icon-on {
+  display: none;
+}
+
+.section-box.no-captions .icon-off {
+  display: inline;
 }
 
 .image-card {

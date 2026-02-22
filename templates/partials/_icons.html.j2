@@ -40,3 +40,41 @@
 </svg>
 {% endmacro %}
 
+{% macro captions_on_icon() %}
+<svg viewBox="0 0 24 24" class="icon image-caption-icon">
+  <!-- Image frame -->
+  <path
+    d="M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+  />
+
+  <!-- Sun -->
+  <circle cx="9" cy="13" r="1.5"/>
+
+  <!-- Mountains -->
+  <path d="M6 18l3-3 3 2 3-3 3 4H6z"/>
+
+  <!-- Caption line -->
+  <rect x="6" y="22" width="12" height="2" rx="1"/>
+</svg>
+{% endmacro %}
+
+{% macro captions_off_icon() %}
+<svg viewBox="0 0 24 24" class="icon image-caption-icon">
+  <!-- Image frame -->
+  <path
+    d="M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+  />
+
+  <!-- Sun -->
+  <circle cx="9" cy="13" r="1.5"/>
+
+  <!-- Mountains -->
+  <path d="M6 18l3-3 3 2 3-3 3 4H6z"/>
+</svg>
+{% endmacro %}
