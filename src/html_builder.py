@@ -222,7 +222,7 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
     for media_group in media_groups:
         rel_image_paths = _sample_images(media_group["images"], ctx.image_gallery_sample_max, ctx.image_gallery_sample_strategy)
-        rel_video_paths = media_group["videos"]
+        media_group_videos = media_group["videos"]
         rel_track_paths = media_group["tracks"]
         rel_document_paths = media_group["documents"]
         rel_text_paths = media_group["texts"]
@@ -238,10 +238,11 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
         videos = [
             {
-                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
-                "title": Path(rel).stem.title()
+                "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(media_group_video["file"]), ctx.symlinks_dir), ctx.output_dir).as_posix(),
+                "title": Path(media_group_video["file"]).stem.title(),
+                "rel_poster_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(media_group_video["poster"]), ctx.symlinks_dir), ctx.output_dir).as_posix() if media_group_video["poster"] else ""
             }
-            for rel in rel_video_paths
+            for media_group_video in media_group_videos
         ]
 
         tracks = [

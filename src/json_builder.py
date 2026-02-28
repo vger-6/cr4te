@@ -98,6 +98,26 @@ def _find_image_by_orientation(image_paths: List[Path], orientation: Orientation
             return image_path
     return None
     
+def _find_video_poster(video_path: Path, input_dir: Path) -> Path | None:
+    """
+    Find an image in the same directory with the same stem as the video.
+    Returns a Path relative to input_dir, or None if not found.
+    """
+    for img_ext in IMAGE_EXTS:
+        candidate = video_path.with_suffix(img_ext)
+        if candidate.exists():
+            return candidate.relative_to(input_dir)
+    return None
+    
+def _is_video_poster_candidate(image_path: Path) -> bool:
+    """
+    Returns True if an image has a sibling video file with the same stem.
+    """
+    for vid_ext in VIDEO_EXTS:
+        if image_path.with_suffix(vid_ext).exists():
+            return True
+    return False
+    
 def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
     media_map = defaultdict(lambda: {
         "videos": [],
@@ -127,10 +147,15 @@ def _build_media_map(ctx: JsonBuildContext, media_dir: Path) -> Dict[str, Dict]:
         rel_dir_key = str(media_path.parent.relative_to(ctx.input_dir)) or media_dir.name
 
         if suffix in VIDEO_EXTS:
-            media_map[rel_dir_key]["videos"].append(str(rel_to_input))
+            poster_rel_path = _find_video_poster(media_path, ctx.input_dir)
+
+            media_map[rel_dir_key]["videos"].append({
+                "file": str(rel_to_input),
+                "poster": str(poster_rel_path) if poster_rel_path else ""
+            })
         elif suffix in AUDIO_EXTS:
             media_map[rel_dir_key]["tracks"].append(str(rel_to_input))
-        elif suffix in IMAGE_EXTS and stem not in (ctx.cover_basename, ctx.portrait_basename):
+        elif suffix in IMAGE_EXTS and stem not in (ctx.cover_basename, ctx.portrait_basename) and not _is_video_poster_candidate(media_path):
             media_map[rel_dir_key]["images"].append(str(rel_to_input))
         elif suffix in DOC_EXTS:
             media_map[rel_dir_key]["documents"].append(str(rel_to_input))
@@ -148,7 +173,7 @@ def _build_media_groups(ctx: JsonBuildContext, media_dir: Path) -> List[Dict[str
     for rel_dir_path, media in media_map.items():
         media_group = {
             "is_root": media["is_root"],
-            "videos": sorted(media["videos"]),
+            "videos": sorted(media["videos"], key=lambda v: v["file"]),
             "tracks": sorted(media["tracks"]),
             "images": sorted(media["images"]),
             "documents": sorted(media["documents"]),

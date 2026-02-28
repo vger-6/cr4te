@@ -18,10 +18,17 @@ def validate_optional_iso_date(v: str) -> str:
         return v
 
     raise ValueError("must be in yyyy, yyyy-mm, yyyy-mm-dd format or empty")
+    
+class Video(BaseModel):
+    file: str
+    poster: str
+
+    class Config:
+        extra = "forbid"
 
 class MediaGroup(BaseModel):
     is_root: bool
-    videos: List[str]
+    videos: List[Video]
     tracks: List[str]
     images: List[str]
     documents: List[str]

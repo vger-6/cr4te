@@ -2,7 +2,7 @@
 
 {% macro render(path_to_root, video) %}
   <div class="video-wrapper">
-    <video preload="metadata">
+    <video preload="metadata" {% if video.rel_poster_path %}poster="{{ path_to_root }}{{ video.rel_poster_path }}"{% endif %}>
       <source src="{{ path_to_root }}{{ video.rel_path }}" type="video/mp4">
       Your browser does not support the video tag.
     </video>
