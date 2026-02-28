@@ -62,8 +62,15 @@
 
               {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
               <div class="meta-row">
-                <div class="meta-label">Date of Birth:</div>
+                <div class="meta-label">Born:</div>
                 <div>{{ creator.date_of_birth }}</div>
+              </div>
+              {% endif %}
+              
+               {% if 'date_of_death' in html_settings.creator_page_visible_creator_fields and creator.date_of_death %}
+              <div class="meta-row">
+                <div class="meta-label">Died:</div>
+                <div>{{ creator.date_of_death }}</div>
               </div>
               {% endif %}
 

@@ -234,6 +234,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "name": creator_name,
         "is_collaboration": is_collab,
         "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
+        "died_or_dissolved": _validate_date_string(existing_creator.get("died_or_dissolved", "")),
         "active_since": _validate_date_string(existing_creator.get("active_since", "")),
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),

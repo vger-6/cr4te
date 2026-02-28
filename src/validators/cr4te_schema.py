@@ -50,6 +50,7 @@ class Creator(BaseModel):
     name: str
     is_collaboration: bool
     born_or_founded: str
+    died_or_dissolved: str
     active_since: str
     nationality: str
     aliases: List[str]
@@ -61,7 +62,7 @@ class Creator(BaseModel):
     members: List[str]
     collaborations: List[str]
 
-    @validator("born_or_founded", "active_since")
+    @validator("born_or_founded", "active_since", "died_or_dissolved")
     def validate_optional_dates(cls, v):
         return validate_optional_iso_date(v)
         

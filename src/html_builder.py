@@ -465,9 +465,11 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         creator_context["members"] = _collect_member_links(ctx, creator, creators)
         creator_context["member_names"] = creator["members"]
         creator_context["founded"] = creator["born_or_founded"]
+        creator_context["dissolved"] = creator["died_or_dissolved"]
         creator_context["active_since"] = creator["active_since"]
     else:
         creator_context["date_of_birth"] = creator["born_or_founded"]
+        creator_context["date_of_death"] = creator["died_or_dissolved"]
         creator_context["debut_age"] =  _calculate_debut_age(creator) or ""
         creator_context["collaborations"] = _build_collaboration_entries(ctx, creator, creators)
         
