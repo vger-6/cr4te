@@ -1,5 +1,5 @@
 :root {
-  --mobile-breakpoint: 48rem;
+  --mobile-breakpoint: 72rem;
   --body-padding: 1rem;
 
   --font-family: sans-serif;
@@ -233,18 +233,28 @@ a:focus {
 
 .meta-list {
   display: grid;
-  gap: 0.4rem;
-}
-
-.meta-row {
-  display: grid;
-  grid-template-columns: 7rem 1fr;
-  column-gap: 0.5rem;
+  grid-template-columns: auto 1fr; /* Label | Value */
+  gap: 10px 20px; /* row gap | column gap */
+  align-items: start;
 }
 
 .meta-label {
   font-weight: bold;
 }
+
+.meta-value {
+  word-break: break-word;
+}
+
+/*Stack on small screens*/
+/*@media (max-width: 600px) {
+.meta-list {
+  grid-template-columns: 1fr;
+}
+.meta-label {
+  margin-top: 10px;
+}
+}*/
 
 .text-content {
   padding-top: 0rem;

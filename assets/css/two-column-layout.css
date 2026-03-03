@@ -18,7 +18,7 @@
 
 .info-block--row img {
   width: 100%;
-  max-width: 12.5rem;
+  max-width: 17rem;
 }
 
 .info-block > div > *:first-child {
@@ -51,7 +51,7 @@
 }
 
 .left-column {
-  flex: 3;
+  flex: 3.5;
   min-width: calc((var(--mobile-breakpoint) / 2) - ((2 * var(--body-padding) + var(--two-column-layout-gap)) / 2));
 }
 
@@ -87,7 +87,7 @@
 }
 
 /* Small screen behavior */
-@media (max-width: 48rem) {
+@media (max-width: 72rem) {
   .two-column-layout {
     flex-direction: column;
     height: 100%;
@@ -95,6 +95,7 @@
     padding-right: 0px;
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-color) transparent;
+    gap: 0;
   }
 
   .two-column-layout::-webkit-scrollbar {
@@ -115,6 +116,7 @@
   .left-column,
   .right-column {
     flex: none;
+    min-width: 0;
     height: auto;
     overflow: visible; /* no internal scrolling */
     padding-right: 0;

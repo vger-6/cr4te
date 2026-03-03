@@ -33,44 +33,42 @@
 
     <div class="left-column">
 
-      <div class="section-box">
-        <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
-        <hr>
-        <div class="section-content markdown">
-          <div class="info-block {{ utils.get_info_block_layout(Orientation, project.thumbnail_orientation) }}">
-            <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox" data-lightbox-single="true">
-              <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Preview of {{ project.title }}">
-            </a>
-            <div class="meta-list">
-              {% if 'title' in html_settings.project_page_visible_project_fields %}
-              <div class="meta-row">
-                <div class="meta-label">Title:</div>
-                <div>{{ project.title }}</div>
-              </div>
-              {% endif %}
+      <div class="original-placeholder" data-mobile-target="1">
+        <div class="section-box">
+          <div class="section-title">{{ html_settings.project_page_overview_title }}</div>
+          <hr>
+          <div class="section-content markdown">
+            <div class="info-block {{ utils.get_info_block_layout(Orientation, project.thumbnail_orientation) }}">
+              <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox" data-lightbox-single="true">
+                <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Preview of {{ project.title }}">
+              </a>
+              <div class="meta-list">
+                {% if 'title' in html_settings.project_page_visible_project_fields %}
+                  <div class="meta-label">Title:</div>
+                  <div class="meta-value">{{ project.title }}</div>
+                {% endif %}
 
-              {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
-              <div class="meta-row">
-                <div class="meta-label">Release Date:</div>
-                <div>{{ project.release_date }}</div>
+                {% if 'release_date' in html_settings.project_page_visible_project_fields and project.release_date %}
+                  <div class="meta-label">Release Date:</div>
+                  <div class="meta-value">{{ project.release_date }}</div>
+                {% endif %}
               </div>
-              {% endif %}
             </div>
           </div>
         </div>
-      </div>
 
-      {% if project.info_html %}
-        <div class="section-box markdown">
-          <div class="section-title">{{ html_settings.project_page_description_title }}</div>
-          <hr>
-          <div class="section-content text-content">
-            {{ project.info_html | safe }}
+        {% if project.info_html %}
+          <div class="section-box markdown">
+            <div class="section-title">{{ html_settings.project_page_description_title }}</div>
+            <hr>
+            <div class="section-content text-content">
+              {{ project.info_html | safe }}
+            </div>
           </div>
-        </div>
-      {% endif %}
+        {% endif %}
+      </div>
       
-      <div class="original-placeholder" data-mobile-target="1">
+      <div class="original-placeholder" data-mobile-target="2">
         {% if project.creator %}
           {% set creator = project.creator%}
         
@@ -96,7 +94,7 @@
         {% endif %}
       </div>
       
-      <div class="original-placeholder" data-mobile-target="2">
+      <div class="original-placeholder" data-mobile-target="3">
         {% if project.collaboration %}
         
           {% set collaboration = project.collaboration%}
@@ -119,7 +117,7 @@
         {% endif %}
       </div>
 
-      <div class="original-placeholder" data-mobile-target="3">
+      <div class="original-placeholder" data-mobile-target="4">
           {% for participant in project.participants %}
             <div class="section-box">
               <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
@@ -143,7 +141,7 @@
           {% endfor %}
       </div>
 
-      <div class="original-placeholder" data-mobile-target="4">
+      <div class="original-placeholder" data-mobile-target="5">
         {% if project.tag_map %}
           <div class="section-box">
             <div class="section-title">{{ html_settings.project_page_tags_title }}</div>
@@ -173,6 +171,7 @@
       <div class="mobile-placeholder" data-mobile-target="2"></div>
       <div class="mobile-placeholder" data-mobile-target="3"></div>
       <div class="mobile-placeholder" data-mobile-target="4"></div>
+      <div class="mobile-placeholder" data-mobile-target="5"></div>
 
     </div>
   </div>

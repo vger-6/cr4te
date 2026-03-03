@@ -30,93 +30,78 @@
 
     <div class="left-column">
 
-      <div class="section-box">
-        <div class="section-title">{{ html_settings.creator_page_profile_title }}</div>
-        <hr>
-        <div class="section-content markdown">
-          <div class="info-block {{ utils.get_info_block_layout(Orientation, creator.portrait_orientation) }}">
-            {% if not html_settings.hide_portraits %}
-              <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox" data-lightbox-single="true">
-                <img src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
-              </a>
-            {% endif %}
-            <div class="meta-list">
-              <div class="meta-row">
+      <div class="original-placeholder" data-mobile-target="1">
+
+        <div class="section-box">
+          <div class="section-title">{{ html_settings.creator_page_profile_title }}</div>
+          <hr>
+          <div class="section-content markdown">
+            <div class="info-block {{ utils.get_info_block_layout(Orientation, creator.portrait_orientation) }}">
+              {% if not html_settings.hide_portraits %}
+                <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox" data-lightbox-single="true">
+                  <img src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
+                </a>
+              {% endif %}
+              <div class="meta-list">
                 <div class="meta-label">Name:</div>
-                <div>{{ creator.name }}</div>
-              </div>
+                <div class="meta-value">{{ creator.name }}</div>
 
-              {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
-              <div class="meta-row">
-                <div class="meta-label">Aliases:</div>
-                <div>{{ creator.aliases | join(', ') }}</div>
-              </div>
-              {% endif %}
+                {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
+                  <div class="meta-label">Aliases:</div>
+                  <div class="meta-value">{{ creator.aliases | join(', ') }}</div>
+                {% endif %}
 
-              {% if 'members' in html_settings.creator_page_visible_collaboration_fields and creator.member_names %}
-              <div class="meta-row">
-                <div class="meta-label">{{ html_settings.creator_page_members_title }}:</div>
-                <div>{{ creator.member_names | join(', ') }}</div>
-              </div>
-              {% endif %}
+                {% if 'members' in html_settings.creator_page_visible_collaboration_fields and creator.member_names %}
+                  <div class="meta-label">{{ html_settings.creator_page_members_title }}:</div>
+                  <div class="meta-value">{{ creator.member_names | join(',<br>') | safe }}</div>
+                {% endif %}
 
-              {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
-              <div class="meta-row">
-                <div class="meta-label">Born:</div>
-                <div>{{ creator.date_of_birth }}</div>
-              </div>
-              {% endif %}
-              
-               {% if 'date_of_death' in html_settings.creator_page_visible_creator_fields and creator.date_of_death %}
-              <div class="meta-row">
-                <div class="meta-label">Died:</div>
-                <div>{{ creator.date_of_death }}</div>
-              </div>
-              {% endif %}
+                {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
+                  <div class="meta-label">Born:</div>
+                  <div class="meta-value">{{ creator.date_of_birth }}</div>
+                {% endif %}
 
-              {% if 'founded' in html_settings.creator_page_visible_collaboration_fields and creator.founded %}
-              <div class="meta-row">
-                <div class="meta-label">Founded:</div>
-                <div>{{ creator.founded }}</div>
-              </div>
-              {% endif %}
+                {% if 'date_of_death' in html_settings.creator_page_visible_creator_fields and creator.date_of_death %}
+                  <div class="meta-label">Died:</div>
+                  <div class="meta-value">{{ creator.date_of_death }}</div>
+                {% endif %}
 
-              {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
-              <div class="meta-row">
-                <div class="meta-label">Nationality:</div>
-                <div>{{ creator.nationality }}</div>
-              </div>
-              {% endif %}
+                {% if 'founded' in html_settings.creator_page_visible_collaboration_fields and creator.founded %}
+                  <div class="meta-label">Founded:</div>
+                  <div class="meta-value">{{ creator.founded }}</div>
+                {% endif %}
 
-              {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
-              <div class="meta-row">
-                <div class="meta-label">Debut Age:</div>
-                <div>{{ creator.debut_age }}</div>
-              </div>
-              {% endif %}
+                {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
+                  <div class="meta-label">Nationality:</div>
+                  <div class="meta-value">{{ creator.nationality }}</div>
+                {% endif %}
 
-              {% if 'active_since' in html_settings.creator_page_visible_collaboration_fields and creator.active_since %}
-              <div class="meta-row">
-                <div class="meta-label">Active Since:</div>
-                <div>{{ creator.active_since }}</div>
+                {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
+                  <div class="meta-label">Debut Age:</div>
+                  <div class="meta-value">{{ creator.debut_age }}</div>
+                {% endif %}
+
+                {% if 'active_since' in html_settings.creator_page_visible_collaboration_fields and creator.active_since %}
+                  <div class="meta-label">Active Since:</div>
+                  <div class="meta-value">{{ creator.active_since }}</div>
+                {% endif %}
               </div>
-              {% endif %}
             </div>
           </div>
         </div>
-      </div>
 
-      {% if creator.info_html %}
-      <div class="section-box markdown">
-        <div class="section-title">{{ html_settings.creator_page_about_title }}</div>
-        <hr>
-        <div class="section-content text-content">
-          {{ creator.info_html | safe }}
-        </div>
-      </div>
+        {% if creator.info_html %}
+          <div class="section-box markdown">
+            <div class="section-title">{{ html_settings.creator_page_about_title }}</div>
+            <hr>
+            <div class="section-content text-content">
+              {{ creator.info_html | safe }}
+           </div>
+         </div>
       {% endif %}
+      </div>
       
-      <div class="original-placeholder" data-mobile-target="1">
+      <div class="original-placeholder" data-mobile-target="2">
         {% for member in creator.members%}
           <div class="section-box">
             <div class="section-title">{{ member.name }} - {{ html_settings.creator_page_profile_title }}</div>
@@ -137,7 +122,7 @@
         {% endfor %}
       </div>
       
-      <div class="original-placeholder" data-mobile-target="2">
+      <div class="original-placeholder" data-mobile-target="3">
         {% if creator.tag_map %}
           <div class="section-box">
             <div class="section-title">{{ html_settings.creator_page_tags_title }}</div>
@@ -216,6 +201,7 @@
       
       <div class="mobile-placeholder" data-mobile-target="1"></div>
       <div class="mobile-placeholder" data-mobile-target="2"></div>
+      <div class="mobile-placeholder" data-mobile-target="3"></div>
 
     </div>
 
