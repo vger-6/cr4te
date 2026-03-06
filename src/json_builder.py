@@ -25,7 +25,7 @@ AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)
 
-def _validate_date_string(date_str: str) -> str:
+def _normalize_date(date_str: str) -> str:
     """
     Validates and normalizes a date string.
     Accepts:
@@ -185,7 +185,7 @@ def _build_media_groups(ctx: JsonBuildContext, media_dir: Path) -> List[Dict[str
 
     return media_groups
 
-def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator: Dict) -> List[Dict]:
+def _build_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator: Dict) -> List[Dict]:
     existing_projects = {p["title"]: p for p in creator.get("projects", []) if "title" in p}
     
     projects = []
@@ -203,7 +203,7 @@ def _collect_creator_projects(ctx: JsonBuildContext, creator_dir: Path, creator:
 
         project = {
             "title": project_title,
-            "release_date": _validate_date_string(existing_project.get("release_date", "")),
+            "release_date": _normalize_date(existing_project.get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
             "info": text_utils.read_text(project_dir / ctx.readme_file_name) or existing_project.get("info", ""),
             "media_groups": _build_media_groups(ctx, project_dir),
@@ -258,15 +258,15 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     creator = {
         "name": creator_name,
         "is_collaboration": is_collab,
-        "born_or_founded": _validate_date_string(existing_creator.get("born_or_founded", "")),
-        "died_or_dissolved": _validate_date_string(existing_creator.get("died_or_dissolved", "")),
-        "active_since": _validate_date_string(existing_creator.get("active_since", "")),
+        "born_or_founded": _normalize_date(existing_creator.get("born_or_founded", "")),
+        "died_or_dissolved": _normalize_date(existing_creator.get("died_or_dissolved", "")),
+        "active_since": _normalize_date(existing_creator.get("active_since", "")),
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
         "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
-        "projects": _collect_creator_projects(ctx, creator_dir, existing_creator),
+        "projects": _build_creator_projects(ctx, creator_dir, existing_creator),
         "media_groups": _build_creator_media_groups(ctx, creator_dir),
         "collaborations": [],
     }
@@ -279,7 +279,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     
     return creator
     
-def _resolve_creator_collaborations(creators: List[Dict]) -> None:
+def _link_creator_collaborations(creators: List[Dict]) -> None:
     # Build collaboration map (name -> members)
     collaboration_map = {
         creator["name"]: creator["members"]
@@ -323,7 +323,7 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
         creator_data = _build_creator(ctx, creator_dir)
         creator_records.append((creator_dir, creator_data))
 
-    _resolve_creator_collaborations([creator_data for _, creator_data in creator_records])
+    _link_creator_collaborations([creator_data for _, creator_data in creator_records])
     
     for _, creator_data in creator_records:
         _validate_creator(creator_data)
