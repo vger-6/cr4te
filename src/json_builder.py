@@ -1,3 +1,4 @@
+import logging
 import json
 import re
 from enum import Enum
@@ -18,6 +19,8 @@ from context.json_context import JsonBuildContext
 from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
+
+logger = logging.getLogger(__name__)
 
 IMAGE_EXTS = (".jpg", ".jpeg", ".png")
 VIDEO_EXTS = (".mp4", ".m4v")
@@ -318,7 +321,7 @@ def build_creator_json_files(input_dir: Path, media_rules: Dict):
     for creator_dir in sorted(ctx.input_dir.iterdir()):
         if not creator_dir.is_dir() or _is_excluded_path(creator_dir, (ctx.global_exclude_prefix,)):
             continue
-        print(f"Processing: {creator_dir.name}")
+        logger.info(f"Processing: {creator_dir.name}")
 
         creator_data = _build_creator(ctx, creator_dir)
         creator_records.append((creator_dir, creator_data))
@@ -342,21 +345,23 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
         json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
         if json_path.exists():
             total += 1
-            print(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
+            logger.info(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
             if not dry_run:
                 try:
                     json_path.unlink()
                     deleted += 1
                 except Exception as e:
-                    print(f"Error deleting {json_path}: {e}")
+                    logger.error(f"Deleting {json_path}: {e}")
                     skipped += 1
         else:
             continue
 
-    print("\nSummary:")
-    print(f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}")
-    print(f"\tDeleted: {deleted}")
-    print(f"\tSkipped/errors: {skipped}")
+    logger.info(
+        f"\nSummary:\n"
+        f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}\n"
+        f"\tDeleted: {deleted}\n"
+        f"\tSkipped/errors: {skipped}"
+        )
     if dry_run:
-        print("\t(Dry-run mode: no files were deleted)")
+        logger.info("\t(Dry-run mode: no files were deleted)")
 

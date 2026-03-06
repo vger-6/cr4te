@@ -1,3 +1,4 @@
+import logging
 import shutil
 import os
 from pathlib import Path
@@ -25,6 +26,8 @@ from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["clear_output_folder", "build_html_pages"]
+
+logger = logging.getLogger(__name__)
 
 # Setup Jinja2 environment
 env = Environment(
@@ -66,7 +69,7 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
             thumb.save(thumb_path, format=format)
 
         except Exception as e:
-            print(f"Error creating thumbnail for {rel_image_path}: {e}")
+            logger.error(f"Error creating thumbnail for {rel_image_path}: {e}")
 
     return thumb_path
     
@@ -129,7 +132,7 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
     return sorted(all_projects, key=lambda p: p["title"].lower())
     
 def _build_project_overview_page(ctx: HtmlBuildContext, creators: List):
-    print("Generating project overview page...")
+    logger.info("Generating project overview page...")
 
     template = env.get_template("project_overview.html.j2")
 
@@ -175,7 +178,7 @@ def _collect_all_tags(creators: List[Dict]) -> Dict[str, List[str]]:
     return _group_tags_by_category(all_tags)
 
 def _build_tags_page(ctx: HtmlBuildContext, creators: List):
-    print("Generating tags page...")
+    logger.info("Generating tags page...")
 
     template = env.get_template("tags.html.j2")
 
@@ -192,7 +195,7 @@ def _create_symlink(input_dir: Path, rel_source_path: Path, target_dir: Path) ->
     target_path = target_dir / path_utils.build_unique_path(rel_source_path)
     
     if not source_path.exists():
-        print(f"[Warning] Cannot create symlink: source file not found: {source_path}")
+        logger.warning(f"Cannot create symlink: source file not found: {source_path}")
     elif not target_path.exists():
         target_path.parent.mkdir(parents=True, exist_ok=True)
         os.symlink(source_path, target_path)
@@ -354,7 +357,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
     return project_context
 
 def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]):
-    print(f"Building project page: {creator['name']} - {project['title']}")
+    logger.info(f"Building project page: {creator['name']} - {project['title']}")
     
     template = env.get_template("project.html.j2")
     
@@ -372,7 +375,7 @@ def _build_project_page(ctx: HtmlBuildContext, creator: Dict, project: Dict, cre
         f.write(output_html)
     
 def _build_project_pages(ctx: HtmlBuildContext, creators: List[Dict]):
-    print("Generating project pages...")
+    logger.info("Generating project pages...")
     
     for creator in creators:
         for project in creator['projects']:
@@ -477,7 +480,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     return creator_context
 
 def _build_creator_page(ctx: HtmlBuildContext, creator: dict, creators: List):
-    print(f"Building creator page: {creator['name']}")
+    logger.info(f"Building creator page: {creator['name']}")
     
     template = env.get_template("creator.html.j2")
 
@@ -524,7 +527,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
     return member_links
     
 def _build_creator_pages(ctx: HtmlBuildContext, creators: List[Dict]):
-    print("Generating creator pages...")
+    logger.info("Generating creator pages...")
     
     for creator in creators:
         _build_creator_page(ctx, creator, creators)
@@ -562,7 +565,7 @@ def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[
     return creator_entries
     
 def _build_creator_overview_page(ctx: HtmlBuildContext, creators: List):
-    print("Generating overview page...")
+    logger.info("Generating overview page...")
 
     template = env.get_template("creator_overview.html.j2")
 
@@ -602,10 +605,10 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
 # TODO: Take aspect ratio and name from html_settings
 def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
     shutil.copytree(constants.CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
-    print(f"Copied {constants.CR4TE_CSS_DIR.name} to {ctx.css_dir}")
+    logger.info(f"Copied {constants.CR4TE_CSS_DIR.name} to {ctx.css_dir}")
        
     shutil.copytree(constants.CR4TE_JS_DIR, ctx.js_dir, dirs_exist_ok=True)
-    print(f"Copied {constants.CR4TE_JS_DIR.name} to {ctx.js_dir}")
+    logger.info(f"Copied {constants.CR4TE_JS_DIR.name} to {ctx.js_dir}")
        
     ctx.defaults_dir.mkdir(parents=True, exist_ok=True)
     thumb_height = ctx.get_thumb_height(ThumbType.THUMB)

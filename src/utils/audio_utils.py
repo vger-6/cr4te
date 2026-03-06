@@ -1,8 +1,9 @@
+import logging
 from pathlib import Path
 
 from mutagen import File as MutagenFile
 
-# TODO: use logging instead of print()
+logger = logging.getLogger(__name__)
 
 __all__ = ["get_audio_duration_seconds"]
 
@@ -16,5 +17,5 @@ def get_audio_duration_seconds(audio_path: Path) -> int:
         if audio and audio.info:
             return int(audio.info.length)
     except Exception as e:
-        print(f"Warning: could not read duration for {audio_path}: {e}")
+        logger.warning(f"Could not read duration for {audio_path}: {e}")
     return 0

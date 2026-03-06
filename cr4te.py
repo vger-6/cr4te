@@ -1,4 +1,5 @@
 import sys
+import logging
 import argparse
 import webbrowser
 import json
@@ -30,10 +31,19 @@ FLAG_FORCE = "--force"
 FLAG_CLEAN = "--clean"
 FLAG_PRINT_CONFIG = "--print-config"
 
+def _setup_logging():
+    """Configures the global logging settings."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S",
+        stream=sys.stderr
+    )
+
 def _validate_input_dir(path_str: str) -> Optional[Path]:
     input_dir = Path(path_str).resolve()
     if not input_dir.exists() or not input_dir.is_dir():
-        print(f"Input path does not exist or is not a directory: {input_dir}")
+        logging.error(f"Input path does not exist or is not a directory: {input_dir}")
         return None
     return input_dir
 
@@ -42,6 +52,8 @@ def _load_config(rel_config_path_arg: str) -> Dict[str, Any]:
     return cfg.load_config(config_path)
 
 def main():
+    _setup_logging()
+    
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
     
     parser.add_argument("-v","--version", action="version", version=f"cr4te v{__version__}")
@@ -101,7 +113,7 @@ def main():
                     ignored_flags.append(FLAG_CLEAN)
                 
                 if ignored_flags:
-                    print(f"[Info] Ignoring flags: {', '.join(sorted(ignored_flags))} (no build performed).", file=sys.stderr)
+                    logging.info(f"Ignoring flags: {', '.join(sorted(ignored_flags))} (no build performed).")
         
             print(json.dumps(config, indent=4))
             return   
@@ -117,20 +129,20 @@ def main():
         if output_dir.exists():
             confirm = 'y' if args.force else input(f"Output folder '{output_dir}' already exists. Delete everything except thumbnails and rebuild? {YES_NO_STR}: ").strip().lower()
             if confirm != 'y':
-                print("Aborting.")
+                logging.info("Aborting.")
                 return
             clear_output_folder(output_dir, args.clean)
         else:
             output_dir.mkdir(parents=True, exist_ok=True)
         
-        print("Building JSON metadata...")
+        logging.info("Building JSON metadata...")
         build_creator_json_files(input_dir, config["media_rules"])
         
-        print("Building HTML site...")
+        logging.info("Building HTML site...")
         index_html_path = build_html_pages(input_dir, output_dir, config["html_settings"])
         
         if args.open:
-            print("Opening index.html...")
+            logging.info("Opening index.html...")
             webbrowser.open(f"file://{index_html_path.resolve()}")
         
     elif args.command == "clean-json":
@@ -141,7 +153,7 @@ def main():
         if not args.force and not args.dry_run:
             confirm = input(f"Delete all cr4te.json files in '{input_dir}'? {YES_NO_STR}: ").strip().lower()
             if confirm != 'y':
-                print("Aborting.")
+                logging.info("Aborting.")
                 return
 
         clean_creator_json_files(input_dir, dry_run=args.dry_run)

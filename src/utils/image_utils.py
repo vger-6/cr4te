@@ -1,9 +1,12 @@
+import logging
 import platform
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 from enums.orientation import Orientation
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["infer_image_orientation", "generate_thumbnail", "create_centered_text_image"]
 
@@ -16,7 +19,7 @@ def _is_portrait(image_path : Path) -> bool:
         return height / width > 1.2
 
     except Exception as e:
-        print(f"Could not open image '{image_path}': {e}")
+        logger.warning(f"Could not open image '{image_path}': {e}")
         return False
 
 # TODO: return Optional[Orientation]

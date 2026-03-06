@@ -1,3 +1,4 @@
+import logging
 import copy
 from pathlib import Path
 from typing import Dict, Optional
@@ -12,6 +13,8 @@ from enums.portrait_strategy import PortraitStrategy
 from enums.media_type import MediaType
 from enums.domain import Domain
 from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["load_config", "apply_cli_overrides"]
 
@@ -99,10 +102,12 @@ def load_config(user_config_path: Path = None) -> Dict:
             user_config = utils.load_json(user_config_path)
             config["html_settings"].update(user_config.get("html_settings", {}))
             config["media_rules"].update(user_config.get("media_rules", {}))
-            print(f"Loaded configuration from {user_config_path}")
+            logger.info(f"Loaded configuration from {user_config_path}")
         except Exception as e:
-            print(f"Warning: Could not load config file {user_config_path}: {e}")
-            print("Proceeding with default internal configuration.")
+            logger.warning(
+                f"Could not load config file {user_config_path}: {e}\n"
+                "Proceeding with default internal configuration."
+            )
 
     _validate_config(config)
 
