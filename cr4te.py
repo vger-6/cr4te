@@ -17,8 +17,6 @@ from json_builder import build_creator_json_files, clean_creator_json_files
 
 __version__ = "0.0.1"
 
-YES_NO_STR = "[y/N]"
-
 # Short flags
 FLAG_INPUT_SHORT = "-i"
 FLAG_OUTPUT_SHORT = "-o"
@@ -49,6 +47,20 @@ def _validate_input_dir(path_str: str) -> Optional[Path]:
 def _load_config(rel_config_path_arg: str) -> Dict[str, Any]:
     config_path = Path(rel_config_path_arg).resolve() if rel_config_path_arg else None
     return cfg.load_config(config_path)
+    
+def _confirm_action(prompt: str, force: bool = False) -> bool:
+    if force:
+        return True
+    confirm = input(f"{prompt} [y/N]: ").strip().lower()
+    return confirm == 'y'
+    
+def _apply_cli_overrides_from_args(config: dict, args) -> dict:
+    return cfg.apply_cli_overrides(
+        config,
+        image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
+        portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
+        domain=Domain(args.domain) if args.domain else None
+    )
 
 def main():
     _setup_logging()
@@ -88,13 +100,7 @@ def main():
     
     if args.command == "build":
         config = _load_config(args.config)
-        
-        config = cfg.apply_cli_overrides(
-            config,
-            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-            portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
-            domain=Domain(args.domain) if args.domain else None
-        )
+        config = _apply_cli_overrides_from_args(config, args)
 
         if args.clean and not args.force:
             parser.error(f"{FLAG_CLEAN} must be used together with {FLAG_FORCE}")
@@ -104,11 +110,12 @@ def main():
             return
             
         output_dir = Path(args.output).resolve()
+
+        if output_dir.exists() and not _confirm_action(f"Output folder '{output_dir}' already exists. Delete everything except thumbnails and rebuild?", force=args.force):
+            logging.info("Aborting.")
+            return
+
         if output_dir.exists():
-            confirm = 'y' if args.force else input(f"Output folder '{output_dir}' already exists. Delete everything except thumbnails and rebuild? {YES_NO_STR}: ").strip().lower()
-            if confirm != 'y':
-                logging.info("Aborting.")
-                return
             clear_output_folder(output_dir, args.clean)
         else:
             output_dir.mkdir(parents=True, exist_ok=True)
@@ -122,29 +129,21 @@ def main():
         if args.open:
             logging.info("Opening index.html...")
             webbrowser.open(f"file://{index_html_path.resolve()}")
+            #webbrowser.open(index_html_path.resolve().as_uri())
         
     elif args.command == "print-config":
         config = _load_config(args.config)
-
-        config = cfg.apply_cli_overrides(
-            config,
-            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-            portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
-            domain=Domain(args.domain) if args.domain else None
-        )
-
+        config = _apply_cli_overrides_from_args(config, args)
         print(json.dumps(config, indent=4))
         
     elif args.command == "clean-json":
         input_dir = _validate_input_dir(args.input)
         if input_dir is None:
             return
-
-        if not args.force and not args.dry_run:
-            confirm = input(f"Delete all cr4te.json files in '{input_dir}'? {YES_NO_STR}: ").strip().lower()
-            if confirm != 'y':
-                logging.info("Aborting.")
-                return
+            
+        if not args.dry_run and not _confirm_action(f"Delete all cr4te.json files in '{input_dir}'?", force=args.force):
+            logging.info("Aborting.")
+            return
 
         clean_creator_json_files(input_dir, dry_run=args.dry_run)
 
