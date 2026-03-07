@@ -69,7 +69,6 @@
     });
     
     window.addEventListener("pageshow", () => { 
-        input.value = ""; 
         input.dispatchEvent(new Event("input")); // re-trigger filtering
     });
 
