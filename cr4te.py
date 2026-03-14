@@ -92,21 +92,23 @@ def _build_cmd_handler(args):
     config = _load_config(args.config)
     config = _apply_cli_overrides_from_args(config, args)
 
-    if args.clean and not args.force:
-        raise ValueError(f"{FLAG_CLEAN} requires {FLAG_FORCE}")
-        
     input_dir = Path(args.input).resolve()
-    if not input_dir.exists() or not input_dir.is_dir():
+    if not input_dir.is_dir():
         logging.info(f"Input path does not exist or is not a directory: {input_dir}")
         logging.info("Aborting.")
         return
 
     output_dir = Path(args.output).resolve()
-    if output_dir.exists() and not _confirm_action(f"Output folder '{output_dir}' exists. Delete everything except thumbnails?", force=args.force):
-        logging.info("Aborting.")
-        return
 
     if output_dir.exists():
+        msg = (
+            f"Output folder '{output_dir}' exists. "
+            f"Delete everything {'INCLUDING thumbnails' if args.clean else 'except thumbnails'}?"
+        )
+        if not _confirm_action(msg, force=args.force):
+            logging.info("Aborting.")
+            return
+
         clear_output_folder(output_dir, args.clean)
     else:
         output_dir.mkdir(parents=True, exist_ok=True)
