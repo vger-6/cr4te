@@ -108,7 +108,7 @@ class ImageSelector:
     def _image_done(self, image_path: Path, candidate: Optional[Path]) -> tuple[Optional[Path], ImageHandler]:
         return candidate, self._image_done
     
-class RootType(Enum):
+class MediaType(Enum):
     CREATOR = "creator"
     PROJECT = "project"
 
@@ -143,7 +143,7 @@ class MediaBucket:
                 return True
         return False
 
-    def add(self, media_path: Path, root_type: RootType) -> None:
+    def add(self, media_path: Path, media_type: MediaType) -> None:
         suffix = media_path.suffix.lower()
         stem = media_path.stem.lower()
         rel = media_path.relative_to(self.ctx.input_dir)
@@ -165,7 +165,7 @@ class MediaBucket:
 
             self.portrait_selector.consider(media_path)
 
-            if root_type == RootType.PROJECT:
+            if media_type == MediaType.PROJECT:
                 self.cover_selector.consider(media_path)
 
         elif suffix in DOC_EXTS:
@@ -195,29 +195,25 @@ class CreatorMediaIndex:
             proj[folder] = MediaBucket(self.ctx, self.portrait_selector, self.cover_selectors[project_name])
         return proj[folder]
     
-    def _classify_media_path(self, path: Path, metadata_folder: str) -> tuple[RootType, Optional[str], Path]:
-        parts = path.parts
+    def _classify_media_path(self, media_path: Path) -> tuple[MediaType, Optional[str], Path]:
+        rel_path = media_path.relative_to(self.ctx.input_dir)
+        parts = rel_path.parts
 
-        if len(parts) <= 2:
-            return RootType.CREATOR, None, path.parent
+        if len(parts) <= 2 or parts[1] == self.ctx.metadata_folder_name:
+            return MediaType.CREATOR, None, rel_path.parent
 
-        if parts[1] == metadata_folder:
-            return RootType.CREATOR, None, path.parent
-
-        project_name =  parts[1]
-        return RootType.PROJECT, project_name, path.parent
+        project_name = parts[1]
+        return MediaType.PROJECT, project_name, rel_path.parent
     
     def add_media(self, media_path: Path) -> None:
-        rel_path = media_path.relative_to(self.ctx.input_dir)
+        media_type, project_name, rel_media_folder_path = self._classify_media_path(media_path)
 
-        root_type, project_name, rel_media_folder_path = self._classify_media_path(rel_path, self.ctx.metadata_folder_name)
-
-        if root_type == RootType.CREATOR:
+        if media_type == MediaType.CREATOR:
             bucket = self._creator_bucket(rel_media_folder_path)
         else:
             bucket = self._project_bucket(project_name, rel_media_folder_path)
 
-        bucket.add(media_path, root_type)
+        bucket.add(media_path, media_type)
     
     def get_selected_portrait(self) -> Optional[Path]:
         return self.portrait_selector.selected
@@ -225,11 +221,12 @@ class CreatorMediaIndex:
     def get_selected_cover(self, project_name: str) -> Optional[Path]:
         return self.cover_selectors[project_name].selected
     
-def _build_media_groups(media_dict: Dict[Path, MediaBucket], root_depth: int) -> List[Dict[str, Any]]:
+def _build_media_groups(media_dict: Dict[Path, MediaBucket], metadata_folder_name: str) -> List[Dict[str, Any]]:
     media_groups = []
     for rel_media_folder_path, media in media_dict.items():
+       parts = rel_media_folder_path.parts
        media_groups.append({
-            "is_root": len(rel_media_folder_path.parts) == root_depth,
+            "is_root": len(parts) <= 2 or parts[1] == metadata_folder_name,
             "videos": sorted(media.videos, key=lambda v: v["file"]),
             "tracks": sorted(media.tracks),
             "images": sorted(media.images),
@@ -271,7 +268,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
             "release_date": _normalize_date(existing_projects.get(project_name, {}).get("release_date", "")),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
             "info": text_utils.read_text(creator_dir / project_name / ctx.readme_file_name) or existing_projects.get(project_name, {}).get("info", ""),
-            "media_groups": _build_media_groups(folders, root_depth=2),
+            "media_groups": _build_media_groups(folders, ctx.metadata_folder_name),
             "tags": existing_projects.get(project_name, {}).get("tags", [])
         })
     
@@ -295,7 +292,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
         "tags": existing_creator.get("tags", []),
         "projects": projects,
-        "media_groups":  _build_media_groups(media_index.creator_media, root_depth=1),
+        "media_groups": _build_media_groups(media_index.creator_media, ctx.metadata_folder_name),
         "collaborations": [],
     }
 
