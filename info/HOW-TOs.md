@@ -17,3 +17,9 @@ convert input.png -background white -alpha remove -alpha off output.png
 ```
 grep -rn . -e 'Search-String'
 ```
+
+## dos2unix
+
+```
+dos2unix file.txt
+```
