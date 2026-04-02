@@ -3,7 +3,6 @@
 ![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
 [![License](https://img.shields.io/badge/license-NonCommercial-blue.svg)](https://github.com/vger-6/cr4te/blob/main/LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10+-yellow.svg)
-[![Donate](https://img.shields.io/badge/donate-PayPal-blue.svg)](https://www.paypal.com/donate/?hosted_button_id=XERA3ZMTLZC2N)
 
 > **⚠️ Under Construction**
 > This project is still in development. Features, structure, and configuration may change without notice.
@@ -15,12 +14,6 @@ cr4te scans your existing folder structure, extracts metadata and media (images,
 <img src="data/example/artist_page.png" alt="Screenshot Artist Page" width="100%"/>
 
 [View full gallery](info/SCREENSHOTS.md)
-
-## Support This Project 🙏
-
-If you find cr4te useful, consider [donating via PayPal](https://www.paypal.com/donate/?hosted_button_id=XERA3ZMTLZC2N) to help support continued development.
-
----
 
 ## Features
 
