@@ -173,54 +173,117 @@ class MediaBucket:
 
 @dataclass
 class CreatorMediaIndex:
-    ctx: JsonBuildContext
-    creator_media: Dict[Path, MediaBucket] = field(default_factory=dict)
-    project_media: Dict[str, Dict[Path, MediaBucket]] = field(default_factory=dict)
+    """
+    Organizes media according to the expected directory structure:
 
-    def __post_init__(self):
-        self.portrait_selector = ImageSelector(self.ctx.portrait_basename, Orientation.PORTRAIT, self.ctx.auto_find_portrait)
-        self.cover_selectors: DefaultDict[str, ImageSelector] = defaultdict(lambda: ImageSelector(self.ctx.cover_basename, Orientation.LANDSCAPE, True))
-        
-    def _is_root(self, rel_folder_path: Path, level: int, metadata_name: str) -> bool:
-        parts = rel_folder_path.parts
-        return len(parts) == level or (len(parts) > level and parts[level] == metadata_name)
+    input_dir/
+        creator_root/
+            <media files>
+            <project_name>/
+                <media files>
+            <metadata_folder_name>/
+                <metadata files>
 
-    def _creator_bucket(self, rel_folder_path: Path) -> MediaBucket:
-        if rel_folder_path not in self.creator_media:
-            is_root = self._is_root(rel_folder_path, 1, self.ctx.metadata_folder_name)
-            self.creator_media[rel_folder_path] = MediaBucket(self.ctx, is_root, self.portrait_selector)
-        return self.creator_media[rel_folder_path]
+    Rules:
+    - Level 0: input_dir
+    - Level 1: creator root
+    - Level 2: project folders or metadata folder
+    - Metadata folders are ignored for project classification
+    """
 
-    def _project_bucket(self, project_name: str, rel_folder_path: Path) -> MediaBucket:
-        proj = self.project_media.setdefault(project_name, {})
-        if rel_folder_path not in proj:
-            is_root = self._is_root(rel_folder_path, 2, self.ctx.metadata_folder_name)
-            proj[rel_folder_path] = MediaBucket(self.ctx, is_root, self.portrait_selector, self.cover_selectors[project_name])
-        return proj[rel_folder_path]
-    
-    def _classify_media_path(self, media_path: Path) -> tuple[Optional[str], Path]:
+    CREATOR_LEVEL = 1
+    PROJECT_LEVEL = 2
+
+    def __init__(self, ctx: JsonBuildContext):
+        self.ctx = ctx
+        self.creator_media: Dict[Path, MediaBucket] = {}
+        self.project_media: Dict[str, Dict[Path, MediaBucket]] = {}
+
+        self.portrait_selector = ImageSelector(
+            ctx.portrait_basename,
+            Orientation.PORTRAIT,
+            ctx.auto_find_portrait,
+        )
+
+        self.cover_selectors: DefaultDict[str, ImageSelector] = defaultdict(
+            lambda: ImageSelector(ctx.cover_basename, Orientation.LANDSCAPE, True)
+        )
+
+    def _analyze_path(self, media_path: Path) -> tuple[Path, Optional[str], tuple[str, ...]]:
         rel_path = media_path.relative_to(self.ctx.input_dir)
-        rel_path_parts = rel_path.parts
-        
-        if len(rel_path_parts) <= 2 or rel_path_parts[1] == self.ctx.metadata_folder_name:
-            return None, rel_path.parent
+        parts = rel_path.parts
+        rel_folder = rel_path.parent
 
-        project_name = rel_path_parts[1]
-        return project_name, rel_path.parent
-    
-    def add_media(self, media_path: Path) -> None:
-        project_name, rel_folder_path = self._classify_media_path(media_path)
+        project_name: Optional[str] = None
+
+        if len(parts) > self.PROJECT_LEVEL:
+            candidate = parts[self.CREATOR_LEVEL]
+
+            if candidate != self.ctx.metadata_folder_name:
+                project_name = candidate
+
+        return rel_folder, project_name, parts
+
+    def _is_creator_root(self, parts: tuple[str, ...]) -> bool:
+        return (
+            len(parts) == self.CREATOR_LEVEL
+            or (
+                len(parts) > self.CREATOR_LEVEL
+                and parts[self.CREATOR_LEVEL] == self.ctx.metadata_folder_name
+            )
+        )
+
+    def _is_project_root(self, parts: tuple[str, ...]) -> bool:
+        return (
+            len(parts) == self.PROJECT_LEVEL
+            or (
+                len(parts) > self.PROJECT_LEVEL
+                and parts[self.PROJECT_LEVEL] == self.ctx.metadata_folder_name
+            )
+        )
+
+    def _creator_bucket(self, rel_folder: Path, parts: tuple[str, ...]) -> MediaBucket:
+        bucket = self.creator_media.get(rel_folder)
+
+        if bucket is None:
+            bucket = MediaBucket(
+                self.ctx,
+                self._is_creator_root(parts),
+                self.portrait_selector,
+            )
+            self.creator_media[rel_folder] = bucket
+
+        return bucket
+
+    def _project_bucket(self, project_name: str, rel_folder: Path, parts: tuple[str, ...]) -> MediaBucket:
+        proj = self.project_media.setdefault(project_name, {})
+        bucket = proj.get(rel_folder)
+
+        if bucket is None:
+            bucket = MediaBucket(
+                self.ctx,
+                self._is_project_root(parts),
+                self.portrait_selector,
+                self.cover_selectors[project_name],
+            )
+            proj[rel_folder] = bucket
+
+        return bucket
+
+    def _get_bucket(self, media_path: Path) -> MediaBucket:
+        rel_folder, project_name, parts = self._analyze_path(media_path)
 
         if project_name is None:
-            bucket = self._creator_bucket(rel_folder_path)
-        else:
-            bucket = self._project_bucket(project_name, rel_folder_path)
+            return self._creator_bucket(rel_folder, parts)
 
-        bucket.add(media_path)
-    
+        return self._project_bucket(project_name, rel_folder, parts)
+
+    def add_media(self, media_path: Path) -> None:
+        self._get_bucket(media_path).add(media_path)
+
     def get_selected_portrait(self) -> Optional[Path]:
         return self.portrait_selector.selected
-    
+
     def get_selected_cover(self, project_name: str) -> Optional[Path]:
         return self.cover_selectors[project_name].selected
     
