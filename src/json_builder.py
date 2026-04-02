@@ -202,12 +202,6 @@ class CreatorMediaIndex:
         rel_path = media_path.relative_to(self.ctx.input_dir)
         rel_path_parts = rel_path.parts
         
-        # e.g.:
-        # rel_path = creator_name/media.ext
-        # rel_path = creator_name/meta/media.ext
-        # rel_path = creator_name/project_name/media.ext
-        # rel_path = creator_name/project_name/sub_folder/media.ext
-
         if len(rel_path_parts) <= 2 or rel_path_parts[1] == self.ctx.metadata_folder_name:
             return None, rel_path.parent
 
@@ -313,56 +307,93 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     
     return creator
     
-def _link_creator_collaborations(creators: List[Dict[str, Any]]) -> None:
-    # Build collaboration map (name -> members)
-    collaboration_map = {
-        creator["name"]: creator["members"]
-        for creator in creators
-        if creator.get("is_collaboration") and creator.get("members")
-    }
+def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
+    """
+    Builds reverse collaboration links and patches JSON files in-place.
+    """
 
-    # Add reverse links to solo creators
-    for creator in creators:
-        if not creator.get("is_collaboration"):
-            auto_collabs = [
-                name for name, members in collaboration_map.items()
-                if creator["name"] in members
-            ]
-            manual_collabs = creator.get("collaborations", [])
-            creator["collaborations"] = sorted(set(auto_collabs + manual_collabs))
-            
-def _write_json_files(creator_records: List[Tuple[Path, Dict[str, Any]]]) -> None:
-    """
-    Writes each creator's JSON data to <creator_dir>/cr4te.json.
-    """
-    for creator_dir, creator_data in creator_records:
-        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
-        
-        existing = _load_existing_json(json_path)
-        if existing == creator_data:
+    reverse_map: dict[str, list[str]] = defaultdict(list)
+
+    # Build reverse index
+    for creator_name, info in collab_map.items():
+        if info["is_collaboration"] and info["members"]:
+            for member in info["members"]:
+                reverse_map[member].append(creator_name)
+
+    valid_names = set(collab_map.keys())
+
+    # Patch each creator JSON independently
+    for creator_name, info in collab_map.items():
+        if info["is_collaboration"]:
             continue
-        
-        with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(creator_data, f, indent=2)
+
+        json_path = info["dir"] / constants.CR4TE_JSON_FILE_NAME
+        existing = _load_existing_json(json_path)
+
+        auto_collabs = reverse_map.get(creator_name, [])
+
+        raw_manual = existing.get("collaborations", [])
+
+        # Detect invalid (deduplicated + sorted for stable logging)
+        invalid_collabs = sorted({
+            name for name in raw_manual
+            if name not in valid_names
+        })
+
+        if invalid_collabs:
+            logger.warning(f"{creator_name} ({json_path}): removing invalid collaborations: {invalid_collabs}")
+
+        # Keep only valid manual collaborations
+        manual_collabs = [
+            name for name in raw_manual
+            if name in valid_names
+        ]
+
+        merged = sorted(set(auto_collabs + manual_collabs))
+
+        if existing.get("collaborations") != merged:
+            existing["collaborations"] = merged
+
+            with open(json_path, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2)
+            
+def _write_creator_json(creator_dir: Path, creator_data: Dict[str, Any]) -> None:
+    json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+
+    existing = _load_existing_json(json_path)
+    if existing == creator_data:
+        return
+
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(creator_data, f, indent=2)
             
 def build_creator_json_files(input_dir: Path, media_rules: dict[str, Any]) -> None:
     ctx = JsonBuildContext(input_dir, media_rules)
 
-    creator_records = []
+    collab_map: dict[str, dict[str, Any]] = {}
+
+    # pass 1: build + write
     for creator_dir in sorted(ctx.input_dir.iterdir()):
         if not creator_dir.is_dir() or _is_excluded_path(creator_dir, (ctx.global_exclude_prefix,)):
             continue
+
         logger.info(f"Processing: {creator_dir.name}")
 
         creator_data = _build_creator(ctx, creator_dir)
-        creator_records.append((creator_dir, creator_data))
 
-    _link_creator_collaborations([creator_data for _, creator_data in creator_records])
-    
-    for _, creator_data in creator_records:
+        # store lightweight metadata for linking
+        collab_map[creator_data["name"]] = {
+            "dir": creator_dir,
+            "members": creator_data.get("members", []),
+            "is_collaboration": creator_data.get("is_collaboration", False),
+        }
+
         _validate_creator(creator_data)
 
-    _write_json_files(creator_records)
+        _write_creator_json(creator_dir, creator_data)
+
+    # pass 2: resolve collaborations
+    _link_creator_collaborations(collab_map)
     
 def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
     total = 0
