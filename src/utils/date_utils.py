@@ -4,7 +4,7 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["parse_date", "calculate_age", "calculate_age_from_strings"]
+__all__ = ["parse_date", "calculate_age_from_strings"]
 
 def parse_date(date_str: str) -> Optional[datetime]:
     if not isinstance(date_str, str):
@@ -22,7 +22,7 @@ def parse_date(date_str: str) -> Optional[datetime]:
     logger.warning(f"Failed to parse date '{date_str}'")
     return None
 
-def calculate_age(dob: datetime, date: datetime) -> Optional[int]:
+def _calculate_age(dob: datetime, date: datetime) -> Optional[int]:
     try:
         age = date.year - dob.year - ((date.month, date.day) < (dob.month, dob.day))
         return age
@@ -38,5 +38,5 @@ def calculate_age_from_strings(date_of_birth_str: str, reference_date_str: str) 
     dob = parse_date(date_of_birth_str)
     ref = parse_date(reference_date_str)
     if dob and ref:
-        return calculate_age(dob, ref)
+        return _calculate_age(dob, ref)
     return None
