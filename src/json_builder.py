@@ -433,18 +433,20 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
         if existing.get("collaborations") != merged:
             existing["collaborations"] = merged
 
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(existing, f, indent=2)
-            
+            _write_creator_json(info["dir"], existing)
+
 def _write_creator_json(creator_dir: Path, creator_data: Dict[str, Any]) -> None:
     json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+    tmp_path = json_path.with_suffix(json_path.suffix + ".tmp")
 
     existing = _load_existing_json(json_path)
     if existing == creator_data:
         return
 
-    with open(json_path, "w", encoding="utf-8") as f:
+    with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(creator_data, f, indent=2)
+
+    tmp_path.replace(json_path)
             
 def build_creator_json_files(input_dir: Path, media_rules: dict[str, Any]) -> None:
     ctx = JsonBuildContext(input_dir, media_rules)
@@ -455,21 +457,25 @@ def build_creator_json_files(input_dir: Path, media_rules: dict[str, Any]) -> No
     for creator_dir in sorted(ctx.input_dir.iterdir()):
         if not creator_dir.is_dir() or _is_excluded_path(creator_dir, (ctx.global_exclude_prefix,)):
             continue
+            
+        try:
+            logger.info(f"Processing: {creator_dir.name}")
 
-        logger.info(f"Processing: {creator_dir.name}")
+            creator_data = _build_creator(ctx, creator_dir)
 
-        creator_data = _build_creator(ctx, creator_dir)
+            _validate_creator(creator_data)
 
-        # store lightweight metadata for linking
-        collab_map[creator_data["name"]] = {
-            "dir": creator_dir,
-            "members": creator_data.get("members", []),
-            "is_collaboration": creator_data.get("is_collaboration", False),
-        }
-
-        _validate_creator(creator_data)
-
-        _write_creator_json(creator_dir, creator_data)
+            _write_creator_json(creator_dir, creator_data)
+            
+            collab_map[creator_data["name"]] = {
+                "dir": creator_dir,
+                "members": creator_data.get("members", []),
+                "is_collaboration": creator_data.get("is_collaboration", False),
+            }
+            
+        except Exception as e:
+            logger.exception(f"{creator_dir.name}: failed to process")
+            continue
 
     # pass 2: resolve collaborations
     _link_creator_collaborations(collab_map)
@@ -503,5 +509,6 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
         f"\tDeleted: {deleted}\n"
         f"\tSkipped/errors: {skipped}"
         )
+        
     if dry_run:
         logger.info("\t(Dry-run mode: no files were deleted)")
