@@ -4,15 +4,15 @@
 
   --font-family: sans-serif;
   
-  --h1-font-size: 2rem;
-  --h2-font-size: 1.8rem;
-  --h3-font-size: 1.6rem;
-  --h4-font-size: 1.4rem;
-  --h5-font-size: 1.2rem;
-  --h6-font-size: 1rem;
+  --h1-font-size: 1.6rem;
+  --h2-font-size: 1.4rem;
+  --h3-font-size: 1.2rem;
+  --h4-font-size: 1rem;
+  --h5-font-size: 0.8rem;
+  --h6-font-size: 0.6rem;
   
   /* Default theme fallback */
-  --bg-color: #ffffff;
+  --background-color: #ffffff;
   
   --hover-background-color: #cccccc;
   --hover-text-color: #111111;
@@ -20,26 +20,32 @@
   --selected-background-color: #cccccc;
   --selected-text-color: #111111;
   
-  --box-bg: #f9f9f9;
-  --border-color: #cccccc;
-  --hr-color: #dddddd;
-  --title-bg: #eeeeee;
+  --title-background-color: #eeeeee;
+  --title-border-color: #cccccc;
   --title-color: #333333;
+  
+  --selection-box-background-color: #f9f9f9;
+  --selection-box-border-color: #cccccc;
+  --selection-box-hr-color: #dddddd;
+  --selection-box-title-backgound-color: #eeeeee;
+  --selection-box-title-color: #333333;
 
   --text-color: #111111;
   --text-muted-color: #666666;
+  
   --tag-category-color: #888888;
   --tag-text-color: #444444;
   --tag-background-color: #fff2;
-  --section-content-bg: transparent;
+  --tag-hover-text-color: #444444;
+  --tag-hover-background-color: #fff2;
 
   --link-color: #007acc;
   --link-visited-color: #6a5acd;
   --link-hover-color: #003366;
   --link-disabled-color: #999999;
 
-  --track-odd: #f0f0f0;
-  --track-even: #e0e0e0;
+  --track-odd-color: #f0f0f0;
+  --track-even-color: #e0e0e0;
   
   --icon-fill-color: #111111;
   --control-border-color: #111111;
@@ -51,7 +57,7 @@
 body {
   color: var(--text-color);
   font-family: var(--font-family);
-  background-color: var(--bg-color);
+  background-color: var(--background-color);
   margin: 0;
   padding: var(--body-padding);
 }
@@ -78,7 +84,8 @@ h1 {
   font-size: var(--h1-font-size);
   font-weight: bold;
   color: var(--title-color);
-  background-color: var(--title-bg);
+  background-color: var(--title-background-color);
+  border: 1px solid var(--title-border-color);
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
@@ -96,6 +103,7 @@ h1 {
   padding: initial;
   margin-bottom: initial;
   border-radius: initial;
+  border: initial;
 }
 
 .markdown h1 {
@@ -110,8 +118,20 @@ h1 {
   font-size: var(--h5-font-size);
 }
 
-.markdown h4,  .markdown h5, .markdown h6 {
+.markdown h4 {
   font-size: var(--h6-font-size);
+  font-weight: bold;
+}
+
+.markdown h5 {
+  font-size: var(--h6-font-size);
+  font-weight: bold;
+  font-style: italic;
+}
+
+.markdown h6 {
+  font-size: var(--h6-font-size);
+  font-style: italic;
 }
 
 .markdown ul {
@@ -142,7 +162,7 @@ a:visited {
 a:hover,
 a:focus {
   color: var(--link-hover-color);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .theme-dropdown {
@@ -165,7 +185,7 @@ a:focus {
 .theme-button:hover,
 .theme-button:focus {
   color: var(--link-hover-color);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .theme-panel {
@@ -173,8 +193,8 @@ a:focus {
   position: absolute;
   right: 0;
   margin-top: 0.5rem;
-  background-color: var(--box-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--selection-box-background-color);
+  border: 1px solid var(--selection-box-border-color);
   padding: 0.5rem 0;
   border-radius: 0.5rem;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -199,16 +219,16 @@ a:focus {
 }
 
 .section-box {
-  border: 2px solid var(--border-color);
-  background-color: var(--box-bg);
+  border: 1px solid var(--selection-box-border-color);
+  background-color: var(--selection-box-background-color);
 }
 
 .section-title {
-  background-color: var(--title-bg);
-  color: var(--title-color);
+  background-color: var(--selection-box-title-backgound-color);
+  color: var(--selection-box-title-color);
   padding: 0.5rem 1rem;
   font-weight: bold;
-  font-size: var(--h3-font-size);
+  font-size: var(--h2-font-size);
   display: flex;
   align-items: center;
 }
@@ -221,13 +241,12 @@ a:focus {
 
 .section-box hr {
   border: none;
-  border-top: 1px solid var(--hr-color);
+  border-top: 1px solid var(--selection-box-hr-color);
   margin: 0;
 }
 
 .section-content {
   padding: 1rem;
-  background-color: var(--section-content-bg);
 }
 
 .meta-list {
@@ -394,13 +413,13 @@ a:focus {
 .audio-gallery li {
   cursor: pointer;
   padding: 0.5rem 1rem;
-  background-color: var(--track-odd);
+  background-color: var(--track-odd-color);
   color: var(--text-color);
   transition: color 0.2s, background-color 0.2s;
 }
 
 .audio-gallery li:nth-child(even) {
-  background-color: var(--track-even);
+  background-color: var(--track-even-color);
 }
 
 .audio-gallery li:hover {
@@ -430,10 +449,10 @@ a:focus {
 }
 
 .pagination-controls {
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   /*padding: 0.5rem;*/
   padding-top: 1rem;
-  /*border: 1px solid var(--border-color);*/
+  /*border: 1px solid var(--selection-box-border-color);*/
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -444,7 +463,7 @@ a:focus {
 .pagination-controls button {
   color: var(--text-color);
   font-weight: bold;
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   border: 1px solid var(--icon-fill-color);
   height: 1.5rem;
   width: 2rem;
@@ -452,7 +471,7 @@ a:focus {
 }
 
 .pagination-controls button.in-active {
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   color: var(--link-disabled-color);
   border: 1px solid var(--link-disabled-color);
   cursor: default;
@@ -523,6 +542,11 @@ a:focus {
   color: var(--tag-text-color);
 }
 
+.tag:hover {
+  background-color: var(--tag-hover-background-color);
+  color: var(--tag-hover-text-color);
+}
+
 .nav-current {
   font-weight: bold;
   color: var(--link-disabled-color);
@@ -535,9 +559,9 @@ a:focus {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   padding: 0.5rem;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--selection-box-border-color);
 }
 
 .audio-controls > * {
@@ -559,7 +583,7 @@ a:focus {
   bottom: 0rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;
 }
@@ -569,7 +593,7 @@ a:focus {
   /*position: sticky;*/
   bottom: 0rem;
   /*padding-top: 1rem;*/
-  background: var(--box-bg);
+  background: var(--selection-box-background-color);
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;
 }
