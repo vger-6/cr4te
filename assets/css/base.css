@@ -64,7 +64,6 @@ html, body {
 .page-header {
   position: sticky;
   top: 0;
-  background: var(--bg-color);
   z-index: 1000;
 }
 
