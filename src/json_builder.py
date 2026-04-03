@@ -29,23 +29,32 @@ AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)
 
-# TODO: Move to utils
-def _normalize_date(date_str: str) -> str:
+class InvalidDateFormatError(ValueError):
+    pass
+
+def _normalize_date(date_str: Optional[str]) -> str:
     """
     Validates and normalizes a date string.
+
     Accepts:
         - YYYY
         - YYYY-MM
         - YYYY-MM-DD
-    Returns normalized string if valid, otherwise "".
+
+    Returns normalized string if valid.
+    Returns "" if input is None or empty.
+    Raises InvalidDateFormatError if format is invalid.
     """
-    if not isinstance(date_str, str):
+    if date_str is None:
         return ""
+
+    if not isinstance(date_str, str):
+        raise InvalidDateFormatError(f"Expected string or None, got {type(date_str)}")
 
     date_str = date_str.strip()
     if not date_str:
         return ""
-        
+
     for fmt in ("%Y-%m-%d", "%Y-%m", "%Y"):
         try:
             parsed = datetime.strptime(date_str, fmt)
@@ -53,7 +62,14 @@ def _normalize_date(date_str: str) -> str:
         except ValueError:
             continue
 
-    return ""
+    raise InvalidDateFormatError(f"Invalid date format: '{date_str}'")
+    
+def _safe_normalize_date(date_str: Optional[str], field_name: str, context_name: str) -> str:
+    try:
+        return _normalize_date(date_str)
+    except InvalidDateFormatError as e:
+        logger.warning(f"{context_name}: invalid {field_name}: {date_str} ({e})")
+        return ""
         
 def _is_excluded_path(path: Path, exclude_prefixes: tuple[str, ...]) -> bool:
     return any(part.startswith(exclude_prefixes) or part.startswith('.') for part in path.parts)
@@ -324,6 +340,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     for media_path in _iter_media_files(ctx, creator_dir):
         media_index.add_media(media_path)
 
+    creator_name = creator_dir.name
     existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_FILE_NAME)
     existing_projects = { p["title"]: p for p in existing_creator.get("projects", []) if "title" in p }
     projects = []
@@ -331,14 +348,13 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         cover = media_index.get_selected_cover(project_name)
         projects.append({
             "title": project_name,
-            "release_date": _normalize_date(existing_projects.get(project_name, {}).get("release_date", "")),
+            "release_date": _safe_normalize_date(existing_projects.get(project_name, {}).get("release_date",""), "release_date", f"{creator_name} - {project_name}"),
             "cover": str(cover.relative_to(ctx.input_dir)) if cover else "",
             "info": text_utils.read_text(creator_dir / project_name / ctx.readme_file_name) or existing_projects.get(project_name, {}).get("info", ""),
             "media_groups": _build_media_groups(folders, ctx.metadata_folder_name),
             "tags": existing_projects.get(project_name, {}).get("tags", [])
         })
     
-    creator_name = creator_dir.name
     separators = ctx.collaboration_separators
     is_collab = existing_creator.get("is_collaboration")
     if is_collab is None:
@@ -349,9 +365,9 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
     creator = {
         "name": creator_name,
         "is_collaboration": is_collab,
-        "born_or_founded": _normalize_date(existing_creator.get("born_or_founded", "")),
-        "died_or_dissolved": _normalize_date(existing_creator.get("died_or_dissolved", "")),
-        "active_since": _normalize_date(existing_creator.get("active_since", "")),
+        "born_or_founded": _safe_normalize_date(existing_creator.get("born_or_founded", ""), "born_or_founded", creator_name),
+        "died_or_dissolved": _safe_normalize_date(existing_creator.get("died_or_dissolved", ""), "died_or_dissolved", creator_name),
+        "active_since": _safe_normalize_date(existing_creator.get("active_since", ""), "active_since", creator_name),
         "nationality": existing_creator.get("nationality", ""),
         "aliases": existing_creator.get("aliases", []),
         "portrait":  str(portrait.relative_to(ctx.input_dir)) if portrait else "",
