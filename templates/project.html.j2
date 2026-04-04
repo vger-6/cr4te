@@ -82,10 +82,12 @@
                     <img src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
                   </a>
                 {% endif %}
-                <div>
-                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ creator.rel_html_path }}">{{ creator.name }}</a></p>
+                <div class="meta-list">
+                  <div class="meta-label">Name:</div>
+                  <div class="meta-value"><a href="{{ path_to_root }}{{ creator.rel_html_path }}">{{ creator.name }}</a></div>
                   {% if creator.age_at_release %}
-                    <p><strong>Age at Time:</strong> {{ creator.age_at_release }}</p>
+                    <div class="meta-label">Age at Time:</div>
+                    <div class="meta-value">{{ creator.age_at_release }}</div>
                   {% endif %}
                 </div>
               </div>
@@ -108,8 +110,9 @@
                     <img src="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" alt="Portrait of {{ collaboration.name }}">
                   </a>
                 {% endif %}
-                <div>
-                  <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ collaboration.rel_html_path }}">{{ collaboration.name }}</a></p>
+                <div class="meta-list">
+                  <div class="meta-label">Name:</div>
+                  <div class="meta-value"><a href="{{ path_to_root }}{{ collaboration.rel_html_path }}">{{ collaboration.name }}</a></div>
                 </div>
               </div>
             </div>
@@ -129,10 +132,12 @@
                       <img src="{{ path_to_root }}{{ participant.rel_portrait_path}}" alt="Portrait of {{ participant.name }}">
                     </a>
                   {% endif %}
-                  <div>
-                    <p><strong>Name:</strong> <a href="{{ path_to_root }}{{ participant.rel_html_path }}">{{ participant.name }}</a></p>
+                  <div class="meta-list">
+                    <div class="meta-label">Name:</div>
+                    <div class="meta-value"><a href="{{ path_to_root }}{{ participant.rel_html_path }}">{{ participant.name }}</a></div>
                     {% if participant.age_at_release %}
-                      <p><strong>Age at Time:</strong> {{ participant.age_at_release }}</p>
+                      <div class="meta-label">Age at Time:</div>
+                      <div class="meta-value">{{ participant.age_at_release }}</div>
                     {% endif %}
                   </div>
                 </div>
