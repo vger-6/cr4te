@@ -48,6 +48,8 @@
   --track-even-color: #e0e0e0;
   
   --icon-fill-color: #111111;
+  --icon-hover-fill-color: #111111;
+  
   --control-border-color: #111111;
   
   --scrollbar-color: #666;
@@ -626,6 +628,10 @@ a:focus {
   width: 1.5rem;
   height: 1.5rem;
   fill: var(--icon-fill-color);
+}
+
+.control-btn:hover:not(.disabled) .icon {
+  fill: var(--icon-hover-fill-color);
 }
 
 .volume-container {

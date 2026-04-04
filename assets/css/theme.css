@@ -34,6 +34,8 @@
   --track-even-color: #1f4660;
 
   --icon-fill-color: #d9f2ff;
+  --icon-hover-fill-color: #d9f2ff;
+  
   --control-border-color: #82e9de;
 
   --scrollbar-color: #294d66;
@@ -76,6 +78,8 @@
   --track-even-color: #2e5a5f;
 
   --icon-fill-color: #d8e5dd;
+  --icon-hover-fill-color: #d8e5dd;
+  
   --control-border-color: #a8dadc;
 
   --scrollbar-color: #2e5a5f;
