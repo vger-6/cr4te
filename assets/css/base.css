@@ -57,9 +57,16 @@
 body {
   color: var(--text-color);
   font-family: var(--font-family);
-  background-color: var(--background-color);
   margin: 0;
   padding: var(--body-padding);
+  background-color: var(--background-color);
+  
+  /*background-image: url('background-image.png');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-blend-mode: multiply;*/ /*luminosity, multiply, overlay, soft-light*/
 }
 
 html, body {
