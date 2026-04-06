@@ -14,21 +14,53 @@
   /* Default theme fallback */
   --background-color: #ffffff;
   
+  --overview-layout-padding-top: 0;
+  --overview-layout-padding-bottom: 0;
+  --overview-layout-padding-left: 0;
+  --overview-layout-padding-right: 0;
+  --overview-layout-border-radius: 0;
+  --overview-layout-background-color: transparent;
+  --overview-layout-border-color: transparent;
+  --overview-layout-border-thickness: 0;
+  
+  --two-column-layout-gap: 2rem;
+  --two-column-layout-column-padding-top: 0;
+  --two-column-layout-column-padding-bottom: 0;
+  --two-column-layout-column-padding-left: 0;
+  --two-column-layout-column-padding-right: 0;
+  --two-column-layout-column-border-radius: 0;
+  --two-column-layout-column-background-color: transparent;
+  --two-column-layout-column-border-color: transparent;
+  --two-column-layout-column-border-thickness: 0;
+
   --hover-background-color: #cccccc;
   --hover-text-color: #111111;
   
   --selected-background-color: #cccccc;
   --selected-text-color: #111111;
   
+  --theme-panel-background-color: #f9f9f9;
+  --theme-panel-border-color: #cccccc;
+  
   --title-background-color: #eeeeee;
   --title-border-color: #cccccc;
   --title-color: #333333;
   
-  --selection-box-background-color: #f9f9f9;
-  --selection-box-border-color: #cccccc;
-  --selection-box-hr-color: #dddddd;
-  --selection-box-title-backgound-color: #eeeeee;
-  --selection-box-title-color: #333333;
+  --section-title-padding-top: 0.5rem;
+  --section-title-padding-bottom: 0.5rem;
+  --section-title-padding-left: 1rem;
+  --section-title-padding-right: 1rem;
+  --section-box-background-color: #f9f9f9;
+  --section-box-border-thickness: 1px;
+  --section-box-border-color: #cccccc;
+  --section-box-hr-color: #dddddd;
+  --section-box-title-backgound-color: #eeeeee;
+  --section-box-title-color: #333333;
+  
+  --section-content-padding-top: 1rem;
+  --section-content-padding-left: 1rem;
+  --section-content-padding-right: 1rem;
+  --section-content-padding-bottom: 1rem;
 
   --text-color: #111111;
   --text-muted-color: #666666;
@@ -43,6 +75,14 @@
   --link-visited-color: #6a5acd;
   --link-hover-color: #003366;
   --link-disabled-color: #999999;
+  
+  --audio-controls-background-color: #f9f9f9;
+  --audio-controls-border-color: #cccccc;
+  --audio-controls-wrapper-background-color: #f9f9f9;
+  
+  --pagination-controls-background-color: #f9f9f9;
+  --pagination-controls-button-background-color: #f9f9f9;
+  --pagination-controls-wrapper-background-color: #f9f9f9;
 
   --track-odd-color: #f0f0f0;
   --track-even-color: #e0e0e0;
@@ -202,8 +242,8 @@ a:focus {
   position: absolute;
   right: 0;
   margin-top: 0.5rem;
-  background-color: var(--selection-box-background-color);
-  border: 1px solid var(--selection-box-border-color);
+  background-color: var(--theme-panel-background-color);
+  border: 1px solid var(--theme-panel-border-color);
   padding: 0.5rem 0;
   border-radius: 0.5rem;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -228,14 +268,17 @@ a:focus {
 }
 
 .section-box {
-  border: 1px solid var(--selection-box-border-color);
-  background-color: var(--selection-box-background-color);
+  border: var(--section-box-border-thickness) solid var(--section-box-border-color);
+  background-color: var(--section-box-background-color);
 }
 
 .section-title {
-  background-color: var(--selection-box-title-backgound-color);
-  color: var(--selection-box-title-color);
-  padding: 0.5rem 1rem;
+  background-color: var(--section-box-title-backgound-color);
+  color: var(--section-box-title-color);
+  padding-top: var(--section-title-padding-top);
+  padding-bottom: var(--section-title-padding-bottom);
+  padding-left: var(--section-title-padding-left);
+  padding-right: var(--section-title-padding-right);
   font-weight: bold;
   font-size: var(--h2-font-size);
   display: flex;
@@ -250,12 +293,15 @@ a:focus {
 
 .section-box hr {
   border: none;
-  border-top: 1px solid var(--selection-box-hr-color);
+  border-top: 1px solid var(--section-box-hr-color);
   margin: 0;
 }
 
 .section-content {
-  padding: 1rem;
+  padding-top: var(--section-content-padding-top);
+  padding-left: var(--section-content-padding-left);
+  padding-right: var(--section-content-padding-right);
+  padding-bottom: var(--section-content-padding-bottom);
 }
 
 .meta-list {
@@ -458,10 +504,10 @@ a:focus {
 }
 
 .pagination-controls {
-  background: var(--selection-box-background-color);
+  background: var(--pagination-controls-background-color);
   /*padding: 0.5rem;*/
   padding-top: 1rem;
-  /*border: 1px solid var(--selection-box-border-color);*/
+  /*border: 1px solid var(--section-box-border-color);*/
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -472,7 +518,7 @@ a:focus {
 .pagination-controls button {
   color: var(--text-color);
   font-weight: bold;
-  background: var(--selection-box-background-color);
+  background: var(--pagination-controls-button-background-color);
   border: 1px solid var(--icon-fill-color);
   height: 1.5rem;
   width: 2rem;
@@ -480,7 +526,7 @@ a:focus {
 }
 
 .pagination-controls button.in-active {
-  background: var(--selection-box-background-color);
+  background: var(--pagination-controls-button-background-color);
   color: var(--link-disabled-color);
   border: 1px solid var(--link-disabled-color);
   cursor: default;
@@ -568,9 +614,9 @@ a:focus {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-  background: var(--selection-box-background-color);
+  background: var(--audio-controls-background-color);
   padding: 0.5rem;
-  border: 1px solid var(--selection-box-border-color);
+  border: 1px solid var(--audio-controls-border-color);
 }
 
 .audio-controls > * {
@@ -592,7 +638,7 @@ a:focus {
   bottom: 0rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  background: var(--selection-box-background-color);
+  background: var(--audio-controls-wrapper-background-color);
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;
 }
@@ -602,7 +648,7 @@ a:focus {
   /*position: sticky;*/
   bottom: 0rem;
   /*padding-top: 1rem;*/
-  background: var(--selection-box-background-color);
+  background: var(--pagination-controls-wrapper-background-color);
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity 0.3s ease;
 }

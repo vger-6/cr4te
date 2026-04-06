@@ -1,5 +1,24 @@
 .theme-frozen-aurora {
   --background-color: #0e1b2a;
+  
+  --overview-layout-padding-top: 0rem;
+  --overview-layout-padding-bottom: 0rem;
+  --overview-layout-padding-left: 1rem;
+  --overview-layout-padding-right: 1rem;
+  --overview-layout-border-radius: 0.5rem;
+  --overview-layout-background-color: #162d42;
+  --overview-layout-border-color: transparent;
+  --overview-layout-border-thickness: 0;
+  
+  --two-column-layout-gap: 1rem;
+  --two-column-layout-column-padding-top: 1rem;
+  --two-column-layout-column-padding-bottom: 0rem;
+  --two-column-layout-column-padding-left: 1rem;
+  --two-column-layout-column-padding-right: 1rem;
+  --two-column-layout-column-border-radius: 0.5rem;
+  --two-column-layout-column-background-color: #162d42;
+  --two-column-layout-column-border-color: transparent;
+  --two-column-layout-column-border-thickness: 0;
 
   --hover-background-color: #2ec8e6;
   --hover-text-color: #002633;
@@ -7,18 +26,32 @@
   --selected-background-color: #2ec8e6;
   --selected-text-color: #002633;
   
-  --title-background-color: #14324b;
+  --theme-panel-background-color: #162d42;
+  --theme-panel-border-color: #55bcd7;
+  
+  --title-background-color: #162d42;
   --title-border-color: transparent;
   --title-color: #e0faff;
 
-  --selection-box-background-color: #162d42;
-  --selection-box-border-color: #55bcd7;
-  --selection-box-hr-color: #89ecf5;
-  --selection-box-title-backgound-color: #14324b;
-  --selection-box-title-color: #e0faff;
+  --section-title-padding-top: 0rem;
+  --section-title-padding-bottom: 0rem;
+  --section-title-padding-left: 0rem;
+  --section-title-padding-right: 0rem;
+  --section-box-background-color: #162d42;
+  --section-box-border-thickness: 0px;
+  --section-box-border-color: #55bcd7;
+  --section-box-hr-color: #89ecf5;
+  --section-box-title-backgound-color: #162d42;
+  --section-box-title-color: #e0faff;
+  
+  --section-content-padding-top: 1rem;
+  --section-content-padding-left: 0rem;
+  --section-content-padding-right: 0rem;
+  --section-content-padding-bottom: 1rem;
 
   --text-color: #d9f2ff;
   --text-muted-color: #a6c4d8;
+  
   --tag-category-color: #97d1f3;
   --tag-text-color: #ffffff;
   --tag-background-color: #1c3b52;
@@ -29,6 +62,14 @@
   --link-visited-color: #aad8ef;
   --link-hover-color: #ffffff;
   --link-disabled-color: #669ea6;
+  
+  --audio-controls-background-color: #162d42;
+  --audio-controls-border-color: #55bcd7;
+  --audio-controls-wrapper-background-color: #162d42;
+  
+  --pagination-controls-background-color: #162d42;
+  --pagination-controls-button-background-color: #162d42;
+  --pagination-controls-wrapper-background-color: #162d42;
 
   --track-odd-color: #18374f;
   --track-even-color: #1f4660;
@@ -44,25 +85,58 @@
 
 .theme-forest-night {
   --background-color: #0d1b1e;
+  
+  --overview-layout-padding-top: 0rem;
+  --overview-layout-padding-bottom: 0rem;
+  --overview-layout-padding-left: 0rem;
+  --overview-layout-padding-right: 0rem;
+  --overview-layout-border-radius: 0rem;
+  --overview-layout-background-color: transparent;
+  --overview-layout-border-color: transparent;
+  --overview-layout-border-thickness: 0;
+  
+  --two-column-layout-gap: 2rem;
+  --two-column-layout-column-padding-top: 0rem;
+  --two-column-layout-column-padding-bottom: 0rem;
+  --two-column-layout-column-padding-left: 0rem;
+  --two-column-layout-column-padding-right: 0rem;
+  --two-column-layout-column-border-radius: 0rem;
+  --two-column-layout-column-background-color: transparent;
+  --two-column-layout-column-border-color: transparent;
+  --two-column-layout-column-border-thickness: 0;
 
   --hover-background-color: #cccccc;
   --hover-text-color: #102014;
 
   --selected-background-color: #cccccc;
   --selected-text-color: #102014;
-  --title-color: #cdeac0;
   
+  --theme-panel-background-color: #1c3a3e;
+  --theme-panel-border-color: #345;
+  
+  --title-color: #cdeac0;
   --title-background-color: #112;
   --title-border-color: #345;
 
-  --selection-box-background-color: #1c3a3e;
-  --selection-box-border-color: #345;
-  --selection-box-hr-color: #466;
-  --selection-box-title-backgound-color: #112;
-  --selection-box-title-color: #cdeac0;
+  --section-title-padding-top: 0.5rem;
+  --section-title-padding-bottom: 0.5rem;
+  --section-title-padding-left: 1rem;
+  --section-title-padding-right: 1rem;
+  --section-box-background-color: #1c3a3e;
+  --section-box-border-thickness: 1px;
+  --section-box-border-color: #345;
+  --section-box-hr-color: #466;
+  --section-box-title-backgound-color: #112;
+  --section-box-title-color: #cdeac0;
+  
+  --section-content-padding-top: 1rem;
+  --section-content-padding-left: 1rem;
+  --section-content-padding-right: 1rem;
+  --section-content-padding-bottom: 1rem;
 
   --text-color: #d8e5dd;
   --text-muted-color: #88a39a;
+  
   --tag-category-color: #b2dfdb;
   --tag-text-color: #fefae0;
   --tag-background-color: #2b4742;
@@ -73,6 +147,14 @@
   --link-visited-color: #f4a261;
   --link-hover-color: #ffffff;
   --link-disabled-color: #44615d;
+  
+  --audio-controls-background-color: #1c3a3e;
+  --audio-controls-border-color: #345;
+  --audio-controls-wrapper-background-color: #1c3a3e;
+  
+  --pagination-controls-background-color: #1c3a3e;
+  --pagination-controls-button-background-color: #1c3a3e;
+  --pagination-controls-wrapper-background-color: #1c3a3e;
 
   --track-odd-color: #24494d;
   --track-even-color: #2e5a5f;
