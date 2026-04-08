@@ -12,6 +12,8 @@
   --h6-font-size: 0.6rem;
   
   /* Default theme fallback */
+  --iframe-vertical-margin: 48px;
+  
   --background-color: #ffffff;
   
   --overview-layout-padding-top: 0;
