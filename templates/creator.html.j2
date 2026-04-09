@@ -159,7 +159,7 @@
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
-            <div class="image-wrapper image-card">
+            <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
                 <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
                 <div class=image-caption>
@@ -183,7 +183,7 @@
                data-image-max-height="{{ project_thumb_max_height }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in collab.projects %}
-            <div class="image-wrapper image-card">
+            <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
                 <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
                 <div class=image-caption>

@@ -42,7 +42,9 @@
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for project in projects %}
           <div class="image-wrapper image-card"
-               data-search-text="{{ project.search_text | default('') }}">
+               data-search-text="{{ project.search_text | default('') }}"
+               data-width="{{ project.image_wrapper_width }}"
+               data-height="{{ project.image_wrapper_height }}">
             <a href="{{ project.rel_html_path }}" title="{{ project.title }}">
               <img src="{{ project.rel_thumbnail_path }}" alt="Poster for {{ project.title }}" loading="lazy">
               <div class=image-caption>

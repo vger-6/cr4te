@@ -81,6 +81,34 @@ def _resolve_thumbnail_or_default(ctx: HtmlBuildContext, rel_image_path: Optiona
     if rel_image_path:
         return _get_or_create_thumbnail(ctx, Path(rel_image_path), thumb_type)
     return ctx.get_default_thumb_path(thumb_type)
+
+
+def _get_image_dimensions(path: Path) -> Dict[str, int]:
+    """Return width and height for the given image path."""
+    try:
+        with Image.open(path) as img:
+            return {
+                "image_wrapper_width": img.width,
+                "image_wrapper_height": img.height,
+            }
+    except Exception as e:
+        logger.warning(f"Unable to read image dimensions for {path}: {e}")
+        return {
+            "image_wrapper_width": 0,
+            "image_wrapper_height": 0,
+        }
+
+
+def _build_thumbnail_context(ctx: HtmlBuildContext, rel_image_path: Optional[str], thumb_type: ThumbType) -> Dict[str, Any]:
+    thumb_path = _resolve_thumbnail_or_default(ctx, rel_image_path, thumb_type)
+    rel_thumbnail_path = path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
+    dimensions = _get_image_dimensions(thumb_path)
+
+    return {
+        "rel_thumbnail_path": rel_thumbnail_path,
+        "image_wrapper_width": dimensions["image_wrapper_width"],
+        "image_wrapper_height": dimensions["image_wrapper_height"],
+    }
     
 def _sample_images(rel_image_paths: List[str], max_images: int, strategy: ImageSampleStrategy) -> List[str]:
     if max_images <= 0:
@@ -230,14 +258,16 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
         rel_document_paths = media_group["documents"]
         rel_text_paths = media_group["texts"]
         
-        images = [
-            {
-                "rel_thumbnail_path": path_utils.relative_path_from(_get_or_create_thumbnail(ctx, Path(rel), ThumbType.GALLERY), ctx.output_dir).as_posix(),
+        images = []
+        for rel in rel_image_paths:
+            thumbnail_context = _build_thumbnail_context(ctx, rel, ThumbType.GALLERY)
+            images.append({
+                "rel_thumbnail_path": thumbnail_context["rel_thumbnail_path"],
+                "image_wrapper_width": thumbnail_context["image_wrapper_width"],
+                "image_wrapper_height": thumbnail_context["image_wrapper_height"],
                 "rel_path": path_utils.relative_path_from(_create_symlink(ctx.input_dir, Path(rel), ctx.symlinks_dir), ctx.output_dir).as_posix(),
                 "caption": Path(rel).stem
-            }
-            for rel in rel_image_paths
-        ]
+            })
 
         videos = [
             {
@@ -410,19 +440,21 @@ def _calculate_debut_age(creator: Dict) -> Optional[int]:
     return date_utils.calculate_age_from_strings(born_or_founded, earliest)
 
     
-def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, str]]:
+def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, Any]]:
     """
     Builds a list of dictionaries with metadata for each project of a creator,
-    including title, html path, and thumbnail path.
+    including title, html path, thumbnail path, and wrapper dimensions.
     """
     project_entries = []
     for project in sorted(creator["projects"], key=_sort_project):
-        thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.GALLERY)
+        thumbnail_context = _build_thumbnail_context(ctx, project["cover"], ThumbType.GALLERY)
 
         project_entries.append({
             "title": project["title"],
             "rel_html_path": (ctx.html_dir.name / _build_rel_project_html_path(creator, project)).as_posix(),
-            "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+            "rel_thumbnail_path": thumbnail_context["rel_thumbnail_path"],
+            "image_wrapper_width": thumbnail_context["image_wrapper_width"],
+            "image_wrapper_height": thumbnail_context["image_wrapper_height"],
         })
 
     return project_entries
@@ -546,20 +578,22 @@ def _build_creator_search_text(creator: Dict) -> str:
 
     return " ".join(search_terms).lower()
     
-def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[Dict[str, str]]:
+def _build_creator_entries(ctx: HtmlBuildContext, creators: List[Dict]) -> List[Dict[str, Any]]:
     """
     Builds a list of dictionaries containing metadata for each creator,
-    including name, thumbnail path, and search text.
+    including name, thumbnail path, wrapper dimensions, and search text.
     """
     creator_entries = []
     for creator in creators:
-        thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.THUMB)
+        thumbnail_context = _build_thumbnail_context(ctx, creator["portrait"], ThumbType.THUMB)
 
         creator_entries.append({
             "name": creator["name"],
             "rel_html_path": (ctx.html_dir.name / _build_rel_creator_html_path(creator)).as_posix(),
-            "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
             "search_text": _build_creator_search_text(creator),
+            "rel_thumbnail_path": thumbnail_context["rel_thumbnail_path"],
+            "image_wrapper_width": thumbnail_context["image_wrapper_width"],
+            "image_wrapper_height": thumbnail_context["image_wrapper_height"],
         })
 
     return creator_entries

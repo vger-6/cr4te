@@ -42,7 +42,9 @@
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for creator in creator_entries %}
           <div class="image-wrapper image-card" 
-               data-search-text="{{ creator.search_text }}">
+               data-search-text="{{ creator.search_text }}"
+               data-width="{{ creator.image_wrapper_width }}"
+               data-height="{{ creator.image_wrapper_height }}">
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
               {% if not html_settings.hide_portraits %}
                 <img src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">

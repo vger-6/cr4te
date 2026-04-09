@@ -1,11 +1,8 @@
 (function () {
   let IMAGES_PER_PAGE_DEFAULT = 20;
 
-  // TODO: break setupPagination into:
-  // function renderPaginationControls(gallery, currentPage, totalPages, onPageClick)
-  // function paginateWrappers(wrappers, pageSize, currentPage)
   function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAULT) {
-    let wrapper = gallery.parentElement.querySelector('.pagination-controls-wrapper'); // sticky background
+    let wrapper = gallery.parentElement.querySelector('.pagination-controls-wrapper');
     let controls = wrapper ? wrapper.querySelector('.pagination-controls') : null;
 
     if (!controls) {
@@ -18,79 +15,234 @@
       wrapper.appendChild(controls);
       gallery.parentElement.appendChild(wrapper);
     } else {
-      wrapper.style.display = ''; // un-hide the whole wrapper (NOT just the controls)
+      wrapper.style.display = '';
     }
 
     let currentPage = 1;
-    
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function getRatio(wrapper) {
+      const w = parseFloat(wrapper.dataset.width);
+      const h = parseFloat(wrapper.dataset.height);
+      if (!w || !h) return 1; // safe fallback
+      return w / h;
+    }
+
+    function extendToCompleteRow(gallery, allWrappers, slice, nextIndex) {
+      if (nextIndex >= allWrappers.length) return slice;
+
+      if (gallery.classList.contains('image-gallery--justified')) {
+        return extendJustifiedRow(gallery, allWrappers, slice, nextIndex);
+      }
+
+      if (gallery.classList.contains('image-gallery--aspect')) {
+        return extendAspectRow(gallery, allWrappers, slice, nextIndex);
+      }
+
+      return slice;
+    }
+
+    function extendJustifiedRow(gallery, allWrappers, slice, nextIndex) {
+      const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
+      const computedStyle = window.getComputedStyle(gallery);
+      const gap = window.utils.parseCssLength(
+        computedStyle.columnGap || computedStyle.gap || "1rem"
+      );
+      const galleryWidth = gallery.clientWidth;
+
+      if (!galleryWidth) return slice; // ✅ Fix 4
+
+      let row = [];
+      let ratioSum = 0;
+
+      for (let wrapper of slice) {
+        const ratio = getRatio(wrapper); // ✅ Fix 1
+
+        row.push(ratio);
+        ratioSum += ratio;
+
+        const totalGap = gap * (row.length - 1);
+        const rowHeight = (galleryWidth - totalGap) / ratioSum;
+
+        if (rowHeight <= maxHeight) {
+          row = [];
+          ratioSum = 0;
+        }
+      }
+
+      const initialLength = slice.length; // ✅ Fix 2
+
+      while (
+        row.length > 0 &&
+        nextIndex < allWrappers.length &&
+        slice.length < initialLength + 10 // limit overflow (~1 row)
+      ) {
+        const wrapper = allWrappers[nextIndex];
+        const ratio = getRatio(wrapper); // ✅ Fix 1
+
+        row.push(ratio);
+        ratioSum += ratio;
+        slice.push(wrapper);
+        nextIndex++;
+
+        const totalGap = gap * (row.length - 1);
+        const rowHeight = (galleryWidth - totalGap) / ratioSum;
+
+        if (rowHeight <= maxHeight) break;
+      }
+
+      return slice;
+    }
+
+    function extendAspectRow(gallery, allWrappers, slice, nextIndex) {
+      const aspectRatio = gallery.dataset.aspectRatio || "1/1";
+      const [w, h] = aspectRatio.split('/').map(Number);
+
+      const computedStyle = window.getComputedStyle(gallery);
+      const gap = window.utils.parseCssLength(
+        computedStyle.columnGap || computedStyle.gap || "1rem"
+      );
+      const galleryWidth = gallery.clientWidth;
+      const maxHeight = parseFloat(gallery.dataset.imageMaxHeight || "200");
+
+      if (!galleryWidth) return slice; // ✅ Fix 4
+
+      let columns = 1;
+      while (true) {
+        const totalGap = gap * (columns - 1);
+        const availableWidth = galleryWidth - totalGap;
+        const itemWidth = availableWidth / columns;
+        const itemHeight = itemWidth * (h / w);
+
+        if (itemHeight <= maxHeight) break;
+        columns++;
+      }
+
+      const remainder = slice.length % columns;
+      if (remainder === 0) return slice;
+
+      const needed = columns - remainder;
+
+      for (let i = 0; i < needed && nextIndex < allWrappers.length; i++) {
+        slice.push(allWrappers[nextIndex]);
+        nextIndex++;
+      }
+
+      return slice;
+    }
+
+    // -----------------------------
+    // Build ALL pages once
+    // -----------------------------
+    function buildPages() {
+      const pages = [];
+      let index = 0;
+
+      while (index < allWrappers.length) {
+        let slice = allWrappers.slice(index, index + pageSize);
+
+        slice = extendToCompleteRow(
+          gallery,
+          allWrappers,
+          slice,
+          index + slice.length
+        );
+
+        pages.push(slice);
+
+        index += slice.length;
+      }
+
+      return pages;
+    }
+
+    let pages = buildPages();
+
     function renderPage(page, autoScroll = false) {
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      const visibleWrappers = allWrappers.slice(start, end);
+      const visibleWrappers = pages[page - 1] || [];
 
       gallery.innerHTML = '';
       visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
 
-      if (typeof rebuildJustifiedImageGallery === 'function') rebuildJustifiedImageGallery();
-      if (typeof rebuildAspectImageGallery === 'function') rebuildAspectImageGallery();
-      if (typeof rebindLightbox === 'function') rebindLightbox();
+      if (typeof rebuildJustifiedImageGallery === 'function') {
+        rebuildJustifiedImageGallery();
+      }
+      if (typeof rebuildAspectImageGallery === 'function') {
+        rebuildAspectImageGallery();
+      }
+      if (typeof rebindLightbox === 'function') {
+        rebindLightbox();
+      }
 
-      const totalPages = Math.ceil(allWrappers.length / pageSize);
+      const totalPages = pages.length;
       controls.innerHTML = '';
 
       if (totalPages > 1) {
         for (let i = 1; i <= totalPages; i++) {
           const btn = document.createElement('button');
           btn.textContent = i;
+
           if (i === page) {
             btn.classList.add('in-active');
-          }
-          else {
+          } else {
             btn.onclick = () => {
               currentPage = i;
               renderPage(currentPage, true);
             };
           }
+
           controls.appendChild(btn);
         }
       } else {
-        wrapper.style.display = 'none'; // hide if only 1 page
+        wrapper.style.display = 'none';
       }
 
-      // Scroll section-box containing the gallery into view after page change
       if (autoScroll) {
         const sectionBox = gallery.closest('.section-box');
         if (sectionBox) {
           const scrollContainer = window.utils.getExplicitScrollableAncestor(sectionBox);
 
           requestAnimationFrame(() => {
-            // This runs after the browser has done a reflow/layout pass
             if (scrollContainer) {
               scrollContainer.scrollTo({
                 top: sectionBox.offsetTop - scrollContainer.offsetTop,
                 behavior: 'smooth'
               });
-            } 
+            }
           });
         }
       }
     }
 
     renderPage(currentPage);
-    window.addEventListener('resize', () => renderPage(currentPage));
+
+    window.addEventListener('resize', () => {
+      pages = buildPages();
+
+      // ✅ Fix 3: clamp currentPage
+      if (currentPage > pages.length) {
+        currentPage = pages.length;
+      }
+
+      renderPage(currentPage);
+    });
   }
 
   window.paginateGallery = setupPagination;
 
-  // Auto-run pagination on pages without a search bar
   document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.image-gallery--justified, .image-gallery--aspect').forEach(gallery => {
-      const hasSearch = !!document.getElementById('search-input');
-      if (hasSearch && gallery.id === 'imageGallery') return; // skip; filtered separately
+    document.querySelectorAll('.image-gallery--justified, .image-gallery--aspect')
+      .forEach(gallery => {
+        const hasSearch = !!document.getElementById('search-input');
+        if (hasSearch && gallery.id === 'imageGallery') return;
 
-      const wrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
-      const pageSize = parseInt(gallery.dataset.pageSize) || IMAGES_PER_PAGE_DEFAULT;
-      setupPagination(gallery, wrappers, pageSize);
-    });
+        const wrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
+        const pageSize = parseInt(gallery.dataset.pageSize) || IMAGES_PER_PAGE_DEFAULT;
+
+        setupPagination(gallery, wrappers, pageSize);
+      });
   });
+
 })();

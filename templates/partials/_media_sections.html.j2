@@ -110,7 +110,7 @@
             <div class="section-content">
               <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}">
                 {% for image in section.images %}
-                  <div class="image-wrapper">
+                  <div class="image-wrapper" data-width="{{ image.image_wrapper_width }}" data-height="{{ image.image_wrapper_height }}">
                     <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank">
                       <img src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}" loading="lazy">
                       <div class=image-caption>
