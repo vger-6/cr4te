@@ -138,15 +138,20 @@ def _sort_project(project: Dict) -> tuple:
     title = project["title"].lower()
     return (not has_date, date_value, title)
     
-def _build_project_search_text(project: Dict) -> str:
+def _build_project_search_text(project: Dict, creator_name: str = "") -> str:
     search_terms = [project["title"]]
     search_terms.extend(project["tags"])
+    
+    if creator_name:
+        search_terms.append(creator_name)
 
     return " ".join(search_terms).lower()
     
 def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[Dict]:
     all_projects = []
     for creator in creators:
+        creator_name = creator.get("name", "") 
+
         for project in creator["projects"]: 
             thumb_path = _resolve_thumbnail_or_default(ctx, project['cover'], ThumbType.GALLERY)
 
@@ -154,8 +159,8 @@ def _collect_all_projects(ctx: HtmlBuildContext, creators: List[Dict]) -> List[D
                 "title": project["title"],
                 "rel_html_path": (Path(ctx.html_dir.name) / _build_rel_project_html_path(creator, project)).as_posix(),
                 "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
-                "creator_name": creator["name"],
-                "search_text": _build_project_search_text(project)
+                "creator_name": creator_name,
+                "search_text": _build_project_search_text(project, creator_name)
             })  
     return sorted(all_projects, key=lambda p: p["title"].lower())
     
