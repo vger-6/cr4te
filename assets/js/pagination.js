@@ -166,20 +166,30 @@
       gallery.innerHTML = '';
       visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
 
-      if (typeof rebuildJustifiedImageGallery === 'function') {
-        rebuildJustifiedImageGallery();
-      }
-      if (typeof rebuildAspectImageGallery === 'function') {
-        rebuildAspectImageGallery();
-      }
-      if (typeof rebindLightbox === 'function') {
-        rebindLightbox();
-      }
+      if (typeof rebuildJustifiedImageGallery === 'function') rebuildJustifiedImageGallery();
+      if (typeof rebuildAspectImageGallery === 'function') rebuildAspectImageGallery();
+      if (typeof rebindLightbox === 'function') rebindLightbox();
 
       const totalPages = pages.length;
       controls.innerHTML = '';
 
       if (totalPages > 1) {
+        // --- 1. Previous Button ---
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '<';
+        prevBtn.className = 'pagination-prev';
+        if (page === 1) {
+          prevBtn.disabled = true;
+          prevBtn.classList.add('in-active');
+        } else {
+          prevBtn.onclick = () => {
+            currentPage = page - 1;
+            renderPage(currentPage, true);
+          };
+        }
+        controls.appendChild(prevBtn);
+
+        // --- 2. Numeric Buttons ---
         for (let i = 1; i <= totalPages; i++) {
           const btn = document.createElement('button');
           btn.textContent = i;
@@ -192,18 +202,33 @@
               renderPage(currentPage, true);
             };
           }
-
           controls.appendChild(btn);
         }
+
+        // --- 3. Next Button ---
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '>';
+        nextBtn.className = 'pagination-next';
+        if (page === totalPages) {
+          nextBtn.disabled = true;
+          nextBtn.classList.add('in-active');
+        } else {
+          nextBtn.onclick = () => {
+            currentPage = page + 1;
+            renderPage(currentPage, true);
+          };
+        }
+        controls.appendChild(nextBtn);
+
       } else {
         wrapper.style.display = 'none';
       }
 
       if (autoScroll) {
+        // ... (keep your existing autoScroll logic here)
         const sectionBox = gallery.closest('.section-box');
         if (sectionBox) {
           const scrollContainer = window.utils.getExplicitScrollableAncestor(sectionBox);
-
           requestAnimationFrame(() => {
             if (scrollContainer) {
               scrollContainer.scrollTo({
