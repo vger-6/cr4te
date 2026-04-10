@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator
-from typing import List
+from typing import List, Literal
 import re
 
 def validate_optional_iso_date(v: str) -> str:
@@ -55,7 +55,7 @@ class Project(BaseModel):
 
 class Creator(BaseModel):
     name: str
-    is_collaboration: bool
+    type: Literal["person", "collaboration"]
     born_or_founded: str
     died_or_dissolved: str
     active_since: str
@@ -75,4 +75,3 @@ class Creator(BaseModel):
         
     class Config:
         extra = "forbid"
-

@@ -343,29 +343,27 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         })
     
     separators = ctx.collaboration_separators
-    is_collab_existing = existing_creator.get("is_collaboration")
+    creator_type = existing_creator.get("type")
 
-    if is_collab_existing is None:
+    if creator_type not in ["person", "collaboration"]:
         is_collab = _is_collaboration(creator_name, separators)
+        creator_type = "collaboration" if is_collab else "person"
         members = [name.strip() for name in text_utils.multi_split(creator_name, separators)] if is_collab else []
-    elif is_collab_existing is False:
-        is_collab = False
-        members = []
     else:
-        is_collab = True
         members = existing_creator.get("members", [])
 
-    # Build creator record
     portrait = media_index.get_selected_portrait()
+    
+    # Build creator record
     creator = {
         "name": creator_name,
+        "type": creator_type,
         "aliases": existing_creator.get("aliases", []),
-        "is_collaboration": is_collab,
         "members": members,
         "collaborations": [],
         "tags": existing_creator.get("tags", []),
         "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
-        "portrait":  str(portrait.relative_to(ctx.input_dir)) if portrait else "",
+        "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
         "born_or_founded": _safe_normalize_date(existing_creator.get("born_or_founded", ""), "born_or_founded", creator_name),
         "died_or_dissolved": _safe_normalize_date(existing_creator.get("died_or_dissolved", ""), "died_or_dissolved", creator_name),
         "active_since": _safe_normalize_date(existing_creator.get("active_since", ""), "active_since", creator_name),
@@ -380,12 +378,11 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
     """
     Builds reverse collaboration links and patches JSON files in-place.
     """
-
     reverse_map: dict[str, list[str]] = defaultdict(list)
 
-    # Build reverse index
+    # Build reverse index: If it's a collab, notify the members
     for creator_name, info in collab_map.items():
-        if info["is_collaboration"] and info["members"]:
+        if info["type"] == "collaboration" and info["members"]:
             for member in info["members"]:
                 reverse_map[member].append(creator_name)
 
@@ -393,17 +390,18 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
 
     # Patch each creator JSON independently
     for creator_name, info in collab_map.items():
-        if info["is_collaboration"]:
+        # Only "person" types get the reverse "collaborations" list updated
+        # Collaborations themselves don't usually list other collaborations they belong to here
+        if info["type"] == "collaboration":
             continue
 
         json_path = info["dir"] / constants.CR4TE_JSON_FILE_NAME
         existing = _load_existing_json(json_path)
 
         auto_collabs = reverse_map.get(creator_name, [])
-
         raw_manual = existing.get("collaborations", [])
 
-        # Detect invalid (deduplicated + sorted for stable logging)
+        # Detect invalid
         invalid_collabs = sorted({
             name for name in raw_manual
             if name not in valid_names
@@ -422,7 +420,6 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
 
         if existing.get("collaborations") != merged:
             existing["collaborations"] = merged
-
             _write_creator_json(info["dir"], existing)
 
 def _write_creator_json(creator_dir: Path, creator_data: Dict[str, Any]) -> None:
@@ -440,34 +437,28 @@ def _write_creator_json(creator_dir: Path, creator_data: Dict[str, Any]) -> None
             
 def build_creator_json_files(input_dir: Path, media_rules: dict[str, Any]) -> None:
     ctx = JsonBuildContext(input_dir, media_rules)
-
     collab_map: dict[str, dict[str, Any]] = {}
 
-    # pass 1: build + write
     for creator_dir in sorted(ctx.input_dir.iterdir()):
         if not creator_dir.is_dir() or _is_excluded_path(creator_dir, (ctx.global_exclude_prefix,)):
             continue
             
         try:
             logger.info(f"Processing: {creator_dir.name}")
-
             creator_data = _build_creator(ctx, creator_dir)
-
             _validate_creator(creator_data)
-
             _write_creator_json(creator_dir, creator_data)
             
             collab_map[creator_data["name"]] = {
                 "dir": creator_dir,
                 "members": creator_data.get("members", []),
-                "is_collaboration": creator_data.get("is_collaboration", False),
+                "type": creator_data.get("type"), 
             }
             
         except Exception as e:
             logger.exception(f"{creator_dir.name}: failed to process")
             continue
 
-    # pass 2: resolve collaborations
     _link_creator_collaborations(collab_map)
     
 def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:

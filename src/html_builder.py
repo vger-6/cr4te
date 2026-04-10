@@ -383,7 +383,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
     }
     
-    if creator["is_collaboration"]:
+    if creator["type"] == "collaboration":
         project_context["participants"] = _collect_participant_entries(ctx, creator, project, creators)
         project_context["collaboration"] = _collect_collaborator_entries(ctx, creator)
     else:
@@ -502,7 +502,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }
     
-    if creator["is_collaboration"]:
+    if creator["type"] == "collaboration":
         creator_context["members"] = _collect_member_links(ctx, creator, creators)
         creator_context["member_names"] = creator["members"]
         creator_context["founded"] = creator["born_or_founded"]
@@ -542,7 +542,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
     Builds a list of dictionaries representing links to member creators
     in a collaboration, including name, html path, and thumbnail path.
     """
-    if not creator["is_collaboration"]:
+    if creator["type"] != "collaboration":
         return []
 
     creator_by_name = {c["name"]: c for c in creators}
