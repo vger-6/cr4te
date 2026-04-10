@@ -52,13 +52,13 @@
       );
       const galleryWidth = gallery.clientWidth;
 
-      if (!galleryWidth) return slice; // ✅ Fix 4
+      if (!galleryWidth) return slice;
 
       let row = [];
       let ratioSum = 0;
 
       for (let wrapper of slice) {
-        const ratio = getRatio(wrapper); // ✅ Fix 1
+        const ratio = getRatio(wrapper);
 
         row.push(ratio);
         ratioSum += ratio;
@@ -72,7 +72,7 @@
         }
       }
 
-      const initialLength = slice.length; // ✅ Fix 2
+      const initialLength = slice.length;
 
       while (
         row.length > 0 &&
@@ -80,7 +80,7 @@
         slice.length < initialLength + 10 // limit overflow (~1 row)
       ) {
         const wrapper = allWrappers[nextIndex];
-        const ratio = getRatio(wrapper); // ✅ Fix 1
+        const ratio = getRatio(wrapper);
 
         row.push(ratio);
         ratioSum += ratio;
@@ -107,7 +107,7 @@
       const galleryWidth = gallery.clientWidth;
       const maxHeight = parseFloat(gallery.dataset.imageMaxHeight || "200");
 
-      if (!galleryWidth) return slice; // ✅ Fix 4
+      if (!galleryWidth) return slice;
 
       let columns = 1;
       while (true) {
@@ -225,7 +225,6 @@
       }
 
       if (autoScroll) {
-        // ... (keep your existing autoScroll logic here)
         const sectionBox = gallery.closest('.section-box');
         if (sectionBox) {
           const scrollContainer = window.utils.getExplicitScrollableAncestor(sectionBox);
@@ -246,7 +245,6 @@
     window.addEventListener('resize', () => {
       pages = buildPages();
 
-      // ✅ Fix 3: clamp currentPage
       if (currentPage > pages.length) {
         currentPage = pages.length;
       }
