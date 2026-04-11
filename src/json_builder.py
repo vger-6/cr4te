@@ -227,12 +227,12 @@ class CreatorMediaIndex:
         """
         A file is considered root if:
         - it is a direct child of the level, OR
-        - it resides anywhere inside that level's metadata folder
+        - it resides directly inside the metadata folder
         """
         is_direct_child = len(parts) == depth + 1
         is_in_metadata = (
             len(parts) > depth
-            and parts[depth] == self.ctx.metadata_folder_name
+            and parts[-2] == self.ctx.metadata_folder_name
         )
         return is_direct_child or is_in_metadata
 
