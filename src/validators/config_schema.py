@@ -30,7 +30,6 @@ class HtmlSettings(BaseModel):
     project_page_overview_title: str
     project_page_description_title: str
     project_page_tags_title: str
-    project_page_creator_profile_title: str
     project_page_audio_section_base_title: str
     project_page_image_section_base_title: str
 

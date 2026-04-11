@@ -73,7 +73,7 @@
           {% set creator = project.creator%}
         
           <div class="section-box">
-            <div class="section-title">{{ creator.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <div class="section-title">{{ creator.name }}</div>
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
@@ -101,7 +101,7 @@
         
           {% set collaboration = project.collaboration%}
           <div class="section-box">
-            <div class="section-title">{{ collaboration.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+            <div class="section-title">{{ collaboration.name }}</div>
             <hr>
             <div class="section-content">
               <div class="info-block info-block--row">
@@ -123,7 +123,7 @@
       <div class="original-placeholder" data-mobile-target="4">
           {% for participant in project.participants %}
             <div class="section-box">
-              <div class="section-title">{{ participant.name }} - {{ html_settings.project_page_creator_profile_title }}</div>
+              <div class="section-title">{{ participant.name }}</div>
               <hr>
               <div class="section-content">
                 <div class="info-block info-block--row">
