@@ -78,8 +78,6 @@
 
   --icon-fill-color: #d9f2ff;
   --icon-hover-fill-color: #d9f2ff;
-  
-  --control-border-color: #82e9de;
 
   --scrollbar-color: #294d66;
   --scrollbar-thumb-color: #55bcd7;
@@ -92,20 +90,20 @@
   
   --overview-layout-padding-top: 0rem;
   --overview-layout-padding-bottom: 0rem;
-  --overview-layout-padding-left: 0rem;
-  --overview-layout-padding-right: 0rem;
-  --overview-layout-border-radius: 0rem;
-  --overview-layout-background-color: transparent;
+  --overview-layout-padding-left: 1rem;
+  --overview-layout-padding-right: 1rem;
+  --overview-layout-border-radius: 0.5rem;
+  --overview-layout-background-color: #1c3a3e;
   --overview-layout-border-color: transparent;
   --overview-layout-border-thickness: 0;
   
-  --two-column-layout-gap: 2rem;
-  --two-column-layout-column-padding-top: 0rem;
+  --two-column-layout-gap: 1rem;
+  --two-column-layout-column-padding-top: 1rem;
   --two-column-layout-column-padding-bottom: 0rem;
-  --two-column-layout-column-padding-left: 0rem;
-  --two-column-layout-column-padding-right: 0rem;
-  --two-column-layout-column-border-radius: 0rem;
-  --two-column-layout-column-background-color: transparent;
+  --two-column-layout-column-padding-left: 1rem;
+  --two-column-layout-column-padding-right: 1rem;
+  --two-column-layout-column-border-radius: 0.5rem;
+  --two-column-layout-column-background-color: #1c3a3e;
   --two-column-layout-column-border-color: transparent;
   --two-column-layout-column-border-thickness: 0;
 
@@ -116,26 +114,26 @@
   --selected-text-color: #102014;
   
   --theme-panel-background-color: #1c3a3e;
-  --theme-panel-border-color: #345;
+  --theme-panel-border-color: #3f6b66;
   
-  --title-color: #cdeac0;
-  --title-background-color: #112;
-  --title-border-color: #345;
+  --title-background-color: #1c3a3e;
+  --title-border-color: transparent;
+  --title-color: #d8e5dd;
 
-  --section-title-padding-top: 0.5rem;
-  --section-title-padding-bottom: 0.5rem;
-  --section-title-padding-left: 1rem;
-  --section-title-padding-right: 1rem;
+  --section-title-padding-top: 0rem;
+  --section-title-padding-bottom: 0rem;
+  --section-title-padding-left: 0rem;
+  --section-title-padding-right: 0rem;
   --section-box-background-color: #1c3a3e;
-  --section-box-border-thickness: 1px;
-  --section-box-border-color: #345;
-  --section-box-hr-color: #466;
-  --section-box-title-backgound-color: #112;
-  --section-box-title-color: #cdeac0;
+  --section-box-border-thickness: 0px;
+  --section-box-border-color: #3f6b66;
+  --section-box-hr-color: #d8e5dd;
+  --section-box-title-backgound-color: #1c3a3e;
+  --section-box-title-color: #d8e5dd;
   
   --section-content-padding-top: 1rem;
-  --section-content-padding-left: 1rem;
-  --section-content-padding-right: 1rem;
+  --section-content-padding-left: 0rem;
+  --section-content-padding-right: 0rem;
   --section-content-padding-bottom: 1rem;
 
   --text-color: #d8e5dd;
@@ -149,11 +147,11 @@
 
   --link-color: #a8dadc;
   --link-visited-color: #f4a261;
-  --link-hover-color: #ffffff;
+  --link-hover-color: #fefae0;
   --link-disabled-color: #44615d;
   
   --audio-controls-background-color: #1c3a3e;
-  --audio-controls-border-color: #345;
+  --audio-controls-border-color: #d8e5dd;
   --audio-controls-wrapper-background-color: #1c3a3e;
   
   --pagination-controls-background-color: #1c3a3e;
@@ -161,12 +159,10 @@
   --pagination-controls-wrapper-background-color: #1c3a3e;
 
   --track-odd-color: #24494d;
-  --track-even-color: #2e5a5f;
+  --track-even-color: #24494d;
 
   --icon-fill-color: #d8e5dd;
   --icon-hover-fill-color: #d8e5dd;
-  
-  --control-border-color: #a8dadc;
 
   --scrollbar-color: #2e5a5f;
   --scrollbar-thumb-color: #88a39a;

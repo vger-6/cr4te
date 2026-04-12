@@ -92,8 +92,6 @@
   --icon-fill-color: #111111;
   --icon-hover-fill-color: #111111;
   
-  --control-border-color: #111111;
-  
   --scrollbar-color: #666;
   --scrollbar-thumb-color: #666;
 }
@@ -400,6 +398,7 @@ a:focus {
   font-weight: bold;
   cursor: pointer;
   font-size: 1rem;
+  padding-right: 0;
 }
 
 .icon-off {
