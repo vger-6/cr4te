@@ -513,6 +513,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         creator_context["founded"] = creator["collaboration"]["founding_date"]
         creator_context["dissolved"] = creator["collaboration"]["dissolution_date"]
     else:
+        creator_context["civil_name"] = creator["person"]["civil_name"]
         creator_context["date_of_birth"] = creator["person"]["date_of_birth"]
         creator_context["date_of_death"] = creator["person"]["date_of_death"]
         creator_context["debut_age"] =  _calculate_debut_age(creator) or ""

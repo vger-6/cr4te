@@ -367,6 +367,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "person": {
             "date_of_birth":  _safe_normalize_date(existing_creator.get("person", {}).get("date_of_birth", ""), "person.date_of_birth", creator_name),
             "date_of_death": _safe_normalize_date(existing_creator.get("person", {}).get("date_of_death", ""), "person.date_of_death", creator_name),
+            "civil_name": existing_creator.get("person", {}).get("civil_name", ""),
           },
         "collaboration": {
             "founding_date":  _safe_normalize_date(existing_creator.get("collaboration", {}).get("founding_date", ""), "collaboration.founding_date", creator_name),

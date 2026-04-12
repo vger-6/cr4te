@@ -4,12 +4,14 @@ class CreatorField(str, Enum):
     DATE_OF_BIRTH = "date_of_birth"
     DATE_OF_DEATH = "date_of_death"
     NATIONALITY = "nationality"
+    CIVIL_NAME = "civil_name"
     ALIASES = "aliases"
     DEBUT_AGE = "debut_age"
 
 class CollaborationField(str, Enum):
     MEMBERS = "members"
     FOUNDED = "founded"
+    DISSOLVED = "dissolved"
     NATIONALITY = "nationality"
     ACTIVE_SINCE = "active_since"
 

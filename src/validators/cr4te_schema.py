@@ -16,7 +16,7 @@ def validate_optional_iso_date(v: str) -> str:
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
         return v
 
-    raise ValueError("must be in yyyy, yyyy-mm, yyyy-mm-dd format or empty")
+    raise ValueError(f"{v} must be in yyyy, yyyy-mm, yyyy-mm-dd format or empty")
 
 
 def _validate_date_order(start: str, end: str, field_names: str):
@@ -25,16 +25,23 @@ def _validate_date_order(start: str, end: str, field_names: str):
 
 
 class BaseDatedModel(BaseModel):
-    @field_validator("*", mode="before")
+    @field_validator(
+        "date_of_birth",
+        "date_of_death",
+        "founding_date",
+        "dissolution_date",
+        mode="before",
+        check_fields=False,
+    )
     def validate_dates(cls, v):
         if isinstance(v, str):
             return validate_optional_iso_date(v)
         return v
 
-
 class Person(BaseDatedModel):
     date_of_birth: str = ""
     date_of_death: str = ""
+    civil_name: str = ""
 
     @model_validator(mode="after")
     def check_person_dates(self):
@@ -119,6 +126,7 @@ class Creator(BaseModel):
             if any([
                 self.person.date_of_birth,
                 self.person.date_of_death,
+                self.person.civil_name,
             ]):
                 raise ValueError("collaboration must not have person data")
 

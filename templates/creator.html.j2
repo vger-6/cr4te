@@ -45,6 +45,11 @@
               <div class="meta-list">
                 <div class="meta-label">Name:</div>
                 <div class="meta-value">{{ creator.name }}</div>
+                
+                {% if 'civil_name' in html_settings.creator_page_visible_creator_fields and creator.civil_name %}
+                  <div class="meta-label">Civil Name:</div>
+                  <div class="meta-value">{{ creator.civil_name }}</div>
+                {% endif %}
 
                 {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
                   <div class="meta-label">Aliases:</div>
