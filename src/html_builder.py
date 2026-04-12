@@ -329,17 +329,21 @@ def _build_media_groups_context(ctx: HtmlBuildContext, media_groups: List) -> Li
 
     return media_groups_context
 
-def calculate_age_at_release(creator: Dict, project: Dict) -> Optional[int]:
-    born_or_founded = creator["born_or_founded"]
-    release_date = project["release_date"]
-    if not born_or_founded or not release_date:
+def _calculate_age_at_release(creator: Dict, project: Dict) -> Optional[int]:
+    if creator["type"] != "person":
         return None
         
-    return date_utils.calculate_age_from_strings(born_or_founded, release_date)
+    date_of_birth = creator["person"]["date_of_birth"]
+    release_date = project["release_date"]
+    
+    if not date_of_birth or not release_date:
+        return None
+        
+    return date_utils.calculate_age_from_strings(date_of_birth, release_date)
     
 def _collect_participant_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict, creators: List[Dict]) -> List[Dict[str, str]]:
     creator_by_name = {c["name"]: c for c in creators}
-    participant_names = creator["members"]
+    participant_names = creator["collaboration"]["members"]
     
     participants = []
     for name in participant_names:
@@ -363,7 +367,7 @@ def _collect_creator_base_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 def _collect_creator_entries(ctx: HtmlBuildContext, creator: Dict, project: Dict) -> Dict[str, str]:
     entries = _collect_creator_base_entries(ctx, creator)
     
-    entries["age_at_release"] = calculate_age_at_release(creator, project)
+    entries["age_at_release"] = _calculate_age_at_release(creator, project)
 
     return entries
     
@@ -417,21 +421,21 @@ def _build_project_pages(ctx: HtmlBuildContext, creators: List[Dict]):
             _build_project_page(ctx, creator, project, creators)
             
 def _get_collaboration_label(collab: Dict, creator_name: str) -> str:
-    if creator_name in collab["members"]:
-        others = [n for n in collab["members"] if n != creator_name]
+    if creator_name in collab["collaboration"]["members"]:
+        others = [n for n in collab["collaboration"]["members"] if n != creator_name]
         return " ".join(others)
     return collab["name"]
     
 def _calculate_debut_age(creator: Dict) -> Optional[int]:
-    born_or_founded = creator["born_or_founded"]
+    date_of_birth = creator["person"]["date_of_birth"]
     active_since = creator["active_since"]
     projects = creator["projects"]
 
-    if not born_or_founded:
+    if not date_of_birth:
         return None
 
     if active_since:
-        return date_utils.calculate_age_from_strings(born_or_founded, active_since)
+        return date_utils.calculate_age_from_strings(date_of_birth, active_since)
 
     release_dates = [
         p["release_date"] for p in projects
@@ -442,7 +446,7 @@ def _calculate_debut_age(creator: Dict) -> Optional[int]:
         return None
 
     earliest = min(release_dates, key=lambda d: date_utils.parse_date(d))
-    return date_utils.calculate_age_from_strings(born_or_founded, earliest)
+    return date_utils.calculate_age_from_strings(date_of_birth, earliest)
 
     
 def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[str, Any]]:
@@ -496,6 +500,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
         "nationality": creator["nationality"],
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
+        "active_since": creator["active_since"],
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
         "projects": _build_project_entries(ctx, creator),
@@ -504,13 +509,12 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, creators: Lis
     
     if creator["type"] == "collaboration":
         creator_context["members"] = _collect_member_links(ctx, creator, creators)
-        creator_context["member_names"] = creator["members"]
-        creator_context["founded"] = creator["born_or_founded"]
-        creator_context["dissolved"] = creator["died_or_dissolved"]
-        creator_context["active_since"] = creator["active_since"]
+        creator_context["member_names"] = creator["collaboration"]["members"]  #TODO: Obsolete?
+        creator_context["founded"] = creator["collaboration"]["founding_date"]
+        creator_context["dissolved"] = creator["collaboration"]["dissolution_date"]
     else:
-        creator_context["date_of_birth"] = creator["born_or_founded"]
-        creator_context["date_of_death"] = creator["died_or_dissolved"]
+        creator_context["date_of_birth"] = creator["person"]["date_of_birth"]
+        creator_context["date_of_death"] = creator["person"]["date_of_death"]
         creator_context["debut_age"] =  _calculate_debut_age(creator) or ""
         creator_context["collaborations"] = _build_collaboration_entries(ctx, creator, creators)
         
@@ -548,7 +552,7 @@ def _collect_member_links(ctx: HtmlBuildContext, creator: Dict, creators: List[D
     creator_by_name = {c["name"]: c for c in creators}
     member_links = []
 
-    for member_name in creator["members"]:
+    for member_name in creator["collaboration"]["members"]:
         member = creator_by_name.get(member_name)
         if not member:
             continue

@@ -350,7 +350,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         creator_type = "collaboration" if is_collab else "person"
         members = [name.strip() for name in text_utils.multi_split(creator_name, separators)] if is_collab else []
     else:
-        members = existing_creator.get("members", [])
+        members = existing_creator.get("collaboration", {}).get("members", [])
 
     portrait = media_index.get_selected_portrait()
     
@@ -359,14 +359,20 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         "name": creator_name,
         "type": creator_type,
         "aliases": existing_creator.get("aliases", []),
-        "members": members,
         "collaborations": [],
         "tags": existing_creator.get("tags", []),
         "info": text_utils.read_text(creator_dir / ctx.readme_file_name) or existing_creator.get("info", ""),
         "portrait": str(portrait.relative_to(ctx.input_dir)) if portrait else "",
-        "born_or_founded": _safe_normalize_date(existing_creator.get("born_or_founded", ""), "born_or_founded", creator_name),
-        "died_or_dissolved": _safe_normalize_date(existing_creator.get("died_or_dissolved", ""), "died_or_dissolved", creator_name),
         "active_since": _safe_normalize_date(existing_creator.get("active_since", ""), "active_since", creator_name),
+        "person": {
+            "date_of_birth":  _safe_normalize_date(existing_creator.get("person", {}).get("date_of_birth", ""), "person.date_of_birth", creator_name),
+            "date_of_death": _safe_normalize_date(existing_creator.get("person", {}).get("date_of_death", ""), "person.date_of_death", creator_name),
+          },
+        "collaboration": {
+            "founding_date":  _safe_normalize_date(existing_creator.get("collaboration", {}).get("founding_date", ""), "collaboration.founding_date", creator_name),
+            "dissolution_date": _safe_normalize_date(existing_creator.get("collaboration", {}).get("dissolution_date", ""), "collaboration.dissolution_date", creator_name),
+            "members": members,
+          },
         "nationality": existing_creator.get("nationality", ""),
         "media_groups": _build_media_groups(media_index.creator_media, ctx.metadata_folder_name),
         "projects": projects,
@@ -451,7 +457,7 @@ def build_creator_json_files(input_dir: Path, media_rules: dict[str, Any]) -> No
             
             collab_map[creator_data["name"]] = {
                 "dir": creator_dir,
-                "members": creator_data.get("members", []),
+                "members": creator_data.get("collaboration", {}).get("members", []),
                 "type": creator_data.get("type"), 
             }
             
