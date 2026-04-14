@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, List
 
-from context.base_context import BaseContext
+from ..context.base_context import BaseContext
 
 README_FILE_NAME = "README.md"
 

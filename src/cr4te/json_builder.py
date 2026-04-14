@@ -9,13 +9,13 @@ from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 
-import constants
-import utils.json_utils as json_utils
-import utils.text_utils as text_utils
-import utils.image_utils as image_utils
-from enums.orientation import Orientation
-from context.json_context import JsonBuildContext
-from validators.cr4te_schema import Creator as CreatorSchema
+from .constants import CR4TE_JSON_FILE_NAME
+from .utils import json_utils
+from .utils import text_utils
+from .utils import image_utils
+from .enums.orientation import Orientation
+from .context.json_context import JsonBuildContext
+from .validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["build_creator_json_files", "clean_creator_json_files"]
 
@@ -328,7 +328,7 @@ def _build_creator(ctx: JsonBuildContext, creator_dir: Path) -> Dict[str, Any]:
         media_index.add_media(media_path)
 
     creator_name = creator_dir.name
-    existing_creator = _load_existing_json(creator_dir / constants.CR4TE_JSON_FILE_NAME)
+    existing_creator = _load_existing_json(creator_dir / CR4TE_JSON_FILE_NAME)
     existing_projects = { p["title"]: p for p in existing_creator.get("projects", []) if "title" in p }
     projects = []
     for project_name, folders in media_index.project_media.items():
@@ -402,7 +402,7 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
         if info["type"] == "collaboration":
             continue
 
-        json_path = info["dir"] / constants.CR4TE_JSON_FILE_NAME
+        json_path = info["dir"] / CR4TE_JSON_FILE_NAME
         existing = _load_existing_json(json_path)
 
         auto_collabs = reverse_map.get(creator_name, [])
@@ -430,7 +430,7 @@ def _link_creator_collaborations(collab_map: dict[str, dict[str, Any]]) -> None:
             _write_creator_json(info["dir"], existing)
 
 def _write_creator_json(creator_dir: Path, creator_data: Dict[str, Any]) -> None:
-    json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+    json_path = creator_dir / CR4TE_JSON_FILE_NAME
     tmp_path = json_path.with_suffix(json_path.suffix + ".tmp")
 
     existing = _load_existing_json(json_path)
@@ -477,7 +477,7 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
         if not creator_dir.is_dir():
             continue
 
-        json_path = creator_dir / constants.CR4TE_JSON_FILE_NAME
+        json_path = creator_dir / CR4TE_JSON_FILE_NAME
         if json_path.exists():
             total += 1
             logger.info(f"{'[DRY-RUN] ' if dry_run else ''}Deleting: {json_path}")
@@ -493,7 +493,7 @@ def clean_creator_json_files(input_dir: Path, dry_run: bool = False) -> None:
 
     logger.info(
         f"\nSummary:\n"
-        f"\tTotal {constants.CR4TE_JSON_FILE_NAME} files found: {total}\n"
+        f"\tTotal {CR4TE_JSON_FILE_NAME} files found: {total}\n"
         f"\tDeleted: {deleted}\n"
         f"\tSkipped/errors: {skipped}"
         )

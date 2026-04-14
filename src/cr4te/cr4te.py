@@ -1,21 +1,18 @@
-import sys
 import logging
 import argparse
 import webbrowser
 import json
+import sys
 from pathlib import Path
 from typing import Dict, Any, Optional
+from importlib.metadata import version, PackageNotFoundError
 
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-
-import config_manager as cfg
-from enums.image_sample_strategy import ImageSampleStrategy
-from enums.portrait_strategy import PortraitStrategy
-from enums.domain import Domain
-from html_builder import clear_output_folder, build_html_pages
-from json_builder import build_creator_json_files, clean_creator_json_files
-
-__version__ = "0.0.1"
+from .config_manager import load_config, apply_cli_overrides
+from .enums.image_sample_strategy import ImageSampleStrategy
+from .enums.portrait_strategy import PortraitStrategy
+from .enums.domain import Domain
+from .html_builder import clear_output_folder, build_html_pages
+from .json_builder import build_creator_json_files, clean_creator_json_files
 
 # Short flags
 FLAG_INPUT_SHORT = "-i"
@@ -39,7 +36,7 @@ def _setup_logging():
 
 def _load_config(rel_config_path_arg: str) -> Dict[str, Any]:
     config_path = Path(rel_config_path_arg).resolve() if rel_config_path_arg else None
-    return cfg.load_config(config_path)
+    return load_config(config_path)
     
 def _confirm_action(prompt: str, force: bool = False) -> bool:
     if force:
@@ -48,7 +45,7 @@ def _confirm_action(prompt: str, force: bool = False) -> bool:
     return confirm == 'y'
     
 def _apply_cli_overrides_from_args(config: dict, args) -> dict:
-    return cfg.apply_cli_overrides(
+    return apply_cli_overrides(
         config,
         image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
         portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
@@ -57,6 +54,12 @@ def _apply_cli_overrides_from_args(config: dict, args) -> dict:
     
 def _create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Media Organizer CLI")
+    
+    try:
+        __version__ = version("cr4te")
+    except PackageNotFoundError:
+        __version__ = "0.0.0"
+    
     parser.add_argument("-v", "--version", action="version", version=f"cr4te v{__version__}")
     
     subparsers = parser.add_subparsers(dest="command", required=True)

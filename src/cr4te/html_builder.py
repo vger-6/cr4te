@@ -10,20 +10,28 @@ from PIL import Image
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import ValidationError
 
-import constants
-import utils.path_utils as path_utils
-import utils.text_utils as text_utils
-import utils.image_utils as image_utils
-import utils.date_utils as date_utils
-import utils.json_utils as json_utils
-import utils.audio_utils as audio_utils
-from enums.media_type import MediaType
-from enums.thumb_type import ThumbType
-from enums.image_sample_strategy import ImageSampleStrategy
-from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
-from enums.orientation import Orientation
-from context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
-from validators.cr4te_schema import Creator as CreatorSchema
+from .constants import (
+    CR4TE_ASSETS_DIR,
+    CR4TE_DEFAULTS_DIR,
+    CR4TE_CSS_DIR,
+    CR4TE_JS_DIR,
+    CR4TE_TEMPLATES_DIR,
+    CR4TE_JSON_FILE_NAME
+)
+
+from .utils import path_utils
+from .utils import text_utils
+from .utils import image_utils
+from .utils import date_utils
+from .utils import json_utils
+from .utils import audio_utils
+from .enums.media_type import MediaType
+from .enums.thumb_type import ThumbType
+from .enums.image_sample_strategy import ImageSampleStrategy
+from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
+from .enums.orientation import Orientation
+from .context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
+from .validators.cr4te_schema import Creator as CreatorSchema
 
 __all__ = ["clear_output_folder", "build_html_pages"]
 
@@ -31,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 # Setup Jinja2 environment
 env = Environment(
-    loader=FileSystemLoader(str(constants.CR4TE_TEMPLATES_DIR)),
+    loader=FileSystemLoader(str(CR4TE_TEMPLATES_DIR)),
     autoescape=select_autoescape(['html', 'xml'])
 )
 env.globals["MediaType"] = MediaType
@@ -637,7 +645,7 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
     for creator_path in sorted(input_dir.iterdir()):
         if not creator_path.is_dir():
             continue
-        json_path = creator_path / constants.CR4TE_JSON_FILE_NAME
+        json_path = creator_path / CR4TE_JSON_FILE_NAME
         if json_path.exists():
             raw_data = json_utils.load_json(json_path)
             # Validate and normalize structure
@@ -648,11 +656,11 @@ def _collect_all_creators(input_dir: Path) -> List[Dict]:
         
 # TODO: Take aspect ratio and name from html_settings
 def _prepare_static_assets(ctx: HtmlBuildContext) -> None:
-    shutil.copytree(constants.CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
-    logger.info(f"Copied {constants.CR4TE_CSS_DIR.name} to {ctx.css_dir}")
+    shutil.copytree(CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
+    logger.info(f"Copied {CR4TE_CSS_DIR.name} to {ctx.css_dir}")
        
-    shutil.copytree(constants.CR4TE_JS_DIR, ctx.js_dir, dirs_exist_ok=True)
-    logger.info(f"Copied {constants.CR4TE_JS_DIR.name} to {ctx.js_dir}")
+    shutil.copytree(CR4TE_JS_DIR, ctx.js_dir, dirs_exist_ok=True)
+    logger.info(f"Copied {CR4TE_JS_DIR.name} to {ctx.js_dir}")
        
     ctx.defaults_dir.mkdir(parents=True, exist_ok=True)
     thumb_height = ctx.get_thumb_height(ThumbType.THUMB)

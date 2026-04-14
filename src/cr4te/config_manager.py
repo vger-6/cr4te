@@ -5,14 +5,14 @@ from typing import Dict, Optional
 
 from pydantic import ValidationError
 
-import utils
-from validators.config_schema import AppConfig
-from enums.visible_fields import CreatorField, CollaborationField, ProjectField
-from enums.image_sample_strategy import ImageSampleStrategy
-from enums.portrait_strategy import PortraitStrategy
-from enums.media_type import MediaType
-from enums.domain import Domain
-from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
+from .utils.json_utils import load_json
+from .validators.config_schema import AppConfig
+from .enums.visible_fields import CreatorField, CollaborationField, ProjectField
+from .enums.image_sample_strategy import ImageSampleStrategy
+from .enums.portrait_strategy import PortraitStrategy
+from .enums.media_type import MediaType
+from .enums.domain import Domain
+from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ def load_config(user_config_path: Path = None) -> Dict:
  
     if user_config_path:
         try:
-            user_config = utils.load_json(user_config_path)
+            user_config = load_json(user_config_path)
             config["html_settings"].update(user_config.get("html_settings", {}))
             config["media_rules"].update(user_config.get("media_rules", {}))
             logger.info(f"Loaded configuration from {user_config_path}")

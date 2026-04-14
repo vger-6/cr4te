@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
-from enums.thumb_type import ThumbType
-from context.base_context import BaseContext
-from constants import (
-    SCRIPT_DIR,
+from ..enums.thumb_type import ThumbType
+from ..context.base_context import BaseContext
+from ..constants import (
+    CR4TE_PACKAGE_DIR,
     CR4TE_DEFAULTS_DIR,
     CR4TE_CSS_DIR, 
     CR4TE_JS_DIR,
@@ -21,15 +21,15 @@ class HtmlBuildContext(BaseContext):
     
     @property
     def defaults_dir(self) -> Path:
-        return self.output_dir / CR4TE_DEFAULTS_DIR.relative_to(SCRIPT_DIR)
+        return self.output_dir / CR4TE_DEFAULTS_DIR.relative_to(CR4TE_PACKAGE_DIR)
     
     @property
     def css_dir(self) -> Path:
-        return self.output_dir / CR4TE_CSS_DIR.relative_to(SCRIPT_DIR)
+        return self.output_dir / CR4TE_CSS_DIR.relative_to(CR4TE_PACKAGE_DIR)
         
     @property
     def js_dir(self) -> Path:
-        return self.output_dir / CR4TE_JS_DIR.relative_to(SCRIPT_DIR)
+        return self.output_dir / CR4TE_JS_DIR.relative_to(CR4TE_PACKAGE_DIR)
     
     @property
     def thumbs_dir(self) -> Path:

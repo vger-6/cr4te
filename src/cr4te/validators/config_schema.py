@@ -3,10 +3,10 @@ import re
 
 from pydantic import BaseModel, conint, validator
 
-from enums.image_sample_strategy import ImageSampleStrategy
-from enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
-from enums.media_type import MediaType
-from enums.visible_fields import CreatorField, CollaborationField, ProjectField
+from ..enums.image_sample_strategy import ImageSampleStrategy
+from ..enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
+from ..enums.media_type import MediaType
+from ..enums.visible_fields import CreatorField, CollaborationField, ProjectField
 
 # HTML settings schema
 class HtmlSettings(BaseModel):

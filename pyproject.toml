@@ -1,0 +1,44 @@
+[project]
+name = "cr4te"
+version = "0.0.1"
+description = "A fast, static site generator for organizing and showcasing media collections."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "vger-6"}]
+keywords = ["static-site-generator", "media-gallery", "portfolio"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia",
+]
+
+dependencies = [
+    "Pillow>=9.0.0",
+    "markdown>=3.3.0",
+    "Jinja2>=3.0.0",
+    "pydantic>=2.11.5",
+    "mutagen>=1.46.0",
+]
+
+[project.scripts]
+cr4te = "cr4te.cr4te:main"
+
+[project.urls]
+Homepage = "https://github.com/vger-6/cr4te"
+
+[build-system]
+requires = ["setuptools>=45"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cr4te = ["assets/**/*", "templates/**/*"]
+
+[tool.setuptools]
+include-package-data = true

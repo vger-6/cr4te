@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from enums.orientation import Orientation
+from ..enums.orientation import Orientation
 
 logger = logging.getLogger(__name__)
 
