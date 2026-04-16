@@ -184,7 +184,7 @@ def _collect_tags_from_creator(creator: Dict) -> List[str]:
     return tags
 
 
-def _group_tags_by_category(tags: Iterable[str]) -> Dict[str, List[str]]:
+def _group_tags_by_category(tags: Iterable[str], fallback_category: str = "Other") -> Dict[str, List[str]]:
     """
     Groups tags by category. Tags with the format 'Category: Label' are grouped under 'Category'.
     Tags without a colon are grouped under the default 'Tag' category.
@@ -199,7 +199,7 @@ def _group_tags_by_category(tags: Iterable[str]) -> Dict[str, List[str]]:
             category, label = tag.split(":", 1)
             grouped[category.strip()].add(label.strip())
         else:
-            grouped["Tag"].add(tag.strip())
+            grouped[fallback_category].add(tag.strip())
 
     return {category: sorted(grouped[category]) for category in sorted(grouped)}
 
@@ -211,7 +211,7 @@ def _build_tags_page(ctx: HtmlBuildContext, tags: List[str]):
 
     output_html = template.render(
         html_settings=ctx.html_settings,
-        tags=_group_tags_by_category(tags),
+        tags=_group_tags_by_category(tags, ctx.fallback_tag_category),
     )
 
     with open(ctx.tags_html_path, "w", encoding="utf-8") as f:
@@ -364,7 +364,7 @@ def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict
         "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "thumbnail_orientation": image_utils.infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(project["info"]),
-        "tag_map": _group_tags_by_category(project["tags"]),
+        "tag_map": _group_tags_by_category(project["tags"], ctx.fallback_tag_category),
         "media_groups": _build_media_groups_context(ctx, project["media_groups"]),
     }
 
@@ -474,7 +474,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator) 
         "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
         "active_since": creator["active_since"],
         "info_html": text_utils.markdown_to_html(creator["info"]),
-        "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator)),
+        "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator), ctx.fallback_tag_category),
         "projects": _build_project_entries(ctx, creator),
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
     }

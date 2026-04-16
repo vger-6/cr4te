@@ -25,6 +25,8 @@ DEFAULT_CONFIG = {
         "nav_projects_label": "Works",
         "nav_tags_label": "Tags",
         
+        "fallback_tag_category": "Other",
+        
         "creator_overview_page_title": "Artists",
         "creator_overview_page_search_placeholder": "Search artists, works, tags...",
         

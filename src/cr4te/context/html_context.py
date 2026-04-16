@@ -62,6 +62,10 @@ class HtmlBuildContext(BaseContext):
     @property
     def project_page_image_section_base_title(self) -> str:
         return self.html_settings["project_page_image_section_base_title"]
+        
+    @property
+    def fallback_tag_category(self) -> str:
+        return self.html_settings["fallback_tag_category"]
 
     @property
     def image_gallery_sample_max(self) -> int:
