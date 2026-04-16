@@ -29,3 +29,7 @@
   background-clip: content-box;
 }
 
+.tag-list {
+  column-count: 2;
+  column-gap: 2rem;
+}

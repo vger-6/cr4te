@@ -602,11 +602,6 @@ a:focus {
   color: var(--tag-text-color);
 }
 
-/*.tag-list {
-  column-count: 2;
-  column-gap: 2rem;
-}*/
-
 .tag:hover {
   background-color: var(--tag-hover-background-color);
   color: var(--tag-hover-text-color);
