@@ -581,11 +581,15 @@ a:focus {
 }
 
 .tag-category {
-  margin-bottom: 0.5rem;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  margin-bottom: 1rem;
 }
 
 .tag-category strong {
   color: var(--tag-category-color);
+  display: block;
+  margin-bottom: 0.4rem;
 }
 
 .tag {
@@ -597,6 +601,11 @@ a:focus {
   font-size: 0.9rem;
   color: var(--tag-text-color);
 }
+
+/*.tag-list {
+  column-count: 2;
+  column-gap: 2rem;
+}*/
 
 .tag:hover {
   background-color: var(--tag-hover-background-color);
