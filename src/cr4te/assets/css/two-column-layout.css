@@ -41,7 +41,7 @@
 .right-column {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
   overflow-y: auto;
   padding-top: var(--two-column-layout-column-padding-top);
   padding-bottom: var(--two-column-layout-column-padding-bottom);

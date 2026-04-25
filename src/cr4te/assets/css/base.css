@@ -1,6 +1,7 @@
 :root {
   --mobile-breakpoint: 72rem;
   --body-padding: 1rem;
+  --two-column-layout-gap: 1rem;
 
   --font-family: sans-serif;
   
@@ -25,7 +26,6 @@
   --overview-layout-border-color: transparent;
   --overview-layout-border-thickness: 0;
   
-  --two-column-layout-gap: 2rem;
   --two-column-layout-column-padding-top: 0;
   --two-column-layout-column-padding-bottom: 0;
   --two-column-layout-column-padding-left: 0;
