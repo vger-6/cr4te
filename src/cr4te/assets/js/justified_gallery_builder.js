@@ -1,109 +1,113 @@
 function rebuildJustifiedImageGallery() {
   document.querySelectorAll('.image-gallery--justified').forEach(gallery => {
     const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
+
     const computedStyle = window.getComputedStyle(gallery);
-    const gap = window.utils.parseCssLength(computedStyle.columnGap || computedStyle.gap || "1rem");
+    const gap = window.utils.parseCssLength(
+      computedStyle.columnGap || computedStyle.gap || "1rem"
+    );
+
     const galleryWidth = gallery.clientWidth;
+    if (!galleryWidth) return;
 
     const allWrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
 
-    // Load all images and collect aspect ratios
-    const loadPromises = allWrappers.map(wrapper => {
+    // --- Build items synchronously using dataset ratios ---
+    const items = allWrappers.map(wrapper => {
       const img = wrapper.querySelector('img');
-      return new Promise(resolve => {
-        if (img.complete) {
-          resolve({ wrapper, img, ratio: img.naturalWidth / img.naturalHeight });
-        } else {
-          img.onload = () => resolve({ wrapper, img, ratio: img.naturalWidth / img.naturalHeight });
-        }
-      });
+
+      const w = parseFloat(wrapper.dataset.width);
+      const h = parseFloat(wrapper.dataset.height);
+
+      const ratio = (w && h) ? (w / h) : 1;
+
+      return { wrapper, img, ratio };
     });
 
-    Promise.all(loadPromises).then(items => {
-      // Remove all children before layout
-      gallery.innerHTML = '';
+    // --- Clear gallery before rebuilding ---
+    gallery.innerHTML = '';
 
-      const rows = [];
-      let row = [];
-      let totalRatio = 0;
+    const rows = [];
+    let row = [];
+    let totalRatio = 0;
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        row.push(item);
-        totalRatio += item.ratio;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
 
-        const totalGap = gap * (row.length - 1);
-        const rowHeight = (galleryWidth - totalGap) / totalRatio;
+      row.push(item);
+      totalRatio += item.ratio;
 
-        if (rowHeight <= maxHeight) {
-          rows.push([...row]);
-          row = [];
-          totalRatio = 0;
-        }
+      const totalGap = gap * (row.length - 1);
+      const rowHeight = (galleryWidth - totalGap) / totalRatio;
+
+      if (rowHeight <= maxHeight) {
+        rows.push([...row]);
+        row = [];
+        totalRatio = 0;
       }
+    }
 
-      // Handle remaining images in the last row
-      if (row.length > 0) {
-        let paddedRow = [...row];
-        let ratioSum = totalRatio;
+    // --- Handle last row (pad if needed like before) ---
+    if (row.length > 0) {
+      let paddedRow = [...row];
+      let ratioSum = totalRatio;
 
-        const lastItem = row[row.length - 1];
-        while (true) {
-          const totalGap = gap * (paddedRow.length - 1);
-          const rowHeight = (galleryWidth - totalGap) / ratioSum;
+      const lastItem = row[row.length - 1];
 
-          if (rowHeight <= maxHeight) break;
+      while (true) {
+        const totalGap = gap * (paddedRow.length - 1);
+        const rowHeight = (galleryWidth - totalGap) / ratioSum;
 
-          const clone = lastItem.wrapper.cloneNode(true);
+        if (rowHeight <= maxHeight) break;
 
-          // Make the clone invisible and non-interactive
-          clone.style.opacity = '0';
-          clone.style.pointerEvents = 'none';
-          clone.style.userSelect = 'none';
-
-          const link = clone.querySelector('a');
-          if (link) {
-            link.removeAttribute('href');
-            link.style.pointerEvents = 'none';
-          }
-          
-          paddedRow.push({
-            wrapper: null,       // no DOM element
-            img: null,
-            ratio: lastItem.ratio,
-            isVirtual: true      // mark as virtual
-          });
-          ratioSum += lastItem.ratio;
-        }
-
-        rows.push(paddedRow);
-      }
-
-      // Render rows
-      rows.forEach(row => {
-        const rowEl = document.createElement('div');
-        rowEl.classList.add('image-row');
-        gallery.appendChild(rowEl);
-
-        const totalRatio = row.reduce((sum, item) => sum + item.ratio, 0);
-        const totalGap = gap * (row.length - 1);
-        const rowHeight = (galleryWidth - totalGap) / totalRatio;
-
-        row.forEach(item => {
-          const width = item.ratio * rowHeight;
-
-          if (item.wrapper && !item.isVirtual) {
-            item.wrapper.style.width = `${width}px`;
-            item.img.style.height = `${rowHeight}px`;
-            rowEl.appendChild(item.wrapper);
-          }
+        paddedRow.push({
+          wrapper: null,
+          img: null,
+          ratio: lastItem.ratio,
+          isVirtual: true
         });
+
+        ratioSum += lastItem.ratio;
+      }
+
+      rows.push(paddedRow);
+    }
+
+    // --- Render rows ---
+    rows.forEach(row => {
+      const rowEl = document.createElement('div');
+      rowEl.classList.add('image-row');
+      gallery.appendChild(rowEl);
+
+      const totalRatio = row.reduce((sum, item) => sum + item.ratio, 0);
+      const totalGap = gap * (row.length - 1);
+      const rowHeight = (galleryWidth - totalGap) / totalRatio;
+
+      row.forEach(item => {
+        const width = item.ratio * rowHeight;
+
+        if (item.wrapper && !item.isVirtual) {
+          item.wrapper.style.width = `${width}px`;
+
+          if (item.img) {
+            item.img.style.height = `${rowHeight}px`;
+          }
+
+          rowEl.appendChild(item.wrapper);
+        }
       });
     });
   });
 }
 
-//TODO: Debounce the resize events e.g., using setTimeout. See also aspect_gallery_builder.js
-window.addEventListener('load', rebuildJustifiedImageGallery);
-window.addEventListener('resize', rebuildJustifiedImageGallery);
+// --- Init earlier (no need to wait for full load anymore) ---
+window.addEventListener('DOMContentLoaded', rebuildJustifiedImageGallery);
 
+// --- Resize (with simple debounce for performance) ---
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    rebuildJustifiedImageGallery();
+  }, 100);
+});

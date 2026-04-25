@@ -20,13 +20,10 @@
 
     let currentPage = 1;
 
-    // -----------------------------
-    // Helpers
-    // -----------------------------
     function getRatio(wrapper) {
       const w = parseFloat(wrapper.dataset.width);
       const h = parseFloat(wrapper.dataset.height);
-      if (!w || !h) return 1; // safe fallback
+      if (!w || !h) return 1;
       return w / h;
     }
 
@@ -77,7 +74,7 @@
       while (
         row.length > 0 &&
         nextIndex < allWrappers.length &&
-        slice.length < initialLength + 10 // limit overflow (~1 row)
+        slice.length < initialLength + 10
       ) {
         const wrapper = allWrappers[nextIndex];
         const ratio = getRatio(wrapper);
@@ -133,9 +130,6 @@
       return slice;
     }
 
-    // -----------------------------
-    // Build ALL pages once
-    // -----------------------------
     function buildPages() {
       const pages = [];
       let index = 0;
@@ -166,18 +160,26 @@
       gallery.innerHTML = '';
       visibleWrappers.forEach(wrapper => gallery.appendChild(wrapper));
 
-      if (typeof rebuildJustifiedImageGallery === 'function') rebuildJustifiedImageGallery();
-      if (typeof rebuildAspectImageGallery === 'function') rebuildAspectImageGallery();
+      if (gallery.classList.contains('image-gallery--justified')) {
+        if (typeof rebuildJustifiedImageGallery === 'function') {
+          rebuildJustifiedImageGallery();
+        }
+      } else if (gallery.classList.contains('image-gallery--aspect')) {
+        if (typeof rebuildAspectImageGallery === 'function') {
+          rebuildAspectImageGallery();
+        }
+      }
+
       if (typeof rebindLightbox === 'function') rebindLightbox();
 
       const totalPages = pages.length;
       controls.innerHTML = '';
 
       if (totalPages > 1) {
-        // --- 1. Previous Button ---
         const prevBtn = document.createElement('button');
         prevBtn.textContent = '<';
         prevBtn.className = 'pagination-prev';
+
         if (page === 1) {
           prevBtn.disabled = true;
           prevBtn.classList.add('in-active');
@@ -189,7 +191,6 @@
         }
         controls.appendChild(prevBtn);
 
-        // --- 2. Numeric Buttons ---
         for (let i = 1; i <= totalPages; i++) {
           const btn = document.createElement('button');
           btn.textContent = i;
@@ -205,10 +206,10 @@
           controls.appendChild(btn);
         }
 
-        // --- 3. Next Button ---
         const nextBtn = document.createElement('button');
         nextBtn.textContent = '>';
         nextBtn.className = 'pagination-next';
+
         if (page === totalPages) {
           nextBtn.disabled = true;
           nextBtn.classList.add('in-active');
