@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 ImageHandler: TypeAlias = Callable[[Path, Optional[Path]], tuple[Optional[Path], "ImageHandler"]]
 
 IMAGE_EXTS = (".jpg", ".jpeg", ".png")
-VIDEO_EXTS = (".mp4", ".m4v")
+VIDEO_EXTS = (".mp4", ".m4v", ".mkv", ".webm")
 AUDIO_EXTS = (".mp3", ".m4a")
 DOC_EXTS = (".pdf",)
 TEXT_EXTS = (".md",)

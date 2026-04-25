@@ -7,14 +7,10 @@ class CreatorField(str, Enum):
     CIVIL_NAME = "civil_name"
     ALIASES = "aliases"
     DEBUT_AGE = "debut_age"
-
-class CollaborationField(str, Enum):
-    MEMBERS = "members"
-    FOUNDED = "founded"
-    DISSOLVED = "dissolved"
-    NATIONALITY = "nationality"
     ACTIVE_SINCE = "active_since"
+    MEMBERS = "members"
+    FOUNDING_DATE = "founding_date"
+    DISSOLUTION_DATE = "dissolution_date"
 
 class ProjectField(str, Enum):
-    TITLE = "title"
     RELEASE_DATE = "release_date"

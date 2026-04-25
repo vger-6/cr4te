@@ -28,6 +28,7 @@ from .enums.thumb_type import ThumbType
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from .enums.orientation import Orientation
+from .enums.visible_fields import CreatorField, ProjectField
 from .context.html_context import HtmlBuildContext, THUMBNAILS_DIRNAME
 from .validators.cr4te_schema import Creator as CreatorSchema
 
@@ -356,11 +357,12 @@ def _collect_collaborator_entries(ctx: HtmlBuildContext, creator: Dict) -> Dict[
 
 
 def _collect_project_context(ctx: HtmlBuildContext, creator: Dict, project: Dict, get_creator) -> Dict:
+    visible = set(ctx.html_settings.get("project_page_visible_fields", []))
     thumb_path = _resolve_thumbnail_or_default(ctx, project["cover"], ThumbType.COVER)
 
     project_context = {
         "title": project["title"],
-        "release_date": project["release_date"],
+        "release_date": date_utils.format_nice_date(project["release_date"]) if ProjectField.RELEASE_DATE in visible else "",
         "rel_thumbnail_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "thumbnail_orientation": image_utils.infer_image_orientation(thumb_path),
         "info_html": text_utils.markdown_to_html(project["info"]),
@@ -464,34 +466,40 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator) 
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
     """
+    visible = set(ctx.html_settings.get("creator_page_visible_fields", []))
     thumb_path = _resolve_thumbnail_or_default(ctx, creator["portrait"], ThumbType.PORTRAIT)
 
-    creator_context = {
+    context = {
+        "type": creator["type"],
         "name": creator["name"],
-        "aliases": creator["aliases"],
-        "nationality": creator["nationality"],
+        "aliases": creator["aliases"] if CreatorField.ALIASES in visible else [],
+        "nationality": creator["nationality"] if CreatorField.NATIONALITY in visible else "",
         "rel_portrait_path": path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         "portrait_orientation": image_utils.infer_image_orientation(thumb_path),
-        "active_since": creator["active_since"],
+        "active_since": date_utils.format_nice_date(creator["active_since"]) if CreatorField.ACTIVE_SINCE in visible else "",
         "info_html": text_utils.markdown_to_html(creator["info"]),
         "tag_map": _group_tags_by_category(_collect_tags_from_creator(creator), ctx.fallback_tag_category),
         "projects": _build_project_entries(ctx, creator),
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
+        "collaborations": _build_collaboration_entries(ctx, creator, get_creator),
     }
-
+    
     if creator["type"] == "collaboration":
-        creator_context["members"] = _collect_member_links(ctx, creator, get_creator)
-        creator_context["member_names"] = creator["collaboration"]["members"]
-        creator_context["founded"] = creator["collaboration"]["founding_date"]
-        creator_context["dissolved"] = creator["collaboration"]["dissolution_date"]
+        collab = creator["collaboration"]
+        context["members"] = _collect_member_links(ctx, creator, get_creator)
+        context["member_names"] = collab["members"] if CreatorField.MEMBERS in visible else []
+        context["founding_date"] = date_utils.format_nice_date(collab["founding_date"]) if CreatorField.FOUNDING_DATE in visible else ""
+        context["dissolution_date"] = date_utils.format_nice_date(collab["dissolution_date"]) if CreatorField.DISSOLUTION_DATE in visible else ""
     else:
-        creator_context["civil_name"] = creator["person"]["civil_name"]
-        creator_context["date_of_birth"] = creator["person"]["date_of_birth"]
-        creator_context["date_of_death"] = creator["person"]["date_of_death"]
-        creator_context["debut_age"] = _calculate_debut_age(creator) or ""
-        creator_context["collaborations"] = _build_collaboration_entries(ctx, creator, get_creator)
+        person = creator["person"]
+        context["civil_name"] = person["civil_name"] if CreatorField.CIVIL_NAME in visible else ""
+        context["date_of_birth"] = date_utils.format_nice_date(person["date_of_birth"]) if CreatorField.DATE_OF_BIRTH in visible else ""
+        context["date_of_death"] = date_utils.format_nice_date(person["date_of_death"]) if CreatorField.DATE_OF_DEATH in visible else ""
+        
+        raw_age = _calculate_debut_age(creator) if CreatorField.DEBUT_AGE in visible else None
+        context["debut_age"] = date_utils.format_age(raw_age)
 
-    return creator_context
+    return context
 
 
 def _build_creator_page(ctx: HtmlBuildContext, creator: dict, get_creator):

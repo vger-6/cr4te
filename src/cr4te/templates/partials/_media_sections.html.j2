@@ -2,7 +2,7 @@
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_video_player.html.j2" as video_player %}
 
-{% macro render_media_groups(path_to_root, media_groups, html_settings, gallery_image_max_height, page_size) %}
+{% macro render_media_groups(path_to_root, media_groups, gallery_image_max_height, page_size) %}
   {% for group in media_groups %}
     {% for section in group.sections %}
       {% if section.type == MediaType.VIDEO.value %}

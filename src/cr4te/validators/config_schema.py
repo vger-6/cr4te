@@ -6,7 +6,7 @@ from pydantic import BaseModel, conint, validator
 from ..enums.image_sample_strategy import ImageSampleStrategy
 from ..enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from ..enums.media_type import MediaType
-from ..enums.visible_fields import CreatorField, CollaborationField, ProjectField
+from ..enums.visible_fields import CreatorField, ProjectField
 
 # HTML settings schema
 class HtmlSettings(BaseModel):
@@ -50,11 +50,10 @@ class HtmlSettings(BaseModel):
     
     project_overview_page_project_gallery_page_size: conint(ge=0)
     
-    creator_page_visible_creator_fields: List[CreatorField]
-    creator_page_visible_collaboration_fields: List[CollaborationField]
+    creator_page_visible_fields: List[CreatorField]
     creator_page_image_gallery_page_size: conint(ge=0)
     
-    project_page_visible_project_fields: List[ProjectField]
+    project_page_visible_fields: List[ProjectField]
     project_page_image_gallery_page_size: conint(ge=0)
     
     hide_portraits: bool

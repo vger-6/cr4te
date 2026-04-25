@@ -33,3 +33,10 @@
   column-count: 2;
   column-gap: 2rem;
 }
+
+/* Small screen behavior */
+@media (max-width: 96rem) {
+  .tag-list {
+    column-count: 1;
+  }
+}

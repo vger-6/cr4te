@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from .utils.json_utils import load_json
 from .validators.config_schema import AppConfig
-from .enums.visible_fields import CreatorField, CollaborationField, ProjectField
+from .enums.visible_fields import CreatorField, ProjectField
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.portrait_strategy import PortraitStrategy
 from .enums.media_type import MediaType
@@ -63,11 +63,10 @@ DEFAULT_CONFIG = {
         
         "project_overview_page_project_gallery_page_size": 100,
         
-        "creator_page_visible_creator_fields": [f for f in CreatorField],
-        "creator_page_visible_collaboration_fields": [f for f in CollaborationField],
+        "creator_page_visible_fields": [f for f in CreatorField],
         "creator_page_image_gallery_page_size" : 15,
 
-        "project_page_visible_project_fields": [f for f in ProjectField],
+        "project_page_visible_fields": [f for f in ProjectField],
         "project_page_image_gallery_page_size" : 15,
         
         "hide_portraits": False,

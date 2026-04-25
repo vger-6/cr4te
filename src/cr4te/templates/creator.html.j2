@@ -46,47 +46,52 @@
                 <div class="meta-label">Name:</div>
                 <div class="meta-value">{{ creator.name }}</div>
                 
-                {% if 'civil_name' in html_settings.creator_page_visible_creator_fields and creator.civil_name %}
+                {% if creator.civil_name %}
                   <div class="meta-label">Civil Name:</div>
                   <div class="meta-value">{{ creator.civil_name }}</div>
                 {% endif %}
 
-                {% if 'aliases' in html_settings.creator_page_visible_creator_fields and creator.aliases %}
+                {% if creator.aliases %}
                   <div class="meta-label">Aliases:</div>
                   <div class="meta-value">{{ creator.aliases | join(', ') }}</div>
                 {% endif %}
 
-                {% if 'members' in html_settings.creator_page_visible_collaboration_fields and creator.member_names %}
+                {% if creator.member_names %}
                   <div class="meta-label">{{ html_settings.creator_page_members_title }}:</div>
-                  <div class="meta-value">{{ creator.member_names | join(',<br>') | safe }}</div>
+                  <div class="meta-value">{{ creator.member_names | join('<br>') | safe }}</div>
                 {% endif %}
 
-                {% if 'date_of_birth' in html_settings.creator_page_visible_creator_fields and creator.date_of_birth %}
+                {% if creator.date_of_birth %}
                   <div class="meta-label">Born:</div>
                   <div class="meta-value">{{ creator.date_of_birth }}</div>
                 {% endif %}
 
-                {% if 'date_of_death' in html_settings.creator_page_visible_creator_fields and creator.date_of_death %}
+                {% if creator.date_of_death %}
                   <div class="meta-label">Died:</div>
                   <div class="meta-value">{{ creator.date_of_death }}</div>
                 {% endif %}
 
-                {% if 'founded' in html_settings.creator_page_visible_collaboration_fields and creator.founded %}
+                {% if creator.founding_date %}
                   <div class="meta-label">Founded:</div>
-                  <div class="meta-value">{{ creator.founded }}</div>
+                  <div class="meta-value">{{ creator.founding_date }}</div>
+                {% endif %}
+                
+                {% if creator.dissolution_date %}
+                  <div class="meta-label">Dissolved:</div>
+                  <div class="meta-value">{{ creator.dissolution_date }}</div>
                 {% endif %}
 
-                {% if 'nationality' in html_settings.creator_page_visible_creator_fields and creator.nationality %}
+                {% if creator.nationality %}
                   <div class="meta-label">Nationality:</div>
                   <div class="meta-value">{{ creator.nationality }}</div>
                 {% endif %}
 
-                {% if 'debut_age' in html_settings.creator_page_visible_creator_fields and creator.debut_age %}
+                {% if creator.debut_age %}
                   <div class="meta-label">Debut Age:</div>
                   <div class="meta-value">{{ creator.debut_age }}</div>
                 {% endif %}
 
-                {% if 'active_since' in html_settings.creator_page_visible_collaboration_fields and creator.active_since %}
+                {% if creator.active_since %}
                   <div class="meta-label">Active Since:</div>
                   <div class="meta-value">{{ creator.active_since }}</div>
                 {% endif %}
@@ -202,7 +207,7 @@
       </div>
       {% endfor %}
         
-      {{ media_macros.render_media_groups(path_to_root, creator.media_groups, html_settings, gallery_image_max_height, html_settings.creator_page_image_gallery_page_size) }}
+      {{ media_macros.render_media_groups(path_to_root, creator.media_groups, gallery_image_max_height, html_settings.creator_page_image_gallery_page_size) }}
       
       <div class="mobile-placeholder" data-mobile-target="1"></div>
       <div class="mobile-placeholder" data-mobile-target="2"></div>
