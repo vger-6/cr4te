@@ -17,8 +17,9 @@
 }
 
 .info-block--row img {
-  width: 100%;
-  max-width: 17rem;
+  /*width: 100%;
+  min-width: 15rem;*/
+  width: 17rem;
 }
 
 .info-block > div > *:first-child {
