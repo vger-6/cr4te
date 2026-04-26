@@ -30,6 +30,13 @@
       max-height: 90vh;
       box-shadow: 0 0 15px black;
     `;
+    
+    img.addEventListener('click', (e) => {
+      e.stopPropagation(); // prevent overlay click (which closes)
+      if (currentGroup.length > 1) {
+        showNext();
+      }
+    });
 
     const closeBtn = document.createElement('div');
     closeBtn.id = 'lightbox-close';
