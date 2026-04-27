@@ -1,4 +1,5 @@
 {% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_media_badges.html.j2" as media_badges %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +48,7 @@
                data-height="{{ project.image_wrapper_height }}">
             <a href="{{ project.rel_html_path }}" title="{{ project.title }}">
               <img src="{{ project.rel_thumbnail_path }}" alt="Poster for {{ project.title }}" loading="lazy">
+              {{ media_badges.media_badges(project.media_counts) }}
               <div class=image-caption>
                 <span>{{ project.title }}</span><br>
                 <span><small>{{ project.creator_name }}</small></span>

@@ -73,6 +73,9 @@
   --tag-hover-text-color: #444444;
   --tag-hover-background-color: #fff2;
 
+  --badge-background-color: rgba(0, 0, 0, 0.7);
+  --badge-text-color: white;
+
   --link-color: #007acc;
   --link-visited-color: #6a5acd;
   --link-hover-color: #003366;
@@ -427,6 +430,7 @@ a:focus {
   align-items: center;
   border: none;
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  position: relative;
 }
 
 .image-card .image-caption {
@@ -782,6 +786,44 @@ a:focus {
   flex: 1;
 }
 
+.media-type-badges {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.image-card:hover .media-type-badges,
+.image-card:focus-within .media-type-badges {
+  opacity: 1;
+}
+
+.media-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--badge-background-color);
+  color: var(--badge-text-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.media-badge .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.media-count {
+  font-size: 0.7rem;
+}
+
 /* Small screen behavior */
 @media (max-width: 96rem) {
   .video-row {
@@ -791,5 +833,12 @@ a:focus {
   .video-row .section-box {
     flex: unset;
     width: 100%;
+  }
+}
+
+/* touch screen behavior */
+@media (hover: none) {
+  .media-type-badges {
+    opacity: 1;
   }
 }

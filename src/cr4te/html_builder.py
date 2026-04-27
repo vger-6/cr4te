@@ -162,6 +162,60 @@ def _build_project_search_text(project: Dict, creator_name: str = "") -> str:
     return " ".join(search_terms).lower()
 
 
+def _compute_media_counts(media_groups: List[Dict]) -> Dict[str, int]:
+    """
+    Computes total media counts from all media groups in a project.
+    Returns a dictionary with counts for each media type.
+    """
+    counts = {
+        "video": 0,
+        "audio": 0,
+        "image": 0,
+        "document": 0,
+        "text": 0,
+    }
+    for group in media_groups:
+        counts["video"] += len(group.get("videos") or [])
+        counts["audio"] += len(group.get("tracks") or [])
+        counts["image"] += len(group.get("images") or [])
+        counts["document"] += len(group.get("documents") or [])
+        counts["text"] += len(group.get("texts") or [])
+    return counts
+
+
+def _compute_creator_stats(creator: Dict) -> Dict[str, Any]:
+    """
+    Computes stats for a creator: number of projects and total media counts.
+    Returns a dictionary with project_count and media_counts.
+    """
+    project_count = len(creator.get("projects", []))
+    
+    # Aggregate media counts from all projects
+    total_media_counts = {
+        "video": 0,
+        "audio": 0,
+        "image": 0,
+        "document": 0,
+        "text": 0,
+    }
+    
+    # Add creator-level media
+    creator_media = _compute_media_counts(creator.get("media_groups", []))
+    for media_type, count in creator_media.items():
+        total_media_counts[media_type] += count
+    
+    # Add project-level media
+    for project in creator.get("projects", []):
+        project_media = _compute_media_counts(project.get("media_groups", []))
+        for media_type, count in project_media.items():
+            total_media_counts[media_type] += count
+    
+    return {
+        "project_count": project_count,
+        "media_counts": total_media_counts,
+    }
+
+
 def _build_project_overview_page(ctx: HtmlBuildContext, project_entries: List[Dict[str, Any]]):
     logger.info("Generating project overview page...")
 
@@ -437,6 +491,7 @@ def _build_project_entries(ctx: HtmlBuildContext, creator: Dict) -> List[Dict[st
             "rel_thumbnail_path": thumb["rel_thumbnail_path"],
             "image_wrapper_width": thumb["image_wrapper_width"],
             "image_wrapper_height": thumb["image_wrapper_height"],
+            "media_counts": _compute_media_counts(project.get("media_groups", [])),
         })
     return project_entries
 
@@ -461,7 +516,7 @@ def _build_collaboration_entries(ctx: HtmlBuildContext, creator: Dict, get_creat
     return collab_entries
 
 
-def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator) -> Dict[str, Any]:
+def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator, creator_stats: Dict[str, Any]) -> Dict[str, Any]:
     """
     Builds the context dictionary for rendering a creator's page,
     including metadata, portrait, projects, collaborations, and tags.
@@ -482,6 +537,7 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator) 
         "projects": _build_project_entries(ctx, creator),
         "media_groups": _build_media_groups_context(ctx, creator["media_groups"]),
         "collaborations": _build_collaboration_entries(ctx, creator, get_creator),
+        "creator_stats": creator_stats,
     }
     
     if creator["type"] == "collaboration":
@@ -502,14 +558,14 @@ def _collect_creator_context(ctx: HtmlBuildContext, creator: Dict, get_creator) 
     return context
 
 
-def _build_creator_page(ctx: HtmlBuildContext, creator: dict, get_creator):
+def _build_creator_page(ctx: HtmlBuildContext, creator: dict, get_creator, creator_stats: Dict[str, Any]):
     logger.info(f"Building creator page: {creator['name']}")
 
     template = env.get_template("creator.html.j2")
 
     output_html = template.render(
         html_settings=ctx.html_settings,
-        creator=_collect_creator_context(ctx, creator, get_creator),
+        creator=_collect_creator_context(ctx, creator, get_creator, creator_stats),
         member_thumb_max_height=ctx.get_thumb_height(ThumbType.THUMB),
         project_thumb_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
         gallery_image_max_height=ctx.get_thumb_height(ThumbType.GALLERY),
@@ -650,7 +706,7 @@ def _get_creator_loader(creator_dirs: Dict[str, Path]) -> Tuple[Any, Dict[str, D
     return loader, cache
 
 
-def _build_creator_summary_entry(ctx: HtmlBuildContext, creator: Dict[str, Any]) -> Dict[str, Any]:
+def _build_creator_summary_entry(ctx: HtmlBuildContext, creator: Dict[str, Any], creator_stats: Dict[str, Any]) -> Dict[str, Any]:
     thumb = _build_thumbnail_context(ctx, creator["portrait"], ThumbType.THUMB)
     return {
         "name": creator["name"],
@@ -659,6 +715,8 @@ def _build_creator_summary_entry(ctx: HtmlBuildContext, creator: Dict[str, Any])
         "rel_thumbnail_path": thumb["rel_thumbnail_path"],
         "image_wrapper_width": thumb["image_wrapper_width"],
         "image_wrapper_height": thumb["image_wrapper_height"],
+        "project_count": creator_stats["project_count"],
+        "media_counts": creator_stats["media_counts"],
     }
 
 
@@ -670,6 +728,7 @@ def _build_project_summary_entry(ctx: HtmlBuildContext, creator: Dict[str, Any],
         "rel_thumbnail_path": thumb["rel_thumbnail_path"],
         "creator_name": creator["name"],
         "search_text": _build_project_search_text(project, creator["name"]),
+        "media_counts": _compute_media_counts(project.get("media_groups", [])),
     }
 
 # TODO: Take aspect ratio and name from html_settings
@@ -719,13 +778,14 @@ def build_html_pages(input_dir: Path, output_dir: Path, html_settings: Dict) -> 
 
         cache[creator_name] = creator
 
-        _build_creator_page(ctx, creator, get_creator)
+        creator_stats = _compute_creator_stats(creator)
+        _build_creator_page(ctx, creator, get_creator, creator_stats)
 
         for project in sorted(creator["projects"], key=_sort_project):
             _build_project_page(ctx, creator, project, get_creator)
             project_entries.append(_build_project_summary_entry(ctx, creator, project))
 
-        creator_entries.append(_build_creator_summary_entry(ctx, creator))
+        creator_entries.append(_build_creator_summary_entry(ctx, creator, creator_stats))
         all_tags.extend(_collect_tags_from_creator(creator))
 
     creator_entries.sort(key=lambda e: e["name"].lower())

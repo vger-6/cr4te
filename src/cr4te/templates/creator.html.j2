@@ -1,5 +1,6 @@
 {% import "partials/_media_sections.html.j2" as media_macros %}
 {% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_media_badges.html.j2" as media_badges %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -172,6 +173,7 @@
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
                 <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                {{ media_badges.media_badges(project.media_counts) }}
                 <div class=image-caption>
                   <span>{{ project.title }}</span>
                 </div>
@@ -196,6 +198,7 @@
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
                 <img src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                {{ media_badges.media_badges(project.media_counts) }}
                 <div class=image-caption>
                   <span>{{ project.title }}</span>
                 </div>

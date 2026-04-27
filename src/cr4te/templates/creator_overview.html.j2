@@ -1,4 +1,5 @@
 {% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_media_badges.html.j2" as media_badges %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -30,6 +31,7 @@
 
   {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, html_settings.creator_gallery_building_strategy) %}
   {% set aspect_ratio = html_settings.creator_gallery_aspect_ratio or '1/1' %}
+  {% set project_label = html_settings.nav_projects_label %}
 
   <div class="overview-layout">
 
@@ -48,6 +50,7 @@
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
               {% if not html_settings.hide_portraits %}
                 <img src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">
+                {{ media_badges.creator_badges(creator.project_count, creator.media_counts, project_label) }}
               {% endif %}
               <div class=image-caption>
                 <span>{{ creator.name }}</span>
