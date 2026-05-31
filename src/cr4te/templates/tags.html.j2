@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>body { display: none; }</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site_labels.entity.tags }}</title>
+  {% include "partials/_favicon.html.j2" %}
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/overview-layout.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
+</head>
+<body>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <a href="index.html">{{ site_labels.entity.creators }}</a> &middot;
+      <a href="projects.html">{{ site_labels.entity.projects }}</a> &middot;
+      <span class="nav-current">{{ site_labels.entity.tags }}</span>
+      {% include "partials/_theme_dropdown.html.j2" %}
+    </div>
+
+    <h1>{{ site_labels.entity.tags }}</h1>
+  </div>
+
+  <div class="overview-layout">
+
+    <div class="section-box">
+      <div class="section-content tag-list">
+
+        {% for group in tags.groups %}
+        <div class="tag-category" id="{{ group.category | lower | replace(' ', '-') }}">
+          <strong>{{ group.category }}:</strong>
+          {% for tag in group.tags %}
+            <a class="tag" href="index.html?tag={{ (group.category ~ ':' ~ tag) | urlencode }}">{{ tag }}</a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+
+     </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/utils.js" defer></script>
+<script src="assets/js/theme_selector.js" defer></script>
+
+</body>
+</html>
+

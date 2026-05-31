@@ -1,0 +1,23 @@
+{
+  "name": "Astra Vey",
+  "type": "person",
+  "portrait": "portrait.png",
+  "person": {
+    "active_since": "2015",
+    "birth": {
+      "date": "1986-01",
+      "place": "Berlin"
+    },
+    "nationalities": [
+      "Swiss"
+    ],
+    "death": {
+      "date": "",
+      "place": ""
+    },
+    "civil_name": ""
+  },
+  "tags": {},
+  "aliases": [],
+  "collaborations": []
+}

@@ -1,0 +1,161 @@
+{% import "partials/_icons.html.j2" as icons %}
+{% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_video_player.html.j2" as video_player %}
+
+{% macro render_media_groups(path_to_root, media_groups, gallery_image_max_height, page_size, site_labels) %}
+  {% for group in media_groups %}
+    {% for section in group.sections %}
+      {% if section.type == MediaType.VIDEO %}
+        {% set total = section.videos|length %}
+        {% if total is odd %}
+          {# First video alone #}
+          <div class="section-box">
+            <div class="section-title">{{ section.videos[0].title }}</div>
+            <hr>
+            <div class="section-content">
+              {{ video_player.render(path_to_root, section.videos[0], site_labels) }}
+            </div>
+          </div>
+
+          {# Remaining videos in rows of two #}
+          {% set videos = section.videos[1:] %}
+          {% else %}
+            {% set videos = section.videos %}
+          {% endif %}
+
+        {% for i in range(0, videos|length, 2) %}
+          <div class="video-row">
+            {% for j in [0, 1] %}
+              {% if i + j < videos|length %}
+                {% set video = videos[i + j] %}
+                <div class="section-box">
+                  <div class="section-title">{{ video.title }}</div>
+                  <hr>
+                  <div class="section-content">
+                    {{ video_player.render(path_to_root, video, site_labels) }}
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endfor %}
+      {% elif section.type == MediaType.AUDIO %}
+        {% if section.tracks %}
+          <div class="section-box audio-gallery-section">
+            <div class="section-title">{{ group.audio_section_title }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="audio-gallery">
+                <ul id="track-list-{{ loop.index }}">
+                  {% for track in section.tracks %}
+                    <li 
+                      data-src="{{ path_to_root }}{{ track.rel_path }}" 
+                      data-audio-action="select-track"
+                      class="track-title">
+                      <span class="track-title-text">{{ track.title }}</span>
+                      <span class="track-duration-text">{{ utils.format_duration(track.duration_seconds) }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+                <div class="audio-controls-wrapper">
+                  <div class="audio-controls">
+                    <button class="control-btn" data-audio-action="toggle-play" title="{{ site_labels.controls.play }}" aria-label="{{ site_labels.controls.play }}" data-play-label="{{ site_labels.controls.play }}" data-pause-label="{{ site_labels.controls.pause }}">
+                      {{ icons.play_pause_icon() }}
+                    </button>
+                  
+                    <button class="control-btn" data-audio-action="stop" title="{{ site_labels.controls.stop }}" aria-label="{{ site_labels.controls.stop }}">
+                      {{ icons.stop_icon() }}
+                    </button>
+                  
+                    <button class="control-btn" data-audio-action="previous" title="{{ site_labels.controls.previous }}" aria-label="{{ site_labels.controls.previous }}">
+                      {{ icons.prev_icon() }}
+                    </button>
+
+                    <button class="control-btn" data-audio-action="next" title="{{ site_labels.controls.next }}" aria-label="{{ site_labels.controls.next }}">
+                      {{ icons.next_icon() }}
+                    </button>
+
+                    <input type="range" class="media-slider progress-bar" value="0" step="0.02" data-audio-action="seek">
+
+                    <span class="time-display">00:00:00 / 00:00:00</span>
+
+                    <div class="volume-container">
+                      <button class="control-btn volume-toggle-btn" data-media-action="toggle-mute" title="{{ site_labels.controls.mute }}" aria-label="{{ site_labels.controls.mute }}" data-mute-label="{{ site_labels.controls.mute }}" data-unmute-label="{{ site_labels.controls.unmute }}">
+                        {{ icons.volume_icon() }}
+                      </button>
+                      <input type="range" class="media-slider volume-slider" min="0" max="1" step="0.01" data-audio-action="volume">
+                    </div>
+                    <audio preload="metadata" style="display: none;"></audio>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% elif section.type == MediaType.IMAGE %}
+        {% if section.images %}
+          <div class="section-box image-caption-section no-captions">
+            <div class="section-title">
+              <span>{{ group.image_section_title }}</span>
+              <div class="title-actions">
+                <button class="section-action-btn caption-toggle-btn" title="{{ site_labels.controls.show_captions }}" aria-label="{{ site_labels.controls.show_captions }}" data-show-captions-label="{{ site_labels.controls.show_captions }}" data-hide-captions-label="{{ site_labels.controls.hide_captions }}">
+                  <span class="icon-on">
+                    {{ icons.captions_on_icon() }}
+                  </span>
+                  <span class="icon-off">
+                    {{ icons.captions_off_icon() }}
+                  </span>
+                </button>
+              </div>
+            </div>
+            <hr>
+            <div class="section-content">
+              <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}" data-previous-label="{{ site_labels.controls.previous }}" data-next-label="{{ site_labels.controls.next }}">
+                {% for image in section.images %}
+                  <div class="image-wrapper" data-width="{{ image.image_wrapper_width }}" data-height="{{ image.image_wrapper_height }}">
+                    <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank" data-lightbox-title="{{ image.caption }}">
+                      <img class="gallery-image" src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}" loading="lazy">
+                      <div class=image-caption>
+                        <span>{{ image.caption }}</span>
+                      </div>
+                    </a>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% elif section.type == MediaType.DOCUMENT %}
+        {% for document in section.documents %}
+          <div class="section-box">
+            <div class="section-title">
+              <span>{{ document.title }}</span>
+              <div class="title-actions">
+                <a class="title-action-link" href="{{ path_to_root }}{{ document.rel_path }}" target="_blank" title="{{ site_labels.controls.open_in_new_tab }}" aria-label="{{ site_labels.controls.open_in_new_tab }}">
+                  {{ icons.fullscreen_icon(tight=True) | safe }}
+                </a>
+              </div>
+            </div>
+            <hr>
+            <div class="section-content" style="padding: 0">
+              <iframe class="auto-height-iframe" src="{{ path_to_root }}{{ document.rel_path }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+            </div>
+          </div>
+        {% endfor %}
+      {% elif section.type == MediaType.TEXT %}
+        {% for text in section.texts %}
+          <div class="section-box markdown">
+            <div class="section-title">{{ text.title }}</div>
+            <hr>
+            <div class="section-content text-content">
+              <div class="text-gallery">
+                {{ text.content | safe }}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+{% endmacro %}
+

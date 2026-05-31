@@ -1,0 +1,1 @@
+A polished electro-pop record built around shimmering synth arpeggios, clipped percussion, and vocals that move between icy restraint and sudden warmth. The album's concept imagines emotion traveling through a transparent machine: fragile, visible, and electrically alive. Its cover's chrome-and-glass aesthetic mirrors the sound: sleek, luminous, and slightly dangerous.

@@ -1,0 +1,27 @@
+{% import "partials/_icons.html.j2" as icons %}
+
+{% macro render(path_to_root, video, site_labels) %}
+  <div class="video-wrapper">
+    <video preload="metadata" {% if video.rel_poster_path %}poster="{{ path_to_root }}{{ video.rel_poster_path }}"{% endif %}>
+      <source src="{{ path_to_root }}{{ video.rel_path }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-controls">
+      <button class="control-btn" data-video-action="toggle-play" title="{{ site_labels.controls.play }}" aria-label="{{ site_labels.controls.play }}" data-play-label="{{ site_labels.controls.play }}" data-pause-label="{{ site_labels.controls.pause }}">
+        {{ icons.play_pause_icon() }}
+      </button>
+      <input type="range" class="media-slider progress-bar" value="0" step="0.01" data-video-action="seek" disabled>
+      <span class="time-display">00:00:00 / 00:00:00</span>
+      <div class="volume-container">
+        <button class="control-btn volume-toggle-btn" data-media-action="toggle-mute" title="{{ site_labels.controls.mute }}" aria-label="{{ site_labels.controls.mute }}" data-mute-label="{{ site_labels.controls.mute }}" data-unmute-label="{{ site_labels.controls.unmute }}">
+          {{ icons.volume_icon() }}
+        </button>
+        <input type="range" class="media-slider volume-slider" min="0" max="1" step="0.01" data-video-action="volume">
+      </div>
+      <button class="control-btn" data-video-action="fullscreen" title="{{ site_labels.controls.fullscreen }}" aria-label="{{ site_labels.controls.fullscreen }}">
+        {{ icons.fullscreen_icon() }}
+      </button>
+    </div>
+  </div>
+{% endmacro %}
+

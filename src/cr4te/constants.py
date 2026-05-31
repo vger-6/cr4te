@@ -1,0 +1,39 @@
+from pathlib import Path
+
+# === General project structure ===
+CR4TE_PACKAGE_DIR = Path(__file__).resolve().parent
+
+ASSETS_DIRNAME = "assets"
+
+CR4TE_ASSETS_DIR = CR4TE_PACKAGE_DIR / ASSETS_DIRNAME
+CR4TE_DEFAULTS_DIR = CR4TE_ASSETS_DIR / "defaults"
+CR4TE_CSS_DIR = CR4TE_ASSETS_DIR / "css"
+CR4TE_FAVICON_PATH = CR4TE_ASSETS_DIR / "favicon.svg"
+CR4TE_JS_DIR = CR4TE_ASSETS_DIR / "js"
+CR4TE_TEMPLATES_DIR = CR4TE_PACKAGE_DIR / "templates"
+
+# === Shared filenames ===
+CR4TE_JSON_FILE_NAME = "cr4te.json"
+README_FILE_NAME = "README.md"
+INDEX_HTML_FILE_NAME = "index.html"
+PROJECTS_HTML_FILE_NAME = "projects.html"
+TAGS_HTML_FILE_NAME = "tags.html"
+CREATOR_OVERVIEW_THUMB_FILE_NAME = "creator-overview.png"
+PROJECT_OVERVIEW_THUMB_FILE_NAME = "project-overview.png"
+CREATOR_PAGE_PROJECT_THUMB_FILE_NAME = "creator-page-project.png"
+PORTRAIT_THUMB_FILE_NAME = "portrait.png"
+COVER_THUMB_FILE_NAME = "cover.png"
+GALLERY_THUMB_FILE_NAME = "gallery.png"
+
+# === Output folder names ===
+OUTPUT_HTML_DIRNAME = "html"
+OUTPUT_SYMLINKS_DIRNAME = "symlinks"
+OUTPUT_THUMBNAILS_DIRNAME = "thumbnails"
+
+# === Thumbnail dimensions ===
+CREATOR_OVERVIEW_THUMB_HEIGHT = 350
+PROJECT_OVERVIEW_THUMB_HEIGHT = 350
+CREATOR_PAGE_PROJECT_THUMB_HEIGHT = 450
+GALLERY_THUMB_HEIGHT = 450
+PORTRAIT_THUMB_HEIGHT = 720
+COVER_THUMB_HEIGHT = 720

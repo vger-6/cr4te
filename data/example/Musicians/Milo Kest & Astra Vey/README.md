@@ -1,0 +1,1 @@
+Astra Vey & Milo Kest are a synth-pop/indie-electronic duo pairing Astra's futuristic precision with Milo's warm guitar-driven songwriting. Their collaborations often explore separation, mirrored lives, and emotional distance through glossy production and intimate vocals. Together they sound like neon architecture wrapped around folk instincts.

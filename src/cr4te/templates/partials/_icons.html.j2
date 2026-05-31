@@ -1,0 +1,132 @@
+{# templates/partials/_icons.html.j2 #}
+{% macro play_pause_icon() %}
+<svg viewBox="0 0 24 24" class="icon play-toggle-icon">
+  <path d="M8 5v14l11-7z" data-play></path>
+  <path d="M6 19h4V5H6v14zm8 0h4V5h-4v14z" data-pause style="display: none;"></path>
+</svg>
+{% endmacro %}
+
+{% macro stop_icon() %}
+<svg viewBox="0 0 24 24" class="icon stop-icon">
+  <rect x="6" y="6" width="12" height="12"/>
+</svg>
+{% endmacro %}
+
+{% macro prev_icon() %}
+<svg viewBox="0 0 24 24" class="icon prev-icon">
+  <rect x="5" y="5" width="2" height="14"/>
+  <path d="M18 5v14l-10-7z"/>
+</svg>
+{% endmacro %}
+
+{% macro next_icon() %}
+<svg viewBox="0 0 24 24" class="icon next-icon">
+  <path d="M6 5v14l10-7z"/>
+  <rect x="17" y="5" width="2" height="14"/>
+</svg>
+{% endmacro %}
+
+{% macro volume_icon() %}
+<svg viewBox="0 0 24 24" class="icon volume-icon" fill="currentColor">
+  <g data-volume>
+    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+    <rect x="13" y="11" width="1.5" height="2" rx="0.5" />
+    <rect x="16" y="9" width="1.5" height="6" rx="0.5" />
+    <rect x="19" y="7" width="1.5" height="10" rx="0.5" />
+  </g>
+  <g data-muted style="display: none;">
+    <path d="M11 5L6 9H2v6h4l5 4V5z" />
+    <path d="M15 9l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>
+{% endmacro %}
+
+{% macro fullscreen_icon(tight=False) %}
+<svg viewBox="{{ '4 4 16 16' if tight else '0 0 24 24' }}" class="icon fullscreen-icon{% if tight %} fullscreen-icon--tight{% endif %}">
+  <path d="M4 4h6v2H6v4H4V4zm16 0v6h-2V6h-4V4h6zm-6 16v-2h4v-4h2v6h-6zm-6 0H4v-6h2v4h4v2z"/>
+</svg>
+{% endmacro %}
+
+{% macro captions_on_icon() %}
+<svg viewBox="0 0 24 24" class="icon image-caption-icon">
+  <!-- Image frame -->
+  <path
+    d="M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"
+    fill="none"
+    stroke="var(--theme-control-icon)"
+    stroke-width="2"
+  />
+
+  <!-- Sun -->
+  <circle cx="9" cy="13" r="1.5"/>
+
+  <!-- Mountains -->
+  <path d="M6 18l3-3 3 2 3-3 3 4H6z"/>
+
+  <!-- Caption line -->
+  <rect x="6" y="22" width="12" height="2" rx="1"/>
+</svg>
+{% endmacro %}
+
+{% macro captions_off_icon() %}
+<svg viewBox="0 0 24 24" class="icon image-caption-icon">
+  <!-- Image frame -->
+  <path
+    d="M6 8h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2z"
+    fill="none"
+    stroke="var(--theme-control-icon)"
+    stroke-width="2"
+  />
+
+  <!-- Sun -->
+  <circle cx="9" cy="13" r="1.5"/>
+
+  <!-- Mountains -->
+  <path d="M6 18l3-3 3 2 3-3 3 4H6z"/>
+</svg>
+{% endmacro %}
+
+{% macro image_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon image-media-icon" fill="currentColor" aria-hidden="true">
+  <path
+    d="M6 6h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+  />
+  <path
+    fill-rule="evenodd"
+    d="M4 6h16v12H4z M4.4 16.9L8.55 12.5L12.15 14.95L15.85 10.95L19.6 16.9H4.4z M8.7 8.5a1.9 1.9 0 1 0 0 3.8a1.9 1.9 0 0 0 0-3.8z"
+  />
+</svg>
+{% endmacro %}
+
+{% macro video_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon" fill="currentColor" aria-hidden="true">
+  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+</svg>
+{% endmacro %}
+
+{% macro audio_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon" fill="currentColor" aria-hidden="true">
+  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+</svg>
+{% endmacro %}
+
+{% macro document_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon" fill="currentColor" aria-hidden="true">
+  <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+</svg>
+{% endmacro %}
+
+{% macro text_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon" fill="currentColor" aria-hidden="true">
+  <path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/>
+</svg>
+{% endmacro %}
+
+{% macro folder_icon() %}
+<svg viewBox="0 0 24 24" class="icon media-type-icon" fill="currentColor" aria-hidden="true">
+  <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+</svg>
+{% endmacro %}

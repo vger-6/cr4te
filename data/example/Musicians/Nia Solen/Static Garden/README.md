@@ -1,0 +1,7 @@
+Static Garden is Nia Solen’s sophomore album, released in 2018. Widely regarded as her breakthrough project, it represents a deeper and more refined exploration of the organic-digital tension that defines her artistry.
+
+On Static Garden, Solen expands her sound with richer production, more complex arrangements, and a wider emotional range. The album perfectly balances energetic, luminous electronic pop with moments of thoughtful introspection and experimental texture. Standout tracks such as the title song “Static Garden,” “Bloom Protocol,” and “After the Signal” showcase her signature style: warm, breathy vocals floating over intricate beats, layered synths, and subtle natural sounds (rain, leaves, distant birds) processed through digital filters.
+
+Thematically, the record dives into the paradox of modern existence — the longing for growth and connection in an increasingly artificial world. It explores digital fatigue, emotional blooming, memory glitches, and the search for stillness amid constant input. The visual identity is even stronger here, with imagery of serene gardens disrupted by beautiful signal interference, flowers wrapped in neon circuitry, and soft light breaking through digital noise.
+
+Static Garden received strong critical praise for its sonic maturity and artistic vision, solidifying Nia Solen’s reputation as one of the most compelling electronic pop artists to emerge from Spain in recent years. It remains her most beloved and streamed body of work.

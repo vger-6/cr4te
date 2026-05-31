@@ -1,0 +1,80 @@
+{% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_media_badges.html.j2" as media_badges %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>body { display: none; }</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site_labels.entity.creators }}</title>
+  {% include "partials/_favicon.html.j2" %}
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/overview-layout.css">
+  <link rel="stylesheet" href="assets/css/theme.css">
+</head>
+<body>
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <span class="nav-current">{{ site_labels.entity.creators }}</span> &middot;
+      <a href="projects.html">{{ site_labels.entity.projects }}</a> &middot;
+      <a href="tags.html">{{ site_labels.entity.tags }}</a>
+      {% include "partials/_theme_dropdown.html.j2" %}
+    </div>
+
+    <h1>{{ site_labels.entity.creators }}</h1>
+  </div>
+
+  {% set search_text_placeholder = site_labels.controls.search_placeholder %}
+  {% include "partials/_search_bar.html.j2" %}
+
+  {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) %}
+  {% set aspect_ratio = site_rendering.galleries.creator_cards.aspect_ratio or '1/1' %}
+
+  <div class="overview-layout">
+
+    <div class="section-box">
+      <div class="section-content">
+        <div class="{{ image_gallery_class }}"
+             id="imageGallery"
+             data-image-max-height="{{ gallery_image_max_height }}"
+             data-page-size="{{ site_rendering.galleries.creator_cards.page_size }}"
+             data-previous-label="{{ site_labels.controls.previous }}"
+             data-next-label="{{ site_labels.controls.next }}"
+             data-aspect-ratio="{{ aspect_ratio }}">
+          {% for creator in creator_entries %}
+          <div class="image-wrapper image-card" 
+               data-search-text="{{ creator.search_text }}"
+               data-width="{{ creator.image_wrapper_width }}"
+               data-height="{{ creator.image_wrapper_height }}">
+            <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
+              {% if not site_rendering.portraits.hide %}
+                <img class="card-image" src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">
+                {{ media_badges.creator_badges(creator.project_count, creator.media_counts, site_labels) }}
+              {% endif %}
+              <div class=image-caption>
+                <span>{{ creator.name }}</span>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="assets/js/utils.js" defer></script>
+<script src="assets/js/pagination.js" defer></script>
+<script src="assets/js/search_filter.js" defer></script>
+<script src="assets/js/aspect_gallery_builder.js" defer></script>
+<script src="assets/js/justified_gallery_builder.js" defer></script>
+<script src="assets/js/theme_selector.js" defer></script>
+
+</body>
+</html>
+

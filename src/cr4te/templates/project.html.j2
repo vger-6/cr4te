@@ -1,0 +1,172 @@
+{% import "partials/_media_sections.html.j2" as media_macros %}
+{% import "partials/_utils.html.j2" as utils %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>body { display: none; }</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ project.title }}</title>
+  {% include "partials/_favicon.html.j2" %}
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/tokens.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/base.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/two-column-layout.css">
+  <link rel="stylesheet" href="{{ path_to_root }}assets/css/theme.css">
+</head>
+<body>
+
+{% set creator_base = project.creator or project.collaboration %}
+
+<div class="page-container">
+  <div class="page-header">
+    <div class="top-link">
+      <a href="{{ path_to_root }}index.html">{{ site_labels.entity.creators }}</a> &middot;
+      <a href="{{ path_to_root }}projects.html">{{ site_labels.entity.projects }}</a> &middot;
+      <a href="{{ path_to_root }}tags.html">{{ site_labels.entity.tags }}</a> &middot;
+      <a href="{{ path_to_root }}{{ creator_base.rel_html_path }}">{{ creator_base.name }}</a>
+      {% include "partials/_theme_dropdown.html.j2" %}
+    </div>
+
+    <h1>{{ project.title }}</h1>
+  </div>
+
+  <div class="two-column-layout">
+
+    <div class="left-column">
+
+      <div class="original-placeholder" data-mobile-target="1">
+        <div class="section-box">
+          <div class="section-title">{{ site_labels.pages.project_overview_title }}</div>
+          <hr>
+          <div class="section-content markdown">
+            <div class="info-block info-block--{{ project.thumbnail_orientation.value }}">
+              <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ project.title }}">
+                <img class="primary-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Preview of {{ project.title }}">
+              </a>
+              {{ utils.render_meta_entries(project.meta_entries, path_to_root) }}
+            </div>
+          </div>
+        </div>
+
+        {% if project.info_html %}
+          <div class="section-box markdown">
+            <div class="section-title">{{ site_labels.pages.project_description_title }}</div>
+            <hr>
+            <div class="section-content text-content">
+              {{ project.info_html | safe }}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="original-placeholder" data-mobile-target="2">
+        {% if project.creator %}
+          {% set creator = project.creator%}
+        
+          <div class="section-box">
+            <div class="section-title">{{ creator.name }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="info-block info-block--portrait">
+                {% if not site_rendering.portraits.hide %}
+                  <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ creator.name }}">
+                    <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
+                  </a>
+                {% endif %}
+                {{ utils.render_meta_entries(creator.meta_entries, path_to_root) }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="original-placeholder" data-mobile-target="3">
+        {% if project.collaboration %}
+        
+          {% set collaboration = project.collaboration%}
+          <div class="section-box">
+            <div class="section-title">{{ collaboration.name }}</div>
+            <hr>
+            <div class="section-content">
+              <div class="info-block info-block--portrait">
+                {% if not site_rendering.portraits.hide %}
+                  <a href="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ collaboration.name }}">
+                    <img class="primary-image" src="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" alt="Portrait of {{ collaboration.name }}">
+                  </a>
+                {% endif %}
+                {{ utils.render_meta_entries(collaboration.meta_entries, path_to_root) }}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="original-placeholder" data-mobile-target="4">
+          {% for participant in project.participants %}
+            <div class="section-box">
+              <div class="section-title">{{ participant.name }}</div>
+              <hr>
+              <div class="section-content">
+                <div class="info-block info-block--portrait">
+                  {% if not site_rendering.portraits.hide %}
+                    <a href="{{ path_to_root }}{{ participant.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ participant.name }}">
+                      <img class="primary-image" src="{{ path_to_root }}{{ participant.rel_portrait_path}}" alt="Portrait of {{ participant.name }}">
+                    </a>
+                  {% endif %}
+                  {{ utils.render_meta_entries(participant.meta_entries, path_to_root) }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+      </div>
+
+      <div class="original-placeholder" data-mobile-target="5">
+        {% if project.tags %}
+          <div class="section-box">
+            <div class="section-title">{{ site_labels.entity.tags }}</div>
+            <hr>
+            <div class="section-content tag-list">
+              {% for group in project.tags.groups %}
+                <div class="tag-category">
+                  <strong>{{ group.category }}:</strong>
+                  {% for tag in group.tags %}
+                    <a class="tag" href="{{ path_to_root }}projects.html?tag={{ (group.category ~ ':' ~ tag) | urlencode }}">{{ tag }}</a>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <div class="right-column">
+
+      {{ media_macros.render_media_groups(path_to_root, project.media_groups, gallery_image_max_height, site_rendering.project_page.media_gallery_page_size, site_labels) }}
+      
+      <div class="mobile-placeholder" data-mobile-target="1"></div>
+      <div class="mobile-placeholder" data-mobile-target="2"></div>
+      <div class="mobile-placeholder" data-mobile-target="3"></div>
+      <div class="mobile-placeholder" data-mobile-target="4"></div>
+      <div class="mobile-placeholder" data-mobile-target="5"></div>
+
+    </div>
+  </div>
+</div>
+
+<script src="{{ path_to_root }}assets/js/utils.js" defer></script>
+<script src="{{ path_to_root }}assets/js/theme_selector.js" defer></script>
+<script src="{{ path_to_root }}assets/js/justified_gallery_builder.js" defer></script>
+<script src="{{ path_to_root }}assets/js/image_captions_toggle.js" defer></script>
+<script src="{{ path_to_root }}assets/js/pagination.js" defer></script>
+<script src="{{ path_to_root }}assets/js/audio_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/video_player.js" defer></script>
+<script src="{{ path_to_root }}assets/js/lightbox.js" defer></script>
+<script src="{{ path_to_root }}assets/js/responsive_content_mover.js" defer></script>
+<script src="{{ path_to_root }}assets/js/resize_iframes.js" defer></script>
+
+</body>
+</html>
+

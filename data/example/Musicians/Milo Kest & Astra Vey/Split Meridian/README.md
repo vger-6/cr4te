@@ -1,0 +1,1 @@
+A darker, more melancholic duo album built around contrast: warm sunset tones against cold midnight synths, closeness against distance, voice against silence. The songs feel like they are divided by a glowing horizon line, with Astra's polished futurism and Milo's grounded indie tone meeting in the middle.

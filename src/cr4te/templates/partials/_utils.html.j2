@@ -1,0 +1,38 @@
+{% macro format_duration(seconds) %}
+  {% if seconds <= 0 %}
+    {{ "" }}
+  {% elif seconds >= 3600 %}
+    {{ ("%02d:%02d:%02d") % (seconds // 3600, (seconds % 3600) // 60, seconds % 60) }}
+  {% else %}
+    {{ ("%02d:%02d") % (seconds // 60, seconds % 60) }}
+  {% endif %}
+{% endmacro %}
+
+{% macro get_image_gallery_class(ImageGalleryBuildingStrategy, strategy) %}
+  {% if ImageGalleryBuildingStrategy.ASPECT == strategy %}
+    image-gallery--aspect
+  {% else %}
+    image-gallery--justified
+  {% endif %}
+{% endmacro %}
+
+{% macro render_meta_entries(entries, path_to_root) %}
+  {% if entries %}
+    <div class="meta-list info-block__meta">
+      {% for entry in entries %}
+        <div class="meta-label">{{ entry.label }}:</div>
+        <div class="meta-value">
+          {%- for value in entry.values %}
+            {%- set href = entry.hrefs[loop.index0] if entry.hrefs else "" -%}
+            {%- if href -%}
+              <a href="{{ path_to_root }}{{ href }}">{{ value }}</a>
+            {%- else -%}
+              {{ value }}
+            {%- endif -%}
+            {%- if not loop.last -%}{{ entry.separator | safe }}{%- endif -%}
+          {%- endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}

@@ -1,0 +1,23 @@
+{
+  "name": "Nia Solen",
+  "type": "person",
+  "portrait": "",
+  "person": {
+    "active_since": "2019",
+    "birth": {
+      "date": "1990-05",
+      "place": "Barcelona"
+    },
+    "nationalities": [
+      "Spanish"
+    ],
+    "death": {
+      "date": "",
+      "place": ""
+    },
+    "civil_name": ""
+  },
+  "tags": {},
+  "aliases": [],
+  "collaborations": []
+}

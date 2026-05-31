@@ -1,0 +1,60 @@
+{% import "partials/_icons.html.j2" as icons %}
+
+{# ------------------------------------------------------------------ #}
+{# Internal helper to render a list of badge definitions              #}
+{# Each item: (count, icon_macro, singular_label, plural_label)       #}
+{# ------------------------------------------------------------------ #}
+{% macro _render_badges(items) %}
+  {% for count, icon, singular, plural in items %}
+    {% if count > 0 %}
+      {% set label = count ~ ' ' ~ (singular if count == 1 else plural) %}
+      <span class="media-badge"
+            title="{{ label }}"
+            aria-label="{{ label }}">
+        {{ icon() }}
+        <span class="media-count">{{ count }}</span>
+      </span>
+    {% endif %}
+  {% endfor %}
+{% endmacro %}
+
+{# ------------------------------------------------------------------ #}
+{# Project / media badges                                             #}
+{# ------------------------------------------------------------------ #}
+{% macro media_badges(media_counts, site_labels) %}
+  {% set total = media_counts.values() | sum %}
+
+  {% if total > 0 %}
+    <div class="media-type-badges">
+      {% set items = [
+        (media_counts.video, icons.video_icon, site_labels.media.video, site_labels.media.videos),
+        (media_counts.audio, icons.audio_icon, site_labels.media.audio_track, site_labels.media.audio_tracks),
+        (media_counts.image, icons.image_icon, site_labels.media.image, site_labels.media.images),
+        (media_counts.document, icons.document_icon, site_labels.media.document, site_labels.media.documents),
+        (media_counts.text, icons.text_icon, site_labels.media.text_file, site_labels.media.text_files)
+      ] %}
+      {{ _render_badges(items) }}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{# ------------------------------------------------------------------ #}
+{# Creator badges (includes project count)                            #}
+{# ------------------------------------------------------------------ #}
+{% macro creator_badges(project_count, media_counts, site_labels) %}
+  {% set total_media = media_counts.values() | sum %}
+
+  {% if project_count > 0 or total_media > 0 %}
+    <div class="media-type-badges">
+      {% set items = [
+        (project_count, icons.folder_icon, site_labels.entity.project, site_labels.entity.projects),
+        (media_counts.video, icons.video_icon, site_labels.media.video, site_labels.media.videos),
+        (media_counts.audio, icons.audio_icon, site_labels.media.audio_track, site_labels.media.audio_tracks),
+        (media_counts.image, icons.image_icon, site_labels.media.image, site_labels.media.images),
+        (media_counts.document, icons.document_icon, site_labels.media.document, site_labels.media.documents),
+        (media_counts.text, icons.text_icon, site_labels.media.text_file, site_labels.media.text_files)
+      ] %}
+      {{ _render_badges(items) }}
+    </div>
+  {% endif %}
+{% endmacro %}

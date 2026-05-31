@@ -1,0 +1,2 @@
+recursive-include src/cr4te/assets *
+recursive-include src/cr4te/templates *
