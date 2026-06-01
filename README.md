@@ -258,6 +258,15 @@ Then visit [http://localhost:8000](http://localhost:8000).
 - Use `--clean` with `build` when you want to regenerate thumbnails from scratch.
 - Use `clean-json --dry-run` before deleting creator and project metadata files.
 
+## Project history
+
+This repository contains the current development codebase for cr4te.
+
+An earlier codebase is archived at:
+
+https://github.com/vger-6/cr4te-old
+
+The archived repository is kept for historical reference only. Active development continues in this repository.
 
 ## License
 
