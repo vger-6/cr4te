@@ -16,6 +16,7 @@ from .html_builder import build_html_pages_streaming
 from .library_builder import build_library_index, load_indexed_creator
 from .metadata_manager import clean_metadata_files, reconcile_metadata_files
 from .output_preparation import clear_output_folder
+from .render_assets import MediaStagingError
 
 # Short flags
 FLAG_INPUT_SHORT = "-i"
@@ -157,13 +158,19 @@ def _build_cmd_handler(args):
     library_index = build_library_index(input_dir, config.media_rules, strict=args.strict)
 
     logging.info("Building HTML site...")
-    index_html_path = build_html_pages_streaming(
-        library_index,
-        output_dir,
-        config.site_labels,
-        config.site_rendering,
-        lambda summary: load_indexed_creator(library_index, summary, config.media_rules),
-    )
+    try:
+        index_html_path = build_html_pages_streaming(
+            library_index,
+            output_dir,
+            config.site_labels,
+            config.site_rendering,
+            lambda summary: load_indexed_creator(library_index, summary, config.media_rules),
+        )
+    except MediaStagingError as exc:
+        logging.error(str(exc))
+        logging.info("Aborting.")
+        raise SystemExit(1) from exc
+
     log_build_summary(BuildSummary.from_library_index(library_index), logging.getLogger(__name__))
 
     if args.open:

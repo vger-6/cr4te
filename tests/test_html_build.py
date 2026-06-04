@@ -68,6 +68,38 @@ class HtmlBuildTests(unittest.TestCase):
             self.assertNotIn("info", project_metadata)
             self.assertTrue((output_dir / "index.html").exists())
 
+    def test_build_command_aborts_when_media_cannot_be_linked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            project_dir = root / "Noomi" / "Landscapes"
+            project_dir.mkdir(parents=True)
+            (project_dir / "catalog.pdf").write_bytes(b"pdf")
+
+            args = SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_strategy=None,
+                open=False,
+                force=True,
+                clean=False,
+                strict=True,
+            )
+
+            with (
+                patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
+                patch("cr4te.render_assets.os.link", side_effect=OSError("no hardlink")),
+                self.assertLogs(level="ERROR") as logs,
+            ):
+                with self.assertRaises(SystemExit) as exit_context:
+                    _build_cmd_handler(args)
+
+            self.assertEqual(exit_context.exception.code, 1)
+            self.assertIn("will not copy media files automatically", "\n".join(logs.output))
+
     def test_build_command_uses_configured_project_facets_without_domain_arg(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Musicians"

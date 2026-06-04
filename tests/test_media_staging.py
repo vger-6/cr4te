@@ -14,6 +14,7 @@ from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.domain import Domain
 from cr4te.output_preparation import copy_static_assets, prepare_output_dirs
 from cr4te.render_assets import (
+    MediaStagingError,
     build_default_thumbnail_specs,
     prepare_default_thumbnails,
     stage_media_file,
@@ -21,7 +22,7 @@ from cr4te.render_assets import (
 
 
 class MediaStagingTests(unittest.TestCase):
-    def test_stage_media_file_copies_when_links_are_unavailable(self):
+    def test_stage_media_file_uses_hardlink_when_symlink_is_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             source = root / "input" / "Noomi" / "image.jpg"
@@ -29,13 +30,36 @@ class MediaStagingTests(unittest.TestCase):
             source.parent.mkdir(parents=True)
             source.write_bytes(b"image bytes")
 
-            with patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")):
-                with patch("cr4te.render_assets.os.link", side_effect=OSError("no hardlink")):
-                    staged = stage_media_file(root / "input", Path("Noomi/image.jpg"), target_dir)
+            def fake_hardlink(src, dst):
+                Path(dst).write_bytes(Path(src).read_bytes())
+
+            with (
+                patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
+                patch("cr4te.render_assets.os.link", side_effect=fake_hardlink),
+            ):
+                staged = stage_media_file(root / "input", Path("Noomi/image.jpg"), target_dir)
 
             self.assertTrue(staged.exists())
             self.assertEqual(staged.read_bytes(), b"image bytes")
             self.assertTrue(staged.is_relative_to(target_dir))
+
+    def test_stage_media_file_aborts_when_links_are_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input" / "Noomi" / "image.jpg"
+            target_dir = root / "output" / "symlinks"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"image bytes")
+
+            with (
+                patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
+                patch("cr4te.render_assets.os.link", side_effect=OSError("no hardlink")),
+            ):
+                with self.assertRaisesRegex(MediaStagingError, "will not copy media files automatically"):
+                    stage_media_file(root / "input", Path("Noomi/image.jpg"), target_dir)
+
+            staged_files = [path for path in target_dir.rglob("*") if path.is_file()]
+            self.assertEqual(staged_files, [])
 
     def test_output_preparation_copies_static_files_and_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:

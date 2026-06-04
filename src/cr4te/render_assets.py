@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -18,6 +17,7 @@ __all__ = [
     "build_thumbnail_context",
     "build_default_thumbnail_specs",
     "DefaultThumbnailSpec",
+    "MediaStagingError",
     "get_image_dimensions",
     "get_image_orientation",
     "prepare_default_thumbnails",
@@ -26,6 +26,10 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+
+class MediaStagingError(RuntimeError):
+    """Raised when media cannot be staged without copying source files."""
 
 
 @dataclass(frozen=True)
@@ -76,11 +80,17 @@ def stage_media_file(input_dir: Path, rel_source_path: Path, target_dir: Path) -
     target_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         os.symlink(source_path, target_path)
-    except OSError:
+    except OSError as symlink_exc:
         try:
             os.link(source_path, target_path)
-        except OSError:
-            shutil.copy2(source_path, target_path)
+        except OSError as hardlink_exc:
+            raise MediaStagingError(
+                "Cannot stage media file because creating both a symbolic link and a hard link failed. "
+                "cr4te will not copy media files automatically because copying large libraries can be expensive. "
+                f"Source: {source_path}. Target: {target_path}. "
+                f"Symbolic link error: {symlink_exc}. Hard link error: {hardlink_exc}. "
+                "Enable symlink permissions or place input and output on the same filesystem so hard links can be used."
+            ) from hardlink_exc
 
     return target_path
 
