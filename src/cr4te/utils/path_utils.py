@@ -2,7 +2,7 @@ import hashlib
 import os
 from pathlib import Path
 
-__all__ = ["relative_path_from", "build_unique_path", "get_path_to_root", "tag_path"]
+__all__ = ["relative_path_from", "build_unique_path", "tag_path"]
 
 
 def relative_path_from(file_path: Path, base_path: Path) -> Path:
@@ -35,21 +35,6 @@ def build_unique_path(input_path: Path, depth: int = 4) -> Path:
     chunks.append(remaining)
 
     return Path(*chunks)
-
-
-def get_path_to_root(depth: int) -> str:
-    """
-    Returns a relative path that navigates up `depth` directories.
-
-    Parameters:
-        depth (int): Number of directory levels to go up.
-
-    Returns:
-        str: Relative path to root, like "../../.."
-    """
-    if depth < 0:
-        raise ValueError("depth must be non-negative")
-    return "../" * depth
 
 
 def tag_path(input_path: Path, tag: str) -> Path:

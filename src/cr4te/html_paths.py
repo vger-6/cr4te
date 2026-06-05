@@ -7,13 +7,12 @@ from .utils import path_utils
 
 __all__ = [
     "FILE_TREE_DEPTH",
-    "HTML_PATH_TO_ROOT",
+    "build_path_to_root",
     "build_rel_creator_html_path",
     "build_rel_project_html_path",
 ]
 
 FILE_TREE_DEPTH = 4
-HTML_PATH_TO_ROOT = path_utils.get_path_to_root(FILE_TREE_DEPTH + 1)
 
 
 class CreatorPathTarget(Protocol):
@@ -22,6 +21,11 @@ class CreatorPathTarget(Protocol):
 
 class ProjectPathTarget(Protocol):
     title: str
+
+
+def build_path_to_root(page_path: Path, output_dir: Path) -> str:
+    relative_path = path_utils.relative_path_from(output_dir, page_path.parent).as_posix()
+    return "" if relative_path == "." else f"{relative_path}/"
 
 
 def build_rel_creator_html_path(creator: CreatorPathTarget) -> Path:

@@ -10,7 +10,7 @@ from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from .enums.media_type import MediaType
 from .enums.thumb_type import ThumbType
 from .html_paths import (
-    HTML_PATH_TO_ROOT,
+    build_path_to_root,
     build_rel_creator_html_path,
     build_rel_project_html_path,
 )
@@ -80,17 +80,17 @@ def render_project_page(
     project: ProjectModel,
     page_context: ProjectPageContext,
 ) -> None:
+    page_path = ctx.html_dir / build_rel_project_html_path(creator, project)
     template = env.get_template("project.html.j2")
     rendered = template.render(
         site_labels=ctx.site_labels,
         site_rendering=ctx.site_rendering,
         project=page_context,
         gallery_image_max_height=ctx.get_display_image_max_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT,
+        path_to_root=build_path_to_root(page_path, ctx.output_dir),
         **_theme_render_context(ctx),
     )
 
-    page_path = ctx.html_dir / build_rel_project_html_path(creator, project)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as file:
         file.write(rendered)
@@ -101,6 +101,7 @@ def render_creator_page(
     creator: CreatorModel,
     page_context: CreatorPageContext,
 ) -> None:
+    page_path = ctx.html_dir / build_rel_creator_html_path(creator)
     template = env.get_template("creator.html.j2")
     rendered = template.render(
         site_labels=ctx.site_labels,
@@ -108,12 +109,11 @@ def render_creator_page(
         creator=page_context,
         project_image_max_height=ctx.get_display_image_max_height(ThumbType.CREATOR_PAGE_PROJECT),
         gallery_image_max_height=ctx.get_display_image_max_height(ThumbType.GALLERY),
-        path_to_root=HTML_PATH_TO_ROOT,
+        path_to_root=build_path_to_root(page_path, ctx.output_dir),
         ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
         **_theme_render_context(ctx),
     )
 
-    page_path = ctx.html_dir / build_rel_creator_html_path(creator)
     page_path.parent.mkdir(parents=True, exist_ok=True)
     with open(page_path, "w", encoding="utf-8") as file:
         file.write(rendered)

@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -6,7 +7,7 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from cr4te.html_paths import HTML_PATH_TO_ROOT, build_rel_creator_html_path, build_rel_project_html_path
+from cr4te.html_paths import build_path_to_root, build_rel_creator_html_path, build_rel_project_html_path
 from cr4te.utils import path_utils
 
 
@@ -28,8 +29,18 @@ class HtmlPathTests(unittest.TestCase):
             path_utils.build_unique_path(Path("project", "Ada", "First Notes").with_suffix(".html"), 4),
         )
 
-    def test_path_to_root_matches_html_depth(self):
-        self.assertEqual(HTML_PATH_TO_ROOT, "../../../../../")
+    def test_path_to_root_is_computed_from_actual_page_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "site"
+            page_path = output_dir / "detail-pages" / "custom" / "depth" / "page.html"
+
+            self.assertEqual(build_path_to_root(page_path, output_dir), "../../../")
+
+    def test_path_to_root_is_empty_for_page_in_output_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / "site"
+
+            self.assertEqual(build_path_to_root(output_dir / "page.html", output_dir), "")
 
 
 if __name__ == "__main__":

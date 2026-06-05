@@ -88,14 +88,19 @@ class TemplateRendererTests(unittest.TestCase):
                 media_groups=[],
             )
 
-            with patch("cr4te.template_renderer.env", fake_env):
+            custom_rel_path = Path("custom") / "depth" / "project.html"
+            with (
+                patch("cr4te.template_renderer.env", fake_env),
+                patch("cr4te.template_renderer.build_rel_project_html_path", return_value=custom_rel_path),
+            ):
                 render_project_page(ctx, creator(), project(), page_context)
 
             rendered_path = next(ctx.html_dir.rglob("*.html"))
+            self.assertEqual(rendered_path, ctx.html_dir / custom_rel_path)
             self.assertEqual(rendered_path.read_text(encoding="utf-8"), "rendered:project.html.j2")
             self.assertEqual(fake_env.calls[0][0], "project.html.j2")
             self.assertIs(fake_env.calls[0][1]["project"], page_context)
-            self.assertIn("path_to_root", fake_env.calls[0][1])
+            self.assertEqual(fake_env.calls[0][1]["path_to_root"], "../../../")
             self.assertEqual(fake_env.calls[0][1]["default_theme"].id, "frozen-aurora")
             self.assertEqual({theme.id for theme in fake_env.calls[0][1]["themes"]}, {
                 "forest-night",

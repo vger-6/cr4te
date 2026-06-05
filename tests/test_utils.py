@@ -75,9 +75,7 @@ class PathUtilsTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     path_utils.build_unique_path(Path("project.html"), depth=depth)
 
-    def test_path_to_root_and_tag_path(self):
-        self.assertEqual(path_utils.get_path_to_root(0), "")
-        self.assertEqual(path_utils.get_path_to_root(3), "../../../")
+    def test_tag_path(self):
         self.assertEqual(path_utils.tag_path(Path("thumbs") / "cover.jpg", "card"), Path("thumbs") / "cover_card.jpg")
 
 
