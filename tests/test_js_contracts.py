@@ -134,6 +134,14 @@ class JavaScriptContractTests(unittest.TestCase):
 
                 self.assertLess(scripts.index("pagination.js"), scripts.index("search_filter.js"))
 
+    def test_pagination_reuses_per_gallery_instance_and_can_remove_resize_listener(self):
+        source = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
+
+        self.assertIn("const instances = new WeakMap()", source)
+        self.assertIn("instance.update(allWrappers, pageSize)", source)
+        self.assertIn("window.addEventListener('resize', handleResize)", source)
+        self.assertIn("window.removeEventListener('resize', handleResize)", source)
+
     def test_theme_selector_uses_rendered_registry_and_handles_restricted_storage(self):
         source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
 

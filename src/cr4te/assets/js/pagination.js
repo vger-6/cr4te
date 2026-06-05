@@ -4,7 +4,8 @@
   cr4te.galleries = cr4te.galleries || {};
   cr4te.lightbox = cr4te.lightbox || {};
 
-  let IMAGES_PER_PAGE_DEFAULT = 20;
+  const IMAGES_PER_PAGE_DEFAULT = 20;
+  const instances = new WeakMap();
 
   function rebuildGallery(gallery) {
     if (gallery.classList.contains('image-gallery--justified')) {
@@ -18,9 +19,7 @@
     cr4te.lightbox.rebind?.();
   }
 
-  function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAULT) {
-    if (!gallery) return;
-
+  function createPagination(gallery, initialWrappers, initialPageSize) {
     let wrapper = gallery.parentElement.querySelector('.pagination-controls-wrapper');
     let controls = wrapper ? wrapper.querySelector('.pagination-controls') : null;
 
@@ -37,6 +36,8 @@
       wrapper.style.display = '';
     }
 
+    let allWrappers = initialWrappers;
+    let pageSize = initialPageSize;
     let currentPage = 1;
 
     function getRatio(wrapper) {
@@ -258,17 +259,45 @@
       }
     }
 
-    renderPage(currentPage);
-
-    window.addEventListener('resize', () => {
+    function handleResize() {
       pages = buildPages();
 
       if (currentPage > pages.length) {
-        currentPage = pages.length;
+        currentPage = Math.max(pages.length, 1);
       }
 
       renderPage(currentPage);
-    });
+    }
+
+    function update(nextWrappers, nextPageSize) {
+      allWrappers = nextWrappers;
+      pageSize = nextPageSize;
+      currentPage = 1;
+      pages = buildPages();
+      renderPage(currentPage);
+    }
+
+    window.addEventListener('resize', handleResize);
+    renderPage(currentPage);
+
+    return {
+      update,
+      destroy() {
+        window.removeEventListener('resize', handleResize);
+      }
+    };
+  }
+
+  function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAULT) {
+    if (!gallery) return;
+
+    const instance = instances.get(gallery);
+    if (instance) {
+      instance.update(allWrappers, pageSize);
+      return;
+    }
+
+    instances.set(gallery, createPagination(gallery, allWrappers, pageSize));
   }
 
   cr4te.pagination.mount = setupPagination;

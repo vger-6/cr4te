@@ -209,6 +209,37 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
+    def test_search_updates_do_not_accumulate_resize_listeners(self):
+        self.page.add_init_script(
+            """
+            (() => {
+                const originalAddEventListener = window.addEventListener.bind(window);
+                window.__resizeListenerRegistrations = 0;
+                window.addEventListener = function(type, listener, options) {
+                    if (type === 'resize') {
+                        window.__resizeListenerRegistrations += 1;
+                    }
+                    return originalAddEventListener(type, listener, options);
+                };
+            })();
+            """
+        )
+        self.open_page("index.html")
+        initial_registrations = self.page.evaluate("window.__resizeListenerRegistrations")
+
+        for query in ("n", "ni", "nia", ""):
+            self.page.fill("#search-input", query)
+            self.page.wait_for_timeout(50)
+
+        self.assertEqual(
+            self.page.evaluate("window.__resizeListenerRegistrations"),
+            initial_registrations,
+        )
+        self.page.evaluate("window.dispatchEvent(new Event('resize'))")
+        self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 3)
+        self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
     def test_project_overview_tag_query_filters_and_clears_url(self):
         self.open_page("projects.html?tag=labels:orbit")
 

@@ -2,40 +2,14 @@
 
 This file tracks product ideas. Durable requirements live in [REQUIREMENTS.md](REQUIREMENTS.md); future refactoring guidance lives in [REFACTORING_GUIDELINES.md](REFACTORING_GUIDELINES.md).
 
-## Test Commands
-
-Rendered-site browser tests live in `tests_browser/`. They build the bundled example library, serve the generated HTML from a temporary local HTTP server, and exercise the JavaScript behavior on the fully rendered pages.
-
-Install the optional browser test dependency once:
-
-```powershell
-python -m pip install -e ".[browser-test]"
-python -m playwright install chromium
-```
-
-Run the browser regression tests:
-
-```powershell
-python -m unittest discover tests_browser
-```
-
-The regular Python test suite remains separate and fast:
-
-```powershell
-python -m unittest discover tests
-```
-
 ## Review Backlog
 
 These items come from the full-codebase review of the Python build pipeline, generated HTML, copied assets, JavaScript, and CSS contracts. They are TODOs, not durable requirements.
 
 ### High Priority
 
-- [ ] Define and implement explicit configuration precedence. Prefer defaults -> domain preset -> user config -> direct CLI flags, so `--domain` does not silently override values from `--config`.
-- [ ] Prevent repeated pagination remounts from accumulating resize listeners during search. Treat pagination as a per-gallery instance that can update its items or clean up old listeners.
-- [ ] Make generated/staged assets cache-aware. Refresh stale staged media and thumbnails when the source file changes, instead of reusing an existing target path unconditionally.
+- [ ] Validate and refresh existing staged media links when they are broken or stale, especially hard links whose source file has been replaced.
 - [ ] Surface render and asset failures as structured build issues. Thumbnail failures, missing staged media, and similar rendering problems should appear in the build summary rather than only in logs.
-- [ ] Reconsider metadata reconciliation as a default side effect of `build`. Either split it into an explicit command or add an opt-out/opt-in flag so builds do not unexpectedly modify input data.
 
 ### Medium Priority
 
@@ -50,7 +24,3 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 - [ ] Add `--dry-run` flag to `build`.
 - [ ] Add optional progress reporting for large folder trees.
-
-## Existing Functionality Ideas
-
-This section is intentionally left for future product ideas that are not review findings.
