@@ -11,7 +11,7 @@ from .enums.orientation import Orientation
 from .enums.thumb_type import ThumbType
 from .media_cache import ImageDimensions
 from .render_models import ThumbnailContext
-from .utils import image_utils, path_utils
+from .utils import file_utils, image_utils, path_utils
 
 __all__ = [
     "build_thumbnail_context",
@@ -121,27 +121,57 @@ def get_image_orientation(ctx: HtmlBuildContext, path: Path) -> Orientation:
     return get_image_dimensions(ctx, path).orientation
 
 
+def _source_hash_sidecar_path(thumb_path: Path) -> Path:
+    return thumb_path.with_suffix(f"{thumb_path.suffix}.sha256")
+
+
+def _regenerate_thumbnail(ctx: HtmlBuildContext, source_path: Path, thumb_path: Path, thumb_type: ThumbType) -> None:
+    thumb = image_utils.generate_thumbnail(source_path, ctx.get_generated_thumb_height(thumb_type))
+    thumb_path.parent.mkdir(parents=True, exist_ok=True)
+
+    thumb_ext = thumb_path.suffix.lower()
+    match thumb_ext:
+        case ".jpg" | ".jpeg":
+            image_format = "JPEG"
+        case ".png":
+            image_format = "PNG"
+        case _:
+            raise ValueError(f"Unsupported thumbnail extension: {thumb_ext}")
+
+    thumb.save(thumb_path, format=image_format)
+
+
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
     thumb_path = ctx.thumbs_dir / path_utils.build_unique_path(rel_image_path)
     thumb_path = path_utils.tag_path(thumb_path, thumb_type.value)
+    source_path = ctx.input_dir / rel_image_path
+    sidecar_path = _source_hash_sidecar_path(thumb_path)
 
-    if not thumb_path.exists():
-        try:
-            thumb = image_utils.generate_thumbnail(ctx.input_dir / rel_image_path, ctx.get_generated_thumb_height(thumb_type))
-            thumb_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if not thumb_path.exists():
+            _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
+            sidecar_path.unlink(missing_ok=True)
+            return thumb_path
 
-            thumb_ext = thumb_path.suffix.lower()
-            match thumb_ext:
-                case ".jpg" | ".jpeg":
-                    image_format = "JPEG"
-                case ".png":
-                    image_format = "PNG"
-                case _:
-                    raise ValueError(f"Unsupported thumbnail extension: {thumb_ext}")
+        thumb_stat = thumb_path.stat()
+        if source_path.stat().st_mtime_ns > thumb_stat.st_mtime_ns:
+            _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
+            sidecar_path.unlink(missing_ok=True)
+            return thumb_path
 
-            thumb.save(thumb_path, format=image_format)
+        parent_mtime_ns = source_path.parent.stat().st_mtime_ns
+        if parent_mtime_ns <= thumb_stat.st_mtime_ns:
+            return thumb_path
 
-        except Exception as exc:
-            logger.error(f"Error creating thumbnail for {rel_image_path}: {exc}")
+        source_hash = file_utils.calculate_sha256(source_path)
+        stored_hash = sidecar_path.read_text(encoding="ascii") if sidecar_path.exists() else None
+        if source_hash == stored_hash:
+            os.utime(thumb_path, ns=(thumb_stat.st_atime_ns, parent_mtime_ns))
+            return thumb_path
+
+        _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
+        sidecar_path.write_text(source_hash, encoding="ascii")
+    except Exception as exc:
+        logger.error(f"Error resolving thumbnail for {rel_image_path}: {exc}")
 
     return thumb_path
