@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from PIL import Image
 
 from cr4te.config_manager import apply_cli_overrides, load_config
+from cr4te.build_issues import BuildIssueError, IssueCode, IssueScope
 from cr4te.cr4te import _build_cmd_handler, _file_uri
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
@@ -20,6 +21,7 @@ from cr4te.library_builder import build_library_index, load_indexed_creator
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
 from cr4te.media_counts import MediaCounts
 from cr4te.schemas.library_schema import Creator, Project
+from cr4te.themes import discover_themes
 
 
 def write_json(path: Path, data: dict) -> None:
@@ -99,6 +101,66 @@ class HtmlBuildTests(unittest.TestCase):
 
             self.assertEqual(exit_context.exception.code, 1)
             self.assertIn("will not copy media files automatically", "\n".join(logs.output))
+
+    def test_build_command_combines_theme_issues_into_final_summary(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            themes_dir = Path(tmp) / "themes"
+            invalid_theme = themes_dir / "invalid.css"
+            root.mkdir()
+            invalid_theme.parent.mkdir(parents=True)
+            invalid_theme.write_text(".theme-other {}", encoding="utf-8")
+
+            args = SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_strategy=None,
+                open=False,
+                force=True,
+                clean=False,
+                strict=False,
+                themes_dir=str(themes_dir),
+            )
+
+            with patch("cr4te.cr4te.log_build_summary") as log_build_summary:
+                _build_cmd_handler(args)
+
+            summary = log_build_summary.call_args.args[0]
+            self.assertEqual(len(summary.issues), 1)
+            self.assertEqual(summary.issues[0].scope, IssueScope.THEME)
+            self.assertEqual(summary.issues[0].path, invalid_theme)
+
+    def test_build_command_aborts_before_side_effects_for_missing_themes_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            missing_themes_dir = Path(tmp) / "missing-themes"
+            root.mkdir()
+
+            args = SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_strategy=None,
+                open=False,
+                force=True,
+                clean=False,
+                strict=False,
+                themes_dir=str(missing_themes_dir),
+            )
+
+            with self.assertRaises(BuildIssueError) as caught:
+                _build_cmd_handler(args)
+
+            self.assertEqual(caught.exception.issue.path, missing_themes_dir.resolve())
+            self.assertEqual(caught.exception.issue.code, IssueCode.MISSING_REFERENCE)
+            self.assertFalse(output_dir.exists())
 
     def test_build_command_uses_configured_project_facets_without_domain_arg(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -255,7 +317,14 @@ class HtmlBuildTests(unittest.TestCase):
             patch("cr4te.html_builder.build_project_page_context", side_effect=project_context),
             patch("cr4te.html_builder.logger.info", side_effect=lambda message: events.append(message)),
         ):
-            build_html_pages_streaming(index, Path("site"), config.site_labels, config.site_rendering, lambda summary: creator)
+            build_html_pages_streaming(
+                index,
+                discover_themes(None),
+                Path("site"),
+                config.site_labels,
+                config.site_rendering,
+                lambda summary: creator,
+            )
 
         self.assertLess(events.index("Building creator page: Noomi"), events.index("creator-context"))
         self.assertLess(events.index("Building project page: Noomi - Landscapes"), events.index("project-context"))
@@ -285,13 +354,51 @@ class HtmlBuildTests(unittest.TestCase):
                 loaded.append(summary.name)
                 return load_indexed_creator(index, summary, config.media_rules)
 
-            build_html_pages_streaming(index, output_dir, config.site_labels, config.site_rendering, load_creator)
+            build_html_pages_streaming(
+                index,
+                discover_themes(None),
+                output_dir,
+                config.site_labels,
+                config.site_rendering,
+                load_creator,
+            )
 
             self.assertEqual(loaded, ["Noomi"])
             self.assertTrue((output_dir / "index.html").exists())
             self.assertTrue((output_dir / "projects.html").exists())
             html_pages = list((output_dir / "html").rglob("*.html"))
             self.assertEqual(len(html_pages), 2)
+
+    def test_streaming_html_build_copies_and_renders_custom_theme(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            themes_dir = Path(tmp) / "themes"
+            custom_theme = themes_dir / "custom-night.css"
+            root.mkdir()
+            custom_theme.parent.mkdir(parents=True)
+            custom_theme.write_text(
+                ".theme-custom-night { --theme-page-bg: rgb(1, 2, 3); }",
+                encoding="utf-8",
+            )
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            index = build_library_index(root, config.media_rules)
+            build_html_pages_streaming(
+                index,
+                discover_themes(themes_dir),
+                output_dir,
+                config.site_labels,
+                config.site_rendering,
+                lambda summary: load_indexed_creator(index, summary, config.media_rules),
+            )
+
+            self.assertEqual((output_dir / "assets" / "css" / "themes" / "custom-night.css").read_text(
+                encoding="utf-8",
+            ), custom_theme.read_text(encoding="utf-8"))
+            rendered = (output_dir / "index.html").read_text(encoding="utf-8")
+            self.assertIn('data-theme="theme-custom-night"', rendered)
+            self.assertIn('assets/css/themes/custom-night.css', rendered)
 
     def test_streaming_html_build_keeps_best_effort_project_recovery(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -312,6 +419,7 @@ class HtmlBuildTests(unittest.TestCase):
 
             build_html_pages_streaming(
                 index,
+                discover_themes(None),
                 output_dir,
                 config.site_labels,
                 config.site_rendering,

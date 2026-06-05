@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ site_labels.entity.tags }}</title>
@@ -9,9 +8,9 @@
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/css/overview-layout.css">
-  <link rel="stylesheet" href="assets/css/theme.css">
+  {% include "partials/_theme_stylesheets.html.j2" %}
 </head>
-<body>
+<body class="{{ default_theme.css_class }}" data-default-theme="{{ default_theme.css_class }}">
 
 <div class="page-container">
   <div class="page-header">

@@ -22,12 +22,12 @@ Allow users to add custom themes by placing CSS theme files in a dedicated theme
 - Render the theme dropdown from discovered theme definitions.
 - Keep JavaScript generic: it should apply one of the rendered theme classes, not know the built-in theme list.
 - Keep CSS authoring simple and valid enough for editor support such as VS Code IntelliSense.
-- Prefer a dedicated, ignored/reserved input folder for user themes so it is not mistaken for a creator folder.
+- Accept a dedicated user theme folder through an explicit build option so themes remain separate from creator/project content.
 - Keep output preparation and asset copying concerns in the existing output/static-asset boundary.
 
 ## Proposed User Contract
 
-- Users place theme CSS files in a dedicated theme folder.
+- Users place theme CSS files in a dedicated folder and pass it with `build --themes-dir`.
 - The filename without extension is the display name unless a later explicit metadata mechanism is added.
 - The CSS file must define the expected theme class derived from the filename, for example:
 
@@ -46,7 +46,7 @@ Allow users to add custom themes by placing CSS theme files in a dedicated theme
 
 1. Define the theme data model and discovery rules.
 2. Move the existing built-in themes into discoverable built-in theme files.
-3. Add custom theme discovery from the dedicated user theme folder.
+3. Add custom theme discovery from the explicitly supplied user theme folder.
 4. Generate or copy theme CSS into the output site through the static asset pipeline.
 5. Render the theme dropdown from the theme registry.
 6. Update `theme_selector.js` so fallback/default behavior comes from rendered data or the first/default registry entry.
@@ -64,7 +64,7 @@ Allow users to add custom themes by placing CSS theme files in a dedicated theme
 - Unit tests for custom theme discovery.
 - Unit tests for filename-to-theme-class/name behavior.
 - Unit tests for duplicate or invalid theme handling.
-- Unit tests proving the dedicated theme folder is not treated as a creator/project content folder.
+- Unit tests proving custom theme discovery remains separate from creator/project indexing.
 - Template/rendering tests proving dropdown entries are generated from registry data.
 - Browser regression test proving a custom theme appears and can be selected on generated pages.
 

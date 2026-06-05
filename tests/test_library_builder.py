@@ -143,6 +143,20 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertTrue(creator.media_groups)
             self.assertTrue(creator.projects[0].media_groups)
 
+    def test_library_index_does_not_discover_or_carry_themes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            theme_path = Path(tmp) / "themes" / "invalid.css"
+            root.mkdir()
+            theme_path.parent.mkdir(parents=True)
+            theme_path.write_text(".theme-other {}", encoding="utf-8")
+
+            index = build_library_index(root, self.build_config().media_rules)
+
+            self.assertEqual(index.creators, ())
+            self.assertEqual(index.issues, ())
+            self.assertFalse(hasattr(index, "themes"))
+
     def test_collaboration_links_are_computed_in_memory(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"

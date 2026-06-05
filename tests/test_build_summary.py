@@ -148,6 +148,22 @@ class BuildSummaryTests(unittest.TestCase):
         self.assertEqual(summary.project_count, 1)
         self.assertEqual(summary.headline(), "Build summary: creators=1, projects=1, errors=0, warnings=0")
 
+    def test_summary_combines_explicit_non_library_issues(self):
+        index = LibraryIndex(input_dir=Path("Artists"), creators=())
+        theme_issue = BuildIssue(
+            path=Path("themes") / "invalid.css",
+            scope=IssueScope.THEME,
+            code=IssueCode.INVALID_THEME,
+            message="Invalid theme",
+        )
+
+        summary = BuildSummary.from_library_index(index, additional_issues=(theme_issue,))
+
+        self.assertEqual(summary.issues, (theme_issue,))
+        self.assertIn("ERROR theme", summary.issue_lines()[0])
+        self.assertIn(str(Path("themes") / "invalid.css"), summary.issue_lines()[0])
+        self.assertIn("[invalid_theme]", summary.issue_lines()[0])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -24,6 +24,11 @@ def copy_static_assets(ctx: HtmlBuildContext) -> None:
     shutil.copytree(CR4TE_CSS_DIR, ctx.css_dir, dirs_exist_ok=True)
     shutil.copytree(CR4TE_JS_DIR, ctx.js_dir, dirs_exist_ok=True)
     shutil.copy2(CR4TE_FAVICON_PATH, ctx.assets_dir / CR4TE_FAVICON_PATH.name)
+    if ctx.themes_dir.exists():
+        shutil.rmtree(ctx.themes_dir)
+    ctx.themes_dir.mkdir(parents=True)
+    for theme in ctx.themes:
+        shutil.copy2(theme.source_path, ctx.themes_dir / theme.output_filename)
 
 
 def clear_output_folder(output_dir: Path, clear_thumbnails: bool) -> None:

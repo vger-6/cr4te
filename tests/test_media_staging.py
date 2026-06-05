@@ -234,6 +234,7 @@ class MediaStagingTests(unittest.TestCase):
             self.assertTrue((ctx.css_dir / "base.css").exists())
             self.assertTrue((ctx.js_dir / "utils.js").exists())
             self.assertTrue((ctx.assets_dir / "favicon.svg").exists())
+            self.assertTrue((ctx.themes_dir / "frozen-aurora.css").exists())
 
             specs = build_default_thumbnail_specs(ctx)
             self.assertEqual(len(specs), 6)

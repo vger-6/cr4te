@@ -1,0 +1,186 @@
+.theme-mono-terminal {
+  --theme-terminal-line-width: 1px;
+  --theme-terminal-thin-line-width: 1px;
+  --theme-terminal-disabled: #4a4a4a;
+  --theme-terminal-enabled: #9a9a9a;
+  --theme-terminal-visited: #767676;
+  --theme-terminal-hover: #d8d8d8;
+  --theme-terminal-selected-bg: #c8c8c8;
+  --theme-terminal-selected-text: #161616;
+  --theme-terminal-hover-bg: #2a2a2a;
+
+  --theme-font-family: ui-monospace, "Cascadia Mono", "Courier New", monospace;
+
+  --theme-page-bg: #141414;
+  --theme-surface-bg: #1b1b1b;
+  --theme-surface-muted-bg: #232323;
+  --theme-surface-raised-bg: #1b1b1b;
+  --theme-border: var(--theme-terminal-enabled);
+  --theme-border-muted: var(--theme-terminal-disabled);
+  --theme-text: #d0d0d0;
+  --theme-text-muted: #8a8a8a;
+  --theme-text-strong: #e2e2e2;
+  --theme-accent: var(--theme-terminal-enabled);
+  --theme-accent-visited: var(--theme-terminal-visited);
+  --theme-accent-hover: var(--theme-terminal-hover);
+  --theme-accent-muted: var(--theme-terminal-disabled);
+  --theme-accent-contrast: var(--theme-terminal-selected-text);
+  --theme-hover-bg: var(--theme-terminal-hover-bg);
+  --theme-hover-text: var(--theme-terminal-hover);
+  --theme-selected-bg: var(--theme-terminal-selected-bg);
+  --theme-selected-text: var(--theme-terminal-selected-text);
+  --theme-overlay-bg: rgba(20, 20, 20, 0.86);
+  --theme-panel-shadow: none;
+  --theme-card-shadow-default: none;
+  --theme-input-shadow: none;
+  --theme-focus-ring: rgba(216, 216, 216, 0.35);
+
+  --theme-link: var(--theme-accent);
+  --theme-link-visited: var(--theme-accent-visited);
+  --theme-link-hover: var(--theme-accent-hover);
+  --theme-link-disabled: var(--theme-accent-muted);
+
+  --theme-title-bg: transparent;
+  --theme-title-text: var(--theme-text-strong);
+  --theme-title-border: var(--theme-border);
+  --theme-title-border-width: var(--theme-terminal-line-width);
+  --theme-title-radius: 0;
+
+  --theme-panel-bg: var(--theme-page-bg);
+  --theme-panel-border: var(--theme-border);
+  --theme-panel-border-width: var(--theme-terminal-line-width);
+  --theme-panel-radius: 0;
+
+  --theme-menu-hover-bg: var(--theme-hover-bg);
+  --theme-menu-hover-text: var(--theme-hover-text);
+  --theme-menu-selected-bg: var(--theme-selected-bg);
+  --theme-menu-selected-text: var(--theme-selected-text);
+
+  --theme-overview-padding-top: 0;
+  --theme-overview-padding-bottom: 1rem;
+  --theme-overview-padding-left: 1rem;
+  --theme-overview-padding-right: 1rem;
+  --theme-overview-bg: transparent;
+  --theme-overview-border: var(--theme-border);
+  --theme-overview-border-width: var(--theme-terminal-line-width);
+  --theme-overview-radius: 0;
+
+  --theme-layout-column-padding-top: 1rem;
+  --theme-layout-column-padding-bottom: 1rem;
+  --theme-layout-column-padding-left: 1rem;
+  --theme-layout-column-padding-right: 1rem;
+  --theme-layout-column-bg: transparent;
+  --theme-layout-column-border: var(--theme-border);
+  --theme-layout-column-border-width: var(--theme-terminal-line-width);
+  --theme-layout-column-radius: 0;
+
+  --theme-section-bg: transparent;
+  --theme-section-border: transparent;
+  --theme-section-border-width: 0;
+  --theme-section-radius: 0;
+  --theme-section-divider: var(--theme-border-muted);
+  --theme-section-title-bg: transparent;
+  --theme-section-title-text: var(--theme-text-strong);
+  --theme-section-title-padding-top: 0;
+  --theme-section-title-padding-bottom: 0.1rem;
+  --theme-section-title-padding-left: 0;
+  --theme-section-title-padding-right: 0;
+  --theme-section-content-padding-top: 1rem;
+  --theme-section-content-padding-bottom: 0rem;
+  --theme-section-content-padding-left: 0;
+  --theme-section-content-padding-right: 0;
+
+  --theme-card-bg: transparent;
+  --theme-card-hover-bg: var(--theme-selected-bg);
+  --theme-card-border: var(--theme-image-border);
+  --theme-card-border-width: var(--theme-terminal-line-width);
+  --theme-card-radius: 0;
+  --theme-card-shadow: none;
+  --theme-card-hover-shadow: none;
+  --theme-card-hover-border: var(--theme-image-hover-border);
+  --theme-card-separator: var(--theme-image-border);
+  --theme-card-separator-width: var(--theme-terminal-thin-line-width);
+  --theme-card-caption: inherit;
+  --theme-card-caption-hover: var(--theme-selected-text);
+
+  --theme-image-bg: var(--theme-page-bg);
+  --theme-image-border: var(--theme-border);
+  --theme-image-border-width: var(--theme-terminal-line-width);
+  --theme-image-border-offset: calc(var(--theme-terminal-line-width) * -1);
+  --theme-image-hover-border: var(--theme-accent-hover);
+  --theme-image-radius: 0;
+
+  --theme-badge-bg: rgba(20, 20, 20, 0.72);
+  --theme-badge-text: var(--theme-text);
+  --theme-badge-border: var(--theme-image-hover-border);
+  --theme-badge-border-width: var(--theme-terminal-thin-line-width);
+  --theme-badge-radius: 0;
+  --theme-badge-shadow: none;
+  --theme-badge-icon: var(--theme-accent);
+
+  --theme-tag-category: var(--theme-text);
+  --theme-tag-bg: transparent;
+  --theme-tag-text: var(--theme-accent);
+  --theme-tag-border: var(--theme-border-muted);
+  --theme-tag-border-width: var(--theme-terminal-line-width);
+  --theme-tag-radius: 0;
+  --theme-tag-hover-bg: var(--theme-selected-bg);
+  --theme-tag-hover-text: var(--theme-selected-text);
+
+  --theme-search-bg: var(--theme-page-bg);
+  --theme-search-text: var(--theme-text);
+  --theme-search-placeholder: var(--theme-text-muted);
+  --theme-search-border: var(--theme-border-muted);
+  --theme-search-border-width: var(--theme-terminal-line-width);
+  --theme-search-radius: 0;
+  --theme-search-shadow: none;
+  --theme-search-focus-border: var(--theme-accent);
+  --theme-search-focus-shadow: 0 0 0 var(--theme-terminal-line-width) var(--theme-focus-ring);
+  --theme-search-clear-icon-bg: var(--theme-search-bg);
+  --theme-search-clear-icon: var(--theme-accent-muted);
+  --theme-search-clear-icon-hover: var(--theme-accent-hover);
+
+  --theme-track-bg-odd: var(--theme-page-bg);
+  --theme-track-bg-even: var(--theme-surface-bg);
+  --theme-track-text: var(--theme-text);
+  --theme-track-hover-bg: var(--theme-hover-bg);
+  --theme-track-hover-text: var(--theme-hover-text);
+  --theme-track-playing-bg: var(--theme-selected-bg);
+  --theme-track-playing-text: var(--theme-selected-text);
+
+  --theme-audio-controls-bg: transparent;
+  --theme-audio-controls-border: var(--theme-border-muted);
+  --theme-audio-controls-border-width: var(--theme-terminal-thin-line-width);
+  --theme-audio-controls-radius: 0;
+  --theme-audio-controls-wrapper-bg: var(--theme-page-bg);
+
+  --theme-control-icon: var(--theme-accent);
+  --theme-control-icon-hover: var(--theme-accent-hover);
+  --theme-control-disabled-opacity: 0.35;
+
+  --theme-slider-track: var(--theme-border-muted);
+  --theme-slider-fill: var(--theme-accent);
+  --theme-slider-thumb: var(--theme-page-bg);
+  --theme-slider-thumb-border: var(--theme-accent);
+  --theme-slider-thumb-border-width: var(--theme-terminal-line-width);
+  --theme-slider-disabled-track: var(--theme-terminal-disabled);
+  --theme-slider-disabled-fill: var(--theme-accent-muted);
+  --theme-slider-focus-ring: var(--theme-focus-ring);
+
+  --theme-pagination-bg: transparent;
+  --theme-pagination-button-bg: transparent;
+  --theme-pagination-button-border: var(--theme-border);
+  --theme-pagination-button-border-width: var(--theme-terminal-line-width);
+  --theme-pagination-wrapper-bg: var(--theme-page-bg);
+
+  --theme-video-controls-bg: var(--theme-overlay-bg);
+  --theme-video-controls-text: var(--theme-text);
+  --theme-video-controls-radius: 0;
+  --theme-media-overlay-bg: rgba(20, 20, 20, 0.78);
+  --theme-media-overlay-text: var(--theme-text);
+
+  --theme-scrollbar-track: var(--theme-slider-track);
+  --theme-scrollbar-thumb: var(--theme-slider-fill);
+  --theme-scrollbar-webkit-thumb: var(--theme-slider-fill);
+  --theme-scrollbar-thumb-hover: var(--theme-accent);
+}

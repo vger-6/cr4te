@@ -21,12 +21,16 @@ class BuildSummary:
     issues: tuple[BuildIssue, ...] = ()
 
     @classmethod
-    def from_library_index(cls, index: LibraryIndex) -> "BuildSummary":
+    def from_library_index(
+        cls,
+        index: LibraryIndex,
+        additional_issues: tuple[BuildIssue, ...] = (),
+    ) -> "BuildSummary":
         return cls(
             input_dir=index.input_dir,
             creator_count=len(index.creators),
             project_count=index.project_count,
-            issues=index.issues,
+            issues=(*index.issues, *additional_issues),
         )
 
     @property

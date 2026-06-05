@@ -16,6 +16,7 @@ __all__ = [
 class IssueScope(str, Enum):
     CREATOR = "creator"
     PROJECT = "project"
+    THEME = "theme"
 
 
 class IssueSeverity(str, Enum):
@@ -25,10 +26,12 @@ class IssueSeverity(str, Enum):
 
 class IssueCode(str, Enum):
     DUPLICATE_CREATOR = "duplicate_creator"
+    DUPLICATE_THEME = "duplicate_theme"
     INVALID_COLLABORATION_REFERENCE = "invalid_collaboration_reference"
     INVALID_JSON = "invalid_json"
     INVALID_METADATA = "invalid_metadata"
     INVALID_METADATA_SHAPE = "invalid_metadata_shape"
+    INVALID_THEME = "invalid_theme"
     IO_ERROR = "io_error"
     MISSING_REFERENCE = "missing_reference"
 

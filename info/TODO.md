@@ -31,8 +31,6 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 ### High Priority
 
-- [ ] Remove the blank-page failure mode caused by `body { display: none; }` depending on `theme_selector.js` to reveal the page. Prefer visible-by-default HTML or a tiny fail-safe theme bootstrap that always reveals the body.
-- [ ] Make theme storage access resilient. Wrap `localStorage` reads/writes in `theme_selector.js` with fallbacks so restricted browser contexts cannot break page initialization.
 - [ ] Define and implement explicit configuration precedence. Prefer defaults -> domain preset -> user config -> direct CLI flags, so `--domain` does not silently override values from `--config`.
 - [ ] Prevent repeated pagination remounts from accumulating resize listeners during search. Treat pagination as a per-gallery instance that can update its items or clean up old listeners.
 - [ ] Make generated/staged assets cache-aware. Refresh stale staged media and thumbnails when the source file changes, instead of reusing an existing target path unconditionally.
@@ -50,7 +48,6 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 ### Low Priority
 
-- [ ] Replace the mojibake theme dropdown caret with plain ASCII text, CSS, or a correctly encoded character.
 - [ ] Add `--dry-run` flag to `build`.
 - [ ] Add optional progress reporting for large folder trees.
 

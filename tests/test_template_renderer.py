@@ -96,6 +96,12 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(fake_env.calls[0][0], "project.html.j2")
             self.assertIs(fake_env.calls[0][1]["project"], page_context)
             self.assertIn("path_to_root", fake_env.calls[0][1])
+            self.assertEqual(fake_env.calls[0][1]["default_theme"].id, "frozen-aurora")
+            self.assertEqual({theme.id for theme in fake_env.calls[0][1]["themes"]}, {
+                "forest-night",
+                "frozen-aurora",
+                "mono-terminal",
+            })
 
     def test_tags_renderer_merges_tag_maps_at_boundary(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -109,6 +115,24 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(ctx.tags_html_path.read_text(encoding="utf-8"), "rendered:tags.html.j2")
             self.assertEqual(fake_env.calls[0][0], "tags.html.j2")
             self.assertEqual(fake_env.calls[0][1]["tags"].as_dict(), {"Theme": ["Night"]})
+
+    def test_overview_template_renders_registry_stylesheets_and_visible_default_body(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            rendered = env.get_template("creator_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator_entries=[],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+            )
+
+            self.assertIn('<body class="theme-frozen-aurora" data-default-theme="theme-frozen-aurora">', rendered)
+            self.assertIn('assets/css/themes/frozen-aurora.css', rendered)
+            self.assertIn('data-theme="theme-forest-night"', rendered)
+            self.assertNotIn("body { display: none; }", rendered)
 
 
 if __name__ == "__main__":

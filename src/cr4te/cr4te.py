@@ -17,6 +17,7 @@ from .library_builder import build_library_index, load_indexed_creator
 from .metadata_manager import clean_metadata_files, reconcile_metadata_files
 from .output_preparation import clear_output_folder
 from .render_assets import MediaStagingError
+from .themes import discover_themes
 
 # Short flags
 FLAG_INPUT_SHORT = "-i"
@@ -28,6 +29,7 @@ FLAG_OUTPUT = "--output"
 FLAG_OPEN = "--open"
 FLAG_FORCE = "--force"
 FLAG_CLEAN = "--clean"
+FLAG_THEMES_DIR = "--themes-dir"
 
 def _setup_logging():
     """Configures the global logging settings."""
@@ -102,6 +104,7 @@ def _create_parser() -> argparse.ArgumentParser:
     build_parser.add_argument(FLAG_OPEN, action="store_true", help="Open index.html after building")
     build_parser.add_argument(FLAG_FORCE, action="store_true", help="Force delete output folder")
     build_parser.add_argument(FLAG_CLEAN, action="store_true", help=f"Also delete thumbnails folder (with {FLAG_FORCE})")
+    build_parser.add_argument(FLAG_THEMES_DIR, help="Path to a folder containing custom theme CSS files")
     build_parser.add_argument("--strict", action="store_true", help="Fail immediately on invalid metadata instead of skipping entries")
 
     # Print-config
@@ -130,6 +133,10 @@ def _build_cmd_handler(args):
     if not _build_paths_are_safe(input_dir, output_dir):
         logging.info("Aborting.")
         return
+
+    custom_themes_dir = Path(args.themes_dir).resolve() if getattr(args, "themes_dir", None) else None
+    logging.info("Discovering themes...")
+    theme_registry = discover_themes(custom_themes_dir, strict=args.strict)
 
     if output_dir.exists():
         msg = (
@@ -161,6 +168,7 @@ def _build_cmd_handler(args):
     try:
         index_html_path = build_html_pages_streaming(
             library_index,
+            theme_registry,
             output_dir,
             config.site_labels,
             config.site_rendering,
@@ -171,7 +179,10 @@ def _build_cmd_handler(args):
         logging.info("Aborting.")
         raise SystemExit(1) from exc
 
-    log_build_summary(BuildSummary.from_library_index(library_index), logging.getLogger(__name__))
+    log_build_summary(
+        BuildSummary.from_library_index(library_index, additional_issues=theme_registry.issues),
+        logging.getLogger(__name__),
+    )
 
     if args.open:
         logging.info("Opening index.html...")

@@ -2,6 +2,7 @@ import functools
 import http.server
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,6 +26,15 @@ class RenderedSiteBrowserTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls._tmp = tempfile.TemporaryDirectory()
+        cls.input_dir = Path(cls._tmp.name) / "Musicians"
+        shutil.copytree(ROOT / "data" / "example" / "Musicians", cls.input_dir)
+        cls.themes_dir = Path(cls._tmp.name) / "themes"
+        shutil.copytree(ROOT / "data" / "example" / "themes", cls.themes_dir)
+        custom_theme = cls.themes_dir / "custom-night.css"
+        custom_theme.write_text(
+            ".theme-custom-night { --theme-page-bg: rgb(1, 2, 3); --theme-text: rgb(245, 245, 245); }",
+            encoding="utf-8",
+        )
         cls.site_dir = Path(cls._tmp.name) / "site"
         cls.paginated_site_dir = Path(cls._tmp.name) / "paginated-site"
         cls._build_example_site(cls.site_dir)
@@ -57,10 +67,12 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             "cr4te.cr4te",
             "build",
             "-i",
-            str(ROOT / "data" / "example" / "Musicians"),
+            str(cls.input_dir),
             "-o",
             str(site_dir),
             "--force",
+            "--themes-dir",
+            str(cls.themes_dir),
         ]
         if domain:
             command.extend(["--domain", domain])
@@ -242,6 +254,30 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         body_class = self.page.locator("body").get_attribute("class") or ""
         self.assertIn("theme-forest-night", body_class)
         self.assertFalse(self.page.locator("#theme-panel").is_visible())
+        self.assertNoBrowserErrors()
+
+    def test_custom_theme_appears_and_can_be_selected(self):
+        self.open_page("index.html")
+
+        self.page.click("#theme-toggle")
+        self.page.click("[data-theme='theme-custom-night']")
+
+        self.assertIn("theme-custom-night", self.page.locator("body").get_attribute("class") or "")
+        self.assertEqual(
+            self.page.locator("body").evaluate("body => getComputedStyle(body).backgroundColor"),
+            "rgb(1, 2, 3)",
+        )
+        self.assertNoBrowserErrors()
+
+    def test_restricted_local_storage_does_not_hide_or_break_page(self):
+        self.page.add_init_script(
+            "Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });"
+        )
+
+        self.open_page("index.html")
+
+        self.assertIn("theme-frozen-aurora", self.page.locator("body").get_attribute("class") or "")
+        self.assertEqual(self.page.locator("body").evaluate("body => getComputedStyle(body).display"), "block")
         self.assertNoBrowserErrors()
 
     def test_tags_page_renders_and_initializes_theme(self):

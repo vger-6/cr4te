@@ -1,11 +1,10 @@
 <div style="float: right;">
   <div class="theme-dropdown">
-    <button class="theme-button" id="theme-toggle">Themes ▾</button>
+    <button class="theme-button" id="theme-toggle">Themes</button>
     <div class="theme-panel" id="theme-panel">
-      <div class="theme-option" data-theme="theme-frozen-aurora">Frozen Aurora</div>
-      <div class="theme-option" data-theme="theme-forest-night">Forest Night</div>
-      <div class="theme-option" data-theme="theme-mono-terminal">Mono Terminal</div>
-      <div class="theme-option" data-theme="theme-amber-terminal">Amber Terminal</div>
+      {% for theme in themes %}
+      <div class="theme-option" data-theme="{{ theme.css_class }}">{{ theme.display_name }}</div>
+      {% endfor %}
     </div>
   </div>
 </div>

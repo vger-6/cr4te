@@ -1,0 +1,3 @@
+{% for theme in themes %}
+  <link rel="stylesheet" href="{{ path_to_root | default('') }}assets/css/themes/{{ theme.output_filename }}">
+{% endfor %}

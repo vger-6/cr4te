@@ -1,5 +1,4 @@
 const THEME_KEY = "cr4te_theme";
-const DEFAULT_THEME = "theme-frozen-aurora";
 const cr4te = window.cr4te = window.cr4te || {};
 cr4te.lightbox = cr4te.lightbox || {};
 
@@ -11,17 +10,34 @@ function getThemeClasses() {
 
 function applyTheme(theme) {
   const themeClasses = getThemeClasses();
-  const selectedTheme = themeClasses.includes(theme) ? theme : DEFAULT_THEME;
+  const defaultTheme = document.body.dataset.defaultTheme;
+  const selectedTheme = themeClasses.includes(theme) ? theme : defaultTheme;
 
   document.body.classList.remove(...themeClasses);
-  document.body.classList.add(selectedTheme);
+  if (selectedTheme) {
+    document.body.classList.add(selectedTheme);
+  }
 
   // Highlight selected option
   document.querySelectorAll('.theme-option').forEach(el => {
     el.classList.toggle('selected', el.dataset.theme === selectedTheme);
   });
-  
-  document.body.style.display = "block";
+}
+
+function loadSavedTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    // Theme selection still works for the current page.
+  }
 }
 
 function refreshThemeSensitiveLayout() {
@@ -35,7 +51,7 @@ function refreshThemeSensitiveLayout() {
 }
 
 function initThemeDropdown() {
-  const savedTheme = localStorage.getItem(THEME_KEY) || DEFAULT_THEME;
+  const savedTheme = loadSavedTheme() || document.body.dataset.defaultTheme;
   applyTheme(savedTheme);
 
   // Toggle panel visibility
@@ -57,7 +73,7 @@ function initThemeDropdown() {
   document.querySelectorAll(".theme-option").forEach(opt => {
     opt.addEventListener("click", () => {
       const theme = opt.dataset.theme;
-      localStorage.setItem(THEME_KEY, theme);
+      saveTheme(theme);
       applyTheme(theme);
       refreshThemeSensitiveLayout();
       panel.style.display = "none";

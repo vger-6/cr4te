@@ -15,6 +15,7 @@ from .constants import (
     CR4TE_DEFAULTS_DIR,
     CR4TE_CSS_DIR, 
     CR4TE_JS_DIR,
+    OUTPUT_THEMES_DIRNAME,
     OUTPUT_HTML_DIRNAME,
     OUTPUT_SYMLINKS_DIRNAME,
     OUTPUT_THUMBNAILS_DIRNAME,
@@ -34,6 +35,7 @@ from .constants import (
     PORTRAIT_THUMB_HEIGHT,
     COVER_THUMB_HEIGHT,
 )
+from .themes import ThemeDefinition, discover_builtin_themes, get_default_theme
 
 @dataclass
 class HtmlBuildContext:
@@ -41,6 +43,7 @@ class HtmlBuildContext:
     output_dir: Path
     site_labels: SiteLabels
     site_rendering: SiteRendering
+    themes: tuple[ThemeDefinition, ...] = field(default_factory=discover_builtin_themes)
     media_cache: MediaInfoCache = field(default_factory=MediaInfoCache)
 
     # Output paths
@@ -59,6 +62,14 @@ class HtmlBuildContext:
     @property
     def js_dir(self) -> Path:
         return self.assets_dir / CR4TE_JS_DIR.relative_to(CR4TE_ASSETS_DIR)
+
+    @property
+    def themes_dir(self) -> Path:
+        return self.css_dir / OUTPUT_THEMES_DIRNAME
+
+    @property
+    def default_theme(self) -> ThemeDefinition:
+        return get_default_theme(self.themes)
     
     @property
     def thumbs_dir(self) -> Path:

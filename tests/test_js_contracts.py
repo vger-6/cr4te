@@ -134,6 +134,26 @@ class JavaScriptContractTests(unittest.TestCase):
 
                 self.assertLess(scripts.index("pagination.js"), scripts.index("search_filter.js"))
 
+    def test_theme_selector_uses_rendered_registry_and_handles_restricted_storage(self):
+        source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
+
+        self.assertIn("document.body.dataset.defaultTheme", source)
+        self.assertIn("try {", source)
+        self.assertNotIn('const DEFAULT_THEME', source)
+        for theme_class in (
+            "theme-amber-terminal",
+            "theme-forest-night",
+            "theme-frozen-aurora",
+            "theme-mono-terminal",
+        ):
+            with self.subTest(theme_class=theme_class):
+                self.assertNotIn(theme_class, source)
+
+    def test_templates_do_not_hide_body_until_theme_javascript_runs(self):
+        source = read_all(sorted(TEMPLATE_DIR.glob("*.j2")))
+
+        self.assertNotIn("body { display: none; }", source)
+
 
 if __name__ == "__main__":
     unittest.main()

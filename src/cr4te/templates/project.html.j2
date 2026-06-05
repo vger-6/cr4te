@@ -4,7 +4,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>body { display: none; }</style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ project.title }}</title>
@@ -12,9 +11,9 @@
   <link rel="stylesheet" href="{{ path_to_root }}assets/css/tokens.css">
   <link rel="stylesheet" href="{{ path_to_root }}assets/css/base.css">
   <link rel="stylesheet" href="{{ path_to_root }}assets/css/two-column-layout.css">
-  <link rel="stylesheet" href="{{ path_to_root }}assets/css/theme.css">
+  {% include "partials/_theme_stylesheets.html.j2" %}
 </head>
-<body>
+<body class="{{ default_theme.css_class }}" data-default-theme="{{ default_theme.css_class }}">
 
 {% set creator_base = project.creator or project.collaboration %}
 

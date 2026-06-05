@@ -14,9 +14,9 @@ The generated site has no database or server requirement. You can open it direct
 - Creator, project, and tag overview pages
 - Creator and project detail pages
 - Images, videos, audio playlists, PDFs/documents, and Markdown text
-- Search, tags, pagination, lightbox, captions, media controls, and theme switching
+- Search, tags, pagination, lightbox, captions, media controls, and built-in or custom themes
 - Responsive image gallery layouts: fixed-aspect and justified
-- Domain presets for `creator`, `art`, `music`, `film`, `book`, and `model`
+- Domain presets for `creator`, `art`, `music`, `film`, and `book`
 - Editable `cr4te.json` metadata beside creator and project folders
 - Best-effort builds by default, with `--strict` available for fail-fast validation
 - Static HTML/CSS/JS output with no runtime backend
@@ -120,6 +120,7 @@ The wiki is the full manual:
 - [Generated Site](https://github.com/vger-6/cr4te/wiki/Generated-Site)
 - [Media and Galleries](https://github.com/vger-6/cr4te/wiki/Media-and-Galleries)
 - [Tags and Search](https://github.com/vger-6/cr4te/wiki/Tags-and-Search)
+- [Custom Themes](https://github.com/vger-6/cr4te/wiki/Custom-Themes)
 - [Troubleshooting](https://github.com/vger-6/cr4te/wiki/Troubleshooting)
 
 ## Development

@@ -29,6 +29,7 @@ from .template_renderer import (
     render_project_page,
     render_tags_page,
 )
+from .themes import ThemeRegistry
 
 __all__ = ["build_html_pages_streaming"]
 
@@ -37,12 +38,13 @@ logger = logging.getLogger(__name__)
 
 def build_html_pages_streaming(
     index: LibraryIndex,
+    theme_registry: ThemeRegistry,
     output_dir: Path,
     site_labels: SiteLabels,
     site_rendering: SiteRendering,
     load_creator: Callable[[CreatorSummary], CreatorModel],
 ) -> Path:
-    ctx = HtmlBuildContext(index.input_dir, output_dir, site_labels, site_rendering)
+    ctx = HtmlBuildContext(index.input_dir, output_dir, site_labels, site_rendering, themes=theme_registry.themes)
 
     prepare_output_dirs(ctx)
     copy_static_assets(ctx)
