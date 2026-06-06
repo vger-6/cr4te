@@ -328,6 +328,42 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(self.page.locator(".audio-gallery .volume-slider").count(), 1)
         self.assertNoBrowserErrors()
 
+    def test_starting_media_pauses_only_the_previously_active_player(self):
+        self.open_page(self.audio_project_path)
+
+        result = self.page.evaluate(
+            """
+            () => {
+              const media = [
+                document.createElement('audio'),
+                document.createElement('video'),
+                document.createElement('audio'),
+              ];
+
+              media.forEach((element, index) => {
+                element.dataset.player = String(index);
+                element.dataset.pauseCount = '0';
+                element.pause = function () {
+                  this.dataset.pauseCount = String(Number(this.dataset.pauseCount) + 1);
+                  this.dispatchEvent(new Event('pause'));
+                };
+                document.body.appendChild(element);
+              });
+
+              media[0].dispatchEvent(new Event('play'));
+              media[1].dispatchEvent(new Event('play'));
+              media[2].dispatchEvent(new Event('play'));
+              media[2].dispatchEvent(new Event('pause'));
+              media[0].dispatchEvent(new Event('play'));
+
+              return media.map(element => Number(element.dataset.pauseCount));
+            }
+            """
+        )
+
+        self.assertEqual(result, [1, 1, 0])
+        self.assertNoBrowserErrors()
+
     def test_audio_previous_and_next_buttons_disable_at_track_bounds(self):
         self.open_page(self.audio_project_path)
         self.page.evaluate(

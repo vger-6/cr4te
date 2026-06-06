@@ -98,6 +98,27 @@ class JavaScriptContractTests(unittest.TestCase):
             self.assertIn("cr4te.media.updateProgress", source)
             self.assertIn("cr4te.media.bindSeekSlider", source)
 
+    def test_playback_coordinator_uses_captured_native_media_events_and_only_pauses(self):
+        source = (ASSET_JS_DIR / "playback_coordinator.js").read_text(encoding="utf-8")
+
+        self.assertIn('document.addEventListener("play"', source)
+        self.assertIn('document.addEventListener("pause"', source)
+        self.assertIn('document.addEventListener("ended"', source)
+        self.assertIn("activeMedia.pause()", source)
+        self.assertNotIn("currentTime", source)
+        self.assertNotIn("removeAttribute", source)
+        self.assertNotIn(".load()", source)
+
+    def test_detail_pages_load_playback_coordinator_after_utils(self):
+        script_pattern = re.compile(r'<script\s+src="[^"]*assets/js/([^"]+)"[^>]*></script>')
+
+        for template_name in ("creator.html.j2", "project.html.j2"):
+            with self.subTest(template_name=template_name):
+                scripts = script_pattern.findall((TEMPLATE_DIR / template_name).read_text(encoding="utf-8"))
+
+                self.assertIn("playback_coordinator.js", scripts)
+                self.assertLess(scripts.index("utils.js"), scripts.index("playback_coordinator.js"))
+
     def test_templates_load_utils_before_cr4te_feature_scripts(self):
         script_pattern = re.compile(r'<script\s+src="[^"]*assets/js/([^"]+)"[^>]*></script>')
         cr4te_feature_scripts = {
@@ -107,6 +128,7 @@ class JavaScriptContractTests(unittest.TestCase):
             "justified_gallery_builder.js",
             "lightbox.js",
             "pagination.js",
+            "playback_coordinator.js",
             "responsive_content_mover.js",
             "search_filter.js",
             "theme_selector.js",
