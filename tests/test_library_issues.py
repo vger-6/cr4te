@@ -8,7 +8,6 @@ sys.path.insert(0, str(ROOT / "src"))
 from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
 from cr4te.library_issues import (
     BuildIssuePolicy,
-    duplicate_creator_issue,
     invalid_collaboration_reference_issue,
     issue_from_exception,
 )
@@ -32,13 +31,17 @@ class LibraryIssuesTests(unittest.TestCase):
         self.assertEqual(policy.issues, [])
 
     def test_non_strict_policy_collects_errors(self):
-        issue = duplicate_creator_issue(Path("Ada Copy"), "Ada")
+        issue = BuildIssue(
+            path=Path("Ada"),
+            scope=IssueScope.CREATOR,
+            code=IssueCode.INVALID_METADATA,
+            message="Invalid",
+        )
         policy = BuildIssuePolicy(strict=False)
 
         policy.handle(issue)
 
         self.assertEqual(policy.issues, [issue])
-        self.assertEqual(issue.code, IssueCode.DUPLICATE_CREATOR)
 
     def test_issue_from_metadata_exception_preserves_code(self):
         issue = issue_from_exception(

@@ -25,7 +25,6 @@ class IssueSeverity(str, Enum):
 
 
 class IssueCode(str, Enum):
-    DUPLICATE_CREATOR = "duplicate_creator"
     DUPLICATE_THEME = "duplicate_theme"
     INVALID_COLLABORATION_REFERENCE = "invalid_collaboration_reference"
     INVALID_JSON = "invalid_json"

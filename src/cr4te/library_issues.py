@@ -10,16 +10,9 @@ from .library_metadata import MetadataLoadError
 
 __all__ = [
     "BuildIssuePolicy",
-    "DuplicateCreatorError",
-    "duplicate_creator_issue",
     "invalid_collaboration_reference_issue",
     "issue_from_exception",
 ]
-
-
-class DuplicateCreatorError(ValueError):
-    pass
-
 
 @dataclass
 class BuildIssuePolicy:
@@ -62,15 +55,6 @@ def issue_from_exception(path: Path, scope: IssueScope, exc: Exception) -> Build
         scope=scope,
         code=IssueCode.INVALID_METADATA,
         message=str(exc),
-    )
-
-
-def duplicate_creator_issue(path: Path, creator_name: str) -> BuildIssue:
-    return BuildIssue(
-        path=path,
-        scope=IssueScope.CREATOR,
-        code=IssueCode.DUPLICATE_CREATOR,
-        message=f"Duplicate creator name '{creator_name}'",
     )
 
 

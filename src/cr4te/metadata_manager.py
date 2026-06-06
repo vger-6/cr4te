@@ -99,14 +99,14 @@ def _creator_metadata_template(
             members=text_utils.multi_split(creator_name, media_rules.collaboration_separators),
         )
         return CreatorMetadataTemplate(
-            name=creator_name,
+            display_name=creator_name,
             type=creator_type,
             portrait="",
             collaboration=collaboration,
         )
 
     return CreatorMetadataTemplate(
-        name=creator_name,
+        display_name=creator_name,
         type=creator_type,
         portrait="",
     )
@@ -114,7 +114,7 @@ def _creator_metadata_template(
 
 def _project_metadata_template(project_dir: Path, project_facet_fields: Sequence[ProjectField]) -> ProjectMetadataTemplate:
     return ProjectMetadataTemplate(
-        title=project_dir.name,
+        display_title=project_dir.name,
         cover="",
         facet_fields=tuple(project_facet_fields),
     )

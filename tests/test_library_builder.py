@@ -50,7 +50,7 @@ class LibraryBuilderTests(unittest.TestCase):
             write_json(
                 creator_dir / "cr4te.json",
                 {
-                    "name": "Noomi",
+                    "display_name": "Displayed Noomi",
                     "type": "person",
                     "person": {
                         "active_since": "2020",
@@ -63,7 +63,7 @@ class LibraryBuilderTests(unittest.TestCase):
             write_json(
                 project_dir / "cr4te.json",
                 {
-                    "title": "Landscapes Vol. 1",
+                    "display_title": "Displayed Landscapes",
                     "release_date": "2024-03-12",
                     "cover": "desert.jpg",
                     "tags": {"Mood": ["Quiet"]},
@@ -80,6 +80,7 @@ class LibraryBuilderTests(unittest.TestCase):
             summary = index.creator_by_name["Noomi"]
             creator = load_indexed_creator(index, summary, self.build_config().media_rules)
             self.assertEqual(creator.name, "Noomi")
+            self.assertEqual(creator.display_name, "Displayed Noomi")
             self.assertEqual(creator.type, CreatorType.PERSON)
             self.assertEqual(creator.date_of_birth, "1990-04")
             self.assertEqual(creator.place_of_birth, "Berlin")
@@ -90,7 +91,8 @@ class LibraryBuilderTests(unittest.TestCase):
 
             self.assertEqual(len(creator.projects), 1)
             project = creator.projects[0]
-            self.assertEqual(project.title, "Landscapes Vol. 1")
+            self.assertEqual(project.title, "Landscapes")
+            self.assertEqual(project.display_title, "Displayed Landscapes")
             self.assertEqual(project.release_date, "2024-03-12")
             self.assertEqual(project.cover, "Noomi/Landscapes/desert.jpg")
             self.assertEqual(project.info, "Project **notes**")
@@ -115,14 +117,14 @@ class LibraryBuilderTests(unittest.TestCase):
             write_json(
                 creator_dir / "cr4te.json",
                 {
-                    "name": "Noomi",
+                    "display_name": "   ",
                     "portrait": "portrait.jpg",
                 },
             )
             write_json(
                 project_dir / "cr4te.json",
                 {
-                    "title": "Landscapes",
+                    "display_title": "   ",
                     "cover": "cover.jpg",
                     "facets": {"mediums": ["Photography"]},
                 },
@@ -132,10 +134,12 @@ class LibraryBuilderTests(unittest.TestCase):
 
             self.assertEqual(len(index.creators), 1)
             summary = index.creator_by_name["Noomi"]
+            self.assertEqual(summary.display_name, "Noomi")
             self.assertEqual(summary.project_count, 1)
             self.assertEqual(summary.media_counts.image, 2)
             self.assertFalse(hasattr(summary, "media_groups"))
             self.assertEqual(summary.projects[0].media_counts.image, 1)
+            self.assertEqual(summary.projects[0].display_title, "Landscapes")
             self.assertFalse(hasattr(summary.projects[0], "media_groups"))
 
             creator = load_indexed_creator(index, summary, self.build_config().media_rules)
@@ -163,12 +167,20 @@ class LibraryBuilderTests(unittest.TestCase):
             for name in ("Ada", "Bob", "Ada & Bob"):
                 (root / name).mkdir(parents=True)
 
-            write_json(root / "Ada & Bob" / "cr4te.json", {"type": "collaboration", "collaboration": {"members": ["Ada", "Bob"]}})
+            write_json(
+                root / "Ada & Bob" / "cr4te.json",
+                {
+                    "display_name": "The Pair",
+                    "type": "collaboration",
+                    "collaboration": {"members": ["Ada", "Bob"]},
+                },
+            )
 
             index = build_library_index(root, self.build_config().media_rules)
             creators = {name: load_indexed_creator(index, index.creator_by_name[name], self.build_config().media_rules) for name in index.creator_by_name}
 
             self.assertEqual(creators["Ada & Bob"].type, CreatorType.COLLABORATION)
+            self.assertEqual(creators["Ada & Bob"].display_name, "The Pair")
             self.assertEqual(creators["Ada & Bob"].members, ["Ada", "Bob"])
             self.assertEqual(creators["Ada"].collaborations, ["Ada & Bob"])
             self.assertEqual(creators["Bob"].collaborations, ["Ada & Bob"])
@@ -259,7 +271,7 @@ class LibraryBuilderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"
             bad_dir = root / "Noomi"
-            write_json(bad_dir / "cr4te.json", {"name": "Noomi", "info": "Use README.md instead"})
+            write_json(bad_dir / "cr4te.json", {"info": "Use README.md instead"})
 
             index = build_library_index(root, self.build_config().media_rules)
 
@@ -278,7 +290,7 @@ class LibraryBuilderTests(unittest.TestCase):
             bad_project = root / "Noomi" / "Bad Project"
             good_project.mkdir(parents=True)
             bad_project.mkdir(parents=True)
-            write_json(good_project / "cr4te.json", {"title": "Good Project"})
+            write_json(good_project / "cr4te.json", {})
             (bad_project / "cr4te.json").write_text("[1, 2, 3]", encoding="utf-8")
 
             index = build_library_index(root, self.build_config().media_rules)
@@ -298,7 +310,7 @@ class LibraryBuilderTests(unittest.TestCase):
             bad_project = root / "Noomi" / "Bad Date"
             good_project.mkdir(parents=True)
             bad_project.mkdir(parents=True)
-            write_json(good_project / "cr4te.json", {"title": "Good Project"})
+            write_json(good_project / "cr4te.json", {})
             write_json(bad_project / "cr4te.json", {"release_date": "Spring 2024"})
 
             index = build_library_index(root, self.build_config().media_rules)
@@ -318,7 +330,7 @@ class LibraryBuilderTests(unittest.TestCase):
             bad_project = root / "Noomi" / "Bad Project"
             good_project.mkdir(parents=True)
             bad_project.mkdir(parents=True)
-            write_json(good_project / "cr4te.json", {"title": "Good Project"})
+            write_json(good_project / "cr4te.json", {})
             write_json(bad_project / "cr4te.json", {"info": "Use README.md instead"})
 
             index = build_library_index(root, self.build_config().media_rules)
@@ -371,31 +383,6 @@ class LibraryBuilderTests(unittest.TestCase):
                 build_library_index(root, self.build_config().media_rules, strict=True)
             self.assertEqual(caught.exception.issue.scope, IssueScope.CREATOR)
             self.assertEqual(caught.exception.issue.code, IssueCode.MISSING_REFERENCE)
-
-    def test_duplicate_creator_name_is_reported_as_issue(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "Artists"
-            write_json(root / "First" / "cr4te.json", {"name": "Same Name"})
-            write_json(root / "Second" / "cr4te.json", {"name": "Same Name"})
-
-            index = build_library_index(root, self.build_config().media_rules)
-
-            self.assertEqual([summary.name for summary in index.creators], ["Same Name"])
-            self.assertEqual(len(index.issues), 1)
-            self.assertEqual(index.issues[0].scope, IssueScope.CREATOR)
-            self.assertEqual(index.issues[0].code, IssueCode.DUPLICATE_CREATOR)
-            self.assertIn("Duplicate creator name", index.issues[0].message)
-
-    def test_duplicate_creator_name_raises_in_strict_mode(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "Artists"
-            write_json(root / "First" / "cr4te.json", {"name": "Same Name"})
-            write_json(root / "Second" / "cr4te.json", {"name": "Same Name"})
-
-            with self.assertRaises(BuildIssueError) as caught:
-                build_library_index(root, self.build_config().media_rules, strict=True)
-            self.assertEqual(caught.exception.issue.code, IssueCode.DUPLICATE_CREATOR)
-
 
 if __name__ == "__main__":
     unittest.main()

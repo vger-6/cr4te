@@ -54,7 +54,8 @@ class MetadataManagerTests(unittest.TestCase):
             self.assertEqual(len(result.created), 2)
             metadata = read_json(creator_dir / "cr4te.json")
 
-            self.assertEqual(metadata["name"], "Noomi")
+            self.assertEqual(metadata["display_name"], "Noomi")
+            self.assertNotIn("name", metadata)
             self.assertEqual(metadata["type"], "person")
             self.assertEqual(metadata["portrait"], "")
             self.assertIn("nationalities", metadata["person"])
@@ -64,13 +65,14 @@ class MetadataManagerTests(unittest.TestCase):
             self.assertNotIn("projects", metadata)
 
             project_metadata = read_json(project_dir / "cr4te.json")
-            self.assertEqual(project_metadata["title"], "Landscapes")
+            self.assertEqual(project_metadata["display_title"], "Landscapes")
+            self.assertNotIn("title", project_metadata)
             self.assertEqual(project_metadata["cover"], "")
             self.assertEqual(project_metadata["facets"]["mediums"], [])
             self.assertEqual(project_metadata["facets"]["materials"], [])
             self.assertNotIn("info", project_metadata)
 
-    def test_reconcile_metadata_preserves_values_and_adds_missing_project_facets(self):
+    def test_reconcile_metadata_preserves_display_values_and_adds_missing_project_facets(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"
             project_dir = root / "Noomi" / "Landscapes"
@@ -80,7 +82,7 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(
                 metadata_path,
                 {
-                    "name": "Custom",
+                    "display_name": "Custom",
                     "type": "person",
                     "person": {"birth": {"date": "1990"}},
                 },
@@ -88,7 +90,7 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(
                 project_metadata_path,
                 {
-                    "title": "Custom Title",
+                    "display_title": "Custom Title",
                     "facets": {"mediums": ["Photography"]},
                 },
             )
@@ -97,10 +99,10 @@ class MetadataManagerTests(unittest.TestCase):
 
             synced = read_json(metadata_path)
             self.assertEqual(len(result.updated), 2)
-            self.assertEqual(synced["name"], "Custom")
+            self.assertEqual(synced["display_name"], "Custom")
             self.assertEqual(synced["person"]["birth"]["date"], "1990")
             project_synced = read_json(project_metadata_path)
-            self.assertEqual(project_synced["title"], "Custom Title")
+            self.assertEqual(project_synced["display_title"], "Custom Title")
             self.assertEqual(project_synced["facets"]["mediums"], ["Photography"])
             self.assertEqual(project_synced["facets"]["materials"], [])
             self.assertEqual(project_synced["facets"]["exhibitions"], [])
@@ -114,7 +116,6 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(
                 metadata_path,
                 {
-                    "name": "Noomi & Ada",
                     "type": "collaboration",
                     "person": {
                         "active_since": "",
@@ -139,7 +140,6 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(
                 metadata_path,
                 {
-                    "name": "Noomi & Ada",
                     "type": "collaboration",
                     "person": {
                         "birth": {"date": "1990", "place": ""},
@@ -160,7 +160,6 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(
                 metadata_path,
                 {
-                    "name": "Noomi",
                     "type": "person",
                     "collaboration": {
                         "members": ["Noomi", "Ada"],
@@ -213,7 +212,7 @@ class MetadataManagerTests(unittest.TestCase):
                     "person": {},
                     "projects": {
                         "New Name": {
-                            "title": "Custom Project Title",
+                            "display_title": "Custom Project Title",
                             "release_date": "2024",
                             "tags": {"Mood": ["Quiet"]},
                             "facets": {"mediums": ["Photography"]},
@@ -227,7 +226,7 @@ class MetadataManagerTests(unittest.TestCase):
             metadata = read_json(metadata_path)
             self.assertNotIn("projects", metadata)
             project_metadata = read_json(project_dir / "cr4te.json")
-            self.assertEqual(project_metadata["title"], "Custom Project Title")
+            self.assertEqual(project_metadata["display_title"], "Custom Project Title")
             self.assertEqual(project_metadata["release_date"], "2024")
             self.assertEqual(project_metadata["tags"], {"Mood": ["Quiet"]})
             self.assertEqual(project_metadata["facets"]["mediums"], ["Photography"])
@@ -247,8 +246,8 @@ class MetadataManagerTests(unittest.TestCase):
             root = Path(tmp) / "Artists"
             creator_meta = root / "Noomi" / "cr4te.json"
             project_meta = root / "Noomi" / "Landscapes" / "cr4te.json"
-            write_json(creator_meta, {"name": "Noomi"})
-            write_json(project_meta, {"title": "Landscapes"})
+            write_json(creator_meta, {})
+            write_json(project_meta, {})
 
             clean_metadata_files(root, dry_run=True)
             self.assertTrue(creator_meta.exists())

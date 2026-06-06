@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 CreatorLoader = Callable[[str], Optional[CreatorModel]]
 
 def sort_project(project: ProjectModel) -> tuple:
-    return dated_title_sort_key(date_utils.parse_date(project.release_date), project.title)
+    return dated_title_sort_key(date_utils.parse_date(project.release_date), project.display_title)
 
 
 def compute_creator_stats(creator: CreatorModel) -> CreatorStats:
@@ -75,7 +75,7 @@ def build_project_page_context(
     thumb_path = resolve_thumbnail_or_default(ctx, project.cover, ThumbType.COVER)
 
     base_context = ProjectPageContext(
-        title=project.title,
+        title=project.display_title,
         release_date=date_utils.format_nice_date(project.release_date) if ProjectField.RELEASE_DATE in visible else "",
         meta_entries=build_project_meta_entries(ctx, project),
         rel_thumbnail_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
@@ -89,7 +89,7 @@ def build_project_page_context(
         return replace(
             base_context,
             participants=_collect_participant_entries(ctx, creator, project, get_creator),
-            collaboration=_collect_collaborator_entry(ctx, creator),
+            collaboration=_collect_collaborator_entry(ctx, creator, get_creator),
         )
 
     return replace(
@@ -108,7 +108,7 @@ def build_creator_page_context(
 
     base_context = CreatorPageContext(
         type=creator.type.value,
-        name=creator.name,
+        name=creator.display_name,
         rel_portrait_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
         portrait_orientation=get_image_orientation(ctx, thumb_path),
         info_html=text_utils.markdown_to_html(creator.info),
@@ -125,17 +125,25 @@ def build_creator_page_context(
 
     if creator.type == CreatorType.COLLABORATION:
         visible = ctx.visible_collaboration_fields
+        member_display_names = _display_member_names(creator, get_creator)
         return replace(
             base_context,
             aliases=creator.aliases if CollaborationField.ALIASES in visible else [],
             nationalities=creator.nationalities if CollaborationField.NATIONALITIES in visible else [],
             active_since=date_utils.format_nice_date(creator.active_since) if CollaborationField.ACTIVE_SINCE in visible else "",
             members=_collect_member_links(ctx, creator, get_creator),
-            member_names=creator.members if CollaborationField.MEMBERS in visible else [],
+            member_names=member_display_names if CollaborationField.MEMBERS in visible else [],
             founding_date=date_utils.format_nice_date(creator.founding_date) if CollaborationField.FOUNDING_DATE in visible else "",
             founding_location=creator.founding_location if CollaborationField.FOUNDING_LOCATION in visible else "",
             dissolution_date=date_utils.format_nice_date(creator.dissolution_date) if CollaborationField.DISSOLUTION_DATE in visible else "",
-            meta_entries=build_collaboration_meta_entries(ctx, creator, visible, "", INDEX_HTML_FILE_NAME),
+            meta_entries=build_collaboration_meta_entries(
+                ctx,
+                creator,
+                visible,
+                "",
+                INDEX_HTML_FILE_NAME,
+                member_display_names,
+            ),
         )
 
     visible = ctx.visible_creator_fields
@@ -176,7 +184,7 @@ def _collect_creator_base_entry(ctx: HtmlBuildContext, creator: CreatorModel) ->
     thumb_path = resolve_thumbnail_or_default(ctx, creator.portrait, ThumbType.PORTRAIT)
 
     return CreatorProfileContext(
-        name=creator.name,
+        name=creator.display_name,
         rel_html_path=(Path(ctx.html_dir.name) / build_rel_creator_html_path(creator)).as_posix(),
         rel_portrait_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
     )
@@ -202,7 +210,11 @@ def _collect_creator_entry(
     )
 
 
-def _collect_collaborator_entry(ctx: HtmlBuildContext, creator: CreatorModel) -> CreatorProfileContext:
+def _collect_collaborator_entry(
+    ctx: HtmlBuildContext,
+    creator: CreatorModel,
+    get_creator: CreatorLoader,
+) -> CreatorProfileContext:
     base = _collect_creator_base_entry(ctx, creator)
     return replace(
         base,
@@ -212,15 +224,20 @@ def _collect_collaborator_entry(ctx: HtmlBuildContext, creator: CreatorModel) ->
             ctx.visible_project_collaboration_fields,
             base.rel_html_path,
             INDEX_HTML_FILE_NAME,
+            _display_member_names(creator, get_creator),
         ),
     )
 
 
-def _get_collaboration_label(collab: CreatorModel, creator_name: str) -> str:
+def _get_collaboration_label(collab: CreatorModel, creator_name: str, get_creator: CreatorLoader) -> str:
     if creator_name in collab.members:
-        others = [n for n in collab.members if n != creator_name]
+        others = [
+            _display_creator_reference(name, get_creator)
+            for name in collab.members
+            if name != creator_name
+        ]
         return " ".join(others)
-    return collab.name
+    return collab.display_name
 
 
 def _build_project_cards(ctx: HtmlBuildContext, creator: CreatorModel) -> list[ProjectCardContext]:
@@ -229,7 +246,7 @@ def _build_project_cards(ctx: HtmlBuildContext, creator: CreatorModel) -> list[P
         thumb = build_thumbnail_context(ctx, project.cover, ThumbType.CREATOR_PAGE_PROJECT)
         project_cards.append(
             ProjectCardContext(
-                title=project.title,
+                title=project.display_title,
                 rel_html_path=(Path(ctx.html_dir.name) / build_rel_project_html_path(creator, project)).as_posix(),
                 rel_thumbnail_path=thumb.rel_thumbnail_path,
                 image_wrapper_width=thumb.image_wrapper_width,
@@ -254,12 +271,12 @@ def _build_collaboration_entries(
 
         collab_entries.append(
             CollaborationProjectsContext(
-                label=_get_collaboration_label(collab, creator.name),
+                label=_get_collaboration_label(collab, creator.name, get_creator),
                 projects=_build_project_cards(ctx, collab),
             )
         )
 
-    return collab_entries
+    return sorted(collab_entries, key=lambda entry: entry.label.lower())
 
 
 def _collect_member_links(
@@ -281,10 +298,22 @@ def _collect_member_links(
         thumb_path = resolve_thumbnail_or_default(ctx, member.portrait, ThumbType.PORTRAIT)
         member_links.append(
             CreatorLinkContext(
-                name=member_name,
+                name=member.display_name,
                 rel_html_path=(Path(ctx.html_dir.name) / build_rel_creator_html_path(member)).as_posix(),
                 rel_thumbnail_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
             )
         )
 
     return member_links
+
+
+def _display_creator_reference(name: str, get_creator: CreatorLoader) -> str:
+    creator = get_creator(name)
+    return creator.display_name if creator else name
+
+
+def _display_member_names(creator: CreatorModel, get_creator: CreatorLoader) -> list[str]:
+    return [
+        _display_creator_reference(member_name, get_creator)
+        for member_name in creator.members
+    ]

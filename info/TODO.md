@@ -12,7 +12,6 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 ### Medium Priority
 
-- [ ] Detect or prevent duplicate project output paths when multiple project folders use the same rendered title.
 - [ ] Avoid repeated full creator reloads while rendering collaboration/member links; use lightweight summaries where practical to preserve the streaming build shape.
 - [ ] Unify build exception handling and reporting across the full build lifecycle.
   - [ ] Fold metadata reconciliation skips and warnings into the structured build summary where practical.

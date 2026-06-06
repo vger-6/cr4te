@@ -50,7 +50,7 @@ def build_project_meta_entries(ctx: HtmlBuildContext, project: ProjectModel) -> 
 
     for field in ctx.visible_project_fields:
         if field == ProjectField.TITLE:
-            _append_meta_entry(entries, ctx.meta_label(field), [project.title])
+            _append_meta_entry(entries, ctx.meta_label(field), [project.display_title])
             continue
 
         if field == ProjectField.RELEASE_DATE:
@@ -112,11 +112,15 @@ def build_collaboration_meta_entries(
     visible_fields: list[CollaborationField],
     rel_html_path: str,
     filter_page: str,
+    member_display_names: list[str] | None = None,
 ) -> list[MetaEntry]:
     entries: list[MetaEntry] = []
 
     for field in visible_fields:
         spec = COLLABORATION_META_ENTRY_SPECS[field]
+        if field == CollaborationField.MEMBERS and member_display_names is not None:
+            _append_meta_entry(entries, ctx.meta_label(field, _count_meta_values(member_display_names)), member_display_names, separator=spec.separator)
+            continue
         _append_spec_entry(entries, ctx, creator, None, spec, rel_html_path, filter_page)
 
     return entries
@@ -234,7 +238,7 @@ def _count_meta_values(values: list[str]) -> int:
 
 
 def _creator_name(creator: CreatorModel, project: ProjectModel | None) -> list[str]:
-    return [creator.name]
+    return [creator.display_name]
 
 
 def _birth_date(creator: CreatorModel, project: ProjectModel | None) -> list[str]:

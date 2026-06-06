@@ -13,7 +13,7 @@ from cr4te.utils import path_utils
 
 class HtmlPathTests(unittest.TestCase):
     def test_creator_path_is_stable_and_sanitized(self):
-        creator = SimpleNamespace(name="Ada Lovelace")
+        creator = SimpleNamespace(name="Ada Lovelace", display_name="Countess Lovelace")
 
         self.assertEqual(
             build_rel_creator_html_path(creator),
@@ -21,8 +21,8 @@ class HtmlPathTests(unittest.TestCase):
         )
 
     def test_project_path_includes_creator_namespace(self):
-        creator = SimpleNamespace(name="Ada")
-        project = SimpleNamespace(title="First Notes")
+        creator = SimpleNamespace(name="Ada", display_name="Countess Lovelace")
+        project = SimpleNamespace(title="First Notes", display_title="Notes on the Engine")
 
         self.assertEqual(
             build_rel_project_html_path(creator, project),

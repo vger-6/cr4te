@@ -67,13 +67,13 @@ class CollaborationMetadataTemplate:
 
 @dataclass(frozen=True)
 class ProjectMetadataTemplate:
-    title: str
+    display_title: str
     cover: str = ""
     facet_fields: tuple[ProjectField, ...] = ()
 
     def as_json(self) -> JsonObject:
         return {
-            "title": self.title,
+            "display_title": self.display_title,
             "release_date": "",
             "cover": self.cover,
             "tags": {},
@@ -86,7 +86,7 @@ class ProjectMetadataTemplate:
 
 @dataclass(frozen=True)
 class CreatorMetadataTemplate:
-    name: str
+    display_name: str
     type: CreatorType
     portrait: str = ""
     aliases: list[str] = field(default_factory=list)
@@ -97,7 +97,7 @@ class CreatorMetadataTemplate:
 
     def as_json(self) -> JsonObject:
         data: JsonObject = {
-            "name": self.name,
+            "display_name": self.display_name,
             "type": self.type.value,
             "portrait": self.portrait,
             "aliases": list(self.aliases),

@@ -20,6 +20,7 @@ __all__ = [
 @dataclass(frozen=True)
 class ProjectSummary:
     title: str
+    display_title: str
     release_date: str
     cover: str
     tags: dict[str, list[str]]
@@ -31,6 +32,7 @@ class ProjectSummary:
 class CreatorSummary:
     path: Path
     name: str
+    display_name: str
     type: CreatorType
     portrait: str
     aliases: tuple[str, ...]
@@ -80,6 +82,7 @@ def summarize_creator(creator_dir: Path, creator: Creator) -> CreatorSummary:
     return CreatorSummary(
         path=creator_dir,
         name=creator.name,
+        display_name=creator.display_name,
         type=creator.type,
         portrait=creator.portrait,
         aliases=tuple(creator.aliases),
@@ -105,6 +108,7 @@ def summarize_creator(creator_dir: Path, creator: Creator) -> CreatorSummary:
 def _summarize_project(project: Project) -> ProjectSummary:
     return ProjectSummary(
         title=project.title,
+        display_title=project.display_title,
         release_date=project.release_date,
         cover=project.cover,
         tags=project.tags,

@@ -33,7 +33,8 @@ class OverviewContextTests(unittest.TestCase):
             output_dir = Path(tmp) / "site"
             ctx = context_for(input_dir, output_dir)
             project = ProjectSummary(
-                title="Landscapes",
+                title="Canonical Project",
+                display_title="Displayed Landscapes",
                 release_date="",
                 cover="",
                 tags={"Mood": ["Calm"]},
@@ -42,7 +43,8 @@ class OverviewContextTests(unittest.TestCase):
             )
             creator = CreatorSummary(
                 path=input_dir / "Noomi",
-                name="Noomi",
+                name="Canonical Creator",
+                display_name="Displayed Noomi",
                 type=CreatorType.PERSON,
                 portrait="",
                 aliases=("N.",),
@@ -56,7 +58,10 @@ class OverviewContextTests(unittest.TestCase):
 
             entry = build_creator_overview_entry_from_index(ctx, creator)
 
-            self.assertIn("noomi", entry.search_text)
+            self.assertIn("displayed noomi", entry.search_text)
+            self.assertIn("displayed landscapes", entry.search_text)
+            self.assertNotIn("canonical creator", entry.search_text)
+            self.assertNotIn("canonical project", entry.search_text)
             self.assertIn("n.", entry.search_text)
             self.assertIn("role:photographer", entry.search_text)
             self.assertIn("mood:calm", entry.search_text)
@@ -66,6 +71,7 @@ class OverviewContextTests(unittest.TestCase):
     def test_sort_project_summary_orders_dated_projects_before_undated(self):
         dated = ProjectSummary(
             title="B",
+            display_title="Z",
             release_date="2024",
             cover="",
             tags={},
@@ -74,6 +80,7 @@ class OverviewContextTests(unittest.TestCase):
         )
         undated = ProjectSummary(
             title="A",
+            display_title="A",
             release_date="",
             cover="",
             tags={},
@@ -82,6 +89,28 @@ class OverviewContextTests(unittest.TestCase):
         )
 
         self.assertEqual(sorted([undated, dated], key=sort_project_summary), [dated, undated])
+
+    def test_sort_project_summary_uses_display_title(self):
+        first = ProjectSummary(
+            title="Z Folder",
+            display_title="A Display",
+            release_date="",
+            cover="",
+            tags={},
+            facets={},
+            media_counts=MediaCounts(),
+        )
+        second = ProjectSummary(
+            title="A Folder",
+            display_title="Z Display",
+            release_date="",
+            cover="",
+            tags={},
+            facets={},
+            media_counts=MediaCounts(),
+        )
+
+        self.assertEqual(sorted([second, first], key=sort_project_summary), [first, second])
 
 
 if __name__ == "__main__":

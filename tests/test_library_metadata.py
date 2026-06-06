@@ -17,7 +17,7 @@ from cr4te.library_metadata import (
     normalize_metadata_date,
 )
 from cr4te.schemas.library_schema import Project
-from cr4te.schemas.metadata_file_schema import ProjectMetadata
+from cr4te.schemas.metadata_file_schema import CreatorMetadata, ProjectMetadata
 from cr4te.utils.date_utils import format_nice_date, normalize_optional_iso_date
 
 
@@ -55,9 +55,21 @@ class LibraryMetadataTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             ProjectMetadata(release_date="2024-99")
 
+    def test_metadata_file_schema_rejects_folder_derived_name_and_title(self):
+        with self.assertRaises(ValidationError):
+            CreatorMetadata(name="Ada")
+
+        with self.assertRaises(ValidationError):
+            ProjectMetadata(title="Album")
+
+    def test_metadata_file_schema_accepts_display_name_and_title(self):
+        self.assertEqual(CreatorMetadata(display_name="Astra").display_name, "Astra")
+        self.assertEqual(ProjectMetadata(display_title="First Notes").display_title, "First Notes")
+
     def test_runtime_schema_rejects_calendar_invalid_date(self):
         base_project = {
             "title": "Album",
+            "display_title": "Album",
             "cover": "",
             "info": "",
             "media_groups": [],

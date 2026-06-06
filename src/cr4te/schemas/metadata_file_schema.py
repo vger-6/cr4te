@@ -55,8 +55,8 @@ class CollaborationMetadata(BaseModel):
 
 
 class CreatorMetadata(BaseModel):
+    display_name: str = ""
     type: Optional[CreatorType] = None
-    name: Optional[str] = None
     portrait: str = ""
     aliases: List[str] = Field(default_factory=list)
     collaborations: List[str] = Field(default_factory=list)
@@ -68,7 +68,7 @@ class CreatorMetadata(BaseModel):
 
 
 class ProjectMetadata(BaseModel):
-    title: Optional[str] = None
+    display_title: str = ""
     release_date: str = ""
     cover: str = ""
     tags: TagMap = Field(default_factory=dict)

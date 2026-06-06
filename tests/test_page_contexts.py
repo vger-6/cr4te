@@ -43,6 +43,7 @@ def context_for(input_dir: Path, output_dir: Path, domain: Domain = Domain.ART) 
 def project(**overrides) -> Project:
     data = {
         "title": "Landscapes",
+        "display_title": "Displayed Landscapes",
         "release_date": "2024-03-12",
         "cover": "Landscapes/cover.jpg",
         "info": "",
@@ -57,6 +58,7 @@ def project(**overrides) -> Project:
 def person(name: str = "Noomi", **overrides) -> Creator:
     data = {
         "name": name,
+        "display_name": name,
         "type": CreatorType.PERSON,
         "active_since": "2020",
         "date_of_birth": "1990-04",
@@ -90,7 +92,7 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(page.name, "Noomi")
             self.assertEqual(page.tags.as_dict()["Mediums"], ["Photography"])
             self.assertIsInstance(page.projects[0], ProjectCardContext)
-            self.assertEqual(page.projects[0].title, "Landscapes")
+            self.assertEqual(page.projects[0].title, "Displayed Landscapes")
             self.assertEqual(page.projects[0].media_counts.values(), (0, 0, 0, 0, 0))
 
     def test_collaboration_creator_page_context_uses_typed_contexts(self):
@@ -100,12 +102,13 @@ class PageContextTests(unittest.TestCase):
             write_image(input_dir / "Collab" / "portrait.jpg", (80, 160))
             write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
 
-            member = person(portrait="Noomi/portrait.jpg")
+            member = person(display_name="Displayed Noomi", portrait="Noomi/portrait.jpg")
             collaboration = Creator(
                 name="Noomi & Ada",
+                display_name="The Duo",
                 type=CreatorType.COLLABORATION,
                 active_since="2021",
-                members=["Noomi"],
+                members=["Noomi", "Missing Member"],
                 portrait="Collab/portrait.jpg",
                 info="",
                 tags={"Format": ["Duo"]},
@@ -124,8 +127,11 @@ class PageContextTests(unittest.TestCase):
             self.assertIsInstance(page, CreatorPageContext)
             self.assertEqual(page.type, CreatorType.COLLABORATION.value)
             self.assertEqual(page.tags.as_dict()["Format"], ["Duo"])
-            self.assertEqual([member.name for member in page.members], ["Noomi"])
-            self.assertEqual(page.member_names, ["Noomi"])
+            self.assertEqual(page.name, "The Duo")
+            self.assertEqual([member.name for member in page.members], ["Displayed Noomi"])
+            self.assertEqual(page.member_names, ["Displayed Noomi", "Missing Member"])
+            members_entry = next(entry for entry in page.meta_entries if entry.label == "Members")
+            self.assertEqual(members_entry.values, ["Displayed Noomi", "Missing Member"])
             self.assertEqual([entry.label for entry in page.meta_entries], ["Name", "Active Since", "Members"])
 
     def test_project_page_context_splits_collaboration_and_participants(self):
@@ -136,10 +142,11 @@ class PageContextTests(unittest.TestCase):
             write_image(input_dir / "Collab" / "portrait.jpg", (80, 160))
             write_image(input_dir / "Landscapes" / "cover.jpg")
 
-            member = person(portrait="Noomi/portrait.jpg")
+            member = person(display_name="Displayed Noomi", portrait="Noomi/portrait.jpg")
             collab_project = project()
             collaboration = Creator(
                 name="Noomi & Ada",
+                display_name="The Duo",
                 type=CreatorType.COLLABORATION,
                 active_since="2021",
                 members=["Noomi"],
@@ -154,9 +161,42 @@ class PageContextTests(unittest.TestCase):
 
             self.assertIsInstance(page, ProjectPageContext)
             self.assertIsNone(page.creator)
-            self.assertEqual(page.collaboration.name, "Noomi & Ada")
-            self.assertEqual([participant.name for participant in page.participants], ["Noomi"])
+            self.assertEqual(page.title, "Displayed Landscapes")
+            self.assertEqual(page.collaboration.name, "The Duo")
+            self.assertEqual([participant.name for participant in page.participants], ["Displayed Noomi"])
             self.assertEqual(page.tags.as_dict()["Mood"], ["Calm"])
+
+    def test_collaboration_section_label_resolves_member_display_names(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(name="Ada", display_name="Displayed Ada", portrait="", collaborations=["Ada & Bob"])
+            other_member = person(name="Bob", display_name="Displayed Bob", portrait="")
+            collaboration = Creator(
+                name="Ada & Bob",
+                display_name="The Pair",
+                type=CreatorType.COLLABORATION,
+                active_since="",
+                members=["Ada", "Bob", "Missing Member"],
+                portrait="",
+                info="",
+                projects=[],
+                media_groups=[],
+            )
+            creators = {
+                other_member.name: other_member,
+                collaboration.name: collaboration,
+            }
+            ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(
+                ctx,
+                creator,
+                creators.get,
+                compute_creator_stats(creator),
+            )
+
+            self.assertEqual(page.collaborations[0].label, "Displayed Bob Missing Member")
 
     def test_project_summary_search_uses_enum_facet_keys_only(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -166,6 +206,7 @@ class PageContextTests(unittest.TestCase):
             creator = CreatorSummary(
                 path=input_dir / "Noomi",
                 name="Noomi",
+                display_name="Displayed Noomi",
                 type=CreatorType.PERSON,
                 portrait="",
                 aliases=(),
@@ -177,6 +218,7 @@ class PageContextTests(unittest.TestCase):
             )
             summary = ProjectSummary(
                 title="Landscapes",
+                display_title="Displayed Landscapes",
                 release_date="",
                 cover="",
                 tags={},

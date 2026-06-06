@@ -14,8 +14,6 @@ from .enums.creator_type import CreatorType
 from .library_index import CreatorSummary, LibraryIndex, summarize_creator
 from .library_issues import (
     BuildIssuePolicy,
-    DuplicateCreatorError,
-    duplicate_creator_issue,
     invalid_collaboration_reference_issue,
     issue_from_exception,
 )
@@ -64,7 +62,8 @@ def _build_project(
         cover = rel_to_input(selected_cover, input_dir) if selected_cover else ""
 
     return Project(
-        title=project_metadata.title or project_name,
+        title=project_name,
+        display_title=project_metadata.display_title.strip() or project_name,
         release_date=normalize_metadata_date(project_metadata.release_date, "release_date", f"{creator_dir.name} - {project_name}"),
         cover=cover,
         info=text_utils.read_text(project_dir / README_FILE_NAME),
@@ -91,7 +90,8 @@ def _build_creator(
     for media_path in iter_media_files(creator_dir, media_rules):
         scan.add_media(media_path)
 
-    creator_name = metadata.name or creator_dir.name
+    creator_name = creator_dir.name
+    display_name = metadata.display_name.strip() or creator_name
     creator_type = _infer_creator_type(creator_name, metadata, media_rules)
     portrait = metadata_relative_path(creator_dir, metadata.portrait, input_dir, "portrait")
     if not portrait:
@@ -135,6 +135,7 @@ def _build_creator(
             members = [name.strip() for name in text_utils.multi_split(creator_name, media_rules.collaboration_separators)]
         return Creator(
             name=creator_name,
+            display_name=display_name,
             portrait=portrait,
             type=creator_type,
             aliases=metadata.aliases,
@@ -153,6 +154,7 @@ def _build_creator(
 
     return Creator(
         name=creator_name,
+        display_name=display_name,
         portrait=portrait,
         type=creator_type,
         aliases=metadata.aliases,
@@ -203,19 +205,10 @@ def build_library_index(input_dir: Path, media_rules: MediaRules, strict: bool =
 
     summaries: list[CreatorSummary] = []
     policy = BuildIssuePolicy(strict=strict)
-    creator_names: set[str] = set()
     for creator_dir in iter_creator_dirs(input_dir, media_rules):
         try:
             logger.info(f"Indexing: {creator_dir.name}")
             creator = _build_creator(creator_dir, input_dir, media_rules, policy)
-            if creator.name in creator_names:
-                issue = duplicate_creator_issue(creator_dir, creator.name)
-                policy.handle(
-                    issue,
-                    DuplicateCreatorError(issue.message),
-                )
-                continue
-            creator_names.add(creator.name)
             summaries.append(summarize_creator(creator_dir, creator))
         except BuildIssueError:
             raise

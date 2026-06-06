@@ -44,6 +44,7 @@ def context_for(input_dir: Path, output_dir: Path) -> HtmlBuildContext:
 def creator() -> Creator:
     return Creator(
         name="Noomi",
+        display_name="Displayed Noomi",
         type=CreatorType.PERSON,
         active_since="2020",
         portrait="",
@@ -56,6 +57,7 @@ def creator() -> Creator:
 def project() -> Project:
     return Project(
         title="Landscapes",
+        display_title="Displayed Landscapes",
         release_date="",
         cover="",
         info="",

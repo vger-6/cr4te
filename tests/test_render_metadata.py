@@ -32,6 +32,7 @@ def context_for(domain: Domain = Domain.ART) -> HtmlBuildContext:
 def project(**overrides) -> Project:
     data = {
         "title": "Landscapes",
+        "display_title": "Displayed Landscapes",
         "release_date": "2024-03-12",
         "cover": "",
         "info": "",
@@ -46,6 +47,7 @@ def project(**overrides) -> Project:
 def creator(**overrides) -> Creator:
     data = {
         "name": "Noomi",
+        "display_name": "Displayed Noomi",
         "type": CreatorType.PERSON,
         "active_since": "2020",
         "date_of_birth": "1990-04",
@@ -78,6 +80,7 @@ class RenderMetadataTests(unittest.TestCase):
         )
 
         self.assertEqual([entry.label for entry in entries], ["Name", "Born", "Nationality", "Alias", "Debut Age"])
+        self.assertEqual(entries[0].values, ["Displayed Noomi"])
         self.assertEqual(entries[0].hrefs, ["html/noomi.html"])
         self.assertEqual(entries[1].values, ["April 1990"])
         self.assertEqual(entries[2].hrefs, ["index.html?tag=Nationalities%3AGerman"])
@@ -100,6 +103,7 @@ class RenderMetadataTests(unittest.TestCase):
     def test_collaboration_meta_entries_use_field_specs(self):
         collab = Creator(
             name="Noomi & Ada",
+            display_name="The Duo",
             type=CreatorType.COLLABORATION,
             active_since="",
             members=["Noomi", "Ada"],
@@ -126,12 +130,15 @@ class RenderMetadataTests(unittest.TestCase):
             ],
             "html/noomi-ada.html",
             "index.html",
+            ["Displayed Noomi", "Ada"],
         )
 
         self.assertEqual([entry.label for entry in entries], ["Name", "Nationalities", "Alias", "Members", "Founded", "Founded in"])
         self.assertEqual(entries[0].hrefs, ["html/noomi-ada.html"])
+        self.assertEqual(entries[0].values, ["The Duo"])
         self.assertEqual(entries[1].hrefs[0], "index.html?tag=Nationalities%3AFrench")
         self.assertEqual(entries[3].separator, "<br>")
+        self.assertEqual(entries[3].values, ["Displayed Noomi", "Ada"])
         self.assertEqual(entries[4].values, ["2021"])
 
     def test_project_meta_entries_use_core_and_facet_specs(self):
@@ -142,6 +149,7 @@ class RenderMetadataTests(unittest.TestCase):
 
         labels = [entry.label for entry in entries]
         self.assertEqual(labels, ["Title", "Release Date", "Medium", "Period"])
+        self.assertEqual(entries[0].values, ["Displayed Landscapes"])
         self.assertEqual(entries[1].values, ["March 12, 2024"])
         self.assertEqual(entries[2].hrefs, ["projects.html?tag=Mediums%3APhotography"])
 

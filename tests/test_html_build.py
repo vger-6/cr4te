@@ -48,6 +48,8 @@ class HtmlBuildTests(unittest.TestCase):
             project_dir = creator_dir / "Landscapes"
             write_image(creator_dir / "portrait.jpg", (80, 160))
             write_image(project_dir / "cover.jpg")
+            write_json(creator_dir / "cr4te.json", {"display_name": "Displayed Creator"})
+            write_json(project_dir / "cr4te.json", {"display_title": "Displayed Project"})
 
             _build_cmd_handler(SimpleNamespace(
                 config=None,
@@ -63,12 +65,49 @@ class HtmlBuildTests(unittest.TestCase):
             ))
 
             metadata = json.loads((creator_dir / "cr4te.json").read_text(encoding="utf-8"))
+            self.assertEqual(metadata["display_name"], "Displayed Creator")
             self.assertNotIn("info", metadata)
             self.assertNotIn("projects", metadata)
             project_metadata = json.loads((project_dir / "cr4te.json").read_text(encoding="utf-8"))
+            self.assertEqual(project_metadata["display_title"], "Displayed Project")
             self.assertEqual(project_metadata["cover"], "")
             self.assertNotIn("info", project_metadata)
             self.assertTrue((output_dir / "index.html").exists())
+            rendered_html = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in output_dir.rglob("*.html")
+            )
+            self.assertIn("Displayed Creator", rendered_html)
+            self.assertIn("Displayed Project", rendered_html)
+
+    def test_build_command_sorts_overviews_by_display_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            (root / "A Folder" / "A Project").mkdir(parents=True)
+            (root / "Z Folder" / "Z Project").mkdir(parents=True)
+            write_json(root / "A Folder" / "cr4te.json", {"display_name": "Z Display"})
+            write_json(root / "A Folder" / "A Project" / "cr4te.json", {"display_title": "Z Project"})
+            write_json(root / "Z Folder" / "cr4te.json", {"display_name": "A Display"})
+            write_json(root / "Z Folder" / "Z Project" / "cr4te.json", {"display_title": "A Project"})
+
+            _build_cmd_handler(SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_strategy=None,
+                open=False,
+                force=True,
+                clean=False,
+                strict=True,
+            ))
+
+            creator_overview = (output_dir / "index.html").read_text(encoding="utf-8")
+            project_overview = (output_dir / "projects.html").read_text(encoding="utf-8")
+            self.assertLess(creator_overview.index("A Display"), creator_overview.index("Z Display"))
+            self.assertLess(project_overview.index("A Project"), project_overview.index("Z Project"))
 
     def test_build_command_aborts_when_media_cannot_be_linked(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -203,16 +242,10 @@ class HtmlBuildTests(unittest.TestCase):
             config_path = Path(tmp) / "music_config.json"
             write_image(project_dir / "cover.jpg")
             write_json(config_path, apply_cli_overrides(load_config(), domain=Domain.MUSIC).model_dump(mode="json"))
-            write_json(
-                creator_dir / "cr4te.json",
-                {
-                    "name": "Noomi",
-                },
-            )
+            write_json(creator_dir / "cr4te.json", {})
             write_json(
                 project_dir / "cr4te.json",
                 {
-                    "title": "Album",
                     "facets": {
                         "genres": ["Ambient"],
                         "labels": [],
@@ -246,6 +279,7 @@ class HtmlBuildTests(unittest.TestCase):
         events = []
         project_summary = ProjectSummary(
             title="Landscapes",
+            display_title="Displayed Landscapes",
             release_date="",
             cover="",
             tags={},
@@ -258,6 +292,7 @@ class HtmlBuildTests(unittest.TestCase):
                 CreatorSummary(
                     path=Path("input") / "Noomi",
                     name="Noomi",
+                    display_name="Displayed Noomi",
                     type=CreatorType.PERSON,
                     portrait="",
                     aliases=(),
@@ -272,6 +307,7 @@ class HtmlBuildTests(unittest.TestCase):
         )
         creator = Creator(
             name="Noomi",
+            display_name="Displayed Noomi",
             type=CreatorType.PERSON,
             active_since="",
             portrait="",
@@ -280,6 +316,7 @@ class HtmlBuildTests(unittest.TestCase):
             projects=[
                 Project(
                     title="Landscapes",
+                    display_title="Displayed Landscapes",
                     release_date="",
                     cover="",
                     info="",
@@ -340,11 +377,10 @@ class HtmlBuildTests(unittest.TestCase):
             write_json(
                 creator_dir / "cr4te.json",
                 {
-                    "name": "Noomi",
                     "portrait": "portrait.jpg",
                 },
             )
-            write_json(project_dir / "cr4te.json", {"title": "Landscapes", "cover": "cover.jpg"})
+            write_json(project_dir / "cr4te.json", {"cover": "cover.jpg"})
 
             config = apply_cli_overrides(load_config(), domain=Domain.ART)
             index = build_library_index(root, config.media_rules)
@@ -408,7 +444,7 @@ class HtmlBuildTests(unittest.TestCase):
             bad_project = root / "Noomi" / "Bad Project"
             good_project.mkdir(parents=True)
             bad_project.mkdir(parents=True)
-            write_json(good_project / "cr4te.json", {"title": "Good Project"})
+            write_json(good_project / "cr4te.json", {})
             write_json(bad_project / "cr4te.json", {"release_date": "Spring 2024"})
 
             config = apply_cli_overrides(load_config(), domain=Domain.ART)

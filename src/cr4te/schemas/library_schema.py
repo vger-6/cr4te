@@ -46,6 +46,7 @@ class MediaGroup(BaseModel):
 
 class Project(BaseModel):
     title: str
+    display_title: str
     release_date: str
     cover: str
     info: str
@@ -78,6 +79,7 @@ COLLABORATION_CREATOR_FIELDS = {
 
 class Creator(BaseDatedModel):
     name: str
+    display_name: str
     type: CreatorType
     active_since: str
     date_of_birth: str = ""

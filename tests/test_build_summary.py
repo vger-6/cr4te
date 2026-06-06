@@ -30,6 +30,7 @@ class BuildSummaryTests(unittest.TestCase):
                     CreatorSummary(
                         path=root / "Noomi",
                         name="Noomi",
+                        display_name="Displayed Noomi",
                         type=CreatorType.PERSON,
                         portrait="",
                         aliases=(),
@@ -41,6 +42,7 @@ class BuildSummaryTests(unittest.TestCase):
                         projects=(
                             ProjectSummary(
                                 title="One",
+                                display_title="One",
                                 release_date="",
                                 cover="",
                                 tags={},
@@ -49,6 +51,7 @@ class BuildSummaryTests(unittest.TestCase):
                             ),
                             ProjectSummary(
                                 title="Two",
+                                display_title="Two",
                                 release_date="",
                                 cover="",
                                 tags={},
@@ -60,6 +63,7 @@ class BuildSummaryTests(unittest.TestCase):
                     CreatorSummary(
                         path=root / "Ada",
                         name="Ada",
+                        display_name="Ada",
                         type=CreatorType.PERSON,
                         portrait="",
                         aliases=(),
@@ -120,6 +124,7 @@ class BuildSummaryTests(unittest.TestCase):
                 CreatorSummary(
                     path=Path("Noomi"),
                     name="Noomi",
+                    display_name="Displayed Noomi",
                     type=CreatorType.PERSON,
                     portrait="",
                     aliases=(),
@@ -131,6 +136,7 @@ class BuildSummaryTests(unittest.TestCase):
                     projects=(
                         ProjectSummary(
                             title="Landscapes",
+                            display_title="Displayed Landscapes",
                             release_date="",
                             cover="",
                             tags={},

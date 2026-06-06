@@ -5,6 +5,9 @@ These are durable product/design requirements for cr4te. They must hold during a
 - No backwards compatibility or legacy metadata migration. The current schema is the only supported schema; obsolete or extra JSON fields should fail validation instead of being silently migrated.
 - `build` is the metadata lifecycle command. It creates and reconciles editable metadata before rendering. `init-metadata` and `sync-metadata` must not return.
 - Metadata lives beside the folder it describes. Creator metadata lives in each creator folder's `cr4te.json`; project metadata lives in each project folder's `cr4te.json`. Creator metadata must not nest project metadata under `projects`.
+- Canonical creator names and project titles come exclusively from their folder names. They drive identity, output-path hashes, and creator-reference resolution and must not appear as `name` or `title` fields in `cr4te.json`.
+- Creator `display_name` and project `display_title` are editable metadata whose generated defaults are their folder names. Display values drive visible labels, user-facing sorting, and search; blank display values fall back to the canonical folder name.
+- Collaboration `members` and creator `collaborations` store canonical creator folder names. Resolved references display the referenced creator's `display_name`; unresolved member strings display unchanged.
 - When `build` encounters matching nested project metadata in a creator file, it should seed the corresponding project-level `cr4te.json` before pruning the nested creator entry, so existing filled metadata is not discarded during the layout change.
 - `cr4te.json` contains editable structured metadata only. It must not contain generated scan output such as `media_groups`, and it must not contain narrative `info` fields.
 - Narrative/descriptive text comes only from `README.md` files in creator/project folders.

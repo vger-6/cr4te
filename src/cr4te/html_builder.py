@@ -60,7 +60,7 @@ def build_html_pages_streaming(
     project_entries: list[ProjectOverviewEntry] = []
     all_tags = TagCollection()
 
-    for summary in sorted(index.creators, key=lambda c: c.name.lower()):
+    for summary in sorted(index.creators, key=lambda c: c.display_name.lower()):
         creator = load_creator(summary)
         logger.info(f"Building creator page: {creator.name}")
         creator_stats = compute_creator_stats(creator)

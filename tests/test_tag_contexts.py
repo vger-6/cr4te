@@ -36,6 +36,7 @@ class TagContextTests(unittest.TestCase):
     def test_collect_tags_from_creator_includes_project_tags(self):
         project = Project(
             title="Landscapes",
+            display_title="Displayed Landscapes",
             release_date="",
             cover="",
             info="",
@@ -45,6 +46,7 @@ class TagContextTests(unittest.TestCase):
         )
         creator = Creator(
             name="Noomi",
+            display_name="Displayed Noomi",
             type=CreatorType.PERSON,
             active_since="",
             portrait="",
@@ -71,6 +73,7 @@ class TagContextTests(unittest.TestCase):
     def test_project_summary_values_ignores_string_facet_keys(self):
         summary = ProjectSummary(
             title="Landscapes",
+            display_title="Displayed Landscapes",
             release_date="",
             cover="",
             tags={},
