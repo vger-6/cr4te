@@ -13,7 +13,13 @@ from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
 from cr4te.enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from cr4te.enums.orientation import Orientation
-from cr4te.render_models import ProjectPageContext, TagCollection
+from cr4te.render_models import (
+    CreatorProfileContext,
+    NavigationItem,
+    PageShellContext,
+    ProjectPageContext,
+    TagCollection,
+)
 from cr4te.schemas.library_schema import Creator, Project
 from cr4te.template_renderer import env, render_project_page, render_tags_page
 
@@ -88,6 +94,11 @@ class TemplateRendererTests(unittest.TestCase):
                 info_html="",
                 tags=TagCollection(),
                 media_groups=[],
+                creator=CreatorProfileContext(
+                    name="Displayed Noomi",
+                    rel_html_path="creator.html",
+                    rel_portrait_path="",
+                ),
             )
 
             custom_rel_path = Path("custom") / "depth" / "project.html"
@@ -103,6 +114,18 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(fake_env.calls[0][0], "project.html.j2")
             self.assertIs(fake_env.calls[0][1]["project"], page_context)
             self.assertEqual(fake_env.calls[0][1]["path_to_root"], "../../../")
+            page_shell = fake_env.calls[0][1]["page_shell"]
+            self.assertEqual(page_shell.title, "Landscapes")
+            self.assertEqual(page_shell.layout_stylesheet, "two-column-layout.css")
+            self.assertEqual(
+                [(item.label, item.href, item.current) for item in page_shell.navigation_items],
+                [
+                    (ctx.site_labels.entity.creators, "../../../index.html", False),
+                    (ctx.site_labels.entity.projects, "../../../projects.html", False),
+                    (ctx.site_labels.entity.tags, "../../../tags.html", False),
+                    ("Displayed Noomi", "../../../creator.html", False),
+                ],
+            )
             self.assertEqual(fake_env.calls[0][1]["default_theme"].id, "frozen-aurora")
             self.assertEqual({theme.id for theme in fake_env.calls[0][1]["themes"]}, {
                 "forest-night",
@@ -122,6 +145,9 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(ctx.tags_html_path.read_text(encoding="utf-8"), "rendered:tags.html.j2")
             self.assertEqual(fake_env.calls[0][0], "tags.html.j2")
             self.assertEqual(fake_env.calls[0][1]["tags"].as_dict(), {"Theme": ["Night"]})
+            page_shell = fake_env.calls[0][1]["page_shell"]
+            self.assertEqual(page_shell.layout_stylesheet, "overview-layout.css")
+            self.assertEqual([item.current for item in page_shell.navigation_items], [False, False, True])
 
     def test_overview_template_renders_registry_stylesheets_and_visible_default_body(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -134,12 +160,39 @@ class TemplateRendererTests(unittest.TestCase):
                 ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
                 themes=ctx.themes,
                 default_theme=ctx.default_theme,
+                page_shell=PageShellContext(
+                    title=ctx.site_labels.entity.creators,
+                    layout_stylesheet="overview-layout.css",
+                    navigation_items=(
+                        NavigationItem(ctx.site_labels.entity.creators, "index.html", current=True),
+                        NavigationItem(ctx.site_labels.entity.projects, "projects.html"),
+                        NavigationItem(ctx.site_labels.entity.tags, "tags.html"),
+                    ),
+                ),
             )
 
             self.assertIn('<body class="theme-frozen-aurora" data-default-theme="theme-frozen-aurora">', rendered)
             self.assertIn('assets/css/themes/frozen-aurora.css', rendered)
             self.assertIn('data-theme="theme-forest-night"', rendered)
+            self.assertIn('<nav class="top-link" aria-label="Primary">', rendered)
+            self.assertIn('<span class="nav-current" aria-current="page">Artists</span>', rendered)
             self.assertNotIn("body { display: none; }", rendered)
+
+    def test_page_templates_use_shared_document_head_and_page_header(self):
+        template_dir = ROOT / "src" / "cr4te" / "templates"
+
+        for template_name in (
+            "creator.html.j2",
+            "creator_overview.html.j2",
+            "project.html.j2",
+            "project_overview.html.j2",
+            "tags.html.j2",
+        ):
+            with self.subTest(template_name=template_name):
+                source = (template_dir / template_name).read_text(encoding="utf-8")
+                self.assertIn('{% include "partials/_document_head.html.j2" %}', source)
+                self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
+                self.assertNotIn('<div class="page-header">', source)
 
 
 if __name__ == "__main__":

@@ -4,29 +4,11 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ creator.name }}</title>
-  {% include "partials/_favicon.html.j2" %}
-  <link rel="stylesheet" href="{{ path_to_root }}assets/css/tokens.css">
-  <link rel="stylesheet" href="{{ path_to_root }}assets/css/base.css">
-  <link rel="stylesheet" href="{{ path_to_root }}assets/css/two-column-layout.css">
-  {% include "partials/_theme_stylesheets.html.j2" %}
-</head>
+{% include "partials/_document_head.html.j2" %}
 <body class="{{ default_theme.css_class }}" data-default-theme="{{ default_theme.css_class }}">
 
 <div class="page-container">
-  <div class="page-header">
-    <div class="top-link">
-      <a href="{{ path_to_root }}index.html">{{ site_labels.entity.creators }}</a> &middot;
-      <a href="{{ path_to_root }}projects.html">{{ site_labels.entity.projects }}</a> &middot;
-      <a href="{{ path_to_root }}tags.html">{{ site_labels.entity.tags }}</a>
-      {% include "partials/_theme_dropdown.html.j2" %}
-    </div>
-
-    <h1>{{ creator.name }}</h1>
-  </div>
+  {% include "partials/_page_header.html.j2" %}
 
   <div class="two-column-layout">
 

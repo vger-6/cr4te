@@ -1,0 +1,15 @@
+<div class="page-header">
+  <nav class="top-link" aria-label="Primary">
+    {% for item in page_shell.navigation_items %}
+      {% if not loop.first %} &middot; {% endif %}
+      {% if item.current %}
+        <span class="nav-current" aria-current="page">{{ item.label }}</span>
+      {% else %}
+        <a href="{{ item.href }}">{{ item.label }}</a>
+      {% endif %}
+    {% endfor %}
+    {% include "partials/_theme_dropdown.html.j2" %}
+  </nav>
+
+  <h1>{{ page_shell.title }}</h1>
+</div>

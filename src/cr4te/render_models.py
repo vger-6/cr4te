@@ -19,6 +19,8 @@ __all__ = [
     "MediaSectionContext",
     "MediaCounts",
     "MetaEntry",
+    "NavigationItem",
+    "PageShellContext",
     "ProjectCardContext",
     "ProjectOverviewEntry",
     "ProjectPageContext",
@@ -63,6 +65,20 @@ class MetaEntry:
     values: list[str]
     separator: str = ", "
     hrefs: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class NavigationItem:
+    label: str
+    href: str
+    current: bool = False
+
+
+@dataclass(frozen=True)
+class PageShellContext:
+    title: str
+    layout_stylesheet: str
+    navigation_items: tuple[NavigationItem, ...]
 
 
 @dataclass(frozen=True)

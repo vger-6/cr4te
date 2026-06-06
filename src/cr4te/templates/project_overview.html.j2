@@ -3,29 +3,11 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ site_labels.entity.projects }}</title>
-  {% include "partials/_favicon.html.j2" %}
-  <link rel="stylesheet" href="assets/css/tokens.css">
-  <link rel="stylesheet" href="assets/css/base.css">
-  <link rel="stylesheet" href="assets/css/overview-layout.css">
-  {% include "partials/_theme_stylesheets.html.j2" %}
-</head>
+{% include "partials/_document_head.html.j2" %}
 <body class="{{ default_theme.css_class }}" data-default-theme="{{ default_theme.css_class }}">
 
 <div class="page-container">
-  <div class="page-header">
-    <div class="top-link">
-      <a href="index.html">{{ site_labels.entity.creators }}</a> &middot;
-      <span class="nav-current">{{ site_labels.entity.projects }}</span> &middot;
-      <a href="tags.html">{{ site_labels.entity.tags }}</a>
-      {% include "partials/_theme_dropdown.html.j2" %}
-    </div>
-
-    <h1>{{ site_labels.entity.projects }}</h1>
-  </div>
+  {% include "partials/_page_header.html.j2" %}
 
   {% set search_text_placeholder = site_labels.controls.search_placeholder %}
   {% include "partials/_search_bar.html.j2" %}
