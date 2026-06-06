@@ -24,15 +24,14 @@ class ImageUtilsTests(unittest.TestCase):
             self.assertEqual(dimensions, ImageDimensions(width=100, height=130))
             self.assertEqual(infer_image_orientation(image_path), Orientation.PORTRAIT)
 
-    def test_unreadable_image_dimensions_fall_back_to_landscape(self):
+    def test_unreadable_image_dimensions_raise_and_orientation_falls_back_to_landscape(self):
         with tempfile.TemporaryDirectory() as tmp:
             missing_path = Path(tmp) / "missing.jpg"
 
-            with self.assertLogs("cr4te.utils.image_utils", level="WARNING"):
-                dimensions = read_image_dimensions(missing_path)
+            with self.assertRaises(FileNotFoundError):
+                read_image_dimensions(missing_path)
 
-            self.assertEqual(dimensions, ImageDimensions())
-            self.assertEqual(dimensions.orientation, Orientation.LANDSCAPE)
+            self.assertEqual(infer_image_orientation(missing_path), Orientation.LANDSCAPE)
 
 
 if __name__ == "__main__":

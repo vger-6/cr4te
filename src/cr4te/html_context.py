@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 
+from .build_issues import BuildIssue, BuildIssuePolicy
 from .enums.media_type import MediaType
 from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
@@ -45,6 +46,14 @@ class HtmlBuildContext:
     site_rendering: SiteRendering
     themes: tuple[ThemeDefinition, ...] = field(default_factory=discover_builtin_themes)
     media_cache: MediaInfoCache = field(default_factory=MediaInfoCache)
+    issue_policy: BuildIssuePolicy = field(default_factory=lambda: BuildIssuePolicy(strict=False))
+
+    @property
+    def issues(self) -> tuple[BuildIssue, ...]:
+        return tuple(self.issue_policy.issues)
+
+    def report_issue(self, issue: BuildIssue, exc: Exception | None = None) -> None:
+        self.issue_policy.handle(issue, exc)
 
     # Output paths
     @property

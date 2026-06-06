@@ -10,13 +10,13 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from cr4te.build_issues import BuildIssueError, BuildIssuePolicy, IssueCode
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.domain import Domain
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.output_preparation import copy_static_assets, prepare_output_dirs
 from cr4te.render_assets import (
-    MediaStagingError,
     build_default_thumbnail_specs,
     prepare_default_thumbnails,
     resolve_thumbnail_or_default,
@@ -32,6 +32,8 @@ class MediaStagingTests(unittest.TestCase):
             target_dir = root / "output" / "symlinks"
             source.parent.mkdir(parents=True)
             source.write_bytes(b"image bytes")
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
 
             def fake_hardlink(src, dst):
                 Path(dst).write_bytes(Path(src).read_bytes())
@@ -40,7 +42,7 @@ class MediaStagingTests(unittest.TestCase):
                 patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
                 patch("cr4te.render_assets.os.link", side_effect=fake_hardlink),
             ):
-                staged = stage_media_file(root / "input", Path("Noomi/image.jpg"), target_dir)
+                staged = stage_media_file(ctx, Path("Noomi/image.jpg"))
 
             self.assertTrue(staged.exists())
             self.assertEqual(staged.read_bytes(), b"image bytes")
@@ -53,16 +55,32 @@ class MediaStagingTests(unittest.TestCase):
             target_dir = root / "output" / "symlinks"
             source.parent.mkdir(parents=True)
             source.write_bytes(b"image bytes")
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
 
             with (
                 patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
                 patch("cr4te.render_assets.os.link", side_effect=OSError("no hardlink")),
             ):
-                with self.assertRaisesRegex(MediaStagingError, "will not copy media files automatically"):
-                    stage_media_file(root / "input", Path("Noomi/image.jpg"), target_dir)
+                with self.assertRaises(BuildIssueError) as caught:
+                    stage_media_file(ctx, Path("Noomi/image.jpg"))
 
+            self.assertEqual(caught.exception.issue.code, IssueCode.MEDIA_STAGING_FAILURE)
+            self.assertIn("will not copy media files automatically", caught.exception.issue.message)
             staged_files = [path for path in target_dir.rglob("*") if path.is_file()]
             self.assertEqual(staged_files, [])
+
+    def test_missing_media_is_reported_and_not_staged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
+
+            staged = stage_media_file(ctx, Path("Noomi/missing.jpg"))
+
+            self.assertIsNone(staged)
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.MISSING_MEDIA)
 
     def test_existing_thumbnail_is_reused_when_source_is_not_newer(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -189,6 +207,49 @@ class MediaStagingTests(unittest.TestCase):
                 resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
 
             self.assertEqual(sidecar_path.read_text(encoding="ascii"), "new-source-hash")
+
+    def test_thumbnail_failure_uses_default_and_reports_issue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            image_path.write_bytes(b"not an image")
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+            prepare_default_thumbnails(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(thumb_path, ctx.get_default_thumb_path(ThumbType.GALLERY))
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.THUMBNAIL_FAILURE)
+
+    def test_thumbnail_failure_raises_in_strict_mode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            image_path.write_bytes(b"not an image")
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(
+                root,
+                output_dir,
+                config.site_labels,
+                config.site_rendering,
+                issue_policy=BuildIssuePolicy(strict=True),
+            )
+            prepare_output_dirs(ctx)
+            prepare_default_thumbnails(ctx)
+
+            with self.assertRaises(BuildIssueError) as caught:
+                resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(caught.exception.issue.code, IssueCode.THUMBNAIL_FAILURE)
 
     def test_thumbnail_is_reused_when_source_folder_is_newer_and_hash_matches(self):
         with tempfile.TemporaryDirectory() as tmp:

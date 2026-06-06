@@ -148,12 +148,12 @@ class AudioUtilsTests(unittest.TestCase):
         with patch.dict(sys.modules, {"mutagen": fake_mutagen}):
             self.assertEqual(get_audio_duration_seconds(Path("track.mp3")), 42.5)
 
-    def test_get_audio_duration_seconds_returns_zero_when_mutagen_fails(self):
+    def test_get_audio_duration_seconds_raises_when_mutagen_fails(self):
         fake_mutagen = types.SimpleNamespace(File=lambda path: (_ for _ in ()).throw(RuntimeError("bad audio")))
 
         with patch.dict(sys.modules, {"mutagen": fake_mutagen}):
-            with self.assertLogs("cr4te.utils.audio_utils", level="WARNING"):
-                self.assertEqual(get_audio_duration_seconds(Path("track.mp3")), 0)
+            with self.assertRaises(RuntimeError):
+                get_audio_duration_seconds(Path("track.mp3"))
 
 
 class JsonUtilsTests(unittest.TestCase):

@@ -12,11 +12,11 @@ sys.path.insert(0, str(ROOT / "src"))
 from PIL import Image
 
 from cr4te.config_manager import apply_cli_overrides, load_config
-from cr4te.build_issues import BuildIssueError, IssueCode, IssueScope
+from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
 from cr4te.cr4te import _build_cmd_handler, _file_uri
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
-from cr4te.html_builder import build_html_pages_streaming
+from cr4te.html_builder import HtmlBuildResult, build_html_pages_streaming
 from cr4te.library_builder import build_library_index, load_indexed_creator
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
 from cr4te.media_counts import MediaCounts
@@ -172,6 +172,44 @@ class HtmlBuildTests(unittest.TestCase):
             self.assertEqual(len(summary.issues), 1)
             self.assertEqual(summary.issues[0].scope, IssueScope.THEME)
             self.assertEqual(summary.issues[0].path, invalid_theme)
+
+    def test_build_command_combines_render_asset_issues_into_final_summary(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            missing_media = root / "Noomi" / "missing.jpg"
+            root.mkdir()
+            issue = BuildIssue(
+                path=missing_media,
+                scope=IssueScope.ASSET,
+                code=IssueCode.MISSING_MEDIA,
+                message="Source media file does not exist",
+            )
+            args = SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_strategy=None,
+                open=False,
+                force=True,
+                clean=False,
+                strict=False,
+                themes_dir=None,
+            )
+
+            with (
+                patch(
+                    "cr4te.cr4te.build_html_pages_streaming",
+                    return_value=HtmlBuildResult(output_dir / "index.html", (issue,)),
+                ),
+                patch("cr4te.cr4te.log_build_summary") as log_build_summary,
+            ):
+                _build_cmd_handler(args)
+
+            summary = log_build_summary.call_args.args[0]
+            self.assertEqual(summary.issues, (issue,))
 
     def test_build_command_aborts_before_side_effects_for_missing_themes_directory(self):
         with tempfile.TemporaryDirectory() as tmp:

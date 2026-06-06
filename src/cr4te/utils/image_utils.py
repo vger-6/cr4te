@@ -1,4 +1,3 @@
-import logging
 import platform
 from pathlib import Path
 
@@ -6,8 +5,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from ..enums.orientation import Orientation
 from ..media_cache import ImageDimensions
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     "create_centered_text_image",
@@ -18,17 +15,15 @@ __all__ = [
 
 
 def read_image_dimensions(image_path: Path) -> ImageDimensions:
-    try:
-        with Image.open(image_path) as img:
-            return ImageDimensions(width=img.width, height=img.height)
-
-    except Exception as exc:
-        logger.warning(f"Could not open image '{image_path}': {exc}")
-        return ImageDimensions()
+    with Image.open(image_path) as img:
+        return ImageDimensions(width=img.width, height=img.height)
 
 
 def infer_image_orientation(image_path: Path) -> Orientation:
-    return read_image_dimensions(image_path).orientation
+    try:
+        return read_image_dimensions(image_path).orientation
+    except Exception:
+        return Orientation.LANDSCAPE
 
 
 def generate_thumbnail(source_path: Path, target_height: int) -> Image:

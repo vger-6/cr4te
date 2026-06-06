@@ -1,11 +1,17 @@
 from __future__ import annotations
 
-import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from .asset_issues import (
+    media_inspection_failure_issue,
+    media_staging_failure_issue,
+    missing_media_issue,
+    thumbnail_failure_issue,
+)
+from .build_issues import BuildIssueError
 from .html_context import HtmlBuildContext
 from .enums.orientation import Orientation
 from .enums.thumb_type import ThumbType
@@ -17,20 +23,12 @@ __all__ = [
     "build_thumbnail_context",
     "build_default_thumbnail_specs",
     "DefaultThumbnailSpec",
-    "MediaStagingError",
     "get_image_dimensions",
     "get_image_orientation",
     "prepare_default_thumbnails",
     "resolve_thumbnail_or_default",
     "stage_media_file",
 ]
-
-logger = logging.getLogger(__name__)
-
-
-class MediaStagingError(RuntimeError):
-    """Raised when media cannot be staged without copying source files."""
-
 
 @dataclass(frozen=True)
 class DefaultThumbnailSpec:
@@ -66,13 +64,13 @@ def build_default_thumbnail_specs(ctx: HtmlBuildContext) -> tuple[DefaultThumbna
     )
 
 
-def stage_media_file(input_dir: Path, rel_source_path: Path, target_dir: Path) -> Path:
-    source_path = (input_dir / rel_source_path).resolve()
-    target_path = target_dir / path_utils.build_unique_path(rel_source_path)
+def stage_media_file(ctx: HtmlBuildContext, rel_source_path: Path) -> Path | None:
+    source_path = (ctx.input_dir / rel_source_path).resolve()
+    target_path = ctx.symlinks_dir / path_utils.build_unique_path(rel_source_path)
 
-    if not source_path.exists():
-        logger.warning(f"Cannot stage media file: source file not found: {source_path}")
-        return target_path
+    if not source_path.is_file():
+        ctx.report_issue(missing_media_issue(source_path))
+        return None
 
     if target_path.exists():
         return target_path
@@ -84,13 +82,14 @@ def stage_media_file(input_dir: Path, rel_source_path: Path, target_dir: Path) -
         try:
             os.link(source_path, target_path)
         except OSError as hardlink_exc:
-            raise MediaStagingError(
+            message = (
                 "Cannot stage media file because creating both a symbolic link and a hard link failed. "
                 "cr4te will not copy media files automatically because copying large libraries can be expensive. "
                 f"Source: {source_path}. Target: {target_path}. "
                 f"Symbolic link error: {symlink_exc}. Hard link error: {hardlink_exc}. "
                 "Enable symlink permissions or place input and output on the same filesystem so hard links can be used."
-            ) from hardlink_exc
+            )
+            raise BuildIssueError(media_staging_failure_issue(source_path, message)) from hardlink_exc
 
     return target_path
 
@@ -104,7 +103,12 @@ def resolve_thumbnail_or_default(ctx: HtmlBuildContext, rel_image_path: Optional
 def build_thumbnail_context(ctx: HtmlBuildContext, rel_image_path: Optional[str], thumb_type: ThumbType) -> ThumbnailContext:
     thumb_path = resolve_thumbnail_or_default(ctx, rel_image_path, thumb_type)
     rel_thumbnail_path = path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
-    dimensions = get_image_dimensions(ctx, thumb_path)
+    source_path = ctx.input_dir / rel_image_path if rel_image_path else thumb_path
+    dimensions = get_image_dimensions(ctx, thumb_path, issue_path=source_path)
+    if not dimensions.width or not dimensions.height:
+        thumb_path = ctx.get_default_thumb_path(thumb_type)
+        rel_thumbnail_path = path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
+        dimensions = get_image_dimensions(ctx, thumb_path)
 
     return ThumbnailContext(
         rel_thumbnail_path=rel_thumbnail_path,
@@ -113,8 +117,15 @@ def build_thumbnail_context(ctx: HtmlBuildContext, rel_image_path: Optional[str]
     )
 
 
-def get_image_dimensions(ctx: HtmlBuildContext, path: Path) -> ImageDimensions:
-    return ctx.media_cache.image_dimensions(path, lambda: image_utils.read_image_dimensions(path))
+def get_image_dimensions(ctx: HtmlBuildContext, path: Path, issue_path: Path | None = None) -> ImageDimensions:
+    def load_dimensions() -> ImageDimensions:
+        try:
+            return image_utils.read_image_dimensions(path)
+        except Exception as exc:
+            ctx.report_issue(media_inspection_failure_issue(issue_path or path, exc), exc)
+            return ImageDimensions()
+
+    return ctx.media_cache.image_dimensions(path, load_dimensions)
 
 
 def get_image_orientation(ctx: HtmlBuildContext, path: Path) -> Orientation:
@@ -147,6 +158,10 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
     source_path = ctx.input_dir / rel_image_path
     sidecar_path = _source_hash_sidecar_path(thumb_path)
 
+    if not source_path.is_file():
+        ctx.report_issue(missing_media_issue(source_path))
+        return ctx.get_default_thumb_path(thumb_type)
+
     try:
         if not thumb_path.exists():
             _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
@@ -172,6 +187,7 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
         _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
         sidecar_path.write_text(source_hash, encoding="ascii")
     except Exception as exc:
-        logger.error(f"Error resolving thumbnail for {rel_image_path}: {exc}")
+        ctx.report_issue(thumbnail_failure_issue(source_path, exc), exc)
+        return ctx.get_default_thumb_path(thumb_type)
 
     return thumb_path

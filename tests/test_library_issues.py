@@ -5,9 +5,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
+from cr4te.build_issues import BuildIssue, BuildIssueError, BuildIssuePolicy, IssueCode, IssueScope
 from cr4te.library_issues import (
-    BuildIssuePolicy,
     invalid_collaboration_reference_issue,
     issue_from_exception,
 )
@@ -39,6 +38,20 @@ class LibraryIssuesTests(unittest.TestCase):
         )
         policy = BuildIssuePolicy(strict=False)
 
+        policy.handle(issue)
+
+        self.assertEqual(policy.issues, [issue])
+
+    def test_non_strict_policy_deduplicates_scope_code_and_path(self):
+        issue = BuildIssue(
+            path=Path("Ada"),
+            scope=IssueScope.ASSET,
+            code=IssueCode.MISSING_MEDIA,
+            message="Missing",
+        )
+        policy = BuildIssuePolicy(strict=False)
+
+        policy.handle(issue)
         policy.handle(issue)
 
         self.assertEqual(policy.issues, [issue])

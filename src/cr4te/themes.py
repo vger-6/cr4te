@@ -4,9 +4,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from .build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
+from .build_issues import BuildIssue, BuildIssueError, BuildIssuePolicy, IssueCode, IssueScope
 from .constants import CR4TE_THEMES_DIR
-from .library_issues import BuildIssuePolicy
 
 __all__ = [
     "DEFAULT_THEME_ID",

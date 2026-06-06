@@ -1,7 +1,9 @@
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional
 
+from .build_issues import BuildIssue, BuildIssuePolicy
 from .html_context import HtmlBuildContext
 from .enums.visible_fields import CreatorField
 from .library_index import CreatorSummary, LibraryIndex
@@ -31,9 +33,15 @@ from .template_renderer import (
 )
 from .themes import ThemeRegistry
 
-__all__ = ["build_html_pages_streaming"]
+__all__ = ["HtmlBuildResult", "build_html_pages_streaming"]
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class HtmlBuildResult:
+    index_html_path: Path
+    issues: tuple[BuildIssue, ...] = ()
 
 
 def build_html_pages_streaming(
@@ -43,8 +51,16 @@ def build_html_pages_streaming(
     site_labels: SiteLabels,
     site_rendering: SiteRendering,
     load_creator: Callable[[CreatorSummary], CreatorModel],
-) -> Path:
-    ctx = HtmlBuildContext(index.input_dir, output_dir, site_labels, site_rendering, themes=theme_registry.themes)
+    strict: bool = False,
+) -> HtmlBuildResult:
+    ctx = HtmlBuildContext(
+        index.input_dir,
+        output_dir,
+        site_labels,
+        site_rendering,
+        themes=theme_registry.themes,
+        issue_policy=BuildIssuePolicy(strict=strict),
+    )
 
     prepare_output_dirs(ctx)
     copy_static_assets(ctx)
@@ -91,4 +107,4 @@ def build_html_pages_streaming(
     render_project_overview_page(ctx, project_entries)
     render_tags_page(ctx, all_tags)
 
-    return ctx.index_html_path
+    return HtmlBuildResult(ctx.index_html_path, ctx.issues)

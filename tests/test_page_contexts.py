@@ -9,9 +9,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from cr4te.config_manager import apply_cli_overrides, load_config
+from cr4te.build_issues import IssueCode
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
+from cr4te.enums.thumb_type import ThumbType
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_index import CreatorSummary, ProjectSummary
 from cr4te.media_counts import MediaCounts
@@ -22,7 +24,7 @@ from cr4te.page_contexts import (
     build_project_page_context,
     compute_creator_stats,
 )
-from cr4te.render_assets import prepare_default_thumbnails
+from cr4te.render_assets import prepare_default_thumbnails, resolve_thumbnail_or_default
 from cr4te.render_models import CreatorPageContext, ProjectCardContext, ProjectPageContext
 from cr4te.schemas.library_schema import Creator, Project
 
@@ -94,6 +96,22 @@ class PageContextTests(unittest.TestCase):
             self.assertIsInstance(page.projects[0], ProjectCardContext)
             self.assertEqual(page.projects[0].title, "Displayed Landscapes")
             self.assertEqual(page.projects[0].media_counts.values(), (0, 0, 0, 0, 0))
+
+    def test_creator_page_uses_default_for_unreadable_cached_portrait_thumbnail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
+            creator = person(portrait="Noomi/portrait.jpg")
+            ctx = context_for(input_dir, output_dir)
+            thumb_path = resolve_thumbnail_or_default(ctx, creator.portrait, ThumbType.PORTRAIT)
+            thumb_path.write_bytes(b"not an image")
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.MEDIA_INSPECTION_FAILURE)
 
     def test_collaboration_creator_page_context_uses_typed_contexts(self):
         with tempfile.TemporaryDirectory() as tmp:

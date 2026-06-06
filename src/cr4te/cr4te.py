@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 
+from .build_issues import BuildIssueError
 from .build_summary import BuildSummary, log_build_summary
 from .config_manager import load_config, apply_cli_overrides
 from .schemas.config_schema import AppConfig
@@ -16,7 +17,6 @@ from .html_builder import build_html_pages_streaming
 from .library_builder import build_library_index, load_indexed_creator
 from .metadata_manager import clean_metadata_files, reconcile_metadata_files
 from .output_preparation import clear_output_folder
-from .render_assets import MediaStagingError
 from .themes import discover_themes
 
 # Short flags
@@ -166,27 +166,31 @@ def _build_cmd_handler(args):
 
     logging.info("Building HTML site...")
     try:
-        index_html_path = build_html_pages_streaming(
+        html_result = build_html_pages_streaming(
             library_index,
             theme_registry,
             output_dir,
             config.site_labels,
             config.site_rendering,
             lambda summary: load_indexed_creator(library_index, summary, config.media_rules),
+            strict=args.strict,
         )
-    except MediaStagingError as exc:
+    except BuildIssueError as exc:
         logging.error(str(exc))
         logging.info("Aborting.")
         raise SystemExit(1) from exc
 
     log_build_summary(
-        BuildSummary.from_library_index(library_index, additional_issues=theme_registry.issues),
+        BuildSummary.from_library_index(
+            library_index,
+            additional_issues=(*theme_registry.issues, *html_result.issues),
+        ),
         logging.getLogger(__name__),
     )
 
     if args.open:
         logging.info("Opening index.html...")
-        webbrowser.open(_file_uri(index_html_path))
+        webbrowser.open(_file_uri(html_result.index_html_path))
         
 def _print_config_cmd_handler(args):
     config = _load_config(args.config)

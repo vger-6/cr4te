@@ -7,16 +7,12 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .build_issues import BuildIssueError, IssueScope
+from .build_issues import BuildIssueError, BuildIssuePolicy, IssueScope
 from .constants import README_FILE_NAME
 from .creator_classification import infer_creator_type
 from .enums.creator_type import CreatorType
 from .library_index import CreatorSummary, LibraryIndex, summarize_creator
-from .library_issues import (
-    BuildIssuePolicy,
-    invalid_collaboration_reference_issue,
-    issue_from_exception,
-)
+from .library_issues import invalid_collaboration_reference_issue, issue_from_exception
 from .library_metadata import (
     MetadataLoadError,
     load_json_model,

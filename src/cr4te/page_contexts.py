@@ -12,7 +12,7 @@ from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from .html_paths import build_rel_creator_html_path, build_rel_project_html_path
 from .media_counts import count_media_groups
-from .render_assets import build_thumbnail_context, get_image_orientation, resolve_thumbnail_or_default
+from .render_assets import build_thumbnail_context, get_image_orientation
 from .render_media import build_media_group_contexts
 from .render_metadata import (
     build_collaboration_meta_entries,
@@ -38,7 +38,7 @@ from .tag_contexts import (
     merge_tag_maps,
 )
 from .utils.sorting_utils import dated_title_sort_key
-from .utils import date_utils, path_utils, text_utils
+from .utils import date_utils, text_utils
 
 __all__ = [
     "CreatorLoader",
@@ -72,13 +72,14 @@ def build_project_page_context(
     get_creator: CreatorLoader,
 ) -> ProjectPageContext:
     visible = ctx.visible_project_fields
-    thumb_path = resolve_thumbnail_or_default(ctx, project.cover, ThumbType.COVER)
+    thumbnail = build_thumbnail_context(ctx, project.cover, ThumbType.COVER)
+    thumb_path = ctx.output_dir / thumbnail.rel_thumbnail_path
 
     base_context = ProjectPageContext(
         title=project.display_title,
         release_date=date_utils.format_nice_date(project.release_date) if ProjectField.RELEASE_DATE in visible else "",
         meta_entries=build_project_meta_entries(ctx, project),
-        rel_thumbnail_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        rel_thumbnail_path=thumbnail.rel_thumbnail_path,
         thumbnail_orientation=get_image_orientation(ctx, thumb_path),
         info_html=text_utils.markdown_to_html(project.info),
         tags=merge_tag_maps(project.tags),
@@ -104,12 +105,13 @@ def build_creator_page_context(
     get_creator: CreatorLoader,
     creator_stats: CreatorStats,
 ) -> CreatorPageContext:
-    thumb_path = resolve_thumbnail_or_default(ctx, creator.portrait, ThumbType.PORTRAIT)
+    thumbnail = build_thumbnail_context(ctx, creator.portrait, ThumbType.PORTRAIT)
+    thumb_path = ctx.output_dir / thumbnail.rel_thumbnail_path
 
     base_context = CreatorPageContext(
         type=creator.type.value,
         name=creator.display_name,
-        rel_portrait_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        rel_portrait_path=thumbnail.rel_thumbnail_path,
         portrait_orientation=get_image_orientation(ctx, thumb_path),
         info_html=text_utils.markdown_to_html(creator.info),
         tags=merge_tag_maps(
@@ -181,12 +183,12 @@ def _collect_participant_entries(
 
 
 def _collect_creator_base_entry(ctx: HtmlBuildContext, creator: CreatorModel) -> CreatorProfileContext:
-    thumb_path = resolve_thumbnail_or_default(ctx, creator.portrait, ThumbType.PORTRAIT)
+    thumbnail = build_thumbnail_context(ctx, creator.portrait, ThumbType.PORTRAIT)
 
     return CreatorProfileContext(
         name=creator.display_name,
         rel_html_path=(Path(ctx.html_dir.name) / build_rel_creator_html_path(creator)).as_posix(),
-        rel_portrait_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+        rel_portrait_path=thumbnail.rel_thumbnail_path,
     )
 
 
@@ -295,12 +297,12 @@ def _collect_member_links(
             logger.debug(f"Missing creator reference: {member_name}")
             continue
 
-        thumb_path = resolve_thumbnail_or_default(ctx, member.portrait, ThumbType.PORTRAIT)
+        thumbnail = build_thumbnail_context(ctx, member.portrait, ThumbType.PORTRAIT)
         member_links.append(
             CreatorLinkContext(
                 name=member.display_name,
                 rel_html_path=(Path(ctx.html_dir.name) / build_rel_creator_html_path(member)).as_posix(),
-                rel_thumbnail_path=path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix(),
+                rel_thumbnail_path=thumbnail.rel_thumbnail_path,
             )
         )
 

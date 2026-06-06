@@ -1,28 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from .build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope, IssueSeverity
+from .build_issues import BuildIssue, IssueCode, IssueScope, IssueSeverity
 from .library_metadata import MetadataLoadError
 
 __all__ = [
-    "BuildIssuePolicy",
     "invalid_collaboration_reference_issue",
     "issue_from_exception",
 ]
-
-@dataclass
-class BuildIssuePolicy:
-    strict: bool
-    issues: list[BuildIssue] = field(default_factory=list)
-
-    def handle(self, issue: BuildIssue, exc: Exception | None = None) -> None:
-        if self.strict and issue.severity == IssueSeverity.ERROR:
-            raise BuildIssueError(issue) from exc
-        self.issues.append(issue)
 
 
 def issue_from_exception(path: Path, scope: IssueScope, exc: Exception) -> BuildIssue:
