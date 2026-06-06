@@ -3,10 +3,12 @@ import argparse
 import webbrowser
 import json
 import sys
+from time import perf_counter
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 
 from .build_issues import BuildIssueError
+from .build_metrics import BuildTimings
 from .build_summary import BuildSummary, log_build_summary
 from .config_manager import load_config, apply_cli_overrides
 from .schemas.config_schema import AppConfig
@@ -135,8 +137,10 @@ def _build_cmd_handler(args):
         return
 
     custom_themes_dir = Path(args.themes_dir).resolve() if getattr(args, "themes_dir", None) else None
+    phase_started = perf_counter()
     logging.info("Discovering themes...")
     theme_registry = discover_themes(custom_themes_dir, strict=args.strict)
+    theme_discovery_seconds = perf_counter() - phase_started
 
     if output_dir.exists():
         msg = (
@@ -147,23 +151,31 @@ def _build_cmd_handler(args):
             logging.info("Aborting.")
             return
 
+    phase_started = perf_counter()
+    if output_dir.exists():
         clear_output_folder(output_dir, args.clean)
     else:
         output_dir.mkdir(parents=True, exist_ok=True)
+    output_preparation_seconds = perf_counter() - phase_started
 
     project_facet_fields = config.site_rendering.project_metadata.configured_fields()
 
+    phase_started = perf_counter()
     logging.info("Reconciling metadata...")
     metadata_result = reconcile_metadata_files(input_dir, config.media_rules, project_facet_fields=project_facet_fields)
+    metadata_reconciliation_seconds = perf_counter() - phase_started
     logging.info(
         f"Metadata summary: created={len(metadata_result.created)}, "
         f"updated={len(metadata_result.updated)}, unchanged={len(metadata_result.unchanged)}, "
         f"skipped={len(metadata_result.skipped)}"
     )
 
+    phase_started = perf_counter()
     logging.info("Indexing media library...")
     library_index = build_library_index(input_dir, config.media_rules, strict=args.strict)
+    library_indexing_seconds = perf_counter() - phase_started
 
+    phase_started = perf_counter()
     logging.info("Building HTML site...")
     try:
         html_result = build_html_pages_streaming(
@@ -179,11 +191,20 @@ def _build_cmd_handler(args):
         logging.error(str(exc))
         logging.info("Aborting.")
         raise SystemExit(1) from exc
+    html_rendering_seconds = perf_counter() - phase_started
 
     log_build_summary(
         BuildSummary.from_library_index(
             library_index,
             additional_issues=(*theme_registry.issues, *html_result.issues),
+            timings=BuildTimings(
+                theme_discovery_seconds=theme_discovery_seconds,
+                output_preparation_seconds=output_preparation_seconds,
+                metadata_reconciliation_seconds=metadata_reconciliation_seconds,
+                library_indexing_seconds=library_indexing_seconds,
+                html_rendering_seconds=html_rendering_seconds,
+            ),
+            asset_statistics=html_result.asset_statistics,
         ),
         logging.getLogger(__name__),
     )

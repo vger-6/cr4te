@@ -1,9 +1,10 @@
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
 
 from .build_issues import BuildIssue, BuildIssuePolicy
+from .build_metrics import AssetStatistics
 from .html_context import HtmlBuildContext
 from .enums.visible_fields import CreatorField
 from .library_index import CreatorSummary, LibraryIndex
@@ -42,6 +43,7 @@ logger = logging.getLogger(__name__)
 class HtmlBuildResult:
     index_html_path: Path
     issues: tuple[BuildIssue, ...] = ()
+    asset_statistics: AssetStatistics = field(default_factory=AssetStatistics)
 
 
 def build_html_pages_streaming(
@@ -107,4 +109,4 @@ def build_html_pages_streaming(
     render_project_overview_page(ctx, project_entries)
     render_tags_page(ctx, all_tags)
 
-    return HtmlBuildResult(ctx.index_html_path, ctx.issues)
+    return HtmlBuildResult(ctx.index_html_path, ctx.issues, ctx.asset_statistics)

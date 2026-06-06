@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from cr4te.build_issues import BuildIssue, IssueCode, IssueScope, IssueSeverity
+from cr4te.build_metrics import AssetStatistics, BuildTimings
 from cr4te.build_summary import BuildSummary, log_build_summary
 from cr4te.enums.creator_type import CreatorType
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
@@ -109,7 +110,21 @@ class BuildSummaryTests(unittest.TestCase):
         with self.assertLogs(logger, level="INFO") as clean_logs:
             log_build_summary(clean_summary, logger)
 
-        self.assertEqual(clean_logs.output, ["INFO:cr4te.tests.build_summary:Build summary: creators=1, projects=2, errors=0, warnings=0"])
+        self.assertEqual(
+            clean_logs.output,
+            [
+                "INFO:cr4te.tests.build_summary:Build summary: creators=1, projects=2, errors=0, warnings=0",
+                (
+                    "INFO:cr4te.tests.build_summary:Build timings: themes=0.000s, output=0.000s, "
+                    "metadata=0.000s, indexing=0.000s, rendering=0.000s, total=0.000s"
+                ),
+                "INFO:cr4te.tests.build_summary:Asset links: symbolic=0, hard=0, reused=0",
+                (
+                    "INFO:cr4te.tests.build_summary:Source thumbnails: "
+                    "generated=0, reused=0, default_uses=0, hash_checks=0"
+                ),
+            ],
+        )
 
         with self.assertLogs(logger, level="WARNING") as dirty_logs:
             log_build_summary(dirty_summary, logger)
@@ -153,6 +168,42 @@ class BuildSummaryTests(unittest.TestCase):
         self.assertEqual(summary.creator_count, 1)
         self.assertEqual(summary.project_count, 1)
         self.assertEqual(summary.headline(), "Build summary: creators=1, projects=1, errors=0, warnings=0")
+
+    def test_summary_reports_timings_and_asset_statistics(self):
+        summary = BuildSummary(
+            input_dir=Path("."),
+            creator_count=1,
+            project_count=2,
+            timings=BuildTimings(
+                theme_discovery_seconds=0.1,
+                output_preparation_seconds=0.2,
+                metadata_reconciliation_seconds=0.3,
+                library_indexing_seconds=0.4,
+                html_rendering_seconds=0.5,
+            ),
+            asset_statistics=AssetStatistics(
+                symbolic_links_created=1,
+                hard_links_created=2,
+                media_links_reused=3,
+                source_thumbnails_generated=4,
+                source_thumbnails_reused=5,
+                default_thumbnail_uses=6,
+                source_hash_checks=7,
+            ),
+        )
+
+        self.assertEqual(
+            summary.timing_line(),
+            "Build timings: themes=0.100s, output=0.200s, metadata=0.300s, indexing=0.400s, rendering=0.500s, total=1.500s",
+        )
+        self.assertEqual(
+            summary.asset_statistic_lines(),
+            (
+                "Asset links: symbolic=1, hard=2, reused=3",
+                "Source thumbnails: generated=4, reused=5, default_uses=6, hash_checks=7",
+            ),
+        )
+        self.assertEqual(summary.lines()[1:], (summary.timing_line(), *summary.asset_statistic_lines()))
 
     def test_summary_combines_explicit_non_library_issues(self):
         index = LibraryIndex(input_dir=Path("Artists"), creators=())

@@ -13,6 +13,7 @@ from PIL import Image
 
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
+from cr4te.build_metrics import AssetStatistics
 from cr4te.cr4te import _build_cmd_handler, _file_uri
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
@@ -185,6 +186,11 @@ class HtmlBuildTests(unittest.TestCase):
                 code=IssueCode.MISSING_MEDIA,
                 message="Source media file does not exist",
             )
+            asset_statistics = AssetStatistics(
+                hard_links_created=2,
+                source_thumbnails_generated=3,
+                source_hash_checks=1,
+            )
             args = SimpleNamespace(
                 config=None,
                 input=str(root),
@@ -202,14 +208,17 @@ class HtmlBuildTests(unittest.TestCase):
             with (
                 patch(
                     "cr4te.cr4te.build_html_pages_streaming",
-                    return_value=HtmlBuildResult(output_dir / "index.html", (issue,)),
+                    return_value=HtmlBuildResult(output_dir / "index.html", (issue,), asset_statistics),
                 ),
+                patch("cr4te.cr4te.perf_counter", side_effect=range(10)),
                 patch("cr4te.cr4te.log_build_summary") as log_build_summary,
             ):
                 _build_cmd_handler(args)
 
             summary = log_build_summary.call_args.args[0]
             self.assertEqual(summary.issues, (issue,))
+            self.assertIs(summary.asset_statistics, asset_statistics)
+            self.assertEqual(summary.timings.total_seconds, 5)
 
     def test_build_command_aborts_before_side_effects_for_missing_themes_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -428,7 +437,7 @@ class HtmlBuildTests(unittest.TestCase):
                 loaded.append(summary.name)
                 return load_indexed_creator(index, summary, config.media_rules)
 
-            build_html_pages_streaming(
+            result = build_html_pages_streaming(
                 index,
                 discover_themes(None),
                 output_dir,
@@ -438,6 +447,7 @@ class HtmlBuildTests(unittest.TestCase):
             )
 
             self.assertEqual(loaded, ["Noomi"])
+            self.assertGreater(result.asset_statistics.source_thumbnails_generated, 0)
             self.assertTrue((output_dir / "index.html").exists())
             self.assertTrue((output_dir / "projects.html").exists())
             html_pages = list((output_dir / "html").rglob("*.html"))

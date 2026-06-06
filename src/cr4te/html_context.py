@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List
 
 from .build_issues import BuildIssue, BuildIssuePolicy
+from .build_metrics import AssetStatistics
 from .enums.media_type import MediaType
 from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
@@ -47,6 +48,7 @@ class HtmlBuildContext:
     themes: tuple[ThemeDefinition, ...] = field(default_factory=discover_builtin_themes)
     media_cache: MediaInfoCache = field(default_factory=MediaInfoCache)
     issue_policy: BuildIssuePolicy = field(default_factory=lambda: BuildIssuePolicy(strict=False))
+    asset_statistics: AssetStatistics = field(default_factory=AssetStatistics)
 
     @property
     def issues(self) -> tuple[BuildIssue, ...]:

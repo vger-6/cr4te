@@ -73,14 +73,17 @@ def stage_media_file(ctx: HtmlBuildContext, rel_source_path: Path) -> Path | Non
         return None
 
     if target_path.exists():
+        ctx.asset_statistics.media_links_reused += 1
         return target_path
 
     target_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         os.symlink(source_path, target_path)
+        ctx.asset_statistics.symbolic_links_created += 1
     except OSError as symlink_exc:
         try:
             os.link(source_path, target_path)
+            ctx.asset_statistics.hard_links_created += 1
         except OSError as hardlink_exc:
             message = (
                 "Cannot stage media file because creating both a symbolic link and a hard link failed. "
@@ -97,6 +100,7 @@ def stage_media_file(ctx: HtmlBuildContext, rel_source_path: Path) -> Path | Non
 def resolve_thumbnail_or_default(ctx: HtmlBuildContext, rel_image_path: Optional[str], thumb_type: ThumbType) -> Path:
     if rel_image_path:
         return _get_or_create_thumbnail(ctx, Path(rel_image_path), thumb_type)
+    ctx.asset_statistics.default_thumbnail_uses += 1
     return ctx.get_default_thumb_path(thumb_type)
 
 
@@ -107,6 +111,7 @@ def build_thumbnail_context(ctx: HtmlBuildContext, rel_image_path: Optional[str]
     dimensions = get_image_dimensions(ctx, thumb_path, issue_path=source_path)
     if not dimensions.width or not dimensions.height:
         thumb_path = ctx.get_default_thumb_path(thumb_type)
+        ctx.asset_statistics.default_thumbnail_uses += 1
         rel_thumbnail_path = path_utils.relative_path_from(thumb_path, ctx.output_dir).as_posix()
         dimensions = get_image_dimensions(ctx, thumb_path)
 
@@ -150,6 +155,7 @@ def _regenerate_thumbnail(ctx: HtmlBuildContext, source_path: Path, thumb_path: 
             raise ValueError(f"Unsupported thumbnail extension: {thumb_ext}")
 
     thumb.save(thumb_path, format=image_format)
+    ctx.asset_statistics.source_thumbnails_generated += 1
 
 
 def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_type: ThumbType) -> Path:
@@ -160,6 +166,7 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
 
     if not source_path.is_file():
         ctx.report_issue(missing_media_issue(source_path))
+        ctx.asset_statistics.default_thumbnail_uses += 1
         return ctx.get_default_thumb_path(thumb_type)
 
     try:
@@ -176,18 +183,22 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
 
         parent_mtime_ns = source_path.parent.stat().st_mtime_ns
         if parent_mtime_ns <= thumb_stat.st_mtime_ns:
+            ctx.asset_statistics.source_thumbnails_reused += 1
             return thumb_path
 
+        ctx.asset_statistics.source_hash_checks += 1
         source_hash = file_utils.calculate_sha256(source_path)
         stored_hash = sidecar_path.read_text(encoding="ascii") if sidecar_path.exists() else None
         if source_hash == stored_hash:
             os.utime(thumb_path, ns=(thumb_stat.st_atime_ns, parent_mtime_ns))
+            ctx.asset_statistics.source_thumbnails_reused += 1
             return thumb_path
 
         _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
         sidecar_path.write_text(source_hash, encoding="ascii")
     except Exception as exc:
         ctx.report_issue(thumbnail_failure_issue(source_path, exc), exc)
+        ctx.asset_statistics.default_thumbnail_uses += 1
         return ctx.get_default_thumb_path(thumb_type)
 
     return thumb_path

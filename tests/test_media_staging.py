@@ -47,6 +47,28 @@ class MediaStagingTests(unittest.TestCase):
             self.assertTrue(staged.exists())
             self.assertEqual(staged.read_bytes(), b"image bytes")
             self.assertTrue(staged.is_relative_to(target_dir))
+            self.assertEqual(ctx.asset_statistics.hard_links_created, 1)
+            self.assertEqual(ctx.asset_statistics.symbolic_links_created, 0)
+
+    def test_stage_media_file_counts_created_and_reused_symbolic_links(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "input" / "Noomi" / "image.jpg"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"image bytes")
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
+
+            def fake_symlink(src, dst):
+                Path(dst).write_bytes(Path(src).read_bytes())
+
+            with patch("cr4te.render_assets.os.symlink", side_effect=fake_symlink):
+                first_staged = stage_media_file(ctx, Path("Noomi/image.jpg"))
+                reused_staged = stage_media_file(ctx, Path("Noomi/image.jpg"))
+
+            self.assertEqual(first_staged, reused_staged)
+            self.assertEqual(ctx.asset_statistics.symbolic_links_created, 1)
+            self.assertEqual(ctx.asset_statistics.media_links_reused, 1)
 
     def test_stage_media_file_aborts_when_links_are_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -82,6 +104,17 @@ class MediaStagingTests(unittest.TestCase):
             self.assertEqual(len(ctx.issues), 1)
             self.assertEqual(ctx.issues[0].code, IssueCode.MISSING_MEDIA)
 
+    def test_missing_thumbnail_source_counts_default_use(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
+
+            thumbnail = resolve_thumbnail_or_default(ctx, None, ThumbType.GALLERY)
+
+            self.assertEqual(thumbnail, ctx.get_default_thumb_path(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
+
     def test_existing_thumbnail_is_reused_when_source_is_not_newer(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "input"
@@ -108,6 +141,9 @@ class MediaStagingTests(unittest.TestCase):
             calculate_sha256.assert_not_called()
             generate_thumbnail.assert_not_called()
             self.assertEqual(reused_path, thumb_path)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
+            self.assertEqual(ctx.asset_statistics.source_hash_checks, 0)
 
     def test_thumbnail_is_regenerated_when_source_is_newer(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -137,6 +173,7 @@ class MediaStagingTests(unittest.TestCase):
             calculate_sha256.assert_not_called()
             self.assertEqual(regenerated_path, thumb_path)
             self.assertFalse(sidecar_path.exists())
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
             with Image.open(thumb_path) as image:
                 self.assertEqual(image.height, ctx.get_generated_thumb_height(ThumbType.GALLERY))
                 self.assertEqual(image.width, 225)
@@ -174,6 +211,8 @@ class MediaStagingTests(unittest.TestCase):
             self.assertEqual(regenerated_path, thumb_path)
             calculate_sha256.assert_called_once_with(image_path)
             generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.source_hash_checks, 1)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
             self.assertEqual(
                 thumb_path.with_suffix(".png.sha256").read_text(encoding="ascii"),
                 "new-source-hash",
@@ -226,6 +265,7 @@ class MediaStagingTests(unittest.TestCase):
             self.assertEqual(thumb_path, ctx.get_default_thumb_path(ThumbType.GALLERY))
             self.assertEqual(len(ctx.issues), 1)
             self.assertEqual(ctx.issues[0].code, IssueCode.THUMBNAIL_FAILURE)
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
 
     def test_thumbnail_failure_raises_in_strict_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -279,6 +319,8 @@ class MediaStagingTests(unittest.TestCase):
             self.assertEqual(reused_path, thumb_path)
             generate_thumbnail.assert_not_called()
             self.assertGreater(thumb_path.stat().st_mtime_ns, stale_thumb_ns)
+            self.assertEqual(ctx.asset_statistics.source_hash_checks, 1)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
 
     def test_output_preparation_copies_static_files_and_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:
