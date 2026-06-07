@@ -9,6 +9,15 @@ These guidelines are for future refactors after the metadata/library refactor. D
 - If a new issue clearly needs attention, record the reason and keep the change focused.
 - Prefer concrete bug fixes, product features, or requirement updates over continued structural reshuffling once the architecture goals are met.
 
+## Project Maturity And Compatibility
+
+- cr4te is currently version `0.0.1`. Do not implement backwards-compatibility shims, legacy metadata or configuration handlers, schema migrations, or other treatment of obsolete data shapes.
+- Change current schemas, configuration, and data shapes directly. Update bundled examples, tests, and documentation in the same change.
+- Keep validation strict: obsolete and extra JSON fields fail validation instead of being silently accepted, migrated, or pruned as legacy data.
+- Do not add conversion or recovery paths to preserve legacy user data when current data shapes change.
+- Remove obsolete helpers, mappings, and data-shape handlers as soon as their replacements are in place.
+- Reconsider compatibility behavior only when the project adopts an explicit versioning and compatibility policy.
+
 ## Design Boundaries
 
 - Preserve the streaming/two-pass build shape for large libraries: keep only lightweight overview/index data globally and load/render full creator data one creator at a time where practical.
@@ -20,10 +29,9 @@ These guidelines are for future refactors after the metadata/library refactor. D
 
 ## Data Shapes
 
-- Do not add backwards-compatibility shims or legacy metadata migrations. The current schema is the supported schema.
 - Prefer typed Python-side models where they reduce ambiguity or make behavior easier to test. Raw dicts are acceptable at external JSON boundaries and Jinja-facing edges when that is the simpler interface.
 - Avoid adding mappings in multiple places. If adding a field or facet requires touching many unrelated modules, look for the missing registry or typed boundary.
-- Remove obsolete helpers, mappings, and imports as soon as their replacement is in place.
+- Remove obsolete imports as soon as their replacement is in place.
 
 ## Errors And Logging
 
@@ -34,6 +42,6 @@ These guidelines are for future refactors after the metadata/library refactor. D
 ## Tests And Validation
 
 - Add or adjust focused unit tests with each design-moving refactor.
-- Run dead-code and backwards-compatibility scans after meaningful refactors.
+- Run dead-code and accidental compatibility-path scans after meaningful refactors.
 - Before considering a refactor complete, run the established validation set: linter, unit tests, pyflakes, vulture, diff whitespace check, and the example build.
 - Update docs and the plan/audit files when a refactor changes a durable decision or user-facing config shape.

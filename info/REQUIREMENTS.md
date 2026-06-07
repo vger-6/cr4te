@@ -1,30 +1,77 @@
 # cr4te Requirements
 
-These are durable product/design requirements for cr4te. They must hold during and after the refactoring unless we explicitly revise this file.
+These are durable product and design requirements for cr4te. They must hold unless this file is explicitly revised.
 
-- No backwards compatibility or legacy metadata migration. The current schema is the only supported schema; obsolete or extra JSON fields should fail validation instead of being silently migrated.
-- `build` is the metadata lifecycle command. It creates and reconciles editable metadata before rendering. `init-metadata` and `sync-metadata` must not return.
-- Metadata lives beside the folder it describes. Creator metadata lives in each creator folder's `cr4te.json`; project metadata lives in each project folder's `cr4te.json`. Creator metadata must not nest project metadata under `projects`.
-- Canonical creator names and project titles come exclusively from their folder names. They drive identity, output-path hashes, and creator-reference resolution and must not appear as `name` or `title` fields in `cr4te.json`.
-- Creator `display_name` and project `display_title` are editable metadata whose generated defaults are their folder names. Display values drive visible labels, user-facing sorting, and search; blank display values fall back to the canonical folder name.
-- Collaboration `members` and creator `collaborations` store canonical creator folder names. Resolved references display the referenced creator's `display_name`; unresolved member strings display unchanged.
-- When `build` encounters matching nested project metadata in a creator file, it should seed the corresponding project-level `cr4te.json` before pruning the nested creator entry, so existing filled metadata is not discarded during the layout change.
-- `cr4te.json` contains editable structured metadata only. It must not contain generated scan output such as `media_groups`, and it must not contain narrative `info` fields.
-- Narrative/descriptive text comes only from `README.md` files in creator/project folders.
-- Creator type-specific metadata uses `person` and `collaboration` branches. The inactive branch is pruned when the type changes.
-- Project domain metadata is stored as generic `facets` in the project-level `cr4te.json`. Empty stale facets are pruned, but stale facets with values are kept as a domain-change failsafe.
-- Date metadata accepts only valid calendar dates in `yyyy`, `yyyy-mm`, or `yyyy-mm-dd` form. Display must preserve the stored precision: year-only dates display as a year, month dates display as month and year, and full dates display with day, month, and year.
-- Editable project facet scaffolding is derived from the resolved configuration, specifically `site_rendering.project_metadata.fields`. Domain presets are only one way to produce that configuration; a saved config file must be self-contained for later builds. When a CLI domain override is applied, that domain replaces the active project facet field set instead of merging with existing configured facet fields.
-- Best-effort builds skip invalid creators or invalid projects and report structured issues. Invalid project metadata skips only that project; it does not skip the whole creator. `--strict` fails fast on errors.
-- Build issues remain structured with scope, severity, code, path, and message. Logging/reporting should happen at command/summary boundaries, not deep inside scan helpers.
-- Render-time asset failures must be represented as structured build issues and included in the final build summary instead of existing only as deep helper logs. Repeated failures with the same scope, issue code, and path must be reported only once per build.
-- Best-effort builds must continue after recoverable asset failures without generating known-broken references: failed portrait and cover thumbnails use generated defaults; missing media and unreadable text or gallery images are omitted; and unavailable optional media inspection data, such as audio duration, uses a safe fallback and produces a warning. `--strict` must abort immediately on asset errors but not asset warnings.
-- Generated detail pages must allow only one audio or video element to play at a time. Starting playback must pause the previously active media element without resetting its source, selection, or playback position, regardless of whether playback started through cr4te controls, native browser behavior, or JavaScript.
-- Every successful build must report final phase timings and constant-memory asset statistics. Timings must cover theme discovery, output preparation, metadata reconciliation, library indexing, HTML rendering, and their total. Asset statistics must distinguish created symbolic links, created hard links, reused media links, generated and reused source thumbnails, default-thumbnail uses, and source-hash checks.
-- The CLI build path must preserve the streaming/two-pass concept for large libraries: avoid retaining full media group path lists for the whole library, keep only lightweight index/overview data globally, and load/render one creator at a time where practical.
-- Media staging during `build` must not silently copy source media when links cannot be created. It may use symbolic links or hard links, but if neither link type can be created it must always abort with a structured asset error and a clear message, regardless of strict mode, so large libraries are not copied unexpectedly.
-- Built-in and user-provided themes must use the same discovery, registry, rendering, and output-copy path. Custom themes are loaded only from an explicitly supplied `build --themes-dir` directory as self-contained CSS files named with lowercase portable slugs, must define the matching `.theme-<slug>` selector, and cannot override built-in theme IDs. A supplied themes path that is missing or is not a directory must abort before build side effects. Frozen Aurora remains the explicit default, and theme initialization failures must never leave generated pages hidden.
-- Source-derived thumbnails must be regenerated when the source image has a newer modified time than the existing thumbnail. When only the source image's parent folder is newer, compare the source image's SHA-256 hash with a sidecar containing only the hash; regenerate when the sidecar is missing or differs, and reuse the thumbnail when it matches. Source hashes must only be calculated for this parent-folder freshness check, and other regeneration paths must remove any stale sidecar.
-- Any future cache for image dimensions, thumbnails, audio durations, or similar expensive data must be bounded or disk-backed. Do not introduce an unbounded in-memory cache for whole-library media data.
-- Jinja templates may receive dict-like render contexts for now, but Python-side assembly should continue moving toward typed render/view models where that improves clarity and testability.
-- Refactors should remove dead code, obsolete mappings, and unused compatibility paths as soon as their replacement is in place. Do not keep legacy shims or old data-shape handlers for hypothetical future migration.
+## Requirement Conventions
+
+- Each requirement has a stable ID for references from tests, documentation, issues, and commits.
+- `must` and `must not` describe required behavior.
+- Implementation and refactoring guidance belongs in [REFACTORING_GUIDELINES.md](REFACTORING_GUIDELINES.md).
+- Planned but uncommitted product ideas belong in [TODO.md](TODO.md).
+
+## Metadata And Identity
+
+- **META-001:** Metadata must live beside the folder it describes. Creator metadata lives in each creator folder's `cr4te.json`; project metadata lives in each project folder's `cr4te.json`. Creator metadata must not nest project metadata under `projects`.
+- **META-002:** Canonical creator names and project titles must come exclusively from their folder names. They drive identity, output-path hashes, and creator-reference resolution and must not appear as `name` or `title` fields in `cr4te.json`.
+- **META-003:** Creator `display_name` and project `display_title` must be editable metadata whose generated defaults are their folder names. Display values drive visible labels, user-facing sorting, and search; blank display values must fall back to the canonical folder name.
+- **META-004:** Collaboration `members` and creator `collaborations` must store canonical creator folder names. Resolved references display the referenced creator's `display_name`; unresolved member strings display unchanged.
+- **META-005:** `cr4te.json` must contain editable structured metadata only. It must not contain generated scan output such as `media_groups`, and it must not contain narrative `info` fields.
+- **META-006:** Narrative and descriptive text must come only from `README.md` files in creator and project folders.
+- **META-007:** Creator type-specific metadata must use `person` and `collaboration` branches. The inactive branch must be pruned when the creator type changes.
+- **META-008:** Project domain metadata must be stored as generic `facets` in the project-level `cr4te.json`. Empty stale facets must be pruned, but stale facets with values must be retained as a domain-change failsafe.
+- **META-009:** Date metadata must accept only valid calendar dates in `yyyy`, `yyyy-mm`, or `yyyy-mm-dd` form. Display must preserve the stored precision: year-only dates display as a year, month dates display as month and year, and full dates display with day, month, and year.
+
+## Metadata Lifecycle And Configuration
+
+- **LIFE-001:** `build` must be the metadata lifecycle command. It creates and reconciles editable metadata before rendering. `init-metadata` and `sync-metadata` must not be available.
+- **LIFE-002:** Editable project facet scaffolding must be derived from the resolved `site_rendering.project_metadata.fields` configuration.
+- **LIFE-003:** Domain presets must be only one way to produce resolved project facet configuration. A saved configuration file must be self-contained for later builds.
+- **LIFE-004:** A CLI domain override must replace the active project facet field set instead of merging with the configured facet fields.
+
+## Build Modes And Issue Reporting
+
+- **BUILD-001:** Best-effort builds must skip invalid creators or invalid projects and report structured issues. Invalid project metadata must skip only that project, not the whole creator.
+- **BUILD-002:** `--strict` must fail fast on errors.
+- **BUILD-003:** Build issues must remain structured with scope, severity, code, path, and message.
+- **BUILD-004:** Render-time asset failures must be represented as structured build issues and included in the final build summary instead of existing only as logs.
+- **BUILD-005:** Repeated failures with the same scope, issue code, and path must be reported only once per build.
+- **BUILD-006:** Every successful build must report final phase timings for theme discovery, output preparation, metadata reconciliation, library indexing, HTML rendering, and their total.
+- **BUILD-007:** Every successful build must report constant-memory asset statistics that distinguish created symbolic links, created hard links, reused media links, generated and reused source thumbnails, default-thumbnail uses, and source-hash checks.
+
+## Asset Staging And Failure Handling
+
+- **ASSET-001:** Best-effort builds must continue after recoverable asset failures without generating known-broken references.
+- **ASSET-002:** Failed portrait and cover thumbnails must use generated defaults.
+- **ASSET-003:** Missing media and unreadable text or gallery images must be omitted from generated pages.
+- **ASSET-004:** Unavailable optional media inspection data, such as audio duration, must use a safe fallback and produce a warning.
+- **ASSET-005:** `--strict` must abort immediately on asset errors but not on asset warnings.
+- **ASSET-006:** Media staging during `build` must not silently copy source media when links cannot be created. It may use symbolic links or hard links.
+- **ASSET-007:** If neither symbolic nor hard links can be created, media staging must abort with a structured asset error and a clear message regardless of strict mode.
+
+## Thumbnail Freshness
+
+- **THUMB-001:** A source-derived thumbnail must be regenerated when its source image has a newer modified time than the existing thumbnail.
+- **THUMB-002:** When only the source image's parent folder is newer, thumbnail freshness must be determined by comparing the source image's SHA-256 hash with a sidecar containing only the hash.
+- **THUMB-003:** A thumbnail must be regenerated when the required hash sidecar is missing or differs, and reused when the hash matches.
+- **THUMB-004:** Source hashes must be calculated only for the parent-folder freshness check. Other thumbnail regeneration paths must remove any stale hash sidecar.
+
+## Generated Site Behavior
+
+- **SITE-001:** Generated detail pages must allow only one audio or video element to play at a time.
+- **SITE-002:** Starting playback must pause the previously active media element without resetting its source, selection, or playback position, regardless of whether playback started through cr4te controls, native browser behavior, or JavaScript.
+
+## Themes
+
+- **THEME-001:** Built-in and user-provided themes must use the same discovery, registry, rendering, and output-copy path.
+- **THEME-002:** Custom themes must be loaded only from an explicitly supplied `build --themes-dir` directory.
+- **THEME-003:** Custom themes must be self-contained CSS files named with lowercase portable slugs and must define the matching `.theme-<slug>` selector.
+- **THEME-004:** Custom themes must not override built-in theme IDs.
+- **THEME-005:** A supplied themes path that is missing or is not a directory must abort before build side effects.
+- **THEME-006:** Frozen Aurora must remain the explicit default theme.
+- **THEME-007:** Theme initialization failures must never leave generated pages hidden.
+
+## Architecture And Scalability Invariants
+
+- **ARCH-001:** The CLI build path must preserve a streaming, two-pass design suitable for large libraries.
+- **ARCH-002:** The build path must not retain full media-group path lists for the whole library and must keep only lightweight index and overview data globally.
+- **ARCH-003:** Any cache for image dimensions, thumbnails, audio durations, or similarly expensive data must be bounded or disk-backed. Whole-library media data must not be retained in an unbounded in-memory cache.
