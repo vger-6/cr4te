@@ -40,6 +40,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls._build_example_site(cls.site_dir)
         cls._build_example_site(cls.paginated_site_dir, cls._write_paginated_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
+        cls.caption_project_path = cls._find_caption_project_page()
         cls._start_static_server()
         cls._start_browser()
 
@@ -113,6 +114,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             if "audio-gallery" in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain an audio project page")
+
+    @classmethod
+    def _find_caption_project_page(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            if "image-caption-section" in path.read_text(encoding="utf-8"):
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain an image-caption project page")
 
     @classmethod
     def _start_static_server(cls):
@@ -309,6 +317,20 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.assertIn("theme-frozen-aurora", self.page.locator("body").get_attribute("class") or "")
         self.assertEqual(self.page.locator("body").evaluate("body => getComputedStyle(body).display"), "block")
+        self.assertNoBrowserErrors()
+
+    def test_caption_toggle_works_when_local_storage_is_restricted(self):
+        self.page.add_init_script(
+            "Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });"
+        )
+
+        self.open_page(self.caption_project_path)
+        section = self.page.locator(".image-caption-section").first
+        self.assertIn("no-captions", section.get_attribute("class") or "")
+
+        section.locator(".caption-toggle-btn").click()
+
+        self.assertNotIn("no-captions", section.get_attribute("class") or "")
         self.assertNoBrowserErrors()
 
     def test_tags_page_renders_and_initializes_theme(self):

@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 ASSET_JS_DIR = ROOT / "src" / "cr4te" / "assets" / "js"
+ASSET_CSS_DIR = ROOT / "src" / "cr4te" / "assets" / "css"
 TEMPLATE_DIR = ROOT / "src" / "cr4te" / "templates"
 
 LEGACY_GLOBAL_PATTERNS = (
@@ -178,6 +179,18 @@ class JavaScriptContractTests(unittest.TestCase):
         ):
             with self.subTest(theme_class=theme_class):
                 self.assertNotIn(theme_class, source)
+
+    def test_caption_toggle_handles_restricted_storage(self):
+        source = (ASSET_JS_DIR / "image_captions_toggle.js").read_text(encoding="utf-8")
+
+        self.assertIn("try {", source)
+        self.assertIn("localStorage.getItem", source)
+        self.assertIn("localStorage.setItem", source)
+
+    def test_base_css_does_not_import_separately_linked_tokens(self):
+        source = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        self.assertNotIn('@import url("tokens.css")', source)
 
     def test_templates_do_not_hide_body_until_theme_javascript_runs(self):
         source = read_all(sorted(TEMPLATE_DIR.glob("*.j2")))

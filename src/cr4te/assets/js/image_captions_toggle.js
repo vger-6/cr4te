@@ -4,6 +4,22 @@ window.cr4te.onReady(function () {
   const sections = document.querySelectorAll(".image-caption-section");
   if (!sections.length) return;
 
+  function loadCaptionsEnabled() {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  function saveCaptionsEnabled(enabled) {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(enabled));
+    } catch {
+      // Caption toggling still works for the current page.
+    }
+  }
+
   function updateCaptionTooltip(sectionBox) {
     const button = sectionBox.querySelector(".caption-toggle-btn");
     if (!button) return;
@@ -18,7 +34,7 @@ window.cr4te.onReady(function () {
   }
 
   // Restore state
-  const captionsEnabled = localStorage.getItem(STORAGE_KEY) === "true";
+  const captionsEnabled = loadCaptionsEnabled();
 
   sections.forEach(sectionBox => {
     if (captionsEnabled) {
@@ -35,7 +51,7 @@ window.cr4te.onReady(function () {
       const isNowHidden = sectionBox.classList.toggle("no-captions");
 
       // Save global state
-      localStorage.setItem(STORAGE_KEY, !isNowHidden);
+      saveCaptionsEnabled(!isNowHidden);
 
       // Apply to ALL sections so they stay in sync
       sections.forEach(sec => {

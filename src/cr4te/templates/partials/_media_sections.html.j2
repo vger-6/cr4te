@@ -114,7 +114,7 @@
                 {% for image in section.images %}
                   <div class="image-wrapper" data-width="{{ image.image_wrapper_width }}" data-height="{{ image.image_wrapper_height }}">
                     <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank" data-lightbox-title="{{ image.caption }}">
-                      <img class="gallery-image" src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="Image for {{ group.image_label }}" loading="lazy">
+                      <img class="gallery-image" src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="{{ image.caption }}" loading="lazy">
                       <div class=image-caption>
                         <span>{{ image.caption }}</span>
                       </div>

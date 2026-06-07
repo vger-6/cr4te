@@ -15,11 +15,16 @@ from cr4te.enums.image_gallery_building_strategy import ImageGalleryBuildingStra
 from cr4te.enums.orientation import Orientation
 from cr4te.render_models import (
     CreatorProfileContext,
+    GalleryImageContext,
+    MediaGroupContext,
+    MediaSectionContext,
     NavigationItem,
     PageShellContext,
     ProjectPageContext,
     TagCollection,
+    VideoContext,
 )
+from cr4te.enums.media_type import MediaType
 from cr4te.schemas.library_schema import Creator, Project
 from cr4te.template_renderer import env, render_project_page, render_tags_page
 
@@ -80,6 +85,52 @@ class TemplateRendererTests(unittest.TestCase):
         rendered = macro(ImageGalleryBuildingStrategy, ImageGalleryBuildingStrategy.JUSTIFIED)
 
         self.assertEqual(rendered.strip(), "image-gallery--justified")
+
+    def test_gallery_image_alt_text_uses_available_image_metadata(self):
+        site_labels = load_config().site_labels
+        macro = env.get_template("partials/_media_sections.html.j2").module.render_media_groups
+        group = MediaGroupContext(
+            audio_section_title="Audio",
+            image_section_title="Gallery",
+            sections=[
+                MediaSectionContext(
+                    type=MediaType.IMAGE,
+                    images=[
+                        GalleryImageContext(
+                            rel_thumbnail_path="thumb.jpg",
+                            image_wrapper_width=120,
+                            image_wrapper_height=80,
+                            rel_path="photo.jpg",
+                            caption="Sunset over water",
+                        )
+                    ],
+                )
+            ],
+        )
+
+        rendered = str(macro("", [group], 450, 24, site_labels))
+
+        self.assertIn('alt="Sunset over water"', rendered)
+        self.assertNotIn('alt="Image for "', rendered)
+
+    def test_video_source_does_not_claim_an_incorrect_media_type(self):
+        site_labels = load_config().site_labels
+        macro = env.get_template("partials/_media_sections.html.j2").module.render_media_groups
+        group = MediaGroupContext(
+            audio_section_title="Audio",
+            image_section_title="Gallery",
+            sections=[
+                MediaSectionContext(
+                    type=MediaType.VIDEO,
+                    videos=[VideoContext(rel_path="clip.webm", title="Clip")],
+                )
+            ],
+        )
+
+        rendered = str(macro("", [group], 450, 24, site_labels))
+
+        self.assertIn('<source src="clip.webm">', rendered)
+        self.assertNotIn('type="video/mp4"', rendered)
 
     def test_project_page_renderer_writes_unique_html_path_and_common_template_data(self):
         with tempfile.TemporaryDirectory() as tmp:

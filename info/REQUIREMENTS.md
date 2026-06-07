@@ -59,6 +59,9 @@ These are durable product and design requirements for cr4te. They must hold unle
 
 - **SITE-001:** Generated detail pages must allow only one audio or video element to play at a time.
 - **SITE-002:** Starting playback must pause the previously active media element without resetting its source, selection, or playback position, regardless of whether playback started through cr4te controls, native browser behavior, or JavaScript.
+- **SITE-003:** Generated pages must remain usable when browser storage is unavailable. Features that persist preferences must continue operating for the current page without producing unhandled errors.
+- **SITE-004:** Generated media markup must not misidentify the format of supported media files.
+- **SITE-005:** Generated gallery images must have meaningful alternative text derived from available image metadata.
 
 ## Themes
 

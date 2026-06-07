@@ -1,5 +1,3 @@
-@import url("tokens.css");
-
 body {
   --theme-primary-image-bg: var(--theme-image-bg);
   --theme-primary-image-border: var(--theme-image-border);
