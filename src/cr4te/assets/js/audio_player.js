@@ -18,7 +18,7 @@
 
   function playTrack(audio, liElement) {
     const gallery = audio.closest(".audio-gallery");
-    const listItems = [...liElement.parentElement.querySelectorAll("li")];
+    const listItems = [...gallery.querySelectorAll("[data-audio-action='select-track']")];
 
     const currentIndex = listItems.indexOf(liElement);
     setGalleryState(gallery, listItems, currentIndex);
@@ -64,6 +64,43 @@
     const gallery = liElement.closest(".audio-gallery");
     const audio = gallery.querySelector("audio");
     playTrack(audio, liElement);
+  }
+
+  function getTrackButtons(gallery) {
+    return [...gallery.querySelectorAll("[data-audio-action='select-track']")];
+  }
+
+  function setTrackTabStop(track) {
+    const gallery = track.closest(".audio-gallery");
+    getTrackButtons(gallery).forEach(button => {
+      button.tabIndex = button === track ? 0 : -1;
+    });
+  }
+
+  function focusTrack(track) {
+    setTrackTabStop(track);
+    track.focus();
+  }
+
+  function handleTrackNavigation(event, track) {
+    const tracks = getTrackButtons(track.closest(".audio-gallery"));
+    const currentIndex = tracks.indexOf(track);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowDown") {
+      nextIndex = Math.min(currentIndex + 1, tracks.length - 1);
+    } else if (event.key === "ArrowUp") {
+      nextIndex = Math.max(currentIndex - 1, 0);
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tracks.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    focusTrack(tracks[nextIndex]);
   }
 
   function togglePlay(btn) {
@@ -213,7 +250,7 @@
         updateUIOnPlay(gallery);
         const { index } = getGalleryState(gallery);
         if (index === -1) {
-          const li = gallery.querySelector("li");
+          const li = gallery.querySelector("[data-audio-action='select-track']");
           if (li) playSelectedTrack(li);
         }
       });
@@ -237,6 +274,10 @@
     bindAudioElements();
 
     document.querySelectorAll(".audio-gallery").forEach(gallery => {
+      const tracks = getTrackButtons(gallery);
+      tracks.forEach((track, index) => {
+        track.tabIndex = index === 0 ? 0 : -1;
+      });
       updatePlayPauseIcon(gallery, false);
       updateButtonStates(gallery, false);
     });
@@ -321,11 +362,28 @@
 
     event.preventDefault();
 
-    if (action === "select-track") playSelectedTrack(target);
+    if (action === "select-track") {
+      setTrackTabStop(target);
+      playSelectedTrack(target);
+    }
     if (action === "toggle-play") togglePlay(target);
     if (action === "stop") stopAudio(target);
     if (action === "previous") prevTrack(target);
     if (action === "next") nextTrack(target);
+  });
+
+  document.addEventListener("keydown", event => {
+    const track = event.target.closest("[data-audio-action='select-track']");
+    if (!track) return;
+
+    handleTrackNavigation(event, track);
+  });
+
+  document.addEventListener("focusin", event => {
+    const track = event.target.closest("[data-audio-action='select-track']");
+    if (!track) return;
+
+    setTrackTabStop(track);
   });
 
   document.addEventListener("change", event => {

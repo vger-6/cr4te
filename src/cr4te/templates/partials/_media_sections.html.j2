@@ -48,12 +48,15 @@
               <div class="audio-gallery">
                 <ul id="track-list-{{ loop.index }}">
                   {% for track in section.tracks %}
-                    <li 
-                      data-src="{{ path_to_root }}{{ track.rel_path }}" 
-                      data-audio-action="select-track"
-                      class="track-title">
-                      <span class="track-title-text">{{ track.title }}</span>
-                      <span class="track-duration-text">{{ utils.format_duration(track.duration_seconds) }}</span>
+                    <li>
+                      <button type="button"
+                        data-src="{{ path_to_root }}{{ track.rel_path }}"
+                        data-audio-action="select-track"
+                        class="track-title"
+                        tabindex="{{ 0 if loop.first else -1 }}">
+                        <span class="track-title-text">{{ track.title }}</span>
+                        <span class="track-duration-text">{{ utils.format_duration(track.duration_seconds) }}</span>
+                      </button>
                     </li>
                   {% endfor %}
                 </ul>
@@ -75,15 +78,15 @@
                       {{ icons.next_icon() }}
                     </button>
 
-                    <input type="range" class="media-slider progress-bar" value="0" step="0.02" data-audio-action="seek">
+                    <input type="range" class="media-slider progress-bar" value="0" step="0.02" data-audio-action="seek" aria-label="{{ site_labels.controls.seek }}">
 
                     <span class="time-display">00:00:00 / 00:00:00</span>
 
                     <div class="volume-container">
-                      <button class="control-btn volume-toggle-btn" data-media-action="toggle-mute" title="{{ site_labels.controls.mute }}" aria-label="{{ site_labels.controls.mute }}" data-mute-label="{{ site_labels.controls.mute }}" data-unmute-label="{{ site_labels.controls.unmute }}">
+                      <button class="control-btn volume-toggle-btn" data-media-action="toggle-mute" title="{{ site_labels.controls.mute }}" aria-label="{{ site_labels.controls.mute }}" aria-pressed="false" data-mute-label="{{ site_labels.controls.mute }}" data-unmute-label="{{ site_labels.controls.unmute }}">
                         {{ icons.volume_icon() }}
                       </button>
-                      <input type="range" class="media-slider volume-slider" min="0" max="1" step="0.01" data-audio-action="volume">
+                      <input type="range" class="media-slider volume-slider" min="0" max="1" step="0.01" data-audio-action="volume" aria-label="{{ site_labels.controls.volume }}">
                     </div>
                     <audio preload="metadata" style="display: none;"></audio>
                   </div>
@@ -98,7 +101,7 @@
             <div class="section-title">
               <span>{{ group.image_section_title }}</span>
               <div class="title-actions">
-                <button class="section-action-btn caption-toggle-btn" title="{{ site_labels.controls.show_captions }}" aria-label="{{ site_labels.controls.show_captions }}" data-show-captions-label="{{ site_labels.controls.show_captions }}" data-hide-captions-label="{{ site_labels.controls.hide_captions }}">
+                <button class="section-action-btn caption-toggle-btn" title="{{ site_labels.controls.show_captions }}" aria-label="{{ site_labels.controls.show_captions }}" aria-pressed="false" data-show-captions-label="{{ site_labels.controls.show_captions }}" data-hide-captions-label="{{ site_labels.controls.hide_captions }}">
                   <span class="icon-on">
                     {{ icons.captions_on_icon() }}
                   </span>
@@ -138,7 +141,7 @@
             </div>
             <hr>
             <div class="section-content" style="padding: 0">
-              <iframe class="auto-height-iframe" src="{{ path_to_root }}{{ document.rel_path }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
+              <iframe class="auto-height-iframe" title="{{ document.title }}" src="{{ path_to_root }}{{ document.rel_path }}#toolbar=0&navpanes=0&scrollbar=0"></iframe>
             </div>
           </div>
         {% endfor %}

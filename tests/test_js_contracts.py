@@ -57,6 +57,17 @@ class JavaScriptContractTests(unittest.TestCase):
             with self.subTest(hook=hook):
                 self.assertIn(hook, source)
 
+    def test_interactive_template_controls_use_native_elements(self):
+        media_source = (TEMPLATE_DIR / "partials" / "_media_sections.html.j2").read_text(encoding="utf-8")
+        search_source = (TEMPLATE_DIR / "partials" / "_search_bar.html.j2").read_text(encoding="utf-8")
+        theme_source = (TEMPLATE_DIR / "partials" / "_theme_dropdown.html.j2").read_text(encoding="utf-8")
+
+        self.assertIn('<button type="button"', media_source)
+        self.assertIn('data-audio-action="select-track"', media_source)
+        self.assertIn('<button type="button" id="clear-search"', search_source)
+        self.assertIn('role="menu"', theme_source)
+        self.assertIn('role="menuitemradio"', theme_source)
+
     def test_only_utils_owns_dom_ready_listener(self):
         owners = []
         for path in sorted(ASSET_JS_DIR.glob("*.js")):
@@ -186,6 +197,41 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn("try {", source)
         self.assertIn("localStorage.getItem", source)
         self.assertIn("localStorage.setItem", source)
+
+    def test_toggle_scripts_expose_pressed_state(self):
+        caption_source = (ASSET_JS_DIR / "image_captions_toggle.js").read_text(encoding="utf-8")
+        utils_source = (ASSET_JS_DIR / "utils.js").read_text(encoding="utf-8")
+
+        self.assertIn('setAttribute("aria-pressed"', caption_source)
+        self.assertIn("setAttribute('aria-pressed'", utils_source)
+
+    def test_theme_selector_supports_keyboard_menu_navigation(self):
+        source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
+
+        for key in ("ArrowDown", "ArrowUp", "Home", "End", "Escape"):
+            with self.subTest(key=key):
+                self.assertIn(key, source)
+        self.assertIn("aria-expanded", source)
+        self.assertIn("aria-checked", source)
+
+    def test_media_players_support_scoped_keyboard_shortcuts(self):
+        audio_source = (ASSET_JS_DIR / "audio_player.js").read_text(encoding="utf-8")
+        video_source = (ASSET_JS_DIR / "video_player.js").read_text(encoding="utf-8")
+
+        for key in ("ArrowDown", "ArrowUp", "Home", "End"):
+            with self.subTest(player="audio", key=key):
+                self.assertIn(key, audio_source)
+        for key in ("Space", "Enter"):
+            with self.subTest(player="video", key=key):
+                self.assertIn(key, video_source)
+
+    def test_shared_focus_tokens_and_focus_visible_styles_are_defined(self):
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        self.assertIn("--theme-focus-outline:", tokens)
+        self.assertIn("--theme-focus-outline-width:", tokens)
+        self.assertIn(":focus-visible", base)
 
     def test_base_css_does_not_import_separately_linked_tokens(self):
         source = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")

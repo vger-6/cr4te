@@ -39,6 +39,8 @@ class MediaLabels(StrictConfigModel):
 
 class ControlLabels(StrictConfigModel):
     search_placeholder: str
+    clear_search: str
+    themes: str
     fullscreen: str
     open_in_new_tab: str
     play: str
@@ -48,6 +50,8 @@ class ControlLabels(StrictConfigModel):
     next: str
     mute: str
     unmute: str
+    seek: str
+    volume: str
     show_captions: str
     hide_captions: str
 

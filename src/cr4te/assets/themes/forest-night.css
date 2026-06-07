@@ -22,6 +22,7 @@
   --theme-card-shadow-default: 0 2px 6px rgba(0, 0, 0, 0.15);
   --theme-input-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   --theme-focus-ring: rgba(168, 218, 220, 0.3);
+  --theme-focus-outline: #f4a261;
 
   --theme-link: #a8dadc;
   --theme-link-visited: #f4a261;

@@ -78,6 +78,8 @@ DEFAULT_MEDIA_LABELS = {
 
 DEFAULT_CONTROL_LABELS = {
     "search_placeholder": "Search creators, projects, tags...",
+    "clear_search": "Clear search",
+    "themes": "Themes",
     "fullscreen": "Fullscreen",
     "open_in_new_tab": "Open in new tab",
     "play": "Play",
@@ -87,6 +89,8 @@ DEFAULT_CONTROL_LABELS = {
     "next": "Next",
     "mute": "Mute",
     "unmute": "Unmute",
+    "seek": "Seek",
+    "volume": "Volume",
     "show_captions": "Show captions",
     "hide_captions": "Hide captions",
 }

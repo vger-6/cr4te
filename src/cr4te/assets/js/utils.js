@@ -210,6 +210,7 @@ window.utils.updateMuteControls = function (isMuted = window.utils.getMediaMuted
       button.title = label;
       button.setAttribute('aria-label', label);
     }
+    button.setAttribute('aria-pressed', String(isMuted));
 
     const volumeIcon = button.querySelector('[data-volume]');
     const mutedIcon = button.querySelector('[data-muted]');

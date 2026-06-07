@@ -22,10 +22,8 @@
     svg.querySelector("[data-pause]").style.display = isPlaying ? "inline" : "none";
   }
 
-  function toggleVideoPlay(btn) {
-    const wrapper = btn.closest(".video-wrapper");
-    const video = wrapper.querySelector("video");
-
+  function toggleVideo(video) {
+    const wrapper = video.closest(".video-wrapper");
     if (video.paused) {
       video.play();
       updatePlayPauseButton(wrapper, true);
@@ -33,6 +31,10 @@
       video.pause();
       updatePlayPauseButton(wrapper, false);
     }
+  }
+
+  function toggleVideoPlay(btn) {
+    toggleVideo(btn.closest(".video-wrapper").querySelector("video"));
   }
 
   function seekVideo(input) {
@@ -91,15 +93,13 @@
       updatePlayPauseButton(wrapper, true);
     });
     video.addEventListener("click", () => {
-      const wrapper = video.closest(".video-wrapper");
+      toggleVideo(video);
+    });
+    video.addEventListener("keydown", event => {
+      if (event.code !== "Space" && event.key !== "Enter") return;
 
-      if (video.paused) {
-        video.play();
-        updatePlayPauseButton(wrapper, true);
-      } else {
-        video.pause();
-        updatePlayPauseButton(wrapper, false);
-      }
+      event.preventDefault();
+      toggleVideo(video);
     });
   }
 

@@ -62,6 +62,11 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-003:** Generated pages must remain usable when browser storage is unavailable. Features that persist preferences must continue operating for the current page without producing unhandled errors.
 - **SITE-004:** Generated media markup must not misidentify the format of supported media files.
 - **SITE-005:** Generated gallery images must have meaningful alternative text derived from available image metadata.
+- **SITE-006:** Generated-site controls must use keyboard-operable native controls where the interaction supports them and must have accessible names.
+- **SITE-007:** Keyboard-focused generated-site controls must display a visible focus indicator that does not alter layout and is not shown solely because of mouse interaction.
+- **SITE-008:** Generated-site toggle controls must expose their current state to assistive technologies.
+- **SITE-009:** The theme menu must support conventional keyboard navigation, selection, and Escape-to-close behavior.
+- **SITE-010:** Generated media players must provide conventional, control-scoped keyboard operation without overriding the native keyboard behavior of their buttons and sliders.
 
 ## Themes
 

@@ -20,7 +20,9 @@ function applyTheme(theme) {
 
   // Highlight selected option
   document.querySelectorAll('.theme-option').forEach(el => {
-    el.classList.toggle('selected', el.dataset.theme === selectedTheme);
+    const isSelected = el.dataset.theme === selectedTheme;
+    el.classList.toggle('selected', isSelected);
+    el.setAttribute('aria-checked', String(isSelected));
   });
 }
 
@@ -54,29 +56,103 @@ function initThemeDropdown() {
   const savedTheme = loadSavedTheme() || document.body.dataset.defaultTheme;
   applyTheme(savedTheme);
 
-  // Toggle panel visibility
   const toggle = document.getElementById("theme-toggle");
   const panel = document.getElementById("theme-panel");
+  const options = [...panel.querySelectorAll(".theme-option")];
 
-  toggle.addEventListener("click", () => {
-    panel.style.display = panel.style.display === "block" ? "none" : "block";
-  });
+  function isOpen() {
+    return toggle.getAttribute("aria-expanded") === "true";
+  }
 
-  // Hide panel on outside click
-  document.addEventListener("click", (e) => {
-    if (!toggle.contains(e.target) && !panel.contains(e.target)) {
-      panel.style.display = "none";
+  function focusOption(index) {
+    if (!options.length) return;
+    options[(index + options.length) % options.length].focus();
+  }
+
+  function selectedIndex() {
+    const index = options.findIndex(option => option.getAttribute("aria-checked") === "true");
+    return index >= 0 ? index : 0;
+  }
+
+  function openMenu(focusIndex = null) {
+    panel.style.display = "block";
+    toggle.setAttribute("aria-expanded", "true");
+    if (focusIndex !== null) {
+      focusOption(focusIndex);
     }
-  });
+  }
 
-  // Handle theme selection
-  document.querySelectorAll(".theme-option").forEach(opt => {
-    opt.addEventListener("click", () => {
-      const theme = opt.dataset.theme;
+  function closeMenu(returnFocus = false) {
+    panel.style.display = "none";
+    toggle.setAttribute("aria-expanded", "false");
+    if (returnFocus) {
+      toggle.focus();
+    }
+  }
+
+  function selectOption(option) {
+    const theme = option.dataset.theme;
+    if (theme) {
       saveTheme(theme);
       applyTheme(theme);
       refreshThemeSensitiveLayout();
-      panel.style.display = "none";
+      closeMenu(true);
+    }
+  }
+
+  toggle.addEventListener("click", () => {
+    if (isOpen()) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+
+  toggle.addEventListener("keydown", event => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      openMenu(selectedIndex());
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      openMenu(options.length - 1);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu(true);
+    }
+  });
+
+  panel.addEventListener("keydown", event => {
+    const currentIndex = options.indexOf(document.activeElement);
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      focusOption(currentIndex + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      focusOption(currentIndex - 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      focusOption(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      focusOption(options.length - 1);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu(true);
+    } else if (event.key === "Tab") {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener("click", event => {
+    if (!toggle.contains(event.target) && !panel.contains(event.target)) {
+      closeMenu();
+    }
+  });
+
+  options.forEach(option => {
+    option.addEventListener("click", () => {
+      selectOption(option);
     });
   });
 }

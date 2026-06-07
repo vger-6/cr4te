@@ -15,6 +15,7 @@ from cr4te.enums.image_gallery_building_strategy import ImageGalleryBuildingStra
 from cr4te.enums.orientation import Orientation
 from cr4te.render_models import (
     CreatorProfileContext,
+    DocumentContext,
     GalleryImageContext,
     MediaGroupContext,
     MediaSectionContext,
@@ -22,6 +23,7 @@ from cr4te.render_models import (
     PageShellContext,
     ProjectPageContext,
     TagCollection,
+    TrackContext,
     VideoContext,
 )
 from cr4te.enums.media_type import MediaType
@@ -130,7 +132,48 @@ class TemplateRendererTests(unittest.TestCase):
         rendered = str(macro("", [group], 450, 24, site_labels))
 
         self.assertIn('<source src="clip.webm">', rendered)
+        self.assertIn('<video preload="metadata" tabindex="0" aria-label="Clip"', rendered)
         self.assertNotIn('type="video/mp4"', rendered)
+
+    def test_media_controls_render_native_semantics_and_accessible_names(self):
+        site_labels = load_config().site_labels
+        macro = env.get_template("partials/_media_sections.html.j2").module.render_media_groups
+        group = MediaGroupContext(
+            audio_section_title="Audio",
+            image_section_title="Gallery",
+            sections=[
+                MediaSectionContext(
+                    type=MediaType.AUDIO,
+                    tracks=[TrackContext(rel_path="song.mp3", title="Song", duration_seconds=10)],
+                ),
+                MediaSectionContext(
+                    type=MediaType.IMAGE,
+                    images=[
+                        GalleryImageContext(
+                            rel_thumbnail_path="thumb.jpg",
+                            image_wrapper_width=120,
+                            image_wrapper_height=80,
+                            rel_path="photo.jpg",
+                            caption="Photo",
+                        )
+                    ],
+                ),
+                MediaSectionContext(
+                    type=MediaType.DOCUMENT,
+                    documents=[DocumentContext(rel_path="book.pdf", title="Book")],
+                ),
+            ],
+        )
+
+        rendered = str(macro("", [group], 450, 24, site_labels))
+
+        self.assertIn('<button type="button"', rendered)
+        self.assertIn('data-audio-action="select-track"', rendered)
+        self.assertIn('data-audio-action="select-track"\n                        class="track-title"\n                        tabindex="0"', rendered)
+        self.assertIn('aria-label="Seek"', rendered)
+        self.assertIn('aria-label="Volume"', rendered)
+        self.assertIn('aria-pressed="false"', rendered)
+        self.assertIn('<iframe class="auto-height-iframe" title="Book"', rendered)
 
     def test_project_page_renderer_writes_unique_html_path_and_common_template_data(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -227,6 +270,9 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('data-theme="theme-forest-night"', rendered)
             self.assertIn('<nav class="top-link" aria-label="Primary">', rendered)
             self.assertIn('<span class="nav-current" aria-current="page">Artists</span>', rendered)
+            self.assertIn('<button type="button" id="clear-search"', rendered)
+            self.assertIn('aria-haspopup="menu"', rendered)
+            self.assertIn('role="menuitemradio"', rendered)
             self.assertNotIn("body { display: none; }", rendered)
 
     def test_page_templates_use_shared_document_head_and_page_header(self):

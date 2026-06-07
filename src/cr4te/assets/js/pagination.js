@@ -213,6 +213,8 @@
 
           if (i === page) {
             btn.classList.add('in-active');
+            btn.disabled = true;
+            btn.setAttribute('aria-current', 'page');
           } else {
             btn.onclick = () => {
               currentPage = i;

@@ -217,6 +217,98 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
+    def test_search_clear_button_works_from_keyboard(self):
+        self.open_page("index.html")
+        self.page.fill("#search-input", "nia")
+        self.page.locator("#search-input").press("Tab")
+
+        self.assertEqual(self.page.evaluate("document.activeElement.id"), "clear-search")
+        self.page.keyboard.press("Enter")
+
+        self.assertEqual(self.page.locator("#search-input").input_value(), "")
+        self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 3)
+        self.assertNoBrowserErrors()
+
+    def test_focus_indicator_is_keyboard_only(self):
+        self.open_page("index.html")
+        toggle = self.page.locator("#theme-toggle")
+
+        toggle.click()
+        mouse_outline = toggle.evaluate("element => getComputedStyle(element).outlineStyle")
+        self.page.keyboard.press("Escape")
+        toggle.evaluate("element => element.blur()")
+        toggle.focus()
+        keyboard_outline = toggle.evaluate(
+            "element => ({ style: getComputedStyle(element).outlineStyle, width: getComputedStyle(element).outlineWidth })"
+        )
+
+        self.assertEqual(mouse_outline, "none")
+        self.assertEqual(keyboard_outline["style"], "solid")
+        self.assertEqual(keyboard_outline["width"], "2px")
+
+    def test_focus_indicators_use_theme_colors_and_render_inside_control_bounds(self):
+        self.open_page("index.html")
+
+        focus_colors = []
+        for theme in ("theme-frozen-aurora", "theme-forest-night", "theme-mono-terminal"):
+            self.page.evaluate(
+                """
+                theme => {
+                    document.body.className = theme;
+                    document.querySelector('#search-input').focus();
+                }
+                """,
+                theme,
+            )
+            focus = self.page.locator("#search-input").evaluate(
+                """
+                element => {
+                    const style = getComputedStyle(element);
+                    const probe = document.createElement('span');
+                    probe.style.color = 'var(--theme-focus-outline)';
+                    document.body.appendChild(probe);
+                    const themeColor = getComputedStyle(probe).color;
+                    probe.remove();
+                    return {
+                        color: style.outlineColor,
+                        offset: style.outlineOffset,
+                        themeColor,
+                    };
+                }
+                """
+            )
+            self.assertEqual(focus["color"], focus["themeColor"])
+            self.assertEqual(focus["offset"], "-2px")
+            focus_colors.append(focus["color"])
+
+        self.assertEqual(len(set(focus_colors)), len(focus_colors))
+
+    def test_image_card_link_draws_focus_ring_around_whole_card(self):
+        self.open_page("index.html")
+        card = self.page.locator("#imageGallery .image-card").first
+        link = card.locator(":scope > a")
+
+        link.focus()
+        styles = self.page.evaluate(
+            """
+            () => {
+                const card = document.querySelector('#imageGallery .image-card');
+                const link = card.querySelector(':scope > a');
+                const cardStyle = getComputedStyle(card);
+                const linkStyle = getComputedStyle(link);
+                return {
+                    cardOutline: cardStyle.outlineStyle,
+                    cardOutlineOffset: cardStyle.outlineOffset,
+                    linkOutline: linkStyle.outlineStyle,
+                };
+            }
+            """
+        )
+
+        self.assertEqual(styles["cardOutline"], "solid")
+        self.assertEqual(styles["cardOutlineOffset"], "-2px")
+        self.assertEqual(styles["linkOutline"], "none")
+
     def test_search_updates_do_not_accumulate_resize_listeners(self):
         self.page.add_init_script(
             """
@@ -293,6 +385,29 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         body_class = self.page.locator("body").get_attribute("class") or ""
         self.assertIn("theme-forest-night", body_class)
         self.assertFalse(self.page.locator("#theme-panel").is_visible())
+
+    def test_theme_dropdown_supports_keyboard_navigation_and_escape(self):
+        self.open_page("index.html")
+        toggle = self.page.locator("#theme-toggle")
+        toggle.focus()
+
+        self.page.keyboard.press("ArrowDown")
+        self.assertTrue(self.page.locator("#theme-panel").is_visible())
+        first_theme = self.page.evaluate("document.activeElement.dataset.theme")
+
+        self.page.keyboard.press("ArrowDown")
+        second_theme = self.page.evaluate("document.activeElement.dataset.theme")
+        self.assertNotEqual(first_theme, second_theme)
+
+        self.page.keyboard.press("Escape")
+        self.assertFalse(self.page.locator("#theme-panel").is_visible())
+        self.assertEqual(self.page.evaluate("document.activeElement.id"), "theme-toggle")
+
+        self.page.keyboard.press("ArrowDown")
+        selected_theme = self.page.evaluate("document.activeElement.dataset.theme")
+        self.page.keyboard.press("Enter")
+        self.assertIn(selected_theme, self.page.locator("body").get_attribute("class") or "")
+        self.assertEqual(self.page.evaluate("document.activeElement.id"), "theme-toggle")
         self.assertNoBrowserErrors()
 
     def test_custom_theme_appears_and_can_be_selected(self):
@@ -327,10 +442,12 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.open_page(self.caption_project_path)
         section = self.page.locator(".image-caption-section").first
         self.assertIn("no-captions", section.get_attribute("class") or "")
+        self.assertEqual(section.locator(".caption-toggle-btn").get_attribute("aria-pressed"), "false")
 
         section.locator(".caption-toggle-btn").click()
 
         self.assertNotIn("no-captions", section.get_attribute("class") or "")
+        self.assertEqual(section.locator(".caption-toggle-btn").get_attribute("aria-pressed"), "true")
         self.assertNoBrowserErrors()
 
     def test_tags_page_renders_and_initializes_theme(self):
@@ -348,6 +465,146 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(self.page.locator(".audio-gallery li").count(), 3)
         self.assertTrue(self.page.locator(".audio-gallery .progress-bar").is_disabled())
         self.assertEqual(self.page.locator(".audio-gallery .volume-slider").count(), 1)
+        self.assertNoBrowserErrors()
+
+    def test_audio_tracks_and_media_controls_expose_accessible_semantics(self):
+        self.open_page(self.audio_project_path)
+        track = self.page.locator("[data-audio-action='select-track']").first
+
+        self.assertEqual(track.evaluate("element => element.tagName"), "BUTTON")
+        self.assertEqual(self.page.locator(".audio-gallery .progress-bar").get_attribute("aria-label"), "Seek")
+        self.assertEqual(self.page.locator(".audio-gallery .volume-slider").get_attribute("aria-label"), "Volume")
+
+        track.focus()
+        self.page.keyboard.press("Enter")
+        self.assertEqual(self.page.locator(".audio-gallery").get_attribute("data-current-index"), "0")
+
+        mute = self.page.locator(".audio-gallery .volume-toggle-btn")
+        self.assertEqual(mute.get_attribute("aria-pressed"), "false")
+        mute.click()
+        self.assertEqual(mute.get_attribute("aria-pressed"), "true")
+        self.assertNoBrowserErrors()
+
+    def test_audio_track_list_supports_roving_keyboard_navigation(self):
+        self.open_page(self.audio_project_path)
+        tracks = self.page.locator("[data-audio-action='select-track']")
+        first = tracks.nth(0)
+        second = tracks.nth(1)
+        last = tracks.nth(2)
+
+        self.assertEqual(first.get_attribute("tabindex"), "0")
+        self.assertEqual(second.get_attribute("tabindex"), "-1")
+        first.focus()
+
+        self.page.keyboard.press("ArrowDown")
+        self.assertTrue(second.evaluate("element => document.activeElement === element"))
+        self.assertEqual(self.page.locator(".audio-gallery").get_attribute("data-current-index"), None)
+        self.assertEqual(first.get_attribute("tabindex"), "-1")
+        self.assertEqual(second.get_attribute("tabindex"), "0")
+
+        self.page.keyboard.press("ArrowUp")
+        self.assertTrue(first.evaluate("element => document.activeElement === element"))
+        self.page.keyboard.press("ArrowDown")
+        self.page.keyboard.press("End")
+        self.assertTrue(last.evaluate("element => document.activeElement === element"))
+        self.page.keyboard.press("Home")
+        self.assertTrue(first.evaluate("element => document.activeElement === element"))
+
+        self.page.evaluate(
+            """
+            () => {
+                HTMLMediaElement.prototype.play = function () {
+                    this.dispatchEvent(new Event('play'));
+                    return Promise.resolve();
+                };
+            }
+            """
+        )
+        self.page.keyboard.press("Space")
+        self.assertEqual(self.page.locator(".audio-gallery").get_attribute("data-current-index"), "0")
+        self.assertNoBrowserErrors()
+
+    def test_focused_video_surface_supports_space_and_enter_play_pause(self):
+        self.open_page("index.html")
+        self.page.evaluate(
+            """
+            () => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'video-wrapper';
+                wrapper.innerHTML = `
+                    <video tabindex="0" aria-label="Test video"></video>
+                    <div class="video-controls">
+                        <button data-video-action="toggle-play" data-play-label="Play" data-pause-label="Pause">
+                            <svg class="play-toggle-icon">
+                                <g data-play></g>
+                                <g data-pause></g>
+                            </svg>
+                        </button>
+                        <input class="progress-bar" type="range">
+                        <span class="time-display"></span>
+                    </div>
+                `;
+                const video = wrapper.querySelector('video');
+                video.dataset.paused = 'true';
+                Object.defineProperty(video, 'paused', { get() { return this.dataset.paused === 'true'; } });
+                video.play = function () {
+                    this.dataset.paused = 'false';
+                    this.dispatchEvent(new Event('play'));
+                    return Promise.resolve();
+                };
+                video.pause = function () {
+                    this.dataset.paused = 'true';
+                    this.dispatchEvent(new Event('pause'));
+                };
+                document.body.appendChild(wrapper);
+
+                const script = document.createElement('script');
+                script.src = 'assets/js/video_player.js?keyboard-test';
+                document.body.appendChild(script);
+            }
+            """
+        )
+        self.page.wait_for_function("typeof window.cr4te?.video?.togglePlay === 'function'")
+        video = self.page.locator(".video-wrapper video")
+        video.focus()
+
+        self.page.keyboard.press("Space")
+        self.assertEqual(video.get_attribute("data-paused"), "false")
+        self.page.keyboard.press("Enter")
+        self.assertEqual(video.get_attribute("data-paused"), "true")
+        self.assertNoBrowserErrors()
+
+    def test_even_audio_track_uses_playing_colors_when_selected(self):
+        self.open_page(self.audio_project_path)
+        track = self.page.locator("[data-audio-action='select-track']").nth(1)
+
+        track.click()
+        self.page.wait_for_timeout(250)
+        colors = track.evaluate(
+            """
+            element => {
+                const style = getComputedStyle(element);
+                const probe = document.createElement('span');
+                probe.style.backgroundColor = 'var(--theme-track-playing-bg)';
+                probe.style.color = 'var(--theme-track-playing-text)';
+                document.body.appendChild(probe);
+                const probeStyle = getComputedStyle(probe);
+                const playingBackground = probeStyle.backgroundColor;
+                const playingText = probeStyle.color;
+                probe.remove();
+                return {
+                    background: style.backgroundColor,
+                    text: style.color,
+                    playingBackground,
+                    playingText,
+                };
+            }
+            """
+        )
+
+        self.assertIn("playing", track.get_attribute("class") or "")
+        self.assertEqual(colors["background"], colors["playingBackground"])
+        self.assertEqual(colors["text"], colors["playingText"])
         self.assertNoBrowserErrors()
 
     def test_starting_media_pauses_only_the_previously_active_player(self):

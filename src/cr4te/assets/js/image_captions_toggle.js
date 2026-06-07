@@ -31,6 +31,7 @@ window.cr4te.onReady(function () {
     if (!label) return;
     button.title = label;
     button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", String(!sectionBox.classList.contains("no-captions")));
   }
 
   // Restore state

@@ -34,6 +34,7 @@
   --theme-card-shadow-default: none;
   --theme-input-shadow: none;
   --theme-focus-ring: rgba(216, 216, 216, 0.35);
+  --theme-focus-outline: var(--theme-terminal-hover);
 
   --theme-link: var(--theme-accent);
   --theme-link-visited: var(--theme-accent-visited);
