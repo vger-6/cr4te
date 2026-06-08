@@ -56,12 +56,41 @@ h1 {
 }
 
 .top-link {
+  display: flex;
+  align-items: center;
   margin-bottom: 1rem;
   font-weight: bold;
 }
 
 .top-link a {
   display: inline-block;
+}
+
+.top-link .site-logo-link {
+  display: inline-flex;
+  margin-right: 0.5rem;
+  flex: 0 0 auto;
+}
+
+.site-logo {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.breadcrumb-separator {
+  margin: 0 0.35rem;
+}
+
+.theme-dropdown-container {
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .markdown h1, .markdown h2 {
@@ -183,7 +212,6 @@ img {
 .theme-dropdown {
   position: relative;
   display: inline-block;
-  float: right;
   margin-left: 1rem;
   z-index: 1001;
 }

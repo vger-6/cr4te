@@ -1,13 +1,24 @@
 <div class="page-header">
   <nav class="top-link" aria-label="Primary">
-    {% for item in page_shell.navigation_items %}
-      {% if not loop.first %} &middot; {% endif %}
-      {% if item.current %}
-        <span class="nav-current" aria-current="page">{{ item.label }}</span>
-      {% else %}
-        <a href="{{ item.href }}">{{ item.label }}</a>
-      {% endif %}
-    {% endfor %}
+    <a class="site-logo-link"
+       href="{{ page_shell.navigation_items[0].href }}"
+       aria-label="cr4te {{ page_shell.navigation_items[0].label }} overview">
+      <img class="site-logo"
+           src="{{ path_to_root | default('') }}assets/favicon.svg"
+           alt=""
+           width="24"
+           height="24">
+    </a>
+    <div class="breadcrumb-list">
+      {% for item in page_shell.navigation_items %}
+        {% if not loop.first %}<span class="breadcrumb-separator" aria-hidden="true">&middot;</span>{% endif %}
+        {% if item.current %}
+          <span class="nav-current" aria-current="page">{{ item.label }}</span>
+        {% else %}
+          <a href="{{ item.href }}">{{ item.label }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
     {% include "partials/_theme_dropdown.html.j2" %}
   </nav>
 

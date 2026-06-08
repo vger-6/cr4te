@@ -67,6 +67,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-008:** Generated-site toggle controls must expose their current state to assistive technologies.
 - **SITE-009:** The theme menu must support conventional keyboard navigation, selection, and Escape-to-close behavior.
 - **SITE-010:** Generated media players must provide conventional, control-scoped keyboard operation without overriding the native keyboard behavior of their buttons and sliders.
+- **SITE-011:** Every generated page must display a consistently styled cr4te logo that links to the creator overview, including when the creator overview is already the current page.
 
 ## Themes
 

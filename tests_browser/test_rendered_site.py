@@ -217,6 +217,52 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
+    def test_logo_remains_active_and_consistent_across_pages_and_themes(self):
+        self.open_page("index.html")
+        logo_link = self.page.locator(".site-logo-link")
+        logo = logo_link.locator(".site-logo")
+
+        self.assertEqual(logo_link.get_attribute("href"), "index.html")
+        self.assertEqual(logo_link.get_attribute("aria-label"), "cr4te Musicians overview")
+        self.assertEqual(logo.get_attribute("src"), "assets/favicon.svg")
+        self.assertEqual(self.page.locator(".nav-current").inner_text(), "Musicians")
+
+        logo_src = logo.evaluate("element => element.currentSrc")
+        self.page.get_by_role("button", name="Themes").click()
+        self.page.get_by_role("menuitemradio", name="Forest Night").click()
+        self.assertEqual(logo.evaluate("element => element.currentSrc"), logo_src)
+
+        self.open_page(self.audio_project_path)
+        logo_link = self.page.locator(".site-logo-link")
+        self.assertTrue(logo_link.get_attribute("href").endswith("index.html"))
+        logo_link.click()
+        self.page.wait_for_load_state("load")
+        self.assertTrue(self.page.url.endswith("/site/index.html"))
+        self.assertNoBrowserErrors()
+
+    def test_header_navigation_items_are_vertically_centered(self):
+        self.open_page("index.html")
+
+        centers = self.page.evaluate(
+            """
+            () => {
+                const center = selector => {
+                    const rect = document.querySelector(selector).getBoundingClientRect();
+                    return rect.top + rect.height / 2;
+                };
+                return {
+                    logo: center('.site-logo-link'),
+                    breadcrumbs: center('.breadcrumb-list'),
+                    theme: center('#theme-toggle'),
+                };
+            }
+            """
+        )
+
+        self.assertAlmostEqual(centers["logo"], centers["breadcrumbs"], delta=0.25)
+        self.assertAlmostEqual(centers["logo"], centers["theme"], delta=0.25)
+        self.assertNoBrowserErrors()
+
     def test_search_clear_button_works_from_keyboard(self):
         self.open_page("index.html")
         self.page.fill("#search-input", "nia")
