@@ -11,7 +11,23 @@ __all__ = [
     "generate_thumbnail",
     "infer_image_orientation",
     "read_image_dimensions",
+    "parse_aspect_ratio",
 ]
+
+
+def parse_aspect_ratio(aspect_ratio: str) -> tuple[int, int]:
+    normalized = aspect_ratio.strip()
+
+    if "/" not in normalized:
+        raise ValueError(f"Invalid aspect ratio: {normalized}")
+
+    width_str, height_str = normalized.split("/", 1)
+    width, height = int(width_str), int(height_str)
+
+    if width <= 0 or height <= 0:
+        raise ValueError("Aspect ratio values must be greater than zero")
+
+    return width, height
 
 
 def read_image_dimensions(image_path: Path) -> ImageDimensions:

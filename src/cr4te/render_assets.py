@@ -54,12 +54,15 @@ def prepare_default_thumbnails(ctx: HtmlBuildContext) -> None:
 
 
 def build_default_thumbnail_specs(ctx: HtmlBuildContext) -> tuple[DefaultThumbnailSpec, ...]:
+    project_cards_width_ratio, project_cards_height_ratio = image_utils.parse_aspect_ratio(
+        ctx.site_rendering.galleries.project_cards.aspect_ratio
+    )
     return (
         DefaultThumbnailSpec(ThumbType.CREATOR_OVERVIEW, ctx.site_labels.entity.creator, 3, 4),
-        DefaultThumbnailSpec(ThumbType.PROJECT_OVERVIEW, ctx.site_labels.entity.project, 4, 3),
+        DefaultThumbnailSpec(ThumbType.PROJECT_OVERVIEW, ctx.site_labels.entity.project, project_cards_width_ratio, project_cards_height_ratio),
         DefaultThumbnailSpec(ThumbType.CREATOR_PAGE_PROJECT, ctx.site_labels.entity.project, 4, 3),
         DefaultThumbnailSpec(ThumbType.PORTRAIT, ctx.site_labels.entity.portrait, 3, 4),
-        DefaultThumbnailSpec(ThumbType.COVER, ctx.site_labels.entity.cover, 4, 3),
+        DefaultThumbnailSpec(ThumbType.COVER, ctx.site_labels.entity.cover, project_cards_width_ratio, project_cards_height_ratio),
         DefaultThumbnailSpec(ThumbType.GALLERY, ctx.site_labels.entity.gallery, 4, 3),
     )
 
