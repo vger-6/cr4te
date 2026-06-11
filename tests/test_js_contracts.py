@@ -84,7 +84,6 @@ class JavaScriptContractTests(unittest.TestCase):
             "justified_gallery_builder.js",
             "lightbox.js",
             "pagination.js",
-            "responsive_content_mover.js",
             "search_filter.js",
             "theme_selector.js",
             "video_player.js",
@@ -141,7 +140,6 @@ class JavaScriptContractTests(unittest.TestCase):
             "lightbox.js",
             "pagination.js",
             "playback_coordinator.js",
-            "responsive_content_mover.js",
             "search_filter.js",
             "theme_selector.js",
             "video_player.js",
@@ -242,6 +240,18 @@ class JavaScriptContractTests(unittest.TestCase):
         source = read_all(sorted(TEMPLATE_DIR.glob("*.j2")))
 
         self.assertNotIn("body { display: none; }", source)
+
+    def test_detail_pages_do_not_move_responsive_content_with_javascript(self):
+        for template_name in ("creator.html.j2", "project.html.j2"):
+            with self.subTest(template_name=template_name):
+                source = (TEMPLATE_DIR / template_name).read_text(encoding="utf-8")
+
+                self.assertNotIn("responsive_content_mover.js", source)
+                self.assertNotIn("original-placeholder", source)
+                self.assertNotIn("mobile-placeholder", source)
+                self.assertLess(source.index('class="left-column"'), source.index('class="right-column"'))
+
+        self.assertFalse((ASSET_JS_DIR / "responsive_content_mover.js").exists())
 
 
 if __name__ == "__main__":

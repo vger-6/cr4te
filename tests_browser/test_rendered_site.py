@@ -41,6 +41,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls._build_example_site(cls.paginated_site_dir, cls._write_paginated_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
+        cls.creator_path = cls._find_creator_page()
         cls._start_static_server()
         cls._start_browser()
 
@@ -121,6 +122,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             if "image-caption-section" in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain an image-caption project page")
+
+    @classmethod
+    def _find_creator_page(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            if '<div class="section-title">Profile</div>' in path.read_text(encoding="utf-8"):
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain a creator page")
 
     @classmethod
     def _start_static_server(cls):
@@ -782,6 +790,68 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.page.wait_for_timeout(250)
 
         self.assertNoBrowserErrors()
+
+    def test_detail_content_is_visible_and_ordered_on_mobile_without_javascript(self):
+        page = self.browser.new_page(
+            java_script_enabled=False,
+            viewport={"width": 390, "height": 844},
+        )
+        try:
+            for rel_path in (self.creator_path, self.audio_project_path):
+                with self.subTest(rel_path=rel_path):
+                    page.set_viewport_size({"width": 390, "height": 844})
+                    page.goto(f"{self.base_url}/site/{rel_path}")
+                    page.wait_for_load_state("load")
+
+                    mobile_layout = page.evaluate(
+                        """
+                        () => {
+                            const layout = document.querySelector('.two-column-layout');
+                            const content = document.querySelector('.detail-content');
+                            const left = document.querySelector('.left-column');
+                            const right = document.querySelector('.right-column');
+                            const layoutRect = layout.getBoundingClientRect();
+                            const contentRect = content.getBoundingClientRect();
+                            const leftRect = left.getBoundingClientRect();
+                            const rightRect = right.getBoundingClientRect();
+                            return {
+                                leftDisplay: getComputedStyle(left).display,
+                                rightDisplay: getComputedStyle(right).display,
+                                leftSections: left.querySelectorAll('.section-box').length,
+                                rightSections: right.querySelectorAll('.section-box').length,
+                                leftHeight: leftRect.height,
+                                rightHeight: rightRect.height,
+                                leftBeforeRight: leftRect.bottom <= rightRect.top,
+                                outerBottomSpace: layoutRect.bottom - contentRect.bottom,
+                                innerBottomPadding: parseFloat(getComputedStyle(content).paddingBottom),
+                            };
+                        }
+                        """
+                    )
+
+                    self.assertNotEqual(mobile_layout["leftDisplay"], "none")
+                    self.assertNotEqual(mobile_layout["rightDisplay"], "none")
+                    self.assertGreater(mobile_layout["leftSections"], 0)
+                    self.assertGreater(mobile_layout["rightSections"], 0)
+                    self.assertGreater(mobile_layout["leftHeight"], 0)
+                    self.assertGreater(mobile_layout["rightHeight"], 0)
+                    self.assertTrue(mobile_layout["leftBeforeRight"])
+                    self.assertGreater(mobile_layout["outerBottomSpace"], 0)
+                    self.assertGreater(mobile_layout["innerBottomPadding"], 0)
+
+                    page.set_viewport_size({"width": 1280, "height": 900})
+                    desktop_side_by_side = page.evaluate(
+                        """
+                        () => {
+                            const leftRect = document.querySelector('.left-column').getBoundingClientRect();
+                            const rightRect = document.querySelector('.right-column').getBoundingClientRect();
+                            return leftRect.right <= rightRect.left;
+                        }
+                        """
+                    )
+                    self.assertTrue(desktop_side_by_side)
+        finally:
+            page.close()
 
 
 if __name__ == "__main__":

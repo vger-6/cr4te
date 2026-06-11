@@ -65,13 +65,20 @@
   --layout-left-column-width: 32rem;
 
   display: flex;
-  gap: var(--layout-two-column-gap);
   flex: 1 1 auto;
   min-height: 0;
   box-sizing: border-box;
   overflow: hidden;
   margin-bottom: 0;
   padding-bottom: 2rem;
+}
+
+.detail-content {
+  display: flex;
+  gap: var(--layout-two-column-gap);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .left-column,
@@ -126,32 +133,51 @@
   background-color: var(--theme-scrollbar-thumb-hover);
 }
 
-.original-placeholder,
-.mobile-placeholder {
-  display: none;
-  flex-direction: column;
-  gap: var(--layout-section-gap);
-}
-
 /* Small screen behavior */
 @media (max-width: 72rem) {
-  .two-column-layout {
-    display: block;
-    overflow: hidden;
+  .detail-content {
+    flex-direction: column;
+    gap: var(--layout-section-gap);
+    overflow-y: auto;
+    padding-top: var(--theme-layout-column-padding-top);
+    padding-bottom: var(--theme-layout-column-padding-bottom);
+    padding-left: var(--theme-layout-column-padding-left);
+    padding-right: var(--theme-layout-column-padding-right);
+    border-radius: var(--theme-layout-column-radius);
+    background-color: var(--theme-layout-column-bg);
+    border: var(--theme-layout-column-border-width) solid var(--theme-layout-column-border);
+    scrollbar-width: thin;
+    scrollbar-color: var(--theme-scrollbar-thumb) var(--theme-scrollbar-track);
   }
 
   .left-column,
   .right-column {
+    flex: none;
     min-width: 0;
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
   }
-  
-  .left-column {
-    display: none;
-  }
-  
-  .right-column {
-    height: 100%;
-    overflow-y: auto;
-  }
+}
+
+.detail-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.detail-content::-webkit-scrollbar-track {
+  background: var(--theme-scrollbar-track);
+}
+
+.detail-content::-webkit-scrollbar-thumb {
+  background-color: var(--theme-scrollbar-webkit-thumb);
+  border-radius: 2px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.detail-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--theme-scrollbar-thumb-hover);
 }
 

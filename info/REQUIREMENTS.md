@@ -68,6 +68,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-009:** The theme menu must support conventional keyboard navigation, selection, and Escape-to-close behavior.
 - **SITE-010:** Generated media players must provide conventional, control-scoped keyboard operation without overriding the native keyboard behavior of their buttons and sliders.
 - **SITE-011:** Every generated page must display a consistently styled cr4te logo that links to the creator overview, including when the creator overview is already the current page.
+- **SITE-012:** Generated detail-page content must remain available without JavaScript at every supported viewport width. Narrow layouts must present profile and overview content before media and other regular sections without moving content nodes at runtime.
 
 ## Themes
 
