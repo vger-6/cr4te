@@ -1,5 +1,4 @@
 from typing import Dict, List
-import re
 
 from pydantic import BaseModel, ConfigDict, conint, field_validator
 
@@ -7,6 +6,7 @@ from ..enums.image_sample_strategy import ImageSampleStrategy
 from ..enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from ..enums.media_type import MediaType
 from ..enums.visible_fields import CollaborationField, CreatorField, ProjectField
+from ..utils.image_utils import parse_aspect_ratio
 
 class StrictConfigModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -117,15 +117,11 @@ class GalleryLayoutRendering(StrictConfigModel):
     building_strategy: ImageGalleryBuildingStrategy
     aspect_ratio: str
 
+    # TODO: Is requiring slash-separated aspect ratios here the right choice, or should we reconsider supporting other formats?
     @field_validator("aspect_ratio")
     def validate_aspect_ratio_colon_format(cls, v):
-        match = re.match(r'^(\d+)/(\d+)$', v.strip())
-        if not match:
-            raise ValueError("Aspect ratio must be in the format 'w:h' (e.g., '4/3')")
-        w, h = map(int, match.groups())
-        if w <= 0 or h <= 0:
-            raise ValueError("Aspect ratio values must be greater than zero")
-        return v.strip()
+        width, height = parse_aspect_ratio(v)
+        return f"{width}/{height}"
 
 
 class OverviewCardGalleryRendering(GalleryLayoutRendering):

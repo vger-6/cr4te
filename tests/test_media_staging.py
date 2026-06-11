@@ -328,6 +328,7 @@ class MediaStagingTests(unittest.TestCase):
             output_dir = Path(tmp) / "site"
             root.mkdir()
             config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            config.site_rendering.galleries.project_cards.aspect_ratio = "7/5"
             ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
 
             prepare_output_dirs(ctx)
@@ -341,6 +342,11 @@ class MediaStagingTests(unittest.TestCase):
 
             specs = build_default_thumbnail_specs(ctx)
             self.assertEqual(len(specs), 6)
+            specs_by_type = {spec.thumb_type: spec for spec in specs}
+            self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].width_ratio, 7)
+            self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].height_ratio, 5)
+            self.assertEqual(specs_by_type[ThumbType.COVER].width_ratio, 7)
+            self.assertEqual(specs_by_type[ThumbType.COVER].height_ratio, 5)
             for spec in specs:
                 expected_height = ctx.get_generated_thumb_height(spec.thumb_type)
                 with Image.open(ctx.get_default_thumb_path(spec.thumb_type)) as image:
