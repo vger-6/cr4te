@@ -253,6 +253,18 @@ class JavaScriptContractTests(unittest.TestCase):
 
         self.assertFalse((ASSET_JS_DIR / "responsive_content_mover.js").exists())
 
+    def test_lightbox_uses_modal_dialog_semantics_and_native_controls(self):
+        source = (ASSET_JS_DIR / "lightbox.js").read_text(encoding="utf-8")
+
+        self.assertIn("overlay.setAttribute('role', 'dialog')", source)
+        self.assertIn("overlay.setAttribute('aria-modal', 'true')", source)
+        self.assertIn("overlay.tabIndex = -1", source)
+        self.assertIn("document.createElement('button')", source)
+        self.assertNotIn("document.createElement('div');\n    closeBtn.id = 'lightbox-close'", source)
+        self.assertIn("previouslyFocusedElement", source)
+        self.assertIn("event.key === 'Tab'", source)
+        self.assertIn("elements.overlay.focus()", source)
+
 
 if __name__ == "__main__":
     unittest.main()

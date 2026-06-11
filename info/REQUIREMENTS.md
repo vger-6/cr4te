@@ -69,6 +69,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-010:** Generated media players must provide conventional, control-scoped keyboard operation without overriding the native keyboard behavior of their buttons and sliders.
 - **SITE-011:** Every generated page must display a consistently styled cr4te logo that links to the creator overview, including when the creator overview is already the current page.
 - **SITE-012:** Generated detail-page content must remain available without JavaScript at every supported viewport width. Narrow layouts must present profile and overview content before media and other regular sections without moving content nodes at runtime.
+- **SITE-013:** Generated-site lightboxes must behave as modal dialogs with keyboard-operable native controls. Opening a lightbox must move focus into it, focus must remain inside while it is open, and closing it must return focus to its trigger. Escape-to-close and arrow-key image navigation must remain available.
 
 ## Themes
 

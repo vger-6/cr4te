@@ -772,13 +772,83 @@ class RenderedSiteBrowserTests(unittest.TestCase):
     def test_single_image_lightbox_opens_and_closes(self):
         self.open_page(self.audio_project_path)
 
-        self.page.locator("a[data-lightbox-single='true']").first.click()
+        trigger = self.page.locator("a[data-lightbox-single='true']").first
+        trigger.focus()
+        trigger.press("Enter")
         self.page.wait_for_timeout(150)
 
-        self.assertTrue(self.page.locator("#lightbox-overlay").is_visible())
+        overlay = self.page.locator("#lightbox-overlay")
+        close = self.page.locator("#lightbox-close")
+
+        self.assertTrue(overlay.is_visible())
+        self.assertEqual(overlay.get_attribute("role"), "dialog")
+        self.assertEqual(overlay.get_attribute("aria-modal"), "true")
+        self.assertEqual(overlay.get_attribute("aria-describedby"), "lightbox-caption")
+        self.assertEqual(close.evaluate("element => element.tagName"), "BUTTON")
+        self.assertEqual(close.get_attribute("aria-label"), "Close lightbox")
+        self.assertTrue(overlay.evaluate("element => document.activeElement === element"))
+
+        self.page.keyboard.press("Tab")
+        self.assertTrue(close.evaluate("element => document.activeElement === element"))
+        self.page.keyboard.press("Shift+Tab")
+        self.assertTrue(close.evaluate("element => document.activeElement === element"))
+
         self.page.keyboard.press("Escape")
         self.page.wait_for_timeout(150)
+        self.assertFalse(overlay.is_visible())
+        self.assertIsNotNone(overlay.get_attribute("hidden"))
+        self.assertTrue(trigger.evaluate("element => document.activeElement === element"))
+        self.assertNoBrowserErrors()
+
+    def test_gallery_lightbox_uses_native_navigation_and_traps_focus(self):
+        self.open_page(self.caption_project_path)
+        trigger = self.page.locator("[data-lightbox='true'] a").first
+        trigger.click()
+        self.page.wait_for_timeout(150)
+
+        close = self.page.locator("#lightbox-close")
+        previous = self.page.locator("#lightbox-left")
+        next_button = self.page.locator("#lightbox-right")
+        image = self.page.locator("#lightbox-image")
+        original_src = image.get_attribute("src")
+
+        for button, label in (
+            (previous, "Previous image"),
+            (next_button, "Next image"),
+        ):
+            with self.subTest(label=label):
+                self.assertTrue(button.is_visible())
+                self.assertEqual(button.evaluate("element => element.tagName"), "BUTTON")
+                self.assertEqual(button.get_attribute("aria-label"), label)
+
+        overlay = self.page.locator("#lightbox-overlay")
+        self.assertTrue(overlay.evaluate("element => document.activeElement === element"))
+        self.assertEqual(overlay.evaluate("element => getComputedStyle(element).outlineStyle"), "none")
+
+        for key in ("ArrowUp", "ArrowDown"):
+            with self.subTest(key=key):
+                self.page.keyboard.press(key)
+                self.assertEqual(image.get_attribute("src"), original_src)
+                self.assertTrue(overlay.evaluate("element => document.activeElement === element"))
+
+        self.page.keyboard.press("ArrowRight")
+        self.assertNotEqual(image.get_attribute("src"), original_src)
+        self.assertTrue(overlay.evaluate("element => document.activeElement === element"))
+
+        self.page.keyboard.press("Tab")
+        self.assertTrue(close.evaluate("element => document.activeElement === element"))
+        self.page.keyboard.press("Shift+Tab")
+        self.assertTrue(next_button.evaluate("element => document.activeElement === element"))
+        self.page.keyboard.press("Tab")
+        self.assertTrue(close.evaluate("element => document.activeElement === element"))
+
+        self.page.keyboard.press("Escape")
+        self.assertTrue(trigger.evaluate("element => document.activeElement === element"))
+
+        trigger.click()
+        self.page.locator("#lightbox-overlay").click(position={"x": 5, "y": 5})
         self.assertFalse(self.page.locator("#lightbox-overlay").is_visible())
+        self.assertTrue(trigger.evaluate("element => document.activeElement === element"))
         self.assertNoBrowserErrors()
 
     def test_resize_does_not_raise_browser_errors(self):

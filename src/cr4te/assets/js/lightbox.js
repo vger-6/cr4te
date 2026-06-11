@@ -5,10 +5,17 @@
   let currentIndex = 0;
   let currentGroup = [];
   let elements = {};
+  let previouslyFocusedElement = null;
 
   function createLightboxElements() {
     const overlay = document.createElement('div');
     overlay.id = 'lightbox-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Image lightbox');
+    overlay.setAttribute('aria-describedby', 'lightbox-caption');
+    overlay.tabIndex = -1;
+    overlay.hidden = true;
     overlay.style = `
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -41,6 +48,7 @@
 
     const caption = document.createElement('figcaption');
     caption.id = 'lightbox-caption';
+    caption.setAttribute('aria-live', 'polite');
 
     img.addEventListener('click', (event) => {
       event.stopPropagation();
@@ -49,8 +57,10 @@
       }
     });
 
-    const closeBtn = document.createElement('div');
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
     closeBtn.id = 'lightbox-close';
+    closeBtn.setAttribute('aria-label', 'Close lightbox');
     closeBtn.textContent = 'x';
     closeBtn.style = `
       position: fixed;
@@ -62,14 +72,18 @@
     `;
     closeBtn.addEventListener('click', closeLightbox);
 
-    const leftArrow = document.createElement('div');
+    const leftArrow = document.createElement('button');
+    leftArrow.type = 'button';
     leftArrow.id = 'lightbox-left';
+    leftArrow.setAttribute('aria-label', 'Previous image');
     leftArrow.textContent = '❮';
     leftArrow.style = arrowStyle('left');
     leftArrow.addEventListener('click', showPrevious);
 
-    const rightArrow = document.createElement('div');
+    const rightArrow = document.createElement('button');
+    rightArrow.type = 'button';
     rightArrow.id = 'lightbox-right';
+    rightArrow.setAttribute('aria-label', 'Next image');
     rightArrow.textContent = '❯';
     rightArrow.style = arrowStyle('right');
     rightArrow.addEventListener('click', showNext);
@@ -77,10 +91,10 @@
     content.appendChild(img);
     content.appendChild(caption);
     overlay.appendChild(content);
+    overlay.appendChild(closeBtn);
+    overlay.appendChild(leftArrow);
+    overlay.appendChild(rightArrow);
     document.body.appendChild(overlay);
-    document.body.appendChild(closeBtn);
-    document.body.appendChild(leftArrow);
-    document.body.appendChild(rightArrow);
 
     overlay.addEventListener('click', (event) => {
       if (event.target === overlay) closeLightbox();
@@ -104,9 +118,10 @@
     `;
   }
 
-  function openLightbox(images, index) {
+  function openLightbox(images, index, trigger) {
     currentGroup = images;
     currentIndex = index;
+    previouslyFocusedElement = trigger || document.activeElement;
 
     if (!elements.overlay) {
       createLightboxElements();
@@ -116,8 +131,9 @@
     showElements(true);
 
     const single = currentGroup.length <= 1;
-    elements.leftArrow.style.display = single ? 'none' : 'block';
-    elements.rightArrow.style.display = single ? 'none' : 'block';
+    elements.leftArrow.hidden = single;
+    elements.rightArrow.hidden = single;
+    elements.overlay.focus();
   }
 
   function updateLightboxImage() {
@@ -147,16 +163,17 @@
     if (elements.caption) {
       elements.caption.textContent = '';
     }
+    if (previouslyFocusedElement?.isConnected) {
+      previouslyFocusedElement.focus();
+    }
+    previouslyFocusedElement = null;
   }
 
   function showElements(visible) {
     if (!elements.overlay) return;
 
-    const display = visible ? 'flex' : 'none';
-    elements.overlay.style.display = display;
-    elements.closeBtn.style.display = visible ? 'block' : 'none';
-    elements.leftArrow.style.display = visible ? 'block' : 'none';
-    elements.rightArrow.style.display = visible ? 'block' : 'none';
+    elements.overlay.hidden = !visible;
+    elements.overlay.style.display = visible ? 'flex' : 'none';
   }
 
   function showPrevious() {
@@ -169,19 +186,54 @@
     updateLightboxImage();
   }
 
+  function trapFocus(event) {
+    const controls = [
+      elements.closeBtn,
+      elements.leftArrow,
+      elements.rightArrow
+    ].filter(control => control && !control.hidden && !control.disabled);
+    if (!controls.length) return;
+
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    const focusIsInside = elements.overlay.contains(document.activeElement);
+
+    if (!focusIsInside || document.activeElement === elements.overlay) {
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   function handleKey(event) {
-    const overlay = document.getElementById('lightbox-overlay');
-    if (!overlay || overlay.style.display !== 'flex') return;
+    if (!elements.overlay || elements.overlay.hidden) return;
+
+    if (event.key === 'Tab') {
+      trapFocus(event);
+      return;
+    }
 
     switch (event.key) {
       case 'Escape':
+        event.preventDefault();
         closeLightbox();
         break;
       case 'ArrowLeft':
-        showPrevious();
+        if (currentGroup.length > 1) {
+          event.preventDefault();
+          showPrevious();
+        }
         break;
       case 'ArrowRight':
-        showNext();
+        if (currentGroup.length > 1) {
+          event.preventDefault();
+          showNext();
+        }
         break;
     }
   }
@@ -222,7 +274,7 @@
           const group = currentGroupLinks.map(buildLightboxItem);
           const startIndex = currentGroupLinks.indexOf(link);
 
-          openLightbox(group, startIndex);
+          openLightbox(group, startIndex, link);
         };
       });
     });
@@ -232,7 +284,7 @@
     document.querySelectorAll('a[data-lightbox-single="true"]').forEach(link => {
       link.onclick = (event) => {
         event.preventDefault();
-        openLightbox([buildLightboxItem(link)], 0);
+        openLightbox([buildLightboxItem(link)], 0, link);
       };
     });
   }
