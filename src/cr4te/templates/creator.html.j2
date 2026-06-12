@@ -19,8 +19,8 @@
         <div class="section-title">{{ site_labels.pages.creator_profile_title }}</div>
         <hr>
         <div class="section-content markdown">
-          <div class="info-block info-block--{{ creator.portrait_orientation.value }}">
-            {% if not site_rendering.portraits.hide %}
+          <div class="info-block{% if creator.portrait_orientation %} info-block--{{ creator.portrait_orientation.value }}{% endif %}">
+            {% if creator.rel_portrait_path %}
               <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ creator.name }}">
                 <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
               </a>
@@ -45,8 +45,8 @@
           <div class="section-title">{{ member.name }}</div>
           <hr>
           <div class="section-content">
-            <div class="info-block info-block--portrait">
-              {% if not site_rendering.portraits.hide %}
+            <div class="info-block{% if member.rel_thumbnail_path %} info-block--portrait{% endif %}">
+              {% if member.rel_thumbnail_path %}
                 <a href="{{ path_to_root }}{{ member.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ member.name }}">
                   <img class="primary-image" src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="Portrait of {{ member.name }}">
                 </a>

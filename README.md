@@ -70,7 +70,7 @@ Musicians/
 ```
 
 `cr4te.json` contains editable structured metadata. `README.md` contains narrative/descriptive text.
-Portraits and covers are selected from image filenames. Place matching images directly inside the creator or project folder; matching images in subfolders are used as fallback. When multiple images match at the same priority, cr4te selects the lexicographically first path.
+Portraits and covers are selected from image filenames. Portrait discovery can use only named matches or also fall back to a portrait-oriented image. Portrait visibility independently controls whether discovered portraits appear nowhere, only on detail pages, or everywhere; it does not change library discovery or classification. Covers use named matches, then landscape-oriented and arbitrary image fallbacks.
 
 ## Commands
 
@@ -90,7 +90,8 @@ Useful build options:
 - `--config my_config.json`: load a JSON configuration file
 - `--domain art|music|film|book|model|creator`: apply a domain preset
 - `--image-sample-strategy none|spread|head|all`: choose how gallery images are sampled per folder
-- `--portrait-strategy none|named|auto`: control portrait discovery
+- `--portrait-discovery named|auto`: control how portrait images are selected
+- `--portrait-visibility disabled|details|all`: control where portraits are rendered
 - `--strict`: fail fast on invalid metadata instead of skipping invalid entries
 - `--open`: open `index.html` after a successful build
 

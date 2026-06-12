@@ -47,7 +47,7 @@
   {% if project_count > 0 or total_media > 0 %}
     <div class="media-type-badges">
       {% set items = [
-        (project_count, icons.folder_icon, site_labels.entity.project, site_labels.entity.projects),
+        (project_count, icons.folder_icon, site_labels.counts.project, site_labels.counts.projects),
         (media_counts.video, icons.video_icon, site_labels.media.video, site_labels.media.videos),
         (media_counts.audio, icons.audio_icon, site_labels.media.audio_track, site_labels.media.audio_tracks),
         (media_counts.image, icons.image_icon, site_labels.media.image, site_labels.media.images),

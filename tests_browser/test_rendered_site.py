@@ -37,8 +37,10 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         cls.site_dir = Path(cls._tmp.name) / "site"
         cls.paginated_site_dir = Path(cls._tmp.name) / "paginated-site"
+        cls.details_site_dir = Path(cls._tmp.name) / "details-site"
         cls._build_example_site(cls.site_dir)
         cls._build_example_site(cls.paginated_site_dir, cls._write_paginated_config(), domain=None)
+        cls._build_example_site(cls.details_site_dir, cls._write_details_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
         cls.creator_path = cls._find_creator_page()
@@ -102,6 +104,21 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                             "creator_cards": {"page_size": 1, "image_max_height": 2000},
                             "project_cards": {"page_size": 1, "image_max_height": 2000},
                         }
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        return config_path
+
+    @classmethod
+    def _write_details_config(cls):
+        config_path = Path(cls._tmp.name) / "details_config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "site_rendering": {
+                        "portraits": {"visibility": "details"},
                     }
                 }
             ),
@@ -177,6 +194,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(250)
 
+    def open_details_page(self, rel_path: str):
+        self.page.goto(f"{self.base_url}/details-site/{rel_path}")
+        self.page.wait_for_load_state("load")
+        self.page.wait_for_timeout(250)
+
     def assertAspectGalleryBuilt(self, selector="#imageGallery"):
         layout = self.page.evaluate(
             """
@@ -208,6 +230,8 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.open_page("index.html")
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 3)
+        self.assertGreater(self.page.locator('#imageGallery .media-badge[title="1 album"]').count(), 0)
+        self.assertEqual(self.page.locator('#imageGallery .media-badge[title="1 Album"]').count(), 0)
         self.assertAspectGalleryBuilt()
 
         self.page.fill("#search-input", "nia")
@@ -223,6 +247,30 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 3)
         self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
+    def test_details_portrait_visibility_uses_text_overview_and_detail_portraits(self):
+        self.open_details_page("index.html")
+
+        cards = self.page.locator("#imageGallery .creator-text-card")
+        self.assertEqual(cards.count(), 3)
+        self.assertEqual(self.page.locator("#imageGallery .card-image").count(), 0)
+        self.assertEqual(self.page.locator("#imageGallery .aspect-ratio-box").count(), 0)
+        self.assertGreater(self.page.locator("#imageGallery .creator-text-card__project-summary").count(), 0)
+        self.assertGreater(self.page.locator("#imageGallery .creator-text-card__media-summary").count(), 0)
+        self.assertGreater(self.page.get_by_text("1 project", exact=True).count(), 0)
+        self.assertEqual(self.page.get_by_text("1 Project", exact=True).count(), 0)
+        project_summary_box = self.page.locator("#imageGallery .creator-text-card__project-summary").first.bounding_box()
+        media_summary_box = self.page.locator("#imageGallery .creator-text-card__media-summary").first.bounding_box()
+        self.assertGreater(media_summary_box["y"], project_summary_box["y"])
+
+        self.page.fill("#search-input", "nia")
+        self.page.wait_for_timeout(150)
+        self.assertEqual(self.page.locator("#imageGallery .creator-text-card").count(), 1)
+        self.assertIn("Nia Solen", self.page.locator("#imageGallery").inner_text())
+
+        self.open_details_page(self.creator_path)
+        self.assertGreater(self.page.locator(".info-block__media img[alt^='Portrait of']").count(), 0)
         self.assertNoBrowserErrors()
 
     def test_logo_remains_active_and_consistent_across_pages_and_themes(self):

@@ -178,7 +178,7 @@ class CreatorPageContext:
     type: str
     name: str
     rel_portrait_path: str
-    portrait_orientation: Orientation
+    portrait_orientation: Orientation | None
     info_html: str
     tags: TagCollection
     projects: list[ProjectCardContext]
@@ -227,6 +227,8 @@ class CreatorOverviewEntry:
     image_wrapper_height: int
     project_count: int
     media_counts: MediaCounts
+    project_count_summary: str
+    media_count_summary: str
 
 
 @dataclass(frozen=True)

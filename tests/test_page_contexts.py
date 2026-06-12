@@ -2,6 +2,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -13,6 +14,7 @@ from cr4te.build_issues import IssueCode
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
+from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_index import CreatorSummary, ProjectSummary
@@ -34,8 +36,13 @@ def write_image(path: Path, size: tuple[int, int] = (120, 90)) -> None:
     Image.new("RGB", size, color=(120, 80, 160)).save(path)
 
 
-def context_for(input_dir: Path, output_dir: Path, domain: Domain = Domain.ART) -> HtmlBuildContext:
-    config = apply_cli_overrides(load_config(), domain=domain)
+def context_for(
+    input_dir: Path,
+    output_dir: Path,
+    domain: Domain = Domain.ART,
+    portrait_visibility: PortraitVisibility = PortraitVisibility.ALL,
+) -> HtmlBuildContext:
+    config = apply_cli_overrides(load_config(), domain=domain, portrait_visibility=portrait_visibility)
     ctx = HtmlBuildContext(input_dir, output_dir, config.site_labels, config.site_rendering)
     prepare_output_dirs(ctx)
     prepare_default_thumbnails(ctx)
@@ -78,6 +85,56 @@ def person(name: str = "Noomi", **overrides) -> Creator:
 
 
 class PageContextTests(unittest.TestCase):
+    def test_disabled_portraits_build_creator_context_without_thumbnail_work(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(portrait="Noomi/portrait.jpg")
+            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.DISABLED)
+
+            with patch("cr4te.page_contexts.build_thumbnail_context") as build_thumbnail:
+                page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            build_thumbnail.assert_not_called()
+            self.assertEqual(page.rel_portrait_path, "")
+            self.assertIsNone(page.portrait_orientation)
+
+    def test_details_portraits_render_discovered_portrait_without_missing_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
+            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.DETAILS)
+
+            discovered_page = build_creator_page_context(
+                ctx,
+                person(portrait="Noomi/portrait.jpg"),
+                lambda name: None,
+                compute_creator_stats(person()),
+            )
+            missing_page = build_creator_page_context(
+                ctx,
+                person(name="Ada", portrait=""),
+                lambda name: None,
+                compute_creator_stats(person(name="Ada", portrait="")),
+            )
+
+            self.assertTrue(discovered_page.rel_portrait_path)
+            self.assertEqual(missing_page.rel_portrait_path, "")
+            self.assertIsNone(missing_page.portrait_orientation)
+
+    def test_all_portraits_use_default_when_discovery_is_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(portrait="")
+            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.ALL)
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertIsNotNone(page.portrait_orientation)
+
     def test_creator_page_context_uses_typed_project_cards_and_tags(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"

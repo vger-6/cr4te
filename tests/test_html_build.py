@@ -1,7 +1,9 @@
+import io
 import json
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -14,9 +16,11 @@ from PIL import Image
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
 from cr4te.build_metrics import AssetStatistics
-from cr4te.cr4te import _build_cmd_handler, _file_uri
+from cr4te.cr4te import _apply_cli_overrides_from_args, _build_cmd_handler, _create_parser, _file_uri
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
+from cr4te.enums.portrait_discovery import PortraitDiscovery
+from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.html_builder import HtmlBuildResult, build_html_pages_streaming
 from cr4te.library_builder import build_library_index, load_indexed_creator
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
@@ -35,6 +39,27 @@ def write_image(path: Path, size: tuple[int, int] = (120, 90)) -> None:
 
 
 class HtmlBuildTests(unittest.TestCase):
+    def test_cli_accepts_portrait_overrides_and_rejects_removed_portrait_options(self):
+        parser = _create_parser()
+        args = parser.parse_args([
+            "print-config",
+            "--portrait-discovery",
+            "auto",
+            "--portrait-visibility",
+            "details",
+        ])
+
+        config = _apply_cli_overrides_from_args(load_config(), args)
+
+        self.assertEqual(config.media_rules.portrait_discovery, PortraitDiscovery.AUTO)
+        self.assertEqual(config.site_rendering.portraits.visibility, PortraitVisibility.DETAILS)
+        for option, value in (
+            ("--portrait-mode", "disabled"),
+            ("--portrait-strategy", "none"),
+        ):
+            with self.subTest(option=option), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                parser.parse_args(["print-config", option, value])
+
     def test_file_uri_uses_resolved_path_uri(self):
         with tempfile.TemporaryDirectory() as tmp:
             index_html = Path(tmp) / "site" / "index.html"
@@ -58,7 +83,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -98,7 +124,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -124,7 +151,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -158,7 +186,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -197,7 +226,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -233,7 +263,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -264,7 +295,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=None,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,
@@ -307,7 +339,8 @@ class HtmlBuildTests(unittest.TestCase):
                 output=str(output_dir),
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
-                portrait_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
                 open=False,
                 force=True,
                 clean=False,

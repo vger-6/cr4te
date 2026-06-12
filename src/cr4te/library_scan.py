@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
+from typing import Collection, Iterable
 
 from .constants import README_FILE_NAME
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.orientation import Orientation
+from .enums.portrait_discovery import PortraitDiscovery
 from .media_extensions import AUDIO_EXTS, DOC_EXTS, IMAGE_EXTS, MEDIA_EXTS, TEXT_EXTS, VIDEO_EXTS
 from .schemas.config_schema import MediaRules
 from .schemas.library_schema import MediaGroup, Video
@@ -61,9 +62,17 @@ def iter_media_files(creator_dir: Path, media_rules: MediaRules) -> Iterable[Pat
         yield media_path
 
 
-def media_groups_from_buckets(buckets: dict[Path, MediaBucket], media_rules: MediaRules) -> list[MediaGroup]:
+def media_groups_from_buckets(
+    buckets: dict[Path, MediaBucket],
+    media_rules: MediaRules,
+    excluded_images: Collection[str] = (),
+) -> list[MediaGroup]:
     return [
-        bucket.to_media_group(media_rules.image_gallery_sample_max, media_rules.image_gallery_sample_strategy)
+        bucket.to_media_group(
+            media_rules.image_gallery_sample_max,
+            media_rules.image_gallery_sample_strategy,
+            excluded_images,
+        )
         for _, bucket in sorted(buckets.items(), key=lambda item: item[0].as_posix())
     ]
 
@@ -99,7 +108,8 @@ class ImageSelector:
     basename: str
     orientation: Orientation
     preferred_dir: Path
-    auto_find: bool = True
+    allow_orientation_fallback: bool = False
+    allow_any_fallback: bool = False
     _direct_named_candidate: Path | None = None
     _nested_named_candidate: Path | None = None
     _orientation_candidate: Path | None = None
@@ -117,11 +127,12 @@ class ImageSelector:
         if self._direct_named_candidate is not None or self._nested_named_candidate is not None:
             return
 
-        if self.auto_find:
+        if self.allow_orientation_fallback:
             if image_utils.infer_image_orientation(image_path) == self.orientation:
                 self._orientation_candidate = _lexicographic_min(self._orientation_candidate, image_path)
 
-        self._fallback_candidate = _lexicographic_min(self._fallback_candidate, image_path)
+        if self.allow_any_fallback:
+            self._fallback_candidate = _lexicographic_min(self._fallback_candidate, image_path)
 
     def best(self) -> Path | None:
         return (
@@ -167,7 +178,11 @@ class MediaBucket:
             self.tracks.append(rel_path)
 
         elif suffix in IMAGE_EXTS and not self._is_video_poster_candidate(media_path):
-            if stem not in (cover_selector.basename if cover_selector else "", portrait_selector.basename):
+            role_basenames = (
+                cover_selector.basename if cover_selector else "",
+                portrait_selector.basename,
+            )
+            if stem not in role_basenames:
                 self.images.append(rel_path)
 
             portrait_selector.consider(media_path)
@@ -190,12 +205,21 @@ class MediaBucket:
     def _is_video_poster_candidate(self, image_path: Path) -> bool:
         return any(image_path.with_suffix(video_ext).exists() for video_ext in VIDEO_EXTS)
 
-    def to_media_group(self, image_sample_max: int, image_sample_strategy: ImageSampleStrategy) -> MediaGroup:
+    def to_media_group(
+        self,
+        image_sample_max: int,
+        image_sample_strategy: ImageSampleStrategy,
+        excluded_images: Collection[str] = (),
+    ) -> MediaGroup:
         return MediaGroup(
             is_root=self.is_root,
             videos=sorted(self.videos, key=lambda video: video.file),
             tracks=sorted(self.tracks),
-            images=_sample_images(self.images, image_sample_max, image_sample_strategy),
+            images=_sample_images(
+                [image for image in self.images if image not in excluded_images],
+                image_sample_max,
+                image_sample_strategy,
+            ),
             documents=sorted(self.documents),
             texts=sorted(self.texts),
             rel_dir_path=self.rel_dir_path.as_posix(),
@@ -217,7 +241,7 @@ class CreatorScan:
             self.media_rules.portrait_basename,
             Orientation.PORTRAIT,
             self.creator_dir,
-            self.media_rules.auto_find_portraits,
+            allow_orientation_fallback=self.media_rules.portrait_discovery == PortraitDiscovery.AUTO,
         )
         self.cover_selectors = {}
 
@@ -278,6 +302,8 @@ class CreatorScan:
                 self.media_rules.cover_basename,
                 Orientation.LANDSCAPE,
                 self.creator_dir / project_name,
+                allow_orientation_fallback=True,
+                allow_any_fallback=True,
             )
             self.cover_selectors[project_name] = selector
         return selector

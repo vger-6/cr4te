@@ -25,7 +25,7 @@ These guidelines are for future refactors after the metadata/library refactor. D
 - Keep output preparation separate from render assets. Output folders and static files belong in `output_preparation.py`; thumbnail generation and media staging belong in `render_assets.py`.
 - Keep enum modules value-focused. Classification, inference, routing, and policy helpers belong in dedicated concept modules.
 - Keep the current top-level module layout unless a package move solves a real navigation, ownership, or testability problem.
-- Keep core metadata labels and project-facet labels separate. Core creator/project labels live under `site_labels.metadata`; facet defaults live in `taxonomy.py`; user facet-label overrides live under `site_labels.project_facets`.
+- Keep label roles separate. Heading and navigation entity labels live under `site_labels.entity`; sentence-style project count labels live under `site_labels.counts`; core metadata labels live under `site_labels.metadata`; facet defaults live in `taxonomy.py`; user facet-label overrides live under `site_labels.project_facets`.
 
 ## Data Shapes
 

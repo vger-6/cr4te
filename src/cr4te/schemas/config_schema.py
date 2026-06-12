@@ -5,6 +5,8 @@ from pydantic import BaseModel, ConfigDict, conint, field_validator
 from ..enums.image_sample_strategy import ImageSampleStrategy
 from ..enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from ..enums.media_type import MediaType
+from ..enums.portrait_discovery import PortraitDiscovery
+from ..enums.portrait_visibility import PortraitVisibility
 from ..enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from ..utils.image_utils import parse_aspect_ratio
 
@@ -35,6 +37,11 @@ class MediaLabels(StrictConfigModel):
     documents: str
     text_file: str
     text_files: str
+
+
+class CountLabels(StrictConfigModel):
+    project: str
+    projects: str
 
 
 class ControlLabels(StrictConfigModel):
@@ -99,6 +106,7 @@ class ProjectFacetLabels(StrictConfigModel):
 class SiteLabels(StrictConfigModel):
     entity: EntityLabels
     media: MediaLabels
+    counts: CountLabels
     controls: ControlLabels
     pages: PageLabels
     metadata: MetadataLabels
@@ -178,7 +186,7 @@ class ProjectMetadataRendering(StrictConfigModel):
 
 
 class PortraitRendering(StrictConfigModel):
-    hide: bool
+    visibility: PortraitVisibility
 
 
 class SiteRendering(StrictConfigModel):
@@ -189,6 +197,7 @@ class SiteRendering(StrictConfigModel):
     project_metadata: ProjectMetadataRendering
     portraits: PortraitRendering
 
+
 # Media rules schema
 class MediaRules(StrictConfigModel):
     max_search_depth: conint(ge=0)
@@ -197,9 +206,9 @@ class MediaRules(StrictConfigModel):
     global_exclude_prefix: str
     metadata_folder_name: str
     collaboration_separators: List[str]
+    portrait_discovery: PortraitDiscovery
     portrait_basename: str
     cover_basename: str
-    auto_find_portraits: bool
 
 # Top-level config schema
 class AppConfig(StrictConfigModel):

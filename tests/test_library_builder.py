@@ -13,6 +13,7 @@ from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.build_issues import BuildIssueError, IssueCode, IssueScope, IssueSeverity
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
+from cr4te.enums.portrait_discovery import PortraitDiscovery
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_builder import build_library_index, load_indexed_creator
 
@@ -103,6 +104,36 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertIn("Noomi/Landscapes/Travel Playlist", rel_paths)
             self.assertTrue(all("\\" not in path for path in rel_paths))
             self.assertEqual((creator_dir / "cr4te.json").read_text(encoding="utf-8"), original_creator_json)
+
+    def test_named_portrait_is_discovered_and_assigned_in_built_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            creator_dir = root / "Noomi"
+            write_image(creator_dir / "portrait.jpg", (80, 160))
+            config = self.build_config()
+
+            index = build_library_index(root, config.media_rules)
+            summary = index.creator_by_name["Noomi"]
+            creator = load_indexed_creator(index, summary, config.media_rules)
+
+            self.assertEqual(summary.portrait, "Noomi/portrait.jpg")
+            self.assertEqual(creator.portrait, "Noomi/portrait.jpg")
+            self.assertEqual(creator.media_groups[0].images, [])
+
+    def test_auto_selected_portrait_is_not_duplicated_in_gallery_media(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            creator_dir = root / "Noomi"
+            write_image(creator_dir / "photo.jpg", (80, 160))
+            config = self.build_config()
+            config.media_rules.portrait_discovery = PortraitDiscovery.AUTO
+
+            index = build_library_index(root, config.media_rules)
+            summary = index.creator_by_name["Noomi"]
+            creator = load_indexed_creator(index, summary, config.media_rules)
+
+            self.assertEqual(summary.portrait, "Noomi/photo.jpg")
+            self.assertEqual(creator.media_groups[0].images, [])
 
     def test_library_index_keeps_lightweight_creator_and_project_summaries(self):
         with tempfile.TemporaryDirectory() as tmp:

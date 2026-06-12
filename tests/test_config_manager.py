@@ -10,6 +10,8 @@ sys.path.insert(0, str(ROOT / "src"))
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.config_presets import DEFAULT_CONFIG, get_domain_preset
 from cr4te.enums.domain import Domain
+from cr4te.enums.portrait_discovery import PortraitDiscovery
+from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.enums.visible_fields import ProjectField
 
 
@@ -28,6 +30,8 @@ class ConfigManagerTests(unittest.TestCase):
             preset_sections = get_domain_preset(domain).sections()
 
             self.assertTrue(config.site_labels.entity.creator)
+            self.assertEqual(config.site_labels.counts.project, config.site_labels.entity.project.lower())
+            self.assertEqual(config.site_labels.counts.projects, config.site_labels.entity.projects.lower())
             self.assertEqual(set(preset_sections), {"site_labels", "site_rendering", "media_rules"})
 
     def test_domain_preset_sections_are_copies(self):
@@ -49,7 +53,69 @@ class ConfigManagerTests(unittest.TestCase):
 
             self.assertEqual(config.site_labels.entity.creators, "Artists")
             self.assertEqual(config.site_labels.entity.creator, "Creator")
+            self.assertEqual(config.site_labels.counts.project, "project")
             self.assertEqual(config.site_labels.controls.play, "Play")
+
+    def test_project_count_labels_are_configurable_independently_from_entity_labels(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_labels": {
+                        "entity": {"project": "Release", "projects": "Releases"},
+                        "counts": {"project": "record", "projects": "records"},
+                    }
+                },
+            )
+
+            config = load_config(config_path)
+
+            self.assertEqual(config.site_labels.entity.project, "Release")
+            self.assertEqual(config.site_labels.entity.projects, "Releases")
+            self.assertEqual(config.site_labels.counts.project, "record")
+            self.assertEqual(config.site_labels.counts.projects, "records")
+
+    def test_portrait_discovery_and_visibility_resolve_in_owned_sections(self):
+        config = load_config()
+
+        self.assertEqual(config.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
+        self.assertEqual(config.media_rules.portrait_basename, "portrait")
+        self.assertEqual(config.site_rendering.portraits.visibility, PortraitVisibility.ALL)
+
+    def test_portrait_overrides_do_not_reset_when_omitted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "media_rules": {"portrait_discovery": "auto"},
+                    "site_rendering": {"portraits": {"visibility": "details"}},
+                },
+            )
+
+            configured = load_config(config_path)
+            preserved = apply_cli_overrides(configured, domain=Domain.ART)
+            overridden = apply_cli_overrides(
+                configured,
+                portrait_discovery=PortraitDiscovery.NAMED,
+                portrait_visibility=PortraitVisibility.DISABLED,
+            )
+
+            self.assertEqual(preserved.media_rules.portrait_discovery, PortraitDiscovery.AUTO)
+            self.assertEqual(preserved.site_rendering.portraits.visibility, PortraitVisibility.DETAILS)
+            self.assertEqual(overridden.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
+            self.assertEqual(overridden.site_rendering.portraits.visibility, PortraitVisibility.DISABLED)
+
+    def test_removed_portrait_configuration_fields_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(config_path, {"portraits": {"mode": "named"}})
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("portraits", str(caught.exception))
 
     def test_load_config_accepts_project_facet_label_overrides(self):
         with tempfile.TemporaryDirectory() as tmp:

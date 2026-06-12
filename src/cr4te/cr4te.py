@@ -13,7 +13,8 @@ from .build_summary import BuildSummary, log_build_summary
 from .config_manager import load_config, apply_cli_overrides
 from .schemas.config_schema import AppConfig
 from .enums.image_sample_strategy import ImageSampleStrategy
-from .enums.portrait_strategy import PortraitStrategy
+from .enums.portrait_discovery import PortraitDiscovery
+from .enums.portrait_visibility import PortraitVisibility
 from .enums.domain import Domain
 from .html_builder import build_html_pages_streaming
 from .library_builder import build_library_index, load_indexed_creator
@@ -59,7 +60,8 @@ def _apply_cli_overrides_from_args(config: AppConfig, args) -> AppConfig:
     return apply_cli_overrides(
         config,
         image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-        portrait_strategy=PortraitStrategy(args.portrait_strategy) if args.portrait_strategy else None,
+        portrait_discovery=PortraitDiscovery(args.portrait_discovery) if args.portrait_discovery else None,
+        portrait_visibility=PortraitVisibility(args.portrait_visibility) if args.portrait_visibility else None,
         domain=_domain_from_args(args)
     )
 
@@ -96,7 +98,8 @@ def _create_parser() -> argparse.ArgumentParser:
         p.add_argument("--config", help="Path to configuration file (optional)")
         p.add_argument("--domain", choices=[m.value for m in Domain], help="Apply a domain-specific configuration preset")
         p.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
-        p.add_argument("--portrait-strategy", choices=[s.value for s in PortraitStrategy], help="Strategy to find portraits")
+        p.add_argument("--portrait-discovery", choices=[mode.value for mode in PortraitDiscovery], help="Control portrait discovery")
+        p.add_argument("--portrait-visibility", choices=[mode.value for mode in PortraitVisibility], help="Control where portraits are rendered")
 
     # Build subcommand
     build_parser = subparsers.add_parser("build", help="Scan metadata and build HTML site")
@@ -184,7 +187,11 @@ def _build_cmd_handler(args):
             output_dir,
             config.site_labels,
             config.site_rendering,
-            lambda summary: load_indexed_creator(library_index, summary, config.media_rules),
+            lambda summary: load_indexed_creator(
+                library_index,
+                summary,
+                config.media_rules,
+            ),
             strict=args.strict,
         )
     except BuildIssueError as exc:

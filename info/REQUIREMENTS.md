@@ -28,6 +28,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **LIFE-002:** Editable project facet scaffolding must be derived from the resolved `site_rendering.project_metadata.fields` configuration.
 - **LIFE-003:** Domain presets must be only one way to produce resolved project facet configuration. A saved configuration file must be self-contained for later builds.
 - **LIFE-004:** A CLI domain override must replace the active project facet field set instead of merging with the configured facet fields.
+- **LIFE-005:** Portrait discovery and portrait visibility must be independently controlled by resolved configuration. Portrait discovery and portrait-role assignment during library indexing must depend only on `media_rules` and remain invariant across portrait visibility settings. An omitted CLI portrait-discovery or portrait-visibility override must preserve its configured value.
 
 ## Build Modes And Issue Reporting
 
@@ -48,7 +49,9 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **ASSET-005:** `--strict` must abort immediately on asset errors but not on asset warnings.
 - **ASSET-006:** Media staging during `build` must not silently copy source media when links cannot be created. It may use symbolic links or hard links.
 - **ASSET-007:** If neither symbolic nor hard links can be created, media staging must abort with a structured asset error and a clear message regardless of strict mode.
-- **ASSET-008:** Portrait and cover discovery must select the lexicographically first image with the configured basename directly inside the creator or project folder it describes. If none exists there, discovery must select the lexicographically first matching image below that folder. If no matching basename exists, the configured automatic-selection and generated-default behavior applies.
+- **ASSET-008:** Named portrait and cover discovery must select the lexicographically first image with the configured basename directly inside the creator or project folder it describes. If none exists there, discovery must select the lexicographically first matching image below that folder.
+- **ASSET-009:** Named portrait discovery must use only named matches. Auto portrait discovery may fall back to a portrait-oriented image. Images matching the portrait basename are portrait-role candidates rather than gallery media, and an image selected as an automatic portrait fallback must not additionally appear as gallery media.
+- **ASSET-010:** Cover discovery must fall back from named matches to a landscape-oriented image, then to any available image, then to the generated default cover.
 
 ## Thumbnail Freshness
 
@@ -72,6 +75,8 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-011:** Every generated page must display a consistently styled cr4te logo that links to the creator overview, including when the creator overview is already the current page.
 - **SITE-012:** Generated detail-page content must remain available without JavaScript at every supported viewport width. Narrow layouts must present profile and overview content before media and other regular sections without moving content nodes at runtime.
 - **SITE-013:** Generated-site lightboxes must behave as modal dialogs with keyboard-operable native controls. Opening a lightbox must move focus into it, focus must remain inside while it is open, and closing it must return focus to its trigger. Escape-to-close and arrow-key image navigation must remain available.
+- **SITE-014:** Disabled portrait visibility must omit portrait markup, perform no portrait-thumbnail work, and render creator overview entries as text cards containing the creator name and non-zero project and media counts. Project counts must occupy a separate line above media counts. Count phrases, badge tooltips, and badge accessible labels must use dedicated count labels independently from capitalized entity labels used for headings and navigation. Details portrait visibility must use the same text cards while rendering discovered portraits on creator and project detail pages. All portrait visibility must preserve portrait image cards and their icon badges.
+- **SITE-015:** Details portrait visibility must omit portrait markup when discovery finds no eligible image. All portrait visibility must use generated default portraits when discovery finds no eligible image.
 
 ## Themes
 

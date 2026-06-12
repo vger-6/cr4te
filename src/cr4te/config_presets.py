@@ -8,6 +8,8 @@ from .enums.domain import Domain
 from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.media_type import MediaType
+from .enums.portrait_discovery import PortraitDiscovery
+from .enums.portrait_visibility import PortraitVisibility
 from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from .taxonomy import get_domain_project_visible_metadata, get_project_facet_label_defaults
 
@@ -76,6 +78,11 @@ DEFAULT_MEDIA_LABELS = {
     "text_files": "text files",
 }
 
+DEFAULT_COUNT_LABELS = {
+    "project": "project",
+    "projects": "projects",
+}
+
 DEFAULT_CONTROL_LABELS = {
     "search_placeholder": "Search creators, projects, tags...",
     "clear_search": "Clear search",
@@ -130,6 +137,7 @@ DEFAULT_METADATA_LABELS = {
 DEFAULT_SITE_LABELS = {
     "entity": DEFAULT_ENTITY_LABELS,
     "media": DEFAULT_MEDIA_LABELS,
+    "counts": DEFAULT_COUNT_LABELS,
     "controls": DEFAULT_CONTROL_LABELS,
     "pages": DEFAULT_PAGE_LABELS,
     "metadata": DEFAULT_METADATA_LABELS,
@@ -182,7 +190,7 @@ DEFAULT_CONFIG = {
             "fields": {},
         },
         "portraits": {
-            "hide": False,
+            "visibility": PortraitVisibility.ALL,
         },
     },
     "media_rules": {
@@ -192,9 +200,9 @@ DEFAULT_CONFIG = {
         "global_exclude_prefix": "_",
         "metadata_folder_name": "meta",
         "collaboration_separators": ["&", ","],
+        "portrait_discovery": PortraitDiscovery.NAMED,
         "portrait_basename": "portrait",
         "cover_basename": "cover",
-        "auto_find_portraits": False,
     },
 }
 
@@ -226,6 +234,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "project": "Movie",
                         "projects": "Movies",
                     },
+                    "counts": {"project": "movie", "projects": "movies"},
                     "controls": {"search_placeholder": "Search directors, movies, tags..."},
                     "pages": {
                         "audio_section_default_title": "Soundtrack",
@@ -246,6 +255,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "project": "Album",
                         "projects": "Albums",
                     },
+                    "counts": {"project": "album", "projects": "albums"},
                     "controls": {"search_placeholder": "Search musicians, albums, tags..."},
                     "pages": {
                         "creator_collabs_title_prefix": "With",
@@ -280,6 +290,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "project": "Work",
                         "projects": "Works",
                     },
+                    "counts": {"project": "work", "projects": "works"},
                     "controls": {"search_placeholder": "Search artists, works, tags..."},
                 },
                 site_rendering={
@@ -301,10 +312,11 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                 site_labels={
                     "entity": {
                         "creator": "Author",
-                        "creators": "Author",
+                        "creators": "Authors",
                         "project": "Book",
                         "projects": "Books",
                     },
+                    "counts": {"project": "book", "projects": "books"},
                     "controls": {"search_placeholder": "Search author, books, tags..."},
                     "pages": {
                         "audio_section_default_title": "Audio",
@@ -329,6 +341,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.BOOK)},
                 },
+                media_rules={
+                    "collaboration_separators": ["&"],
+                }
             )
         case Domain.MODEL:
             return ConfigPreset(
@@ -339,6 +354,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "project": "Scene",
                         "projects": "Scenes",
                     },
+                    "counts": {"project": "scene", "projects": "scenes"},
                     "controls": {"search_placeholder": "Search models, scenes, tags..."},
                     "pages": {"creator_collabs_title_prefix": "Scenes with"},
                     "metadata": {"members": "Featuring"},

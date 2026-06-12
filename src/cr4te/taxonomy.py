@@ -73,7 +73,7 @@ PROJECT_FACETS: tuple[FacetSpec, ...] = (
     FacetSpec(ProjectField.PUBLISHERS, FacetLabels("Publisher", "Publishers"), frozenset({Domain.BOOK}), _FILTERABLE_LINES),
     FacetSpec(ProjectField.EDITORS, FacetLabels("Editor", "Editors"), frozenset({Domain.BOOK, Domain.FILM}), _LINES),
     FacetSpec(ProjectField.TRANSLATORS, FacetLabels("Translator", "Translators"), frozenset({Domain.BOOK}), _LINES),
-    FacetSpec(ProjectField.ISBNS, FacetLabels("ISBN", "ISBNs"), frozenset({Domain.BOOK}), _FILTERABLE_LINES),
+    FacetSpec(ProjectField.ISBNS, FacetLabels("ISBN", "ISBNs"), frozenset({Domain.BOOK}), FacetRenderSpec(separator="<br>", searchable=True, clickable=False, tags=False)),
     FacetSpec(ProjectField.CITATIONS, FacetLabels("Citation", "Citations"), frozenset({Domain.BOOK}), _LINES),
     FacetSpec(ProjectField.COVER_ARTISTS, FacetLabels("Cover Artist", "Cover Artists"), frozenset({Domain.BOOK, Domain.MUSIC}), _FILTERABLE_LINES),
     FacetSpec(ProjectField.GENRES, FacetLabels("Genre", "Genres"), frozenset({Domain.BOOK, Domain.FILM, Domain.MUSIC}), _FILTERABLE),

@@ -49,6 +49,7 @@ def _build_project(
     scan: CreatorScan,
     media_rules: MediaRules,
     input_dir: Path,
+    excluded_images: tuple[str, ...],
 ) -> Project:
     project_name = project_dir.name
     selected_cover = scan.selected_cover(project_name)
@@ -62,7 +63,7 @@ def _build_project(
         info=text_utils.read_text(project_dir / README_FILE_NAME),
         tags=project_metadata.tags,
         facets=project_metadata.facets,
-        media_groups=media_groups_from_buckets(project_buckets, media_rules),
+        media_groups=media_groups_from_buckets(project_buckets, media_rules, excluded_images),
     )
 
 
@@ -88,6 +89,7 @@ def _build_creator(
     creator_type = _infer_creator_type(creator_name, metadata, media_rules)
     selected_portrait = scan.selected_portrait()
     portrait = rel_to_input(selected_portrait, input_dir) if selected_portrait else ""
+    excluded_images = (portrait,) if portrait else ()
 
     project_dirs = {project_dir.name: project_dir for project_dir in iter_project_dirs(creator_dir, media_rules)}
     project_names = sorted(set(project_dirs) | set(scan.project_buckets))
@@ -107,6 +109,7 @@ def _build_creator(
                 scan,
                 media_rules,
                 input_dir,
+                excluded_images,
             ))
         except (MetadataLoadError, ValidationError, ValueError, OSError) as exc:
             policy.handle(issue_from_exception(project_dir, IssueScope.PROJECT, exc), exc)
@@ -118,7 +121,7 @@ def _build_creator(
 
     active_since = normalize_metadata_date(type_metadata.active_since, "active_since", creator_name)
     info = text_utils.read_text(creator_dir / README_FILE_NAME)
-    media_groups = media_groups_from_buckets(scan.creator_buckets, media_rules)
+    media_groups = media_groups_from_buckets(scan.creator_buckets, media_rules, excluded_images)
 
     if creator_type == CreatorType.COLLABORATION:
         members = metadata.collaboration.members
@@ -191,7 +194,11 @@ def _link_creator_summaries(summaries: list[CreatorSummary], policy: BuildIssueP
     return tuple(linked)
 
 
-def build_library_index(input_dir: Path, media_rules: MediaRules, strict: bool = False) -> LibraryIndex:
+def build_library_index(
+    input_dir: Path,
+    media_rules: MediaRules,
+    strict: bool = False,
+) -> LibraryIndex:
     input_dir = input_dir.resolve()
 
     summaries: list[CreatorSummary] = []
@@ -213,7 +220,11 @@ def build_library_index(input_dir: Path, media_rules: MediaRules, strict: bool =
     )
 
 
-def load_indexed_creator(index: LibraryIndex, summary: CreatorSummary, media_rules: MediaRules) -> Creator:
+def load_indexed_creator(
+    index: LibraryIndex,
+    summary: CreatorSummary,
+    media_rules: MediaRules,
+) -> Creator:
     policy = BuildIssuePolicy(strict=False)
     creator = _build_creator(summary.path, index.input_dir, media_rules, policy)
     return creator.model_copy(update={"collaborations": list(summary.collaborations)})

@@ -12,7 +12,8 @@
   {% set search_text_placeholder = site_labels.controls.search_placeholder %}
   {% include "partials/_search_bar.html.j2" %}
 
-  {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) %}
+  {% set portrait_image_cards = site_rendering.portraits.visibility == PortraitVisibility.ALL %}
+  {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) if portrait_image_cards else 'creator-card-grid' %}
   {% set aspect_ratio = site_rendering.galleries.creator_cards.aspect_ratio or '1/1' %}
 
   <div class="overview-layout">
@@ -27,20 +28,37 @@
              data-next-label="{{ site_labels.controls.next }}"
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for creator in creator_entries %}
-          <div class="image-wrapper image-card" 
+            {% if not portrait_image_cards %}
+          <div class="image-wrapper image-card creator-text-card"
+               data-search-text="{{ creator.search_text }}">
+            <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}" class="creator-text-card__content">
+              <span class="creator-text-card__name">{{ creator.name }}</span>
+              {% if creator.project_count_summary or creator.media_count_summary %}
+                <span class="creator-text-card__counts">
+                {% if creator.project_count_summary %}
+                  <small class="creator-text-card__summary creator-text-card__project-summary">{{ creator.project_count_summary }}</small>
+                {% endif %}
+                {% if creator.media_count_summary %}
+                  <small class="creator-text-card__summary creator-text-card__media-summary">{{ creator.media_count_summary }}</small>
+                {% endif %}
+                </span>
+              {% endif %}
+            </a>
+          </div>
+            {% else %}
+          <div class="image-wrapper image-card"
                data-search-text="{{ creator.search_text }}"
                data-width="{{ creator.image_wrapper_width }}"
                data-height="{{ creator.image_wrapper_height }}">
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
-              {% if not site_rendering.portraits.hide %}
                 <img class="card-image" src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">
                 {{ media_badges.creator_badges(creator.project_count, creator.media_counts, site_labels) }}
-              {% endif %}
               <div class=image-caption>
                 <span>{{ creator.name }}</span>
               </div>
             </a>
           </div>
+            {% endif %}
           {% endfor %}
         </div>
       </div>

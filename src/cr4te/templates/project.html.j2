@@ -44,8 +44,8 @@
           <div class="section-title">{{ creator.name }}</div>
           <hr>
           <div class="section-content">
-            <div class="info-block info-block--portrait">
-              {% if not site_rendering.portraits.hide %}
+            <div class="info-block{% if creator.rel_portrait_path %} info-block--portrait{% endif %}">
+              {% if creator.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ creator.name }}">
                   <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
                 </a>
@@ -62,8 +62,8 @@
           <div class="section-title">{{ collaboration.name }}</div>
           <hr>
           <div class="section-content">
-            <div class="info-block info-block--portrait">
-              {% if not site_rendering.portraits.hide %}
+            <div class="info-block{% if collaboration.rel_portrait_path %} info-block--portrait{% endif %}">
+              {% if collaboration.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ collaboration.name }}">
                   <img class="primary-image" src="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" alt="Portrait of {{ collaboration.name }}">
                 </a>
@@ -79,8 +79,8 @@
           <div class="section-title">{{ participant.name }}</div>
           <hr>
           <div class="section-content">
-            <div class="info-block info-block--portrait">
-              {% if not site_rendering.portraits.hide %}
+            <div class="info-block{% if participant.rel_portrait_path %} info-block--portrait{% endif %}">
+              {% if participant.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ participant.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ participant.name }}">
                   <img class="primary-image" src="{{ path_to_root }}{{ participant.rel_portrait_path}}" alt="Portrait of {{ participant.name }}">
                 </a>

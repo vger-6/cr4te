@@ -506,6 +506,48 @@ a:focus img {
   color: var(--theme-card-caption-hover);
 }
 
+.creator-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+}
+
+.creator-text-card {
+  align-items: stretch;
+  padding-bottom: 0;
+}
+
+.creator-text-card__content {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+  justify-content: center;
+  min-height: 5rem;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+.creator-text-card__name {
+  color: var(--theme-card-caption);
+  font-weight: bold;
+}
+
+.creator-text-card__counts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.creator-text-card__summary {
+  color: var(--theme-text-muted);
+}
+
+.creator-text-card:hover .creator-text-card__name {
+  color: var(--theme-card-caption-hover);
+}
+
 .image-gallery--aspect .image-wrapper {
   display: block;
 }

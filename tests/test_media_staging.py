@@ -14,6 +14,7 @@ from cr4te.build_issues import BuildIssueError, BuildIssuePolicy, IssueCode
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.domain import Domain
+from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.output_preparation import copy_static_assets, prepare_output_dirs
 from cr4te.render_assets import (
@@ -25,6 +26,34 @@ from cr4te.render_assets import (
 
 
 class MediaStagingTests(unittest.TestCase):
+    def test_disabled_portraits_omit_portrait_default_thumbnails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config(), portrait_visibility=PortraitVisibility.DISABLED)
+            ctx = HtmlBuildContext(
+                root / "input",
+                root / "output",
+                config.site_labels,
+                config.site_rendering,
+            )
+
+            thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
+
+            self.assertNotIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
+            self.assertNotIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertIn(ThumbType.COVER, thumb_types)
+
+    def test_details_portraits_prepare_detail_default_but_not_overview_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config(), portrait_visibility=PortraitVisibility.DETAILS)
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
+
+            thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
+
+            self.assertNotIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
+            self.assertIn(ThumbType.PORTRAIT, thumb_types)
+
     def test_stage_media_file_uses_hardlink_when_symlink_is_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

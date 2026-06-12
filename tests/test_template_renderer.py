@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,7 +14,10 @@ from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
 from cr4te.enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from cr4te.enums.orientation import Orientation
+from cr4te.enums.portrait_visibility import PortraitVisibility
+from cr4te.media_counts import MediaCounts
 from cr4te.render_models import (
+    CreatorOverviewEntry,
     CreatorProfileContext,
     DocumentContext,
     GalleryImageContext,
@@ -49,8 +53,16 @@ class FakeEnvironment:
         return FakeTemplate(name, self.calls)
 
 
-def context_for(input_dir: Path, output_dir: Path) -> HtmlBuildContext:
-    config = apply_cli_overrides(load_config(), domain=Domain.ART)
+def context_for(
+    input_dir: Path,
+    output_dir: Path,
+    portrait_visibility: PortraitVisibility = PortraitVisibility.ALL,
+) -> HtmlBuildContext:
+    config = apply_cli_overrides(
+        load_config(),
+        domain=Domain.ART,
+        portrait_visibility=portrait_visibility,
+    )
     return HtmlBuildContext(input_dir, output_dir, config.site_labels, config.site_rendering)
 
 
@@ -81,6 +93,111 @@ def project() -> Project:
 
 
 class TemplateRendererTests(unittest.TestCase):
+    def test_non_all_portrait_overview_renders_text_card_without_image_or_badges(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            entry = CreatorOverviewEntry(
+                name="Displayed Noomi",
+                rel_html_path="html/noomi.html",
+                search_text="displayed noomi",
+                rel_thumbnail_path="",
+                image_wrapper_width=0,
+                image_wrapper_height=0,
+                project_count=1,
+                media_counts=MediaCounts(image=2),
+                project_count_summary="1 work",
+                media_count_summary="2 images",
+            )
+
+            for visibility in (PortraitVisibility.DISABLED, PortraitVisibility.DETAILS):
+                with self.subTest(visibility=visibility):
+                    ctx = context_for(Path(tmp) / "input", Path(tmp) / "site", visibility)
+                    render_data = {
+                        "site_labels": ctx.site_labels,
+                        "site_rendering": ctx.site_rendering,
+                        "gallery_image_max_height": 450,
+                        "ImageGalleryBuildingStrategy": ImageGalleryBuildingStrategy,
+                        "themes": ctx.themes,
+                        "default_theme": ctx.default_theme,
+                        "page_shell": PageShellContext(
+                            title=ctx.site_labels.entity.creators,
+                            layout_stylesheet="overview-layout.css",
+                            navigation_items=(
+                                NavigationItem(ctx.site_labels.entity.creators, "index.html", current=True),
+                            ),
+                        ),
+                    }
+
+                    rendered = env.get_template("creator_overview.html.j2").render(
+                        creator_entries=[entry],
+                        **render_data,
+                    )
+
+                    self.assertIn('class="creator-card-grid"', rendered)
+                    self.assertIn('class="image-wrapper image-card creator-text-card"', rendered)
+                    self.assertIn('class="creator-text-card__summary creator-text-card__project-summary">1 work</small>', rendered)
+                    self.assertIn('class="creator-text-card__summary creator-text-card__media-summary">2 images</small>', rendered)
+                    self.assertNotIn("1 work | 2 images", rendered)
+                    self.assertNotIn('class="card-image"', rendered)
+                    self.assertNotIn("media-type-badges", rendered)
+
+                    empty_summary_rendered = env.get_template("creator_overview.html.j2").render(
+                        creator_entries=[replace(entry, project_count_summary="", media_count_summary="")],
+                        **render_data,
+                    )
+                    self.assertNotIn("creator-text-card__counts", empty_summary_rendered)
+
+                    project_only_rendered = env.get_template("creator_overview.html.j2").render(
+                        creator_entries=[replace(entry, media_count_summary="")],
+                        **render_data,
+                    )
+                    self.assertIn("creator-text-card__project-summary", project_only_rendered)
+                    self.assertNotIn("creator-text-card__media-summary", project_only_rendered)
+
+                    media_only_rendered = env.get_template("creator_overview.html.j2").render(
+                        creator_entries=[replace(entry, project_count_summary="")],
+                        **render_data,
+                    )
+                    self.assertNotIn("creator-text-card__project-summary", media_only_rendered)
+                    self.assertIn("creator-text-card__media-summary", media_only_rendered)
+
+    def test_enabled_portrait_overview_preserves_image_card_and_badges(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            entry = CreatorOverviewEntry(
+                name="Displayed Noomi",
+                rel_html_path="html/noomi.html",
+                search_text="displayed noomi",
+                rel_thumbnail_path="thumb.jpg",
+                image_wrapper_width=80,
+                image_wrapper_height=160,
+                project_count=1,
+                media_counts=MediaCounts(image=2),
+                project_count_summary="1 work",
+                media_count_summary="2 images",
+            )
+
+            rendered = env.get_template("creator_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator_entries=[entry],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=PageShellContext(
+                    title=ctx.site_labels.entity.creators,
+                    layout_stylesheet="overview-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "index.html", current=True),),
+                ),
+            )
+
+            self.assertIn('class="card-image"', rendered)
+            self.assertIn("media-type-badges", rendered)
+            self.assertIn('title="1 work"', rendered)
+            self.assertIn('aria-label="1 work"', rendered)
+            self.assertNotIn('title="1 Work"', rendered)
+            self.assertNotIn("creator-text-card", rendered)
+
     def test_gallery_class_macro_supports_justified_strategy(self):
         macro = env.get_template("partials/_utils.html.j2").module.get_image_gallery_class
 
