@@ -10,7 +10,7 @@ from cr4te.library_issues import (
     invalid_collaboration_reference_issue,
     issue_from_exception,
 )
-from cr4te.library_metadata import MetadataReferenceError
+from cr4te.library_metadata import MetadataValidationError
 
 
 class LibraryIssuesTests(unittest.TestCase):
@@ -60,10 +60,10 @@ class LibraryIssuesTests(unittest.TestCase):
         issue = issue_from_exception(
             Path("Ada"),
             IssueScope.CREATOR,
-            MetadataReferenceError("portrait file not found"),
+            MetadataValidationError("invalid metadata"),
         )
 
-        self.assertEqual(issue.code, IssueCode.MISSING_REFERENCE)
+        self.assertEqual(issue.code, IssueCode.INVALID_METADATA)
         self.assertEqual(issue.scope, IssueScope.CREATOR)
 
     def test_invalid_collaboration_reference_is_warning(self):

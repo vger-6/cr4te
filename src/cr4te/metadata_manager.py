@@ -101,21 +101,18 @@ def _creator_metadata_template(
         return CreatorMetadataTemplate(
             display_name=creator_name,
             type=creator_type,
-            portrait="",
             collaboration=collaboration,
         )
 
     return CreatorMetadataTemplate(
         display_name=creator_name,
         type=creator_type,
-        portrait="",
     )
 
 
 def _project_metadata_template(project_dir: Path, project_facet_fields: Sequence[ProjectField]) -> ProjectMetadataTemplate:
     return ProjectMetadataTemplate(
         display_title=project_dir.name,
-        cover="",
         facet_fields=tuple(project_facet_fields),
     )
 

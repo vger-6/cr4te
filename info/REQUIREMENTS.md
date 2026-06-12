@@ -20,6 +20,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **META-007:** Creator type-specific metadata must use `person` and `collaboration` branches. The inactive branch must be pruned when the creator type changes.
 - **META-008:** Project domain metadata must be stored as generic `facets` in the project-level `cr4te.json`. Empty stale facets must be pruned, but stale facets with values must be retained as a domain-change failsafe.
 - **META-009:** Date metadata must accept only valid calendar dates in `yyyy`, `yyyy-mm`, or `yyyy-mm-dd` form. Display must preserve the stored precision: year-only dates display as a year, month dates display as month and year, and full dates display with day, month, and year.
+- **META-010:** Portrait and cover image selection must be derived exclusively from filesystem discovery.
 
 ## Metadata Lifecycle And Configuration
 
@@ -47,6 +48,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **ASSET-005:** `--strict` must abort immediately on asset errors but not on asset warnings.
 - **ASSET-006:** Media staging during `build` must not silently copy source media when links cannot be created. It may use symbolic links or hard links.
 - **ASSET-007:** If neither symbolic nor hard links can be created, media staging must abort with a structured asset error and a clear message regardless of strict mode.
+- **ASSET-008:** Portrait and cover discovery must select the lexicographically first image with the configured basename directly inside the creator or project folder it describes. If none exists there, discovery must select the lexicographically first matching image below that folder. If no matching basename exists, the configured automatic-selection and generated-default behavior applies.
 
 ## Thumbnail Freshness
 

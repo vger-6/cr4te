@@ -9,11 +9,9 @@ sys.path.insert(0, str(ROOT / "src"))
 from pydantic import ValidationError
 
 from cr4te.library_metadata import (
-    MetadataReferenceError,
     MetadataShapeError,
     MetadataValidationError,
     load_json_model,
-    metadata_relative_path,
     normalize_metadata_date,
 )
 from cr4te.schemas.library_schema import Project
@@ -80,23 +78,6 @@ class LibraryMetadataTests(unittest.TestCase):
 
         with self.assertRaises(ValidationError):
             Project(**base_project, release_date="2024-99")
-
-    def test_metadata_relative_path_requires_existing_file_inside_input_dir(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            input_dir = Path(tmp) / "Artists"
-            project_dir = input_dir / "Ada" / "Project"
-            cover_path = project_dir / "cover.jpg"
-            cover_path.parent.mkdir(parents=True)
-            cover_path.write_bytes(b"image")
-
-            self.assertEqual(
-                metadata_relative_path(project_dir, "cover.jpg", input_dir, "cover"),
-                "Ada/Project/cover.jpg",
-            )
-
-            outside_path = Path("..") / ".." / ".." / "outside.jpg"
-            with self.assertRaises(MetadataReferenceError):
-                metadata_relative_path(project_dir, str(outside_path), input_dir, "cover")
 
     def test_load_json_model_rejects_non_object_json(self):
         with tempfile.TemporaryDirectory() as tmp:

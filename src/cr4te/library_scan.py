@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable
@@ -99,33 +98,49 @@ def _sample_images(rel_image_paths: list[str], max_images: int, strategy: ImageS
 class ImageSelector:
     basename: str
     orientation: Orientation
+    preferred_dir: Path
     auto_find: bool = True
-    selected: Path | None = None
-    _named_candidate: Path | None = None
+    _direct_named_candidate: Path | None = None
+    _nested_named_candidate: Path | None = None
     _orientation_candidate: Path | None = None
     _fallback_candidate: Path | None = None
 
     def consider(self, image_path: Path) -> None:
-        if self.selected is not None:
-            return
-
         stem = image_path.stem.lower()
         if stem == self.basename.lower():
-            self.selected = image_path
+            if image_path.parent == self.preferred_dir:
+                self._direct_named_candidate = _lexicographic_min(self._direct_named_candidate, image_path)
+            else:
+                self._nested_named_candidate = _lexicographic_min(self._nested_named_candidate, image_path)
             return
 
-        if self._named_candidate is None:
-            self._named_candidate = image_path
+        if self._direct_named_candidate is not None or self._nested_named_candidate is not None:
+            return
 
-        if self.auto_find and self._orientation_candidate is None:
+        if self.auto_find:
             if image_utils.infer_image_orientation(image_path) == self.orientation:
-                self._orientation_candidate = image_path
+                self._orientation_candidate = _lexicographic_min(self._orientation_candidate, image_path)
 
-        if self._fallback_candidate is None:
-            self._fallback_candidate = image_path
+        self._fallback_candidate = _lexicographic_min(self._fallback_candidate, image_path)
 
     def best(self) -> Path | None:
-        return self.selected or self._orientation_candidate or self._named_candidate or self._fallback_candidate
+        return (
+            self._direct_named_candidate
+            or self._nested_named_candidate
+            or self._orientation_candidate
+            or self._fallback_candidate
+        )
+
+
+def _lexicographic_min(current: Path | None, candidate: Path) -> Path:
+    if current is None:
+        return candidate
+
+    def key(path: Path) -> tuple[str, str]:
+        value = path.as_posix()
+        return value.casefold(), value
+
+    return min(current, candidate, key=key)
 
 
 @dataclass
@@ -195,17 +210,16 @@ class CreatorScan:
     creator_buckets: dict[Path, MediaBucket] = field(default_factory=dict)
     project_buckets: dict[str, dict[Path, MediaBucket]] = field(default_factory=dict)
     portrait_selector: ImageSelector = field(init=False)
-    cover_selectors: defaultdict[str, ImageSelector] = field(init=False)
+    cover_selectors: dict[str, ImageSelector] = field(init=False)
 
     def __post_init__(self) -> None:
         self.portrait_selector = ImageSelector(
             self.media_rules.portrait_basename,
             Orientation.PORTRAIT,
+            self.creator_dir,
             self.media_rules.auto_find_portraits,
         )
-        self.cover_selectors = defaultdict(
-            lambda: ImageSelector(self.media_rules.cover_basename, Orientation.LANDSCAPE, True)
-        )
+        self.cover_selectors = {}
 
     def add_media(self, media_path: Path) -> None:
         if media_path.suffix.lower() not in MEDIA_EXTS:
@@ -221,7 +235,7 @@ class CreatorScan:
             cover_selector = None
         else:
             bucket = self._project_bucket(project_name, rel_folder, parts)
-            cover_selector = self.cover_selectors[project_name]
+            cover_selector = self._cover_selector(project_name)
 
         bucket.add(media_path, cover_selector, self.portrait_selector)
 
@@ -255,4 +269,15 @@ class CreatorScan:
         return self.portrait_selector.best()
 
     def selected_cover(self, project_name: str) -> Path | None:
-        return self.cover_selectors[project_name].best()
+        return self._cover_selector(project_name).best()
+
+    def _cover_selector(self, project_name: str) -> ImageSelector:
+        selector = self.cover_selectors.get(project_name)
+        if selector is None:
+            selector = ImageSelector(
+                self.media_rules.cover_basename,
+                Orientation.LANDSCAPE,
+                self.creator_dir / project_name,
+            )
+            self.cover_selectors[project_name] = selector
+        return selector

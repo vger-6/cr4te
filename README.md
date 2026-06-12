@@ -70,6 +70,7 @@ Musicians/
 ```
 
 `cr4te.json` contains editable structured metadata. `README.md` contains narrative/descriptive text.
+Portraits and covers are selected from image filenames. Place matching images directly inside the creator or project folder; matching images in subfolders are used as fallback. When multiple images match at the same priority, cr4te selects the lexicographically first path.
 
 ## Commands
 

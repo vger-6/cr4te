@@ -15,12 +15,10 @@ __all__ = [
     "MetadataIOError",
     "MetadataJsonError",
     "MetadataLoadError",
-    "MetadataReferenceError",
     "MetadataShapeError",
     "MetadataValidationError",
     "load_json_model",
     "metadata_path",
-    "metadata_relative_path",
     "normalize_metadata_date",
 ]
 
@@ -41,10 +39,6 @@ class MetadataShapeError(MetadataLoadError):
 
 class MetadataValidationError(MetadataLoadError):
     issue_code = IssueCode.INVALID_METADATA
-
-
-class MetadataReferenceError(MetadataLoadError):
-    issue_code = IssueCode.MISSING_REFERENCE
 
 
 class MetadataIOError(MetadataLoadError):
@@ -79,21 +73,3 @@ def load_json_model(path: Path, model_type: type[ModelT]) -> ModelT:
 
 def metadata_path(folder: Path) -> Path:
     return folder / CR4TE_JSON_FILE_NAME
-
-
-def metadata_relative_path(folder: Path, configured_path: str, input_dir: Path, field_name: str) -> str:
-    if not configured_path:
-        return ""
-
-    raw_path = Path(configured_path)
-    full_path = raw_path if raw_path.is_absolute() else folder / raw_path
-    resolved_path = full_path.resolve()
-    resolved_input_dir = input_dir.resolve()
-
-    if not resolved_path.is_relative_to(resolved_input_dir):
-        raise MetadataReferenceError(f"{field_name} must point inside the input directory: {configured_path}")
-    if not resolved_path.is_file():
-        raise MetadataReferenceError(f"{field_name} file not found: {full_path}")
-
-    return resolved_path.relative_to(resolved_input_dir).as_posix()
-

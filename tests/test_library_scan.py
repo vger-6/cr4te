@@ -50,6 +50,46 @@ class LibraryScanTests(unittest.TestCase):
             self.assertEqual(project_groups[0].videos[0].file, "Ada/Project/video.mp4")
             self.assertEqual(project_groups[0].videos[0].poster, "Ada/Project/video.jpg")
 
+    def test_direct_portrait_and_cover_names_win_over_nested_matches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "Artists"
+            creator_dir = input_dir / "Ada"
+            project_dir = creator_dir / "Project"
+
+            write_image(creator_dir / "nested" / "portrait.jpg", (80, 160))
+            write_image(creator_dir / "portrait.jpg", (80, 160))
+            write_image(creator_dir / "portrait.png", (80, 160))
+            write_image(project_dir / "nested" / "cover.jpg")
+            write_image(project_dir / "cover.jpg")
+            write_image(project_dir / "cover.png")
+
+            media_rules = load_config().media_rules
+            scan = CreatorScan(creator_dir, input_dir, media_rules)
+            for media_path in iter_media_files(creator_dir, media_rules):
+                scan.add_media(media_path)
+
+            self.assertEqual(rel_to_input(scan.selected_portrait(), input_dir), "Ada/portrait.jpg")
+            self.assertEqual(rel_to_input(scan.selected_cover("Project"), input_dir), "Ada/Project/cover.jpg")
+
+    def test_nested_portrait_and_cover_names_are_selected_lexicographically(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "Artists"
+            creator_dir = input_dir / "Ada"
+            project_dir = creator_dir / "Project"
+
+            write_image(creator_dir / "z" / "portrait.jpg", (80, 160))
+            write_image(creator_dir / "a" / "portrait.png", (80, 160))
+            write_image(project_dir / "z" / "cover.jpg")
+            write_image(project_dir / "a" / "cover.png")
+
+            media_rules = load_config().media_rules
+            scan = CreatorScan(creator_dir, input_dir, media_rules)
+            for media_path in reversed(list(iter_media_files(creator_dir, media_rules))):
+                scan.add_media(media_path)
+
+            self.assertEqual(rel_to_input(scan.selected_portrait(), input_dir), "Ada/a/portrait.png")
+            self.assertEqual(rel_to_input(scan.selected_cover("Project"), input_dir), "Ada/Project/a/cover.png")
+
 
 if __name__ == "__main__":
     unittest.main()

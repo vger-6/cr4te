@@ -40,7 +40,7 @@ class LibraryBuilderTests(unittest.TestCase):
 
             write_image(creator_dir / "portrait.jpg", (80, 160))
             write_image(creator_dir / "img_001.jpg")
-            write_image(project_dir / "desert.jpg")
+            write_image(project_dir / "cover.jpg")
             write_image(project_dir / "cloud.jpg")
             playlist_dir.mkdir(parents=True)
             (playlist_dir / "01 track.mp3").write_bytes(b"not real audio")
@@ -65,7 +65,6 @@ class LibraryBuilderTests(unittest.TestCase):
                 {
                     "display_title": "Displayed Landscapes",
                     "release_date": "2024-03-12",
-                    "cover": "desert.jpg",
                     "tags": {"Mood": ["Quiet"]},
                     "facets": {
                         "mediums": ["Photography"],
@@ -94,7 +93,7 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertEqual(project.title, "Landscapes")
             self.assertEqual(project.display_title, "Displayed Landscapes")
             self.assertEqual(project.release_date, "2024-03-12")
-            self.assertEqual(project.cover, "Noomi/Landscapes/desert.jpg")
+            self.assertEqual(project.cover, "Noomi/Landscapes/cover.jpg")
             self.assertEqual(project.info, "Project **notes**")
             self.assertEqual(project.facets[ProjectField.MEDIUMS], ["Photography"])
             self.assertEqual(project.facets[ProjectField.PERIODS], ["Contemporary"])
@@ -118,14 +117,12 @@ class LibraryBuilderTests(unittest.TestCase):
                 creator_dir / "cr4te.json",
                 {
                     "display_name": "   ",
-                    "portrait": "portrait.jpg",
                 },
             )
             write_json(
                 project_dir / "cr4te.json",
                 {
                     "display_title": "   ",
-                    "cover": "cover.jpg",
                     "facets": {"mediums": ["Photography"]},
                 },
             )
@@ -356,12 +353,12 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertEqual(caught.exception.issue.scope, IssueScope.PROJECT)
             self.assertEqual(caught.exception.issue.code, IssueCode.INVALID_METADATA_SHAPE)
 
-    def test_missing_project_cover_override_is_reported_as_project_issue(self):
+    def test_project_cover_metadata_field_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"
             project_dir = root / "Noomi" / "Bad Cover"
             project_dir.mkdir(parents=True)
-            write_json(project_dir / "cr4te.json", {"cover": "missing.jpg"})
+            write_json(project_dir / "cr4te.json", {"cover": "cover.jpg"})
 
             index = build_library_index(root, self.build_config().media_rules)
 
@@ -369,20 +366,21 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertEqual(index.creators[0].projects, ())
             self.assertEqual(len(index.issues), 1)
             self.assertEqual(index.issues[0].scope, IssueScope.PROJECT)
-            self.assertEqual(index.issues[0].code, IssueCode.MISSING_REFERENCE)
-            self.assertIn("cover file not found", index.issues[0].message)
+            self.assertEqual(index.issues[0].code, IssueCode.INVALID_METADATA)
+            self.assertIn("cover", index.issues[0].message)
+            self.assertIn("Extra inputs", index.issues[0].message)
 
-    def test_missing_portrait_override_raises_in_strict_mode(self):
+    def test_creator_portrait_metadata_field_is_rejected_in_strict_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"
             creator_dir = root / "Noomi"
             creator_dir.mkdir(parents=True)
-            write_json(creator_dir / "cr4te.json", {"portrait": "missing.jpg"})
+            write_json(creator_dir / "cr4te.json", {"portrait": "portrait.jpg"})
 
             with self.assertRaises(BuildIssueError) as caught:
                 build_library_index(root, self.build_config().media_rules, strict=True)
             self.assertEqual(caught.exception.issue.scope, IssueScope.CREATOR)
-            self.assertEqual(caught.exception.issue.code, IssueCode.MISSING_REFERENCE)
+            self.assertEqual(caught.exception.issue.code, IssueCode.INVALID_METADATA)
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,6 @@ from .library_metadata import (
     MetadataLoadError,
     load_json_model,
     metadata_path,
-    metadata_relative_path,
     normalize_metadata_date,
 )
 from .library_scan import (
@@ -52,10 +51,8 @@ def _build_project(
     input_dir: Path,
 ) -> Project:
     project_name = project_dir.name
-    cover = metadata_relative_path(project_dir, project_metadata.cover, input_dir, "cover")
-    if not cover:
-        selected_cover = scan.selected_cover(project_name)
-        cover = rel_to_input(selected_cover, input_dir) if selected_cover else ""
+    selected_cover = scan.selected_cover(project_name)
+    cover = rel_to_input(selected_cover, input_dir) if selected_cover else ""
 
     return Project(
         title=project_name,
@@ -89,10 +86,8 @@ def _build_creator(
     creator_name = creator_dir.name
     display_name = metadata.display_name.strip() or creator_name
     creator_type = _infer_creator_type(creator_name, metadata, media_rules)
-    portrait = metadata_relative_path(creator_dir, metadata.portrait, input_dir, "portrait")
-    if not portrait:
-        selected_portrait = scan.selected_portrait()
-        portrait = rel_to_input(selected_portrait, input_dir) if selected_portrait else ""
+    selected_portrait = scan.selected_portrait()
+    portrait = rel_to_input(selected_portrait, input_dir) if selected_portrait else ""
 
     project_dirs = {project_dir.name: project_dir for project_dir in iter_project_dirs(creator_dir, media_rules)}
     project_names = sorted(set(project_dirs) | set(scan.project_buckets))

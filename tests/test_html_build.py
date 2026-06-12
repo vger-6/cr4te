@@ -71,7 +71,7 @@ class HtmlBuildTests(unittest.TestCase):
             self.assertNotIn("projects", metadata)
             project_metadata = json.loads((project_dir / "cr4te.json").read_text(encoding="utf-8"))
             self.assertEqual(project_metadata["display_title"], "Displayed Project")
-            self.assertEqual(project_metadata["cover"], "")
+            self.assertNotIn("cover", project_metadata)
             self.assertNotIn("info", project_metadata)
             self.assertTrue((output_dir / "index.html").exists())
             rendered_html = "\n".join(
@@ -423,11 +423,9 @@ class HtmlBuildTests(unittest.TestCase):
             write_image(project_dir / "cover.jpg")
             write_json(
                 creator_dir / "cr4te.json",
-                {
-                    "portrait": "portrait.jpg",
-                },
+                {},
             )
-            write_json(project_dir / "cr4te.json", {"cover": "cover.jpg"})
+            write_json(project_dir / "cr4te.json", {})
 
             config = apply_cli_overrides(load_config(), domain=Domain.ART)
             index = build_library_index(root, config.media_rules)
