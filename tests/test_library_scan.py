@@ -62,6 +62,68 @@ class LibraryScanTests(unittest.TestCase):
             self.assertEqual(project_groups[0].videos[0].file, "Ada/Project/video.mp4")
             self.assertEqual(project_groups[0].videos[0].poster, "Ada/Project/video.jpg")
 
+    def test_media_groups_prioritize_root_then_configured_metadata_folder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "Artists"
+            creator_dir = input_dir / "Ada"
+            project_dir = creator_dir / "Project"
+
+            for path in (
+                creator_dir / "root.md",
+                creator_dir / "archive" / "nested" / "notes.md",
+                creator_dir / "archive" / "notes.md",
+                creator_dir / "meta" / "notes.md",
+                project_dir / "root.md",
+                project_dir / "meta" / "notes.md",
+                project_dir / "a" / "notes.md",
+                project_dir / "a" / "nested" / "notes.md",
+                project_dir / "b" / "notes.md",
+            ):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Notes", encoding="utf-8")
+
+            config = load_config()
+            scan = self.scan(creator_dir, input_dir)
+
+            creator_groups = media_groups_from_buckets(scan.creator_buckets, config.media_rules)
+            project_groups = media_groups_from_buckets(scan.project_buckets["Project"], config.media_rules)
+
+            self.assertEqual(
+                [group.rel_dir_path for group in creator_groups],
+                ["Ada", "Ada/meta"],
+            )
+            self.assertEqual(
+                [group.rel_dir_path for group in project_groups],
+                ["Ada/Project", "Ada/Project/meta", "Ada/Project/a", "Ada/Project/a/nested", "Ada/Project/b"],
+            )
+
+    def test_media_groups_prioritize_custom_metadata_folder_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "Artists"
+            creator_dir = input_dir / "Ada"
+            project_dir = creator_dir / "Project"
+
+            for path in (
+                project_dir / "root.md",
+                project_dir / "a" / "notes.md",
+                project_dir / "details" / "notes.md",
+            ):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("Notes", encoding="utf-8")
+
+            config = load_config()
+            config.media_rules.metadata_folder_name = "details"
+            scan = CreatorScan(creator_dir, input_dir, config.media_rules)
+            for media_path in iter_media_files(creator_dir, config.media_rules):
+                scan.add_media(media_path)
+
+            groups = media_groups_from_buckets(scan.project_buckets["Project"], config.media_rules)
+
+            self.assertEqual(
+                [group.rel_dir_path for group in groups],
+                ["Ada/Project", "Ada/Project/details", "Ada/Project/a"],
+            )
+
     def test_direct_portrait_and_cover_names_win_over_nested_matches(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "Artists"

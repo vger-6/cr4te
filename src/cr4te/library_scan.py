@@ -67,13 +67,23 @@ def media_groups_from_buckets(
     media_rules: MediaRules,
     excluded_images: Collection[str] = (),
 ) -> list[MediaGroup]:
+    def group_sort_key(item: tuple[Path, MediaBucket]) -> tuple[int, str]:
+        rel_folder, bucket = item
+        if bucket.is_root and rel_folder.name != media_rules.metadata_folder_name:
+            priority = 0
+        elif rel_folder.name == media_rules.metadata_folder_name:
+            priority = 1
+        else:
+            priority = 2
+        return priority, rel_folder.as_posix()
+
     return [
         bucket.to_media_group(
             media_rules.image_gallery_sample_max,
             media_rules.image_gallery_sample_strategy,
             excluded_images,
         )
-        for _, bucket in sorted(buckets.items(), key=lambda item: item[0].as_posix())
+        for _, bucket in sorted(buckets.items(), key=group_sort_key)
     ]
 
 
