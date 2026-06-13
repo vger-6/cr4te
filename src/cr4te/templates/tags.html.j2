@@ -13,7 +13,7 @@
 
         {% for group in tags.groups %}
         <div class="tag-category" id="{{ group.category | lower | replace(' ', '-') }}">
-          <strong>{{ group.category }}:</strong>
+          <span class="tag-category-label data-label">{{ group.category }}</span>
           {% for tag in group.tags %}
             <a class="tag" href="index.html?tag={{ (group.category ~ ':' ~ tag) | urlencode }}">{{ tag }}</a>
           {% endfor %}

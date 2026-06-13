@@ -21,7 +21,7 @@
     <dl class="meta-list info-block__meta">
       {% for entry in entries %}
         <div class="meta-entry">
-          <dt class="meta-label">{{ entry.label }}</dt>
+          <dt class="meta-label data-label">{{ entry.label }}</dt>
           <dd class="meta-value">
             {%- for value in entry.values %}
               {%- set href = entry.hrefs[loop.index0] if entry.hrefs else "" -%}

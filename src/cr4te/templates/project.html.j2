@@ -98,7 +98,7 @@
           <div class="section-content tag-list">
             {% for group in project.tags.groups %}
               <div class="tag-category">
-                <strong>{{ group.category }}:</strong>
+                <span class="tag-category-label data-label">{{ group.category }}</span>
                 {% for tag in group.tags %}
                   <a class="tag" href="{{ path_to_root }}projects.html?tag={{ (group.category ~ ':' ~ tag) | urlencode }}">{{ tag }}</a>
                 {% endfor %}

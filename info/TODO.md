@@ -28,7 +28,7 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 - [ ] Review CSS design tokens to make recurring spacing, typography, icon, motion, and layout values more coherent without over-tokenizing component-specific details.
   - Introduce a small foundational scale for genuinely recurring values, such as `--space-xs: 0.25rem`, `--space-sm: 0.5rem`, `--space-md: 1rem`, and body/small-text sizes.
-  - Add expressive component aliases where independent fine-tuning remains useful, such as `--meta-label-value-gap`, `--meta-entry-gap`, and `--meta-label-size`, backed by the foundational scale.
+  - Add expressive component aliases where independent fine-tuning remains useful, such as `--meta-label-value-gap`, `--meta-entry-gap`, and `--data-label-size`, backed by the foundational scale.
   - Prioritize repeated spacing values, non-heading typography sizes, common icon dimensions, transition durations, and duplicated scrollbar dimensions.
   - Keep specialized values such as slider track/thumb dimensions, search-control padding, thumbnail dimensions, and unusual compact gaps component-specific unless multiple components genuinely share the same design role.
   - Organize or document token roles as foundational, layout, theme, and component aliases while keeping `tokens.css` as the single file unless its size or ownership becomes difficult to navigate.

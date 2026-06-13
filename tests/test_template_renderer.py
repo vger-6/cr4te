@@ -222,7 +222,7 @@ class TemplateRendererTests(unittest.TestCase):
 
         self.assertIn('<dl class="meta-list info-block__meta">', rendered)
         self.assertEqual(rendered.count('<div class="meta-entry">'), 2)
-        self.assertIn('<dt class="meta-label">Genres</dt>', rendered)
+        self.assertIn('<dt class="meta-label data-label">Genres</dt>', rendered)
         self.assertIn('<dd class="meta-value">', rendered)
         self.assertIn('<a href="../projects.html?tag=Genres%3AAmbient">Ambient</a> | Electronic', rendered)
         self.assertNotIn("Genres:", rendered)
@@ -437,15 +437,17 @@ class TemplateRendererTests(unittest.TestCase):
                 self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
                 self.assertNotIn('<div class="page-header">', source)
 
-    def test_detail_templates_use_shared_metadata_renderer_and_preserve_tags(self):
+    def test_detail_templates_use_shared_metadata_renderer_and_shared_tag_label_style(self):
         template_dir = ROOT / "src" / "cr4te" / "templates"
         creator_source = (template_dir / "creator.html.j2").read_text(encoding="utf-8")
         project_source = (template_dir / "project.html.j2").read_text(encoding="utf-8")
+        tags_source = (template_dir / "tags.html.j2").read_text(encoding="utf-8")
 
         self.assertIn("utils.render_meta_entries(member.meta_entries, path_to_root)", creator_source)
         self.assertNotIn('<div class="info-block__meta">', creator_source)
-        for source in (creator_source, project_source):
-            self.assertIn("<strong>{{ group.category }}:</strong>", source)
+        for source in (creator_source, project_source, tags_source):
+            self.assertIn('<span class="tag-category-label data-label">{{ group.category }}</span>', source)
+            self.assertNotIn("<strong>{{ group.category }}:</strong>", source)
 
 
 if __name__ == "__main__":

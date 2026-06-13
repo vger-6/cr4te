@@ -38,9 +38,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls.site_dir = Path(cls._tmp.name) / "site"
         cls.paginated_site_dir = Path(cls._tmp.name) / "paginated-site"
         cls.details_site_dir = Path(cls._tmp.name) / "details-site"
+        cls.disabled_portraits_site_dir = Path(cls._tmp.name) / "disabled-portraits-site"
         cls._build_example_site(cls.site_dir)
         cls._build_example_site(cls.paginated_site_dir, cls._write_paginated_config(), domain=None)
         cls._build_example_site(cls.details_site_dir, cls._write_details_config(), domain=None)
+        cls._build_example_site(cls.disabled_portraits_site_dir, cls._write_disabled_portraits_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
         cls.landscape_project_path = cls._find_landscape_project_page_with_metadata()
@@ -129,6 +131,21 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         return config_path
 
     @classmethod
+    def _write_disabled_portraits_config(cls):
+        config_path = Path(cls._tmp.name) / "disabled_portraits_config.json"
+        config_path.write_text(
+            json.dumps(
+                {
+                    "site_rendering": {
+                        "portraits": {"visibility": "disabled"},
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        return config_path
+
+    @classmethod
     def _find_audio_project_page(cls):
         for path in sorted((cls.site_dir / "html").rglob("*.html")):
             if "audio-gallery" in path.read_text(encoding="utf-8"):
@@ -146,7 +163,10 @@ class RenderedSiteBrowserTests(unittest.TestCase):
     def _find_landscape_project_page_with_metadata(cls):
         for path in sorted((cls.site_dir / "html").rglob("*.html")):
             content = path.read_text(encoding="utf-8")
-            if 'info-block info-block--landscape' in content and '<dt class="meta-label">Release Date</dt>' in content:
+            if (
+                'info-block info-block--landscape' in content
+                and '<dt class="meta-label data-label">Release Date</dt>' in content
+            ):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain a landscape project with multiple metadata entries")
 
@@ -213,6 +233,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
     def open_details_page(self, rel_path: str):
         self.page.goto(f"{self.base_url}/details-site/{rel_path}")
+        self.page.wait_for_load_state("load")
+        self.page.wait_for_timeout(250)
+
+    def open_disabled_portraits_page(self, rel_path: str):
+        self.page.goto(f"{self.base_url}/disabled-portraits-site/{rel_path}")
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(250)
 
@@ -314,7 +339,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const valueRect = value.getBoundingClientRect();
                 const nextLabelRect = nextLabel.getBoundingClientRect();
                 const probe = document.createElement('span');
-                probe.style.color = 'var(--theme-meta-label-text)';
+                probe.style.color = 'var(--theme-data-label-text)';
                 document.body.appendChild(probe);
                 const labelToken = getComputedStyle(probe).color;
                 probe.style.color = 'var(--theme-link)';
@@ -349,7 +374,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                     document.body.className = theme;
                     const label = document.querySelector('.meta-label');
                     const probe = document.createElement('span');
-                    probe.style.color = 'var(--theme-meta-label-text)';
+                    probe.style.color = 'var(--theme-data-label-text)';
                     document.body.appendChild(probe);
                     const labelToken = getComputedStyle(probe).color;
                     probe.style.color = 'var(--theme-link)';
@@ -366,6 +391,44 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             )
             self.assertEqual(colors["label"], colors["labelToken"])
             self.assertNotEqual(colors["label"], colors["linkToken"])
+
+        for theme, expected_label_color, expected_link_color, label_uses_muted_text in (
+            ("theme-frozen-aurora", "rgb(170, 216, 239)", "rgb(130, 233, 222)", False),
+            ("theme-forest-night", "rgb(168, 218, 220)", "rgb(244, 162, 97)", False),
+            ("theme-mono-terminal", "rgb(138, 138, 138)", "rgb(154, 154, 154)", True),
+        ):
+            colors = self.page.evaluate(
+                """
+                theme => {
+                    document.body.className = theme;
+                    const label = document.querySelector('.meta-label');
+                    const probe = document.createElement('span');
+                    probe.style.color = 'var(--theme-text-muted)';
+                    document.body.appendChild(probe);
+                    const mutedText = getComputedStyle(probe).color;
+                    probe.style.color = 'var(--theme-link)';
+                    const link = getComputedStyle(probe).color;
+                    probe.style.color = 'var(--theme-link-visited)';
+                    const result = {
+                        label: getComputedStyle(label).color,
+                        mutedText,
+                        link,
+                        visitedLink: getComputedStyle(probe).color,
+                    };
+                    probe.remove();
+                    return result;
+                }
+                """,
+                theme,
+            )
+            self.assertEqual(colors["label"], expected_label_color)
+            self.assertEqual(colors["link"], expected_link_color)
+            self.assertEqual(colors["visitedLink"], expected_link_color)
+            self.assertNotEqual(colors["label"], colors["link"])
+            if label_uses_muted_text:
+                self.assertEqual(colors["label"], colors["mutedText"])
+            else:
+                self.assertNotEqual(colors["label"], colors["mutedText"])
 
         self.page.set_viewport_size({"width": 360, "height": 900})
         self.page.reload()
@@ -421,6 +484,47 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             """
         )
         self.assertTrue(narrow_landscape_layout)
+        self.assertNoBrowserErrors()
+
+    def test_image_less_detail_metadata_uses_responsive_equal_columns(self):
+        self.open_disabled_portraits_page(self.creator_path)
+
+        wide_layout = self.page.evaluate(
+            """
+            () => {
+                const block = document.querySelector('.info-block');
+                const entries = block.querySelectorAll('.meta-entry');
+                const firstRect = entries[0].getBoundingClientRect();
+                const secondRect = entries[1].getBoundingClientRect();
+                return {
+                    hasMedia: Boolean(block.querySelector('.info-block__media')),
+                    entriesShareRow: Math.abs(firstRect.top - secondRect.top) < 1,
+                    entriesEqualWidth: Math.abs(firstRect.width - secondRect.width) < 1,
+                    entriesAlignContentToTop: Array.from(entries).every(
+                        entry => getComputedStyle(entry).alignContent === 'start'
+                    ),
+                };
+            }
+            """
+        )
+        self.assertFalse(wide_layout["hasMedia"])
+        self.assertTrue(wide_layout["entriesShareRow"])
+        self.assertTrue(wide_layout["entriesEqualWidth"])
+        self.assertTrue(wide_layout["entriesAlignContentToTop"])
+
+        self.page.set_viewport_size({"width": 360, "height": 900})
+        self.page.reload()
+        narrow_layout = self.page.evaluate(
+            """
+            () => {
+                const entries = document.querySelector('.info-block').querySelectorAll('.meta-entry');
+                const firstRect = entries[0].getBoundingClientRect();
+                const secondRect = entries[1].getBoundingClientRect();
+                return secondRect.top >= firstRect.bottom;
+            }
+            """
+        )
+        self.assertTrue(narrow_layout)
         self.assertNoBrowserErrors()
 
     def test_creator_event_metadata_combines_date_and_place(self):
@@ -713,10 +817,41 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertNoBrowserErrors()
 
     def test_tags_page_renders_and_initializes_theme(self):
+        self.open_page(self.creator_path)
+        metadata_label_style = self.page.locator(".meta-label").first.evaluate(
+            """
+            label => {
+                const style = getComputedStyle(label);
+                return {
+                    color: style.color,
+                    fontSize: style.fontSize,
+                    fontWeight: style.fontWeight,
+                };
+            }
+            """
+        )
+
         self.open_page("tags.html")
 
         self.assertEqual(self.page.locator("body").evaluate("body => getComputedStyle(body).display"), "block")
         self.assertGreater(self.page.locator(".tag-category").count(), 0)
+        tag_category_labels = self.page.locator(".tag-category-label")
+        self.assertGreater(tag_category_labels.count(), 0)
+        self.assertTrue(all(not label.endswith(":") for label in tag_category_labels.all_inner_texts()))
+        self.assertGreater(self.page.locator(".tag-category .tag").count(), 0)
+        tag_category_label_style = tag_category_labels.first.evaluate(
+            """
+            label => {
+                const style = getComputedStyle(label);
+                return {
+                    color: style.color,
+                    fontSize: style.fontSize,
+                    fontWeight: style.fontWeight,
+                };
+            }
+            """
+        )
+        self.assertEqual(tag_category_label_style, metadata_label_style)
         self.assertEqual(self.page.evaluate("typeof window.cr4te?.onReady"), "function")
         self.assertNoBrowserErrors()
 

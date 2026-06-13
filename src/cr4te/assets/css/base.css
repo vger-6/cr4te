@@ -349,12 +349,13 @@ img {
 
 .meta-entry {
   display: grid;
+  align-content: start;
   gap: 0.25rem;
 }
 
-.meta-label {
+.data-label {
   margin: 0;
-  color: var(--theme-meta-label-text);
+  color: var(--theme-data-label-text);
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -739,8 +740,7 @@ a:focus img {
   margin-bottom: 1rem;
 }
 
-.tag-category strong {
-  color: var(--theme-tag-category);
+.tag-category-label {
   display: block;
   margin-bottom: 0.4rem;
 }

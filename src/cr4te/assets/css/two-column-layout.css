@@ -32,7 +32,8 @@
   width: 100%;
 }
 
-.info-block--landscape .meta-list {
+.info-block--landscape .meta-list,
+.info-block:not(:has(.info-block__media)) .meta-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -47,7 +48,8 @@
 }
 
 @container info-block-section (max-width: 25rem) {
-  .info-block--landscape .meta-list {
+  .info-block--landscape .meta-list,
+  .info-block:not(:has(.info-block__media)) .meta-list {
     grid-template-columns: minmax(0, 1fr);
   }
 

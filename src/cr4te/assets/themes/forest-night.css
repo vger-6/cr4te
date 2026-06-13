@@ -24,10 +24,11 @@
   --theme-focus-ring: rgba(168, 218, 220, 0.3);
   --theme-focus-outline: #f4a261;
 
-  --theme-link: #a8dadc;
+  --theme-link: #f4a261;
   --theme-link-visited: #f4a261;
   --theme-link-hover: #fefae0;
   --theme-link-disabled: #44615d;
+  --theme-data-label-text: #a8dadc;
 
   --theme-title-bg: #1c3a3e;
   --theme-title-text: #d8e5dd;
@@ -81,7 +82,6 @@
   --theme-badge-text: #d8e5dd;
   --theme-badge-icon: #d8e5dd;
 
-  --theme-tag-category: #b2dfdb;
   --theme-tag-bg: #2b4742;
   --theme-tag-text: #fefae0;
   --theme-tag-hover-bg: #fefae0;

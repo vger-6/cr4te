@@ -25,9 +25,10 @@
   --theme-focus-outline: #2ec8e6;
 
   --theme-link: #82e9de;
-  --theme-link-visited: #aad8ef;
+  --theme-link-visited: #82e9de;
   --theme-link-hover: #ffffff;
   --theme-link-disabled: #669ea6;
+  --theme-data-label-text: #aad8ef;
 
   --theme-title-bg: #162d42;
   --theme-title-text: #e0faff;
@@ -81,7 +82,6 @@
   --theme-badge-text: #e0faff;
   --theme-badge-icon: #d9f2ff;
 
-  --theme-tag-category: #97d1f3;
   --theme-tag-bg: #1c3b52;
   --theme-tag-text: #ffffff;
   --theme-tag-hover-bg: #ffffff;

@@ -119,7 +119,6 @@
   --theme-badge-shadow: none;
   --theme-badge-icon: var(--theme-accent);
 
-  --theme-tag-category: var(--theme-text);
   --theme-tag-bg: transparent;
   --theme-tag-text: var(--theme-accent);
   --theme-tag-border: var(--theme-border-muted);

@@ -3,7 +3,6 @@
   --theme-terminal-thin-line-width: 1px;
   --theme-terminal-disabled: #4a4a4a;
   --theme-terminal-enabled: #9a9a9a;
-  --theme-terminal-visited: #767676;
   --theme-terminal-hover: #d8d8d8;
   --theme-terminal-selected-bg: #c8c8c8;
   --theme-terminal-selected-text: #161616;
@@ -21,7 +20,7 @@
   --theme-text-muted: #8a8a8a;
   --theme-text-strong: #e2e2e2;
   --theme-accent: var(--theme-terminal-enabled);
-  --theme-accent-visited: var(--theme-terminal-visited);
+  --theme-accent-visited: var(--theme-terminal-enabled);
   --theme-accent-hover: var(--theme-terminal-hover);
   --theme-accent-muted: var(--theme-terminal-disabled);
   --theme-accent-contrast: var(--theme-terminal-selected-text);
@@ -37,9 +36,10 @@
   --theme-focus-outline: var(--theme-terminal-hover);
 
   --theme-link: var(--theme-accent);
-  --theme-link-visited: var(--theme-accent-visited);
+  --theme-link-visited: var(--theme-link);
   --theme-link-hover: var(--theme-accent-hover);
   --theme-link-disabled: var(--theme-accent-muted);
+  --theme-data-label-text: var(--theme-text-muted);
 
   --theme-title-bg: transparent;
   --theme-title-text: var(--theme-text-strong);
@@ -119,7 +119,6 @@
   --theme-badge-shadow: none;
   --theme-badge-icon: var(--theme-accent);
 
-  --theme-tag-category: var(--theme-text);
   --theme-tag-bg: transparent;
   --theme-tag-text: var(--theme-accent);
   --theme-tag-border: var(--theme-border-muted);

@@ -45,7 +45,7 @@
   --theme-link-visited: var(--theme-accent-visited);
   --theme-link-hover: var(--theme-accent-hover);
   --theme-link-disabled: var(--theme-accent-muted);
-  --theme-meta-label-text: var(--theme-text-muted);
+  --theme-data-label-text: var(--theme-text-muted);
 
   --theme-title-bg: var(--theme-surface-raised-bg);
   --theme-title-text: var(--theme-text-strong);
@@ -138,7 +138,6 @@
   --theme-badge-icon: var(--theme-control-icon);
   --theme-badge-gap: 0.25rem;
 
-  --theme-tag-category: #888888;
   --theme-tag-bg: #fff2;
   --theme-tag-text: #444444;
   --theme-tag-border: transparent;
