@@ -45,6 +45,13 @@ class CollaborationMetaEntrySpec:
     links_to_creator: bool = False
 
 
+@dataclass(frozen=True)
+class EventMetaEntrySpec:
+    field: CreatorField | CollaborationField
+    date_values: CreatorValueGetter
+    place_values: CreatorValueGetter
+
+
 def build_project_meta_entries(ctx: HtmlBuildContext, project: ProjectModel) -> list[MetaEntry]:
     entries: list[MetaEntry] = []
 
@@ -89,6 +96,11 @@ def build_creator_meta_entries(
     entries: list[MetaEntry] = []
 
     for field in visible_fields:
+        event_spec = CREATOR_EVENT_ENTRY_SPECS.get(field)
+        if event_spec:
+            _append_event_meta_entry(entries, ctx, creator, event_spec, project)
+            continue
+
         spec = CREATOR_META_ENTRY_SPECS[field]
         _append_spec_entry(entries, ctx, creator, project, spec, rel_html_path, filter_page)
 
@@ -117,6 +129,11 @@ def build_collaboration_meta_entries(
     entries: list[MetaEntry] = []
 
     for field in visible_fields:
+        event_spec = COLLABORATION_EVENT_ENTRY_SPECS.get(field)
+        if event_spec:
+            _append_event_meta_entry(entries, ctx, creator, event_spec)
+            continue
+
         spec = COLLABORATION_META_ENTRY_SPECS[field]
         if field == CollaborationField.MEMBERS and member_display_names is not None:
             _append_meta_entry(entries, ctx.meta_label(field, _count_meta_values(member_display_names)), member_display_names, separator=spec.separator)
@@ -233,8 +250,28 @@ def _append_spec_entry(
     _append_meta_entry(entries, label, values, separator=spec.separator, hrefs=hrefs)
 
 
+def _append_event_meta_entry(
+    entries: list[MetaEntry],
+    ctx: HtmlBuildContext,
+    creator: CreatorModel,
+    spec: EventMetaEntrySpec,
+    project: ProjectModel | None = None,
+) -> None:
+    date = _first_meta_value(spec.date_values(creator, project))
+    place = _first_meta_value(spec.place_values(creator, project))
+    _append_meta_entry(
+        entries,
+        ctx.meta_label(spec.field),
+        [ctx.format_date_and_place(date, place)],
+    )
+
+
 def _count_meta_values(values: list[str]) -> int:
     return sum(1 for value in values if value and value.strip())
+
+
+def _first_meta_value(values: list[str]) -> str:
+    return next((value for value in values if value and value.strip()), "")
 
 
 def _creator_name(creator: CreatorModel, project: ProjectModel | None) -> list[str]:
@@ -301,10 +338,6 @@ def _dissolution_date(creator: CreatorModel, project: ProjectModel | None) -> li
 
 CREATOR_META_ENTRY_SPECS: dict[CreatorField, CreatorMetaEntrySpec] = {
     CreatorField.NAME: CreatorMetaEntrySpec(CreatorField.NAME, _creator_name, links_to_creator=True),
-    CreatorField.DATE_OF_BIRTH: CreatorMetaEntrySpec(CreatorField.DATE_OF_BIRTH, _birth_date),
-    CreatorField.PLACE_OF_BIRTH: CreatorMetaEntrySpec(CreatorField.PLACE_OF_BIRTH, _birth_place),
-    CreatorField.DATE_OF_DEATH: CreatorMetaEntrySpec(CreatorField.DATE_OF_DEATH, _death_date),
-    CreatorField.PLACE_OF_DEATH: CreatorMetaEntrySpec(CreatorField.PLACE_OF_DEATH, _death_place),
     CreatorField.NATIONALITIES: CreatorMetaEntrySpec(CreatorField.NATIONALITIES, _nationalities, filterable=True),
     CreatorField.CIVIL_NAME: CreatorMetaEntrySpec(CreatorField.CIVIL_NAME, _civil_name),
     CreatorField.ALIASES: CreatorMetaEntrySpec(CreatorField.ALIASES, _aliases, separator="<br>"),
@@ -319,7 +352,26 @@ COLLABORATION_META_ENTRY_SPECS: dict[CollaborationField, CollaborationMetaEntryS
     CollaborationField.ALIASES: CollaborationMetaEntrySpec(CollaborationField.ALIASES, _aliases, separator="<br>"),
     CollaborationField.ACTIVE_SINCE: CollaborationMetaEntrySpec(CollaborationField.ACTIVE_SINCE, _active_since),
     CollaborationField.MEMBERS: CollaborationMetaEntrySpec(CollaborationField.MEMBERS, _members, separator="<br>"),
-    CollaborationField.FOUNDING_DATE: CollaborationMetaEntrySpec(CollaborationField.FOUNDING_DATE, _founding_date),
-    CollaborationField.FOUNDING_LOCATION: CollaborationMetaEntrySpec(CollaborationField.FOUNDING_LOCATION, _founding_location),
     CollaborationField.DISSOLUTION_DATE: CollaborationMetaEntrySpec(CollaborationField.DISSOLUTION_DATE, _dissolution_date),
+}
+
+CREATOR_EVENT_ENTRY_SPECS: dict[CreatorField, EventMetaEntrySpec] = {
+    CreatorField.BIRTH: EventMetaEntrySpec(
+        field=CreatorField.BIRTH,
+        date_values=_birth_date,
+        place_values=_birth_place,
+    ),
+    CreatorField.DEATH: EventMetaEntrySpec(
+        field=CreatorField.DEATH,
+        date_values=_death_date,
+        place_values=_death_place,
+    ),
+}
+
+COLLABORATION_EVENT_ENTRY_SPECS: dict[CollaborationField, EventMetaEntrySpec] = {
+    CollaborationField.FOUNDING: EventMetaEntrySpec(
+        field=CollaborationField.FOUNDING,
+        date_values=_founding_date,
+        place_values=_founding_location,
+    ),
 }

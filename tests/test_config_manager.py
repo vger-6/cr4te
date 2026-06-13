@@ -12,7 +12,7 @@ from cr4te.config_presets import DEFAULT_CONFIG, get_domain_preset
 from cr4te.enums.domain import Domain
 from cr4te.enums.portrait_discovery import PortraitDiscovery
 from cr4te.enums.portrait_visibility import PortraitVisibility
-from cr4te.enums.visible_fields import ProjectField
+from cr4te.enums.visible_fields import CollaborationField, CreatorField, ProjectField
 
 
 def write_json(path: Path, data: dict) -> None:
@@ -162,6 +162,93 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_rendering.galleries.project_cards.aspect_ratio, "4/5")
             self.assertEqual(config.site_rendering.galleries.project_cards.page_size, 25)
             self.assertEqual(config.site_rendering.galleries.project_cards.image_max_height, 350)
+
+    def test_metadata_date_and_place_format_is_configurable_as_a_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_labels": {
+                        "metadata": {
+                            "date_and_place_format": "{place}, {date}",
+                        }
+                    }
+                },
+            )
+
+            config = load_config(config_path)
+
+            self.assertEqual(
+                config.site_labels.metadata.date_and_place_format,
+                "{place}, {date}",
+            )
+
+    def test_metadata_labels_reject_invalid_date_and_place_formats(self):
+        for value in ("{0} in {1}", "{date}", "{date} in {location}", "{date!r} in {place}"):
+            with self.subTest(value=value), tempfile.TemporaryDirectory() as tmp:
+                config_path = Path(tmp) / "config.json"
+                write_json(
+                    config_path,
+                    {
+                        "site_labels": {
+                            "metadata": {
+                                "date_and_place_format": value,
+                            }
+                        }
+                    },
+                )
+
+                with self.assertRaises(ValueError) as caught:
+                    load_config(config_path)
+
+                self.assertIn("date_and_place_format", str(caught.exception))
+
+    def test_removed_metadata_presentation_rendering_section_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_rendering": {
+                        "metadata_presentation": {
+                            "date_and_place_format": "{date} in {place}",
+                        }
+                    }
+                },
+            )
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("metadata_presentation", str(caught.exception))
+
+    def test_event_visibility_uses_semantic_fields(self):
+        config = load_config()
+
+        self.assertIn(CreatorField.BIRTH, config.site_rendering.creator_page.visible_creator_fields)
+        self.assertIn(CreatorField.DEATH, config.site_rendering.creator_page.visible_creator_fields)
+        self.assertIn(CollaborationField.FOUNDING, config.site_rendering.creator_page.visible_collaboration_fields)
+
+    def test_removed_component_event_visibility_fields_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_rendering": {
+                        "creator_page": {
+                            "visible_creator_fields": ["date_of_birth"],
+                        }
+                    }
+                },
+            )
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("visible_creator_fields", str(caught.exception))
+            self.assertIn("'birth'", str(caught.exception))
 
     def test_project_metadata_rendering_resolves_defaults_and_field_overrides(self):
         config = apply_cli_overrides(load_config(), domain=Domain.FILM)

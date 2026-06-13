@@ -2,10 +2,8 @@ from enum import Enum
 
 class CreatorField(str, Enum):
     NAME = "name"
-    DATE_OF_BIRTH = "date_of_birth"
-    PLACE_OF_BIRTH = "place_of_birth"
-    DATE_OF_DEATH = "date_of_death"
-    PLACE_OF_DEATH = "place_of_death"
+    BIRTH = "birth"
+    DEATH = "death"
     NATIONALITIES = "nationalities"
     CIVIL_NAME = "civil_name"
     ALIASES = "aliases"
@@ -19,8 +17,7 @@ class CollaborationField(str, Enum):
     ALIASES = "aliases"
     ACTIVE_SINCE = "active_since"
     MEMBERS = "members"
-    FOUNDING_DATE = "founding_date"
-    FOUNDING_LOCATION = "founding_location"
+    FOUNDING = "founding"
     DISSOLUTION_DATE = "dissolution_date"
 
 class ProjectField(str, Enum):

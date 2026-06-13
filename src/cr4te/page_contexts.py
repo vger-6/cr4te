@@ -10,7 +10,7 @@ from .html_context import HtmlBuildContext
 from .enums.creator_type import CreatorType
 from .enums.portrait_visibility import PortraitVisibility
 from .enums.thumb_type import ThumbType
-from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
+from .enums.visible_fields import CreatorField, ProjectField
 from .html_paths import build_rel_creator_html_path, build_rel_project_html_path
 from .media_counts import count_media_groups
 from .render_assets import build_thumbnail_context, get_image_orientation
@@ -21,7 +21,6 @@ from .render_metadata import (
     build_project_creator_meta_entries,
     build_project_meta_entries,
     calculate_age_at_release,
-    calculate_debut_age,
 )
 from .render_models import (
     CollaborationProjectsContext,
@@ -29,6 +28,7 @@ from .render_models import (
     CreatorPageContext,
     CreatorProfileContext,
     CreatorStats,
+    MetaEntry,
     ProjectCardContext,
     ProjectPageContext,
     ThumbnailContext,
@@ -146,14 +146,7 @@ def build_creator_page_context(
         member_display_names = _display_member_names(creator, get_creator)
         return replace(
             base_context,
-            aliases=creator.aliases if CollaborationField.ALIASES in visible else [],
-            nationalities=creator.nationalities if CollaborationField.NATIONALITIES in visible else [],
-            active_since=date_utils.format_nice_date(creator.active_since) if CollaborationField.ACTIVE_SINCE in visible else "",
             members=_collect_member_links(ctx, creator, get_creator),
-            member_names=member_display_names if CollaborationField.MEMBERS in visible else [],
-            founding_date=date_utils.format_nice_date(creator.founding_date) if CollaborationField.FOUNDING_DATE in visible else "",
-            founding_location=creator.founding_location if CollaborationField.FOUNDING_LOCATION in visible else "",
-            dissolution_date=date_utils.format_nice_date(creator.dissolution_date) if CollaborationField.DISSOLUTION_DATE in visible else "",
             meta_entries=build_collaboration_meta_entries(
                 ctx,
                 creator,
@@ -165,19 +158,9 @@ def build_creator_page_context(
         )
 
     visible = ctx.visible_creator_fields
-    raw_age = calculate_debut_age(creator) if CreatorField.DEBUT_AGE in visible else None
 
     return replace(
         base_context,
-        aliases=creator.aliases if CreatorField.ALIASES in visible else [],
-        nationalities=creator.nationalities if CreatorField.NATIONALITIES in visible else [],
-        active_since=date_utils.format_nice_date(creator.active_since) if CreatorField.ACTIVE_SINCE in visible else "",
-        civil_name=creator.civil_name if CreatorField.CIVIL_NAME in visible else "",
-        date_of_birth=date_utils.format_nice_date(creator.date_of_birth) if CreatorField.DATE_OF_BIRTH in visible else "",
-        place_of_birth=creator.place_of_birth if CreatorField.PLACE_OF_BIRTH in visible else "",
-        date_of_death=date_utils.format_nice_date(creator.date_of_death) if CreatorField.DATE_OF_DEATH in visible else "",
-        place_of_death=creator.place_of_death if CreatorField.PLACE_OF_DEATH in visible else "",
-        debut_age=date_utils.format_age(raw_age),
         meta_entries=build_creator_meta_entries(ctx, creator, visible, "", INDEX_HTML_FILE_NAME),
     )
 
@@ -314,11 +297,18 @@ def _collect_member_links(
             continue
 
         thumbnail = _build_portrait_thumbnail(ctx, member.portrait)
+        rel_html_path = (Path(ctx.html_dir.name) / build_rel_creator_html_path(member)).as_posix()
         member_links.append(
             CreatorLinkContext(
                 name=member.display_name,
-                rel_html_path=(Path(ctx.html_dir.name) / build_rel_creator_html_path(member)).as_posix(),
                 rel_thumbnail_path=thumbnail.rel_thumbnail_path if thumbnail else "",
+                meta_entries=[
+                    MetaEntry(
+                        label=ctx.meta_label(CreatorField.NAME),
+                        values=[member.display_name],
+                        hrefs=[rel_html_path],
+                    )
+                ],
             )
         )
 

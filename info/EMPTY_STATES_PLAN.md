@@ -26,6 +26,8 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Keep static empty states present in generated HTML without requiring JavaScript.
 - Let `search_filter.js` control only the dynamic no-results state.
 - Store user-facing messages in the existing site-label configuration structure rather than hard-coding English text throughout templates and JavaScript.
+- Configure domain-aware messages as complete named-placeholder formats rather than sentence fragments that templates or JavaScript concatenate with entity labels.
+- Keep messages without dynamic wording as ordinary complete labels.
 - Prefer Python/page-context booleans for non-trivial content-presence decisions instead of duplicating deep content checks in Jinja templates.
 
 ## Proposed User Contract
@@ -40,6 +42,7 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - When a creator has no projects, collaboration projects, or creator-level media, the otherwise-empty right column shows one combined `No projects or media available` panel.
 - When a project has no media, the otherwise-empty media column shows `No media available`.
 - Empty-state wording follows configured entity labels where appropriate so domain presets can continue using terms such as artists, albums, books, or movies.
+- Domain-aware defaults use complete formats such as `No {creators} available`, `No {projects} available`, and `No {projects} or media available`; the renderer supplies the configured entity labels through named placeholders.
 
 ## UI And Accessibility Decisions To Confirm
 
@@ -55,7 +58,7 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 1. Agree on the UI and wording decisions listed above.
 2. Add durable generated-site empty-state behavior to `REQUIREMENTS.md`.
 3. Add focused failing template and browser tests for the agreed static and dynamic states before production changes.
-4. Extend the site-label schema and defaults with the required empty-state messages, using domain-aware entity labels where practical.
+4. Extend the site-label schema and defaults with the required empty-state messages. Use validated named-placeholder formats for domain-aware phrases and ordinary complete labels for messages without dynamic wording.
 5. Add a reusable empty-state macro or partial with semantic markup suitable for static and dynamic use.
 6. Add minimal shared empty-state CSS using existing theme tokens and panel spacing.
 7. Update creator and project overview templates:
@@ -85,6 +88,8 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Template/rendering test proving a project with no media renders one media-region empty state.
 - Template/rendering test proving a project with media does not render that empty state.
 - Config-schema/default tests for all newly added site-label fields.
+- Config tests proving domain-aware empty-state formats accept their documented named placeholders, support different word order, and reject positional or unknown placeholders.
+- Rendering tests proving domain-aware empty-state messages use configured entity labels without template- or JavaScript-level sentence construction.
 - Regression tests proving absent optional sections remain omitted instead of each receiving an empty-state panel.
 - Browser or rendered-markup checks proving empty states do not alter existing populated-page layout.
 
@@ -97,3 +102,4 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Do not add illustrations, decorative icons, animations, or new theme color systems unless separately discussed and approved.
 - Do not make static empty states depend on JavaScript.
 - Do not add compatibility handling for generated sites or configuration files from earlier development versions.
+- Do not expose partial empty-state sentence fragments or assemble human-readable empty-state phrases from independently configured labels in templates or JavaScript.

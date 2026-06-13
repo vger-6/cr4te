@@ -23,10 +23,8 @@ class MetadataLabelKey(str, Enum):
     RELEASE_DATE = "release_date"
     NAME = "name"
     MEMBERS = "members"
-    DATE_OF_BIRTH = "date_of_birth"
-    PLACE_OF_BIRTH = "place_of_birth"
-    DATE_OF_DEATH = "date_of_death"
-    PLACE_OF_DEATH = "place_of_death"
+    BIRTH = "birth"
+    DEATH = "death"
     NATIONALITY = "nationality"
     NATIONALITIES = "nationalities"
     CIVIL_NAME = "civil_name"
@@ -35,8 +33,7 @@ class MetadataLabelKey(str, Enum):
     DEBUT_AGE = "debut_age"
     AGE_AT_TIME = "age_at_time"
     ACTIVE_SINCE = "active_since"
-    FOUNDING_DATE = "founding_date"
-    FOUNDING_LOCATION = "founding_location"
+    FOUNDING = "founding"
     DISSOLUTION_DATE = "dissolution_date"
 
 
@@ -67,10 +64,8 @@ CORE_META_FIELD_SPECS: tuple[MetaFieldSpec, ...] = (
     MetaFieldSpec(ProjectField.TITLE, _single(MetadataLabelKey.TITLE)),
     MetaFieldSpec(ProjectField.RELEASE_DATE, _single(MetadataLabelKey.RELEASE_DATE)),
     MetaFieldSpec(CreatorField.NAME, _single(MetadataLabelKey.NAME)),
-    MetaFieldSpec(CreatorField.DATE_OF_BIRTH, _single(MetadataLabelKey.DATE_OF_BIRTH)),
-    MetaFieldSpec(CreatorField.PLACE_OF_BIRTH, _single(MetadataLabelKey.PLACE_OF_BIRTH)),
-    MetaFieldSpec(CreatorField.DATE_OF_DEATH, _single(MetadataLabelKey.DATE_OF_DEATH)),
-    MetaFieldSpec(CreatorField.PLACE_OF_DEATH, _single(MetadataLabelKey.PLACE_OF_DEATH)),
+    MetaFieldSpec(CreatorField.BIRTH, _single(MetadataLabelKey.BIRTH)),
+    MetaFieldSpec(CreatorField.DEATH, _single(MetadataLabelKey.DEATH)),
     MetaFieldSpec(CreatorField.NATIONALITIES, LabelPair(MetadataLabelKey.NATIONALITY, MetadataLabelKey.NATIONALITIES)),
     MetaFieldSpec(CreatorField.CIVIL_NAME, _single(MetadataLabelKey.CIVIL_NAME)),
     MetaFieldSpec(CreatorField.ALIASES, LabelPair(MetadataLabelKey.ALIAS, MetadataLabelKey.ALIASES)),
@@ -85,8 +80,7 @@ CORE_META_FIELD_SPECS: tuple[MetaFieldSpec, ...] = (
     MetaFieldSpec(CollaborationField.ALIASES, LabelPair(MetadataLabelKey.ALIAS, MetadataLabelKey.ALIASES)),
     MetaFieldSpec(CollaborationField.ACTIVE_SINCE, _single(MetadataLabelKey.ACTIVE_SINCE)),
     MetaFieldSpec(CollaborationField.MEMBERS, _single(MetadataLabelKey.MEMBERS)),
-    MetaFieldSpec(CollaborationField.FOUNDING_DATE, _single(MetadataLabelKey.FOUNDING_DATE)),
-    MetaFieldSpec(CollaborationField.FOUNDING_LOCATION, _single(MetadataLabelKey.FOUNDING_LOCATION)),
+    MetaFieldSpec(CollaborationField.FOUNDING, _single(MetadataLabelKey.FOUNDING)),
     MetaFieldSpec(CollaborationField.DISSOLUTION_DATE, _single(MetadataLabelKey.DISSOLUTION_DATE)),
 )
 

@@ -131,6 +131,14 @@ class HtmlBuildContext:
     def meta_filter_label(self, field: CollaborationField | CreatorField | ProjectField) -> str:
         return self.meta_label(field, 2)
 
+    def format_date_and_place(self, date: str, place: str) -> str:
+        if date and place:
+            return self.site_labels.metadata.date_and_place_format.format(
+                date=date,
+                place=place,
+            )
+        return date or place
+
     # Rendering visibility and project metadata config
     @property
     def media_type_order(self) -> List[MediaType]:

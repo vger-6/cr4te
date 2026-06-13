@@ -1,4 +1,5 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -19,8 +20,8 @@ from cr4te.render_metadata import (
 from cr4te.schemas.library_schema import Creator, Project
 
 
-def context_for(domain: Domain = Domain.ART) -> HtmlBuildContext:
-    config = apply_cli_overrides(load_config(), domain=domain)
+def context_for(domain: Domain = Domain.ART, config_path: Path | None = None) -> HtmlBuildContext:
+    config = apply_cli_overrides(load_config(config_path), domain=domain)
     return HtmlBuildContext(
         input_dir=Path("input"),
         output_dir=Path("output"),
@@ -70,7 +71,7 @@ class RenderMetadataTests(unittest.TestCase):
             creator(),
             [
                 CreatorField.NAME,
-                CreatorField.DATE_OF_BIRTH,
+                CreatorField.BIRTH,
                 CreatorField.NATIONALITIES,
                 CreatorField.ALIASES,
                 CreatorField.DEBUT_AGE,
@@ -82,10 +83,67 @@ class RenderMetadataTests(unittest.TestCase):
         self.assertEqual([entry.label for entry in entries], ["Name", "Born", "Nationality", "Alias", "Debut Age"])
         self.assertEqual(entries[0].values, ["Displayed Noomi"])
         self.assertEqual(entries[0].hrefs, ["html/noomi.html"])
-        self.assertEqual(entries[1].values, ["April 1990"])
+        self.assertEqual(entries[1].values, ["April 1990 in Berlin"])
         self.assertEqual(entries[2].hrefs, ["index.html?tag=Nationalities%3AGerman"])
         self.assertEqual(entries[3].separator, "<br>")
         self.assertEqual(entries[4].values, ["29 y.o."])
+
+    def test_creator_event_entries_combine_visible_date_and_place(self):
+        entries = build_creator_meta_entries(
+            context_for(),
+            creator(
+                date_of_death="2024-03-12",
+                place_of_death="Paris",
+            ),
+            [
+                CreatorField.BIRTH,
+                CreatorField.DEATH,
+            ],
+            "",
+            "index.html",
+        )
+
+        self.assertEqual([entry.label for entry in entries], ["Born", "Died"])
+        self.assertEqual(entries[0].values, ["April 1990 in Berlin"])
+        self.assertEqual(entries[1].values, ["March 12, 2024 in Paris"])
+
+    def test_creator_event_entries_fall_back_to_available_values(self):
+        date_only = build_creator_meta_entries(
+            context_for(),
+            creator(place_of_birth=""),
+            [CreatorField.BIRTH],
+            "",
+            "index.html",
+        )
+        place_only = build_creator_meta_entries(
+            context_for(),
+            creator(date_of_birth="", place_of_birth="Berlin"),
+            [CreatorField.BIRTH],
+            "",
+            "index.html",
+        )
+
+        self.assertEqual(date_only[0].values, ["April 1990"])
+        self.assertEqual(place_only[0].label, "Born")
+        self.assertEqual(place_only[0].values, ["Berlin"])
+
+    def test_creator_event_entries_use_configured_named_placeholder_order(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            config_path.write_text(
+                '{"site_labels":{"metadata":{"date_and_place_format":"{place}, {date}"}}}',
+                encoding="utf-8",
+            )
+
+            entries = build_creator_meta_entries(
+                context_for(config_path=config_path),
+                creator(),
+                [CreatorField.BIRTH],
+                "",
+                "index.html",
+            )
+
+        self.assertEqual(entries[0].values, ["Berlin, April 1990"])
 
     def test_project_creator_meta_entries_can_use_project_date(self):
         entries = build_project_creator_meta_entries(
@@ -125,21 +183,20 @@ class RenderMetadataTests(unittest.TestCase):
                 CollaborationField.NATIONALITIES,
                 CollaborationField.ALIASES,
                 CollaborationField.MEMBERS,
-                CollaborationField.FOUNDING_DATE,
-                CollaborationField.FOUNDING_LOCATION,
+                CollaborationField.FOUNDING,
             ],
             "html/noomi-ada.html",
             "index.html",
             ["Displayed Noomi", "Ada"],
         )
 
-        self.assertEqual([entry.label for entry in entries], ["Name", "Nationalities", "Alias", "Members", "Founded", "Founded in"])
+        self.assertEqual([entry.label for entry in entries], ["Name", "Nationalities", "Alias", "Members", "Founded"])
         self.assertEqual(entries[0].hrefs, ["html/noomi-ada.html"])
         self.assertEqual(entries[0].values, ["The Duo"])
         self.assertEqual(entries[1].hrefs[0], "index.html?tag=Nationalities%3AFrench")
         self.assertEqual(entries[3].separator, "<br>")
         self.assertEqual(entries[3].values, ["Displayed Noomi", "Ada"])
-        self.assertEqual(entries[4].values, ["2021"])
+        self.assertEqual(entries[4].values, ["2021 in Paris"])
 
     def test_project_meta_entries_use_core_and_facet_specs(self):
         entries = build_project_meta_entries(

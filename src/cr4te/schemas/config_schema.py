@@ -1,4 +1,5 @@
 from typing import Dict, List
+from string import Formatter
 
 from pydantic import BaseModel, ConfigDict, conint, field_validator
 
@@ -78,10 +79,8 @@ class MetadataLabels(StrictConfigModel):
     release_date: str
     name: str
     members: str
-    date_of_birth: str
-    place_of_birth: str
-    date_of_death: str
-    place_of_death: str
+    birth: str
+    death: str
     nationality: str
     nationalities: str
     civil_name: str
@@ -90,9 +89,30 @@ class MetadataLabels(StrictConfigModel):
     debut_age: str
     age_at_time: str
     active_since: str
-    founding_date: str
-    founding_location: str
+    founding: str
     dissolution_date: str
+    date_and_place_format: str
+
+    @field_validator("date_and_place_format")
+    @classmethod
+    def validate_date_and_place_format(cls, value: str) -> str:
+        try:
+            parsed = list(Formatter().parse(value))
+        except ValueError as exc:
+            raise ValueError("must be a valid format string") from exc
+
+        fields = []
+        for _, field_name, format_spec, conversion in parsed:
+            if field_name is None:
+                continue
+            if field_name not in {"date", "place"} or format_spec or conversion:
+                raise ValueError("must use only the named placeholders {date} and {place}")
+            fields.append(field_name)
+
+        if fields.count("date") != 1 or fields.count("place") != 1:
+            raise ValueError("must contain each of {date} and {place} exactly once")
+
+        return value
 
 
 class ProjectFacetLabels(StrictConfigModel):

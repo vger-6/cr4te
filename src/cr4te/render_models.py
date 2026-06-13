@@ -153,8 +153,8 @@ class CreatorProfileContext:
 @dataclass(frozen=True)
 class CreatorLinkContext:
     name: str
-    rel_html_path: str
     rel_thumbnail_path: str
+    meta_entries: list[MetaEntry] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -186,20 +186,7 @@ class CreatorPageContext:
     collaborations: list[CollaborationProjectsContext]
     creator_stats: CreatorStats
     meta_entries: list[MetaEntry]
-    aliases: list[str] = field(default_factory=list)
-    nationalities: list[str] = field(default_factory=list)
-    active_since: str = ""
     members: list[CreatorLinkContext] = field(default_factory=list)
-    member_names: list[str] = field(default_factory=list)
-    founding_date: str = ""
-    founding_location: str = ""
-    dissolution_date: str = ""
-    civil_name: str = ""
-    date_of_birth: str = ""
-    place_of_birth: str = ""
-    date_of_death: str = ""
-    place_of_death: str = ""
-    debut_age: str = ""
 
 
 @dataclass(frozen=True)

@@ -23,6 +23,7 @@ from cr4te.render_models import (
     GalleryImageContext,
     MediaGroupContext,
     MediaSectionContext,
+    MetaEntry,
     NavigationItem,
     PageShellContext,
     ProjectPageContext,
@@ -204,6 +205,28 @@ class TemplateRendererTests(unittest.TestCase):
         rendered = macro(ImageGalleryBuildingStrategy, ImageGalleryBuildingStrategy.JUSTIFIED)
 
         self.assertEqual(rendered.strip(), "image-gallery--justified")
+
+    def test_metadata_macro_renders_grouped_stacked_entries_without_colons(self):
+        macro = env.get_template("partials/_utils.html.j2").module.render_meta_entries
+        entries = [
+            MetaEntry(
+                label="Genres",
+                values=["Ambient", "Electronic"],
+                separator=" | ",
+                hrefs=["projects.html?tag=Genres%3AAmbient", ""],
+            ),
+            MetaEntry(label="Release Date", values=["2001"]),
+        ]
+
+        rendered = str(macro(entries, "../"))
+
+        self.assertIn('<dl class="meta-list info-block__meta">', rendered)
+        self.assertEqual(rendered.count('<div class="meta-entry">'), 2)
+        self.assertIn('<dt class="meta-label">Genres</dt>', rendered)
+        self.assertIn('<dd class="meta-value">', rendered)
+        self.assertIn('<a href="../projects.html?tag=Genres%3AAmbient">Ambient</a> | Electronic', rendered)
+        self.assertNotIn("Genres:", rendered)
+        self.assertNotIn("Release Date:", rendered)
 
     def test_gallery_image_alt_text_uses_available_image_metadata(self):
         site_labels = load_config().site_labels
@@ -413,6 +436,16 @@ class TemplateRendererTests(unittest.TestCase):
                 self.assertIn('{% include "partials/_document_head.html.j2" %}', source)
                 self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
                 self.assertNotIn('<div class="page-header">', source)
+
+    def test_detail_templates_use_shared_metadata_renderer_and_preserve_tags(self):
+        template_dir = ROOT / "src" / "cr4te" / "templates"
+        creator_source = (template_dir / "creator.html.j2").read_text(encoding="utf-8")
+        project_source = (template_dir / "project.html.j2").read_text(encoding="utf-8")
+
+        self.assertIn("utils.render_meta_entries(member.meta_entries, path_to_root)", creator_source)
+        self.assertNotIn('<div class="info-block__meta">', creator_source)
+        for source in (creator_source, project_source):
+            self.assertIn("<strong>{{ group.category }}:</strong>", source)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,9 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls._build_example_site(cls.details_site_dir, cls._write_details_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
+        cls.landscape_project_path = cls._find_landscape_project_page_with_metadata()
         cls.creator_path = cls._find_creator_page()
+        cls.combined_event_creator_path = cls._find_creator_page_with_combined_event()
         cls._start_static_server()
         cls._start_browser()
 
@@ -141,11 +143,26 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         raise AssertionError("Generated example site does not contain an image-caption project page")
 
     @classmethod
+    def _find_landscape_project_page_with_metadata(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            content = path.read_text(encoding="utf-8")
+            if 'info-block info-block--landscape' in content and '<dt class="meta-label">Release Date</dt>' in content:
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain a landscape project with multiple metadata entries")
+
+    @classmethod
     def _find_creator_page(cls):
         for path in sorted((cls.site_dir / "html").rglob("*.html")):
             if '<div class="section-title">Profile</div>' in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain a creator page")
+
+    @classmethod
+    def _find_creator_page_with_combined_event(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            if "January 1986 in Berlin" in path.read_text(encoding="utf-8"):
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain a combined date-and-place event")
 
     @classmethod
     def _start_static_server(cls):
@@ -271,6 +288,149 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.open_details_page(self.creator_path)
         self.assertGreater(self.page.locator(".info-block__media img[alt^='Portrait of']").count(), 0)
+        self.assertNoBrowserErrors()
+
+    def test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts(self):
+        self.open_page(self.creator_path)
+        metadata = self.page.locator(".meta-list").first
+        entries = metadata.locator(".meta-entry")
+
+        self.assertEqual(metadata.evaluate("element => element.tagName"), "DL")
+        self.assertGreater(entries.count(), 1)
+        self.assertEqual(entries.first.locator(".meta-label").evaluate("element => element.tagName"), "DT")
+        self.assertEqual(entries.first.locator(".meta-value").evaluate("element => element.tagName"), "DD")
+
+        layout = self.page.evaluate(
+            """
+            () => {
+                const block = document.querySelector('.info-block--portrait');
+                const entries = block.querySelectorAll('.meta-entry');
+                const label = entries[0].querySelector('.meta-label');
+                const value = entries[0].querySelector('.meta-value');
+                const nextLabel = entries[1].querySelector('.meta-label');
+                const mediaRect = block.querySelector('.info-block__media').getBoundingClientRect();
+                const metaRect = block.querySelector('.info-block__meta').getBoundingClientRect();
+                const labelRect = label.getBoundingClientRect();
+                const valueRect = value.getBoundingClientRect();
+                const nextLabelRect = nextLabel.getBoundingClientRect();
+                const probe = document.createElement('span');
+                probe.style.color = 'var(--theme-meta-label-text)';
+                document.body.appendChild(probe);
+                const labelToken = getComputedStyle(probe).color;
+                probe.style.color = 'var(--theme-link)';
+                const linkToken = getComputedStyle(probe).color;
+                probe.remove();
+                return {
+                    labelToken,
+                    linkToken,
+                    labelColor: getComputedStyle(label).color,
+                    labelSize: parseFloat(getComputedStyle(label).fontSize),
+                    valueSize: parseFloat(getComputedStyle(value).fontSize),
+                    valueBelowLabel: valueRect.top >= labelRect.bottom,
+                    labelValueGap: valueRect.top - labelRect.bottom,
+                    entryGap: nextLabelRect.top - valueRect.bottom,
+                    metadataBesidePortrait: metaRect.left >= mediaRect.right,
+                };
+            }
+            """
+        )
+
+        self.assertEqual(layout["labelColor"], layout["labelToken"])
+        self.assertNotEqual(layout["labelColor"], layout["linkToken"])
+        self.assertLess(layout["labelSize"], layout["valueSize"])
+        self.assertTrue(layout["valueBelowLabel"])
+        self.assertGreater(layout["entryGap"], layout["labelValueGap"])
+        self.assertTrue(layout["metadataBesidePortrait"])
+
+        for theme in ("theme-frozen-aurora", "theme-forest-night", "theme-mono-terminal", "theme-amber-terminal"):
+            colors = self.page.evaluate(
+                """
+                theme => {
+                    document.body.className = theme;
+                    const label = document.querySelector('.meta-label');
+                    const probe = document.createElement('span');
+                    probe.style.color = 'var(--theme-meta-label-text)';
+                    document.body.appendChild(probe);
+                    const labelToken = getComputedStyle(probe).color;
+                    probe.style.color = 'var(--theme-link)';
+                    const result = {
+                        label: getComputedStyle(label).color,
+                        labelToken,
+                        linkToken: getComputedStyle(probe).color,
+                    };
+                    probe.remove();
+                    return result;
+                }
+                """,
+                theme,
+            )
+            self.assertEqual(colors["label"], colors["labelToken"])
+            self.assertNotEqual(colors["label"], colors["linkToken"])
+
+        self.page.set_viewport_size({"width": 360, "height": 900})
+        self.page.reload()
+        narrow_layout = self.page.evaluate(
+            """
+            () => {
+                const block = document.querySelector('.info-block--portrait');
+                const mediaRect = block.querySelector('.info-block__media').getBoundingClientRect();
+                const metaRect = block.querySelector('.info-block__meta').getBoundingClientRect();
+                return {
+                    metadataBelowPortrait: metaRect.top >= mediaRect.bottom,
+                    metadataVisible: metaRect.height > 0,
+                };
+            }
+            """
+        )
+        self.assertTrue(narrow_layout["metadataBelowPortrait"])
+        self.assertTrue(narrow_layout["metadataVisible"])
+
+        self.page.set_viewport_size({"width": 1280, "height": 720})
+        self.open_page(self.landscape_project_path)
+        landscape_layout = self.page.evaluate(
+            """
+            () => {
+                const block = document.querySelector('.info-block--landscape');
+                const mediaRect = block.querySelector('.info-block__media').getBoundingClientRect();
+                const metaRect = block.querySelector('.info-block__meta').getBoundingClientRect();
+                const entries = block.querySelectorAll('.meta-entry');
+                const firstRect = entries[0].getBoundingClientRect();
+                const secondRect = entries[1].getBoundingClientRect();
+                return {
+                    metadataBelowImage: metaRect.top >= mediaRect.bottom,
+                    entriesShareRow: Math.abs(firstRect.top - secondRect.top) < 1,
+                    entriesEqualWidth: Math.abs(firstRect.width - secondRect.width) < 1,
+                };
+            }
+            """
+        )
+        self.assertTrue(landscape_layout["metadataBelowImage"])
+        self.assertTrue(landscape_layout["entriesShareRow"])
+        self.assertTrue(landscape_layout["entriesEqualWidth"])
+
+        self.page.set_viewport_size({"width": 360, "height": 900})
+        self.page.reload()
+        narrow_landscape_layout = self.page.evaluate(
+            """
+            () => {
+                const entries = document.querySelector('.info-block--landscape').querySelectorAll('.meta-entry');
+                const firstRect = entries[0].getBoundingClientRect();
+                const secondRect = entries[1].getBoundingClientRect();
+                return secondRect.top >= firstRect.bottom;
+            }
+            """
+        )
+        self.assertTrue(narrow_landscape_layout)
+        self.assertNoBrowserErrors()
+
+    def test_creator_event_metadata_combines_date_and_place(self):
+        self.open_page(self.combined_event_creator_path)
+
+        born_entry = self.page.locator(".meta-entry").filter(has_text="Born")
+        self.assertEqual(born_entry.count(), 1)
+        self.assertEqual(born_entry.locator(".meta-label").inner_text(), "Born")
+        self.assertEqual(born_entry.locator(".meta-value").inner_text(), "January 1986 in Berlin")
+        self.assertEqual(self.page.get_by_text("Born in", exact=True).count(), 0)
         self.assertNoBrowserErrors()
 
     def test_logo_remains_active_and_consistent_across_pages_and_themes(self):

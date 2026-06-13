@@ -32,6 +32,11 @@
   width: 100%;
 }
 
+.info-block--landscape .meta-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .info-block--portrait {
   flex-direction: row;
 }
@@ -42,6 +47,10 @@
 }
 
 @container info-block-section (max-width: 25rem) {
+  .info-block--landscape .meta-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .info-block--portrait {
     flex-direction: column;
   }

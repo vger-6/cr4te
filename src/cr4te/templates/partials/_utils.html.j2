@@ -18,21 +18,23 @@
 
 {% macro render_meta_entries(entries, path_to_root) %}
   {% if entries %}
-    <div class="meta-list info-block__meta">
+    <dl class="meta-list info-block__meta">
       {% for entry in entries %}
-        <div class="meta-label">{{ entry.label }}:</div>
-        <div class="meta-value">
-          {%- for value in entry.values %}
-            {%- set href = entry.hrefs[loop.index0] if entry.hrefs else "" -%}
-            {%- if href -%}
-              <a href="{{ path_to_root }}{{ href }}">{{ value }}</a>
-            {%- else -%}
-              {{ value }}
-            {%- endif -%}
-            {%- if not loop.last -%}{{ entry.separator | safe }}{%- endif -%}
-          {%- endfor %}
+        <div class="meta-entry">
+          <dt class="meta-label">{{ entry.label }}</dt>
+          <dd class="meta-value">
+            {%- for value in entry.values %}
+              {%- set href = entry.hrefs[loop.index0] if entry.hrefs else "" -%}
+              {%- if href -%}
+                <a href="{{ path_to_root }}{{ href }}">{{ value }}</a>
+              {%- else -%}
+                {{ value }}
+              {%- endif -%}
+              {%- if not loop.last -%}{{ entry.separator | safe }}{%- endif -%}
+            {%- endfor %}
+          </dd>
         </div>
       {% endfor %}
-    </div>
+    </dl>
   {% endif %}
 {% endmacro %}

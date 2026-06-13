@@ -31,10 +31,8 @@ PROJECT_VISIBLE_METADATA_DEFAULTS = {
 
 CREATOR_VISIBLE_FIELDS = [
     CreatorField.NAME,
-    CreatorField.DATE_OF_BIRTH,
-    CreatorField.PLACE_OF_BIRTH,
-    CreatorField.DATE_OF_DEATH,
-    CreatorField.PLACE_OF_DEATH,
+    CreatorField.BIRTH,
+    CreatorField.DEATH,
     CreatorField.NATIONALITIES,
     CreatorField.CIVIL_NAME,
     CreatorField.ALIASES,
@@ -49,8 +47,7 @@ COLLABORATION_VISIBLE_FIELDS = [
     CollaborationField.ALIASES,
     CollaborationField.ACTIVE_SINCE,
     CollaborationField.MEMBERS,
-    CollaborationField.FOUNDING_DATE,
-    CollaborationField.FOUNDING_LOCATION,
+    CollaborationField.FOUNDING,
     CollaborationField.DISSOLUTION_DATE,
 ]
 
@@ -117,10 +114,8 @@ DEFAULT_METADATA_LABELS = {
     "release_date": "Release Date",
     "name": "Name",
     "members": "Members",
-    "date_of_birth": "Born",
-    "place_of_birth": "Born in",
-    "date_of_death": "Died",
-    "place_of_death": "Died in",
+    "birth": "Born",
+    "death": "Died",
     "nationality": "Nationality",
     "nationalities": "Nationalities",
     "civil_name": "Civil Name",
@@ -129,9 +124,9 @@ DEFAULT_METADATA_LABELS = {
     "debut_age": "Debut Age",
     "age_at_time": "Age at Time",
     "active_since": "Active Since",
-    "founding_date": "Founded",
-    "founding_location": "Founded in",
+    "founding": "Founded",
     "dissolution_date": "Dissolved",
+    "date_and_place_format": "{date} in {place}",
 }
 
 DEFAULT_SITE_LABELS = {
