@@ -3,8 +3,16 @@
   cr4te.galleries = cr4te.galleries || {};
 
   function parseAspectRatio(value) {
-    const [w, h] = (value || "1/1").split('/').map(Number);
-    return w > 0 && h > 0 ? { w, h } : { w: 1, h: 1 };
+    const match = typeof value === 'string'
+      ? value.match(/^\s*([0-9]+)\s*\/\s*([0-9]+)\s*$/)
+      : null;
+    if (!match) return { w: 1, h: 1 };
+
+    const w = Number(match[1]);
+    const h = Number(match[2]);
+    return Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
+      ? { w, h }
+      : { w: 1, h: 1 };
   }
 
   function calculateColumns(galleryWidth, gap, maxHeight, w, h) {

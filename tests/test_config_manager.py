@@ -13,6 +13,7 @@ from cr4te.enums.domain import Domain
 from cr4te.enums.portrait_discovery import PortraitDiscovery
 from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.enums.visible_fields import CollaborationField, CreatorField, ProjectField
+from cr4te.schemas.config_schema import GalleryLayoutRendering
 
 
 def write_json(path: Path, data: dict) -> None:
@@ -162,6 +163,31 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_rendering.galleries.project_cards.aspect_ratio, "4/5")
             self.assertEqual(config.site_rendering.galleries.project_cards.page_size, 25)
             self.assertEqual(config.site_rendering.galleries.project_cards.image_max_height, 350)
+
+    def test_gallery_aspect_ratio_config_normalizes_supported_values(self):
+        valid_ratios = {
+            "3/2": "3/2",
+            "2/3": "2/3",
+            "1/1": "1/1",
+            " 03 / 002 ": "3/2",
+            "1000/1414": "1000/1414",
+        }
+
+        for value, expected in valid_ratios.items():
+            with self.subTest(value=value):
+                rendering = GalleryLayoutRendering(building_strategy="aspect", aspect_ratio=value)
+
+                self.assertEqual(rendering.aspect_ratio, expected)
+
+    def test_gallery_aspect_ratio_config_rejects_unsupported_values_with_clear_error(self):
+        invalid_ratios = ("3", "3/2/1", "3.0/2", "3:2", "0/2", "-3/2", ["3", "2"])
+
+        for value in invalid_ratios:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                ValueError,
+                r"Aspect ratio must use two positive integers in width/height format, for example 3/2\.",
+            ):
+                GalleryLayoutRendering(building_strategy="aspect", aspect_ratio=value)
 
     def test_metadata_date_and_place_format_is_configurable_as_a_label(self):
         with tempfile.TemporaryDirectory() as tmp:

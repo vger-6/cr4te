@@ -145,10 +145,10 @@ class GalleryLayoutRendering(StrictConfigModel):
     building_strategy: ImageGalleryBuildingStrategy
     aspect_ratio: str
 
-    # TODO: Is requiring slash-separated aspect ratios here the right choice, or should we reconsider supporting other formats?
-    @field_validator("aspect_ratio")
-    def validate_aspect_ratio_colon_format(cls, v):
-        width, height = parse_aspect_ratio(v)
+    @field_validator("aspect_ratio", mode="before")
+    @classmethod
+    def validate_and_normalize_aspect_ratio(cls, value: object) -> str:
+        width, height = parse_aspect_ratio(value)
         return f"{width}/{height}"
 
 

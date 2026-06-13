@@ -29,6 +29,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **LIFE-003:** Domain presets must be only one way to produce resolved project facet configuration. A saved configuration file must be self-contained for later builds.
 - **LIFE-004:** A CLI domain override must replace the active project facet field set instead of merging with the configured facet fields.
 - **LIFE-005:** Portrait discovery and portrait visibility must be independently controlled by resolved configuration. Portrait discovery and portrait-role assignment during library indexing must depend only on `media_rules` and remain invariant across portrait visibility settings. An omitted CLI portrait-discovery or portrait-visibility override must preserve its configured value.
+- **LIFE-006:** Gallery aspect-ratio configuration must use a string containing two positive integers in `width/height` order, separated by one slash. Resolved configuration must normalize accepted values to canonical `width/height` form.
 
 ## Build Modes And Issue Reporting
 

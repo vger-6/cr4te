@@ -10,10 +10,47 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from cr4te.enums.orientation import Orientation
 from cr4te.media_cache import ImageDimensions
-from cr4te.utils.image_utils import infer_image_orientation, read_image_dimensions
+from cr4te.utils.image_utils import infer_image_orientation, parse_aspect_ratio, read_image_dimensions
 
 
 class ImageUtilsTests(unittest.TestCase):
+    def test_parse_aspect_ratio_accepts_positive_integer_width_and_height(self):
+        valid_ratios = {
+            "3/2": (3, 2),
+            "2/3": (2, 3),
+            "1/1": (1, 1),
+            " 03 / 002 ": (3, 2),
+            "1000/1414": (1000, 1414),
+        }
+
+        for value, expected in valid_ratios.items():
+            with self.subTest(value=value):
+                self.assertEqual(parse_aspect_ratio(value), expected)
+
+    def test_parse_aspect_ratio_rejects_values_outside_the_supported_format(self):
+        invalid_ratios = (
+            "3",
+            "3/2/1",
+            "3.0/2",
+            "3:2",
+            "wide/tall",
+            "0/2",
+            "3/0",
+            "-3/2",
+            "3/-2",
+            "+3/2",
+            "",
+            None,
+            ["3", "2"],
+        )
+
+        for value in invalid_ratios:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                ValueError,
+                r"Aspect ratio must use two positive integers in width/height format, for example 3/2\.",
+            ):
+                parse_aspect_ratio(value)
+
     def test_read_image_dimensions_and_orientation_use_same_threshold(self):
         with tempfile.TemporaryDirectory() as tmp:
             image_path = Path(tmp) / "portrait.jpg"

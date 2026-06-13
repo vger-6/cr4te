@@ -727,6 +727,29 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
+    def test_aspect_gallery_builder_falls_back_for_malformed_aspect_ratios(self):
+        self.open_page("index.html")
+
+        aspect_ratios = self.page.evaluate(
+            """
+            () => ["3/2/1", "3.0/2", "3:2", "0/2", "-3/2"].map(value => {
+                const gallery = document.createElement("div");
+                gallery.className = "image-gallery--aspect";
+                gallery.dataset.aspectRatio = value;
+                gallery.innerHTML = '<div class="image-wrapper"><img alt=""></div>';
+                document.body.appendChild(gallery);
+
+                window.cr4te.galleries.rebuildAspect(gallery);
+                const aspectRatio = gallery.querySelector(".aspect-ratio-box").style.aspectRatio;
+                gallery.remove();
+                return aspectRatio;
+            })
+            """
+        )
+
+        self.assertEqual(aspect_ratios, ["1 / 1"] * 5)
+        self.assertNoBrowserErrors()
+
     def test_paginated_gallery_rebuilds_layout_after_page_change(self):
         self.open_paginated_page("index.html")
 

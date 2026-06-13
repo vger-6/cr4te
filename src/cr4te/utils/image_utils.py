@@ -1,4 +1,5 @@
 import platform
+import re
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -15,17 +16,27 @@ __all__ = [
 ]
 
 
+ASPECT_RATIO_FORMAT_ERROR = (
+    "Aspect ratio must use two positive integers in width/height format, for example 3/2."
+)
+ASPECT_RATIO_PATTERN = re.compile(r"\s*([0-9]+)\s*/\s*([0-9]+)\s*")
+
+
 def parse_aspect_ratio(aspect_ratio: str) -> tuple[int, int]:
-    normalized = aspect_ratio.strip()
+    if not isinstance(aspect_ratio, str):
+        raise ValueError(ASPECT_RATIO_FORMAT_ERROR)
 
-    if "/" not in normalized:
-        raise ValueError(f"Invalid aspect ratio: {normalized}")
+    match = ASPECT_RATIO_PATTERN.fullmatch(aspect_ratio)
+    if match is None:
+        raise ValueError(ASPECT_RATIO_FORMAT_ERROR)
 
-    width_str, height_str = normalized.split("/", 1)
-    width, height = int(width_str), int(height_str)
+    try:
+        width, height = (int(component) for component in match.groups())
+    except ValueError as exc:
+        raise ValueError(ASPECT_RATIO_FORMAT_ERROR) from exc
 
-    if width <= 0 or height <= 0:
-        raise ValueError("Aspect ratio values must be greater than zero")
+    if width == 0 or height == 0:
+        raise ValueError(ASPECT_RATIO_FORMAT_ERROR)
 
     return width, height
 
