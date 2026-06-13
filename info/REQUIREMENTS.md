@@ -82,6 +82,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-017:** Birth, death, and founding metadata must each be configurable as one visible event entry. When both the event's date and place have values, the generated value must use the configured named-placeholder date-and-place format; when only one value is available, it must render alone.
 - **SITE-018:** Tag category labels must use the same visual label presentation as metadata labels and omit trailing colons, while tags must preserve their distinct linked-chip presentation.
 - **SITE-019:** Creator and project media must be presented as folder-derived groups. The actual root group must appear first, groups whose final folder name matches the configured metadata folder must appear second, and remaining groups must follow in lexicographical order by their complete relative folder paths. Within each group, media sections must follow the resolved configured media-type order. Media directly in a creator or project folder and media in its configured metadata folder must use root-group section labels.
+- **SITE-020:** Generated pages must respect reduced-motion preferences by removing nonessential interface transition durations and avoiding smooth programmatic scrolling.
 
 ## Themes
 

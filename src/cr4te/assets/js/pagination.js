@@ -114,8 +114,7 @@
     }
 
     function extendAspectRow(gallery, allWrappers, slice, nextIndex) {
-      const aspectRatio = gallery.dataset.aspectRatio || "1/1";
-      const [w, h] = aspectRatio.split('/').map(Number);
+      const { w, h } = window.utils.parseAspectRatio(gallery.dataset.aspectRatio);
 
       const computedStyle = window.getComputedStyle(gallery);
       const gap = window.utils.parseCssLength(
@@ -253,7 +252,7 @@
             if (scrollContainer) {
               scrollContainer.scrollTo({
                 top: sectionBox.offsetTop - scrollContainer.offsetTop,
-                behavior: 'smooth'
+                behavior: window.utils.prefersReducedMotion() ? 'auto' : 'smooth'
               });
             }
           });

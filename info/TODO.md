@@ -14,15 +14,6 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 ### Low Priority
 
-- [ ] Review CSS design tokens to make recurring spacing, typography, icon, motion, and layout values more coherent without over-tokenizing component-specific details.
-  - Introduce a small foundational scale for genuinely recurring values, such as `--space-xs: 0.25rem`, `--space-sm: 0.5rem`, `--space-md: 1rem`, and body/small-text sizes.
-  - Add expressive component aliases where independent fine-tuning remains useful, such as `--meta-label-value-gap`, `--meta-entry-gap`, and `--data-label-size`, backed by the foundational scale.
-  - Prioritize repeated spacing values, non-heading typography sizes, common icon dimensions, transition durations, and duplicated scrollbar dimensions.
-  - Keep specialized values such as slider track/thumb dimensions, search-control padding, thumbnail dimensions, and unusual compact gaps component-specific unless multiple components genuinely share the same design role.
-  - Organize or document token roles as foundational, layout, theme, and component aliases while keeping `tokens.css` as the single file unless its size or ownership becomes difficult to navigate.
-  - Audit existing literals before adding tokens; introduce tokens only when they express a shared design decision or remove meaningful duplication.
-  - Review `--layout-mobile-breakpoint`, which cannot normally be referenced from CSS media-query conditions and currently suggests central control while the actual `72rem` breakpoint remains hardcoded.
-  - Add visual/browser regression coverage only for token changes that could alter generated-site layout or appearance.
 - [ ] Review generated human-readable phrases and replace fragment concatenation with complete named-placeholder label formats where it improves domain wording or localization.
   - Replace the currently unused `creator_collabs_title_prefix` with a complete collaboration-title format and use it instead of the hardcoded `{{ projects }} with {{ collaborator }}` template phrase. Support domain presets such as `{projects} with {collaborator}`, `Codirected with {collaborator}`, and `Scenes with {collaborator}`.
   - Consider deriving the search placeholder from a complete format such as `Search {creators}, {projects}, {tags}...` while preserving the option for domains to provide different complete wording.

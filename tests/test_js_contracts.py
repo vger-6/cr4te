@@ -174,6 +174,23 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn("window.addEventListener('resize', handleResize)", source)
         self.assertIn("window.removeEventListener('resize', handleResize)", source)
 
+    def test_aspect_gallery_and_pagination_use_shared_defensive_aspect_ratio_parser(self):
+        utils = (ASSET_JS_DIR / "utils.js").read_text(encoding="utf-8")
+        aspect_gallery = (ASSET_JS_DIR / "aspect_gallery_builder.js").read_text(encoding="utf-8")
+        pagination = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
+
+        self.assertIn("window.utils.parseAspectRatio = function", utils)
+        self.assertIn("window.utils.parseAspectRatio(gallery.dataset.aspectRatio)", aspect_gallery)
+        self.assertIn("window.utils.parseAspectRatio(gallery.dataset.aspectRatio)", pagination)
+        self.assertNotIn("function parseAspectRatio", aspect_gallery)
+        self.assertNotIn("aspectRatio.split('/')", pagination)
+
+    def test_pagination_auto_scroll_respects_reduced_motion_preference(self):
+        source = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
+
+        self.assertIn("window.utils.prefersReducedMotion()", source)
+        self.assertIn("behavior: window.utils.prefersReducedMotion() ? 'auto' : 'smooth'", source)
+
     def test_theme_selector_uses_rendered_registry_and_handles_restricted_storage(self):
         source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
 
@@ -230,6 +247,58 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn("--theme-focus-outline:", tokens)
         self.assertIn("--theme-focus-outline-width:", tokens)
         self.assertIn(":focus-visible", base)
+
+    def test_shared_design_tokens_cover_motion_metadata_icons_and_scrollbars(self):
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
+
+        for token in (
+            "--space-xs:",
+            "--space-sm:",
+            "--space-md:",
+            "--icon-size:",
+            "--icon-size-compact:",
+            "--motion-interaction:",
+            "--motion-visibility:",
+            "--meta-label-value-gap:",
+            "--meta-entry-gap:",
+            "--data-label-size:",
+            "--scrollbar-width:",
+            "--scrollbar-radius:",
+            "--scrollbar-border-width:",
+        ):
+            with self.subTest(token=token):
+                self.assertIn(token, tokens)
+
+        self.assertNotIn("--layout-mobile-breakpoint:", tokens)
+
+    def test_css_transitions_use_shared_motion_tokens_and_explicit_properties(self):
+        source = read_all(sorted(ASSET_CSS_DIR.glob("*.css")))
+
+        self.assertNotRegex(source, r"transition:\s*all\b")
+        self.assertNotRegex(source, r"transition:[^;]*(?:0\.2s|0\.3s)")
+        self.assertIn("transition: opacity var(--motion-visibility)", source)
+        self.assertIn("transition: color var(--motion-interaction)", source)
+
+    def test_css_reduced_motion_preference_disables_shared_motion_tokens(self):
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
+
+        self.assertIn("@media (prefers-reduced-motion: reduce)", tokens)
+        self.assertRegex(
+            tokens,
+            r"@media \(prefers-reduced-motion: reduce\)\s*\{\s*:root\s*\{[^}]*"
+            r"--motion-interaction:\s*0s !important;[^}]*--motion-visibility:\s*0s !important;",
+        )
+
+    def test_scrollbar_styles_are_shared_by_base_css(self):
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+        overview = (ASSET_CSS_DIR / "overview-layout.css").read_text(encoding="utf-8")
+        two_column = (ASSET_CSS_DIR / "two-column-layout.css").read_text(encoding="utf-8")
+
+        self.assertIn(".overview-layout::-webkit-scrollbar,", base)
+        self.assertIn(".detail-content::-webkit-scrollbar", base)
+        self.assertIn("width: var(--scrollbar-width)", base)
+        self.assertNotIn("::-webkit-scrollbar", overview)
+        self.assertNotIn("::-webkit-scrollbar", two_column)
 
     def test_base_css_does_not_import_separately_linked_tokens(self):
         source = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")

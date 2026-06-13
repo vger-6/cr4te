@@ -750,6 +750,23 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(aspect_ratios, ["1 / 1"] * 5)
         self.assertNoBrowserErrors()
 
+    def test_paginated_aspect_gallery_falls_back_for_malformed_aspect_ratio(self):
+        self.open_paginated_page("index.html")
+
+        self.page.evaluate(
+            """
+            () => {
+                const gallery = document.querySelector("#imageGallery");
+                gallery.dataset.aspectRatio = "3/2/1";
+                window.dispatchEvent(new Event("resize"));
+            }
+            """
+        )
+
+        self.assertGreater(self.page.locator(".pagination-controls button").count(), 0)
+        self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
     def test_paginated_gallery_rebuilds_layout_after_page_change(self):
         self.open_paginated_page("index.html")
 
@@ -762,6 +779,61 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
         self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
+    def test_reduced_motion_disables_shared_transitions_and_smooth_pagination_scroll(self):
+        self.page.emulate_media(reduced_motion="reduce")
+        self.open_paginated_page("index.html")
+        self.page.evaluate(
+            """
+            () => {
+                const overview = document.querySelector(".overview-layout");
+                overview.style.height = "100px";
+                window.__scrollBehaviors = [];
+                overview.scrollTo = options => window.__scrollBehaviors.push(options.behavior);
+            }
+            """
+        )
+
+        motion = self.page.evaluate(
+            """
+            () => {
+                const root = getComputedStyle(document.documentElement);
+                const button = document.querySelector(".pagination-controls button:not(:disabled)");
+                return {
+                    prefersReducedMotion: window.utils.prefersReducedMotion(),
+                    interaction: root.getPropertyValue("--motion-interaction").trim(),
+                    visibility: root.getPropertyValue("--motion-visibility").trim(),
+                    buttonDuration: getComputedStyle(button).transitionDuration,
+                };
+            }
+            """
+        )
+        self.page.click(".pagination-next")
+        self.page.wait_for_timeout(50)
+
+        self.assertTrue(motion["prefersReducedMotion"])
+        self.assertEqual(motion["interaction"], "0s")
+        self.assertEqual(motion["visibility"], "0s")
+        self.assertEqual(set(motion["buttonDuration"].split(", ")), {"0s"})
+        self.assertEqual(self.page.evaluate("window.__scrollBehaviors"), ["auto"])
+        self.assertNoBrowserErrors()
+
+    def test_pagination_hover_feedback_preserves_button_geometry(self):
+        self.open_paginated_page("index.html")
+        button = self.page.locator(".pagination-next")
+        before = button.bounding_box()
+        transitions = button.evaluate(
+            "element => getComputedStyle(element).transitionProperty.split(', ').sort()"
+        )
+
+        button.hover()
+        self.page.wait_for_timeout(250)
+        after = button.bounding_box()
+
+        self.assertEqual(transitions, ["background-color", "color"])
+        self.assertEqual(before["width"], after["width"])
+        self.assertEqual(before["height"], after["height"])
         self.assertNoBrowserErrors()
 
     def test_theme_dropdown_applies_selected_theme(self):

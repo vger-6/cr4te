@@ -60,10 +60,21 @@ window.utils.parseCssLength = function (value, contextElement = document.documen
   return isNaN(numeric) ? NaN : numeric;
 };
 
-window.utils.getBreakpointPx = function (varName = '--mobile-breakpoint') {
-  const rootStyles = getComputedStyle(document.documentElement);
-  const value = rootStyles.getPropertyValue(varName).trim();
-  return window.utils.parseCssLength(value);
+window.utils.parseAspectRatio = function (value) {
+  const match = typeof value === 'string'
+    ? value.match(/^\s*([0-9]+)\s*\/\s*([0-9]+)\s*$/)
+    : null;
+  if (!match) return { w: 1, h: 1 };
+
+  const w = Number(match[1]);
+  const h = Number(match[2]);
+  return Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0
+    ? { w, h }
+    : { w: 1, h: 1 };
+};
+
+window.utils.prefersReducedMotion = function () {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false;
 };
 
 window.utils.getExplicitScrollableAncestor = function (el) {
