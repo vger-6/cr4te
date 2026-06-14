@@ -44,6 +44,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls._build_example_site(cls.details_site_dir, cls._write_details_config(), domain=None)
         cls._build_example_site(cls.disabled_portraits_site_dir, cls._write_disabled_portraits_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
+        cls.video_project_path = cls._find_video_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
         cls.landscape_project_path = cls._find_landscape_project_page_with_metadata()
         cls.creator_path = cls._find_creator_page()
@@ -151,6 +152,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             if "audio-gallery" in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain an audio project page")
+
+    @classmethod
+    def _find_video_project_page(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            if "video-wrapper" in path.read_text(encoding="utf-8"):
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain a video project page")
 
     @classmethod
     def _find_caption_project_page(cls):
@@ -836,6 +844,41 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(before["height"], after["height"])
         self.assertNoBrowserErrors()
 
+    def test_media_badges_remain_visible_for_hover_focus_and_touch_input(self):
+        self.open_page("index.html")
+        badge_group = self.page.locator(".media-type-badges").first
+        card = badge_group.locator("xpath=ancestor::*[contains(@class, 'image-card')]")
+        card_link = card.locator(":scope > a")
+
+        self.assertEqual(badge_group.evaluate("element => getComputedStyle(element).opacity"), "0")
+        self.assertEqual(
+            badge_group.evaluate("element => getComputedStyle(element).transitionProperty"),
+            "opacity",
+        )
+
+        card.hover()
+        self.page.wait_for_timeout(250)
+        self.assertEqual(badge_group.evaluate("element => getComputedStyle(element).opacity"), "1")
+
+        self.page.mouse.move(0, 0)
+        self.page.wait_for_timeout(250)
+        self.assertEqual(badge_group.evaluate("element => getComputedStyle(element).opacity"), "0")
+
+        card_link.focus()
+        self.page.wait_for_timeout(250)
+        self.assertEqual(badge_group.evaluate("element => getComputedStyle(element).opacity"), "1")
+
+        touch_page = self.browser.new_page(has_touch=True, viewport={"width": 390, "height": 844})
+        try:
+            touch_page.goto(f"{self.base_url}/site/index.html")
+            touch_page.wait_for_load_state("load")
+            touch_badge_group = touch_page.locator(".media-type-badges").first
+            self.assertEqual(touch_badge_group.evaluate("element => getComputedStyle(element).opacity"), "1")
+        finally:
+            touch_page.close()
+
+        self.assertNoBrowserErrors()
+
     def test_theme_dropdown_applies_selected_theme(self):
         self.open_page("index.html")
 
@@ -957,6 +1000,67 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(self.page.locator(".audio-gallery li").count(), 3)
         self.assertTrue(self.page.locator(".audio-gallery .progress-bar").is_disabled())
         self.assertEqual(self.page.locator(".audio-gallery .volume-slider").count(), 1)
+        self.assertNoBrowserErrors()
+
+    def test_audio_and_video_control_visibility_states_remain_functional(self):
+        self.open_page(self.audio_project_path)
+        audio_visibility = self.page.evaluate(
+            """
+            () => {
+                const section = document.querySelector('.audio-gallery-section');
+                const gallery = section.querySelector('.audio-gallery');
+                const controls = section.querySelector('.audio-controls-wrapper');
+                const scrollContainer = window.utils.getExplicitScrollableAncestor(gallery) || window;
+                const transitionProperty = getComputedStyle(controls).transitionProperty;
+
+                section.getBoundingClientRect = () => ({ top: 0 });
+                controls.getBoundingClientRect = () => ({ top: 150 });
+                scrollContainer.dispatchEvent(new Event('scroll'));
+                const shown = { opacity: controls.style.opacity, pointerEvents: controls.style.pointerEvents };
+
+                controls.getBoundingClientRect = () => ({ top: 50 });
+                scrollContainer.dispatchEvent(new Event('scroll'));
+                const hidden = { opacity: controls.style.opacity, pointerEvents: controls.style.pointerEvents };
+
+                return { transitionProperty, shown, hidden };
+            }
+            """
+        )
+        self.assertEqual(audio_visibility["transitionProperty"], "opacity")
+        self.assertEqual(audio_visibility["shown"], {"opacity": "1", "pointerEvents": "auto"})
+        self.assertEqual(audio_visibility["hidden"], {"opacity": "0", "pointerEvents": "none"})
+
+        self.open_page(self.video_project_path)
+        transition_property = self.page.locator(".video-controls").evaluate(
+            "element => getComputedStyle(element).transitionProperty"
+        )
+        wrapper = self.page.locator(".video-wrapper").first
+        controls = wrapper.locator(".video-controls")
+
+        wrapper.evaluate("element => element.classList.add('hide-controls')")
+        self.page.wait_for_timeout(350)
+        hidden = controls.evaluate(
+            """
+            element => ({
+                opacity: getComputedStyle(element).opacity,
+                pointerEvents: getComputedStyle(element).pointerEvents,
+            })
+            """
+        )
+        wrapper.evaluate("element => element.classList.remove('hide-controls')")
+        self.page.wait_for_timeout(350)
+        shown = controls.evaluate(
+            """
+            element => ({
+                opacity: getComputedStyle(element).opacity,
+                pointerEvents: getComputedStyle(element).pointerEvents,
+            })
+            """
+        )
+
+        self.assertEqual(transition_property, "opacity")
+        self.assertEqual(hidden, {"opacity": "0", "pointerEvents": "none"})
+        self.assertEqual(shown, {"opacity": "1", "pointerEvents": "auto"})
         self.assertNoBrowserErrors()
 
     def test_audio_tracks_and_media_controls_expose_accessible_semantics(self):
@@ -1297,6 +1401,91 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.page.set_viewport_size({"width": 1280, "height": 900})
         self.page.wait_for_timeout(250)
 
+        self.assertNoBrowserErrors()
+
+    def test_shared_scrollbars_preserve_desktop_and_mobile_scroll_ownership(self):
+        self.page.set_viewport_size({"width": 1280, "height": 720})
+        self.open_page("index.html")
+        overview = self.page.evaluate(
+            """
+            () => {
+                const element = document.querySelector('.overview-layout');
+                element.style.height = '200px';
+                const spacer = document.createElement('div');
+                spacer.style.height = '2000px';
+                element.appendChild(spacer);
+                element.scrollTop = 100;
+                const style = getComputedStyle(element);
+                return {
+                    overflowY: style.overflowY,
+                    scrollbarWidth: style.scrollbarWidth,
+                    webkitWidth: getComputedStyle(element, '::-webkit-scrollbar').width,
+                    scrollTop: element.scrollTop,
+                };
+            }
+            """
+        )
+        self.assertEqual(overview["overflowY"], "auto")
+        self.assertEqual(overview["scrollbarWidth"], "thin")
+        self.assertEqual(overview["webkitWidth"], "4px")
+        self.assertGreater(overview["scrollTop"], 0)
+
+        self.open_page(self.creator_path)
+        desktop = self.page.evaluate(
+            """
+            () => {
+                const column = document.querySelector('.right-column');
+                column.style.maxHeight = '200px';
+                const spacer = document.createElement('div');
+                spacer.style.height = '2000px';
+                spacer.style.flex = '0 0 2000px';
+                column.appendChild(spacer);
+                column.scrollTop = 100;
+                const style = getComputedStyle(column);
+                return {
+                    overflowY: style.overflowY,
+                    scrollbarWidth: style.scrollbarWidth,
+                    webkitWidth: getComputedStyle(column, '::-webkit-scrollbar').width,
+                    scrollTop: column.scrollTop,
+                };
+            }
+            """
+        )
+        self.assertEqual(desktop["overflowY"], "auto")
+        self.assertEqual(desktop["scrollbarWidth"], "thin")
+        self.assertEqual(desktop["webkitWidth"], "4px")
+        self.assertGreater(desktop["scrollTop"], 0)
+
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        self.open_page(self.creator_path)
+        mobile = self.page.evaluate(
+            """
+            () => {
+                const content = document.querySelector('.detail-content');
+                const column = document.querySelector('.right-column');
+                content.style.height = '250px';
+                content.style.flex = 'none';
+                const spacer = document.createElement('div');
+                spacer.style.height = '2000px';
+                spacer.style.flex = '0 0 2000px';
+                content.appendChild(spacer);
+                content.scrollTop = 100;
+                const style = getComputedStyle(content);
+                return {
+                    overflowY: style.overflowY,
+                    scrollbarWidth: style.scrollbarWidth,
+                    webkitWidth: getComputedStyle(content, '::-webkit-scrollbar').width,
+                    scrollTop: content.scrollTop,
+                    columnOverflow: getComputedStyle(column).overflowY,
+                };
+            }
+            """
+        )
+        self.assertEqual(mobile["overflowY"], "auto")
+        self.assertEqual(mobile["scrollbarWidth"], "thin")
+        self.assertEqual(mobile["webkitWidth"], "4px")
+        self.assertGreater(mobile["scrollTop"], 0)
+        self.assertEqual(mobile["columnOverflow"], "visible")
         self.assertNoBrowserErrors()
 
     def test_detail_content_is_visible_and_ordered_on_mobile_without_javascript(self):

@@ -17,13 +17,6 @@ body {
   margin: 0;
   padding: var(--layout-body-padding) var(--layout-body-padding-inline);
   background-color: var(--theme-page-bg);
-  
-  /*background-image: url('background-image.png');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover;
-  background-position: center;
-  background-blend-mode: multiply;*/ /*luminosity, multiply, overlay, soft-light*/
 }
 
 html, body {
@@ -409,8 +402,6 @@ img {
   padding-bottom: 0rem;
   text-align: justify;
   line-height: 1.3;
-  /*max-height: 30rem;
-  overflow-y: auto;*/
 }
 
 .image-gallery--justified {
@@ -682,15 +673,6 @@ a:focus img {
   cursor: default;
 }
 
-/*Example text-overflow: ellipsis;
-.project-entry a {
-  display: inline-block;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}*/
-
 .search-bar-wrapper {
   position: relative;
   margin: 0rem 2rem 1rem 0rem;
@@ -832,12 +814,6 @@ a:focus img {
 .audio-controls > * {
   min-width: 0px;
 }
-
-/*
-.section-box.audio-gallery-section {
-  position: relative;
-}
-*/
 
 .audio-gallery-section .section-content {
   padding-bottom: 0rem;
