@@ -11,8 +11,11 @@ from typing import Any
 
 from .constants import CR4TE_JSON_FILE_NAME
 from .creator_classification import infer_creator_type
+from .build_issues import BuildIssue, IssueScope
 from .enums.creator_type import CreatorType
 from .enums.visible_fields import ProjectField
+from .library_issues import issue_from_exception
+from .library_metadata import MetadataIOError, MetadataJsonError, MetadataLoadError, MetadataShapeError
 from .library_scan import iter_creator_dirs, iter_project_dirs
 from .metadata_templates import (
     CollaborationMetadataTemplate,
@@ -37,6 +40,16 @@ class MetadataWriteResult:
     updated: list[Path] = field(default_factory=list)
     unchanged: list[Path] = field(default_factory=list)
     skipped: list[Path] = field(default_factory=list)
+    issues: list[BuildIssue] = field(default_factory=list)
+
+    def summary_line(self) -> str:
+        return (
+            "Metadata summary: "
+            f"created={len(self.created)}, "
+            f"updated={len(self.updated)}, "
+            f"unchanged={len(self.unchanged)}, "
+            f"skipped={len(self.skipped)}"
+        )
 
 
 def reconcile_metadata_files(
@@ -51,28 +64,35 @@ def reconcile_metadata_files(
 
     for creator_dir in iter_creator_dirs(input_dir, media_rules):
         metadata_path = creator_dir / CR4TE_JSON_FILE_NAME
-        existing = _load_optional_json(metadata_path)
+        existing, invalid = _load_reconciliation_json(
+            metadata_path,
+            creator_dir,
+            IssueScope.CREATOR,
+            result,
+        )
         nested_projects = existing.get("projects", {}) if isinstance(existing, dict) else {}
         if not isinstance(nested_projects, dict):
             nested_projects = {}
-        if existing is None and metadata_path.exists():
-            result.skipped.append(metadata_path)
-        else:
+        if not invalid:
             try:
                 creator_type = _selected_creator_type(existing or {}, creator_dir.name, media_rules)
                 template = _creator_metadata_template(creator_dir, media_rules, creator_type)
                 reconciled = _reconcile_creator_metadata(existing or {}, template, creator_type)
             except ValueError as exc:
-                logger.warning(f"Skipping metadata update for invalid file {metadata_path}: {exc}")
                 result.skipped.append(metadata_path)
+                result.issues.append(issue_from_exception(creator_dir, IssueScope.CREATOR, exc))
             else:
                 _record_metadata_write(metadata_path, existing, reconciled, result, dry_run)
 
         for project_dir in iter_project_dirs(creator_dir, media_rules):
             project_metadata_path = project_dir / CR4TE_JSON_FILE_NAME
-            existing_project = _load_optional_json(project_metadata_path)
-            if existing_project is None and project_metadata_path.exists():
-                result.skipped.append(project_metadata_path)
+            existing_project, invalid = _load_reconciliation_json(
+                project_metadata_path,
+                project_dir,
+                IssueScope.PROJECT,
+                result,
+            )
+            if invalid:
                 continue
 
             seeded_project = existing_project
@@ -228,6 +248,20 @@ def _has_user_values(value: Any, default: Any) -> bool:
     return value != default
 
 
+def _load_reconciliation_json(
+    metadata_path: Path,
+    owner_path: Path,
+    scope: IssueScope,
+    result: MetadataWriteResult,
+) -> tuple[dict[str, Any] | None, bool]:
+    try:
+        return _load_optional_json(metadata_path), False
+    except MetadataLoadError as exc:
+        result.skipped.append(metadata_path)
+        result.issues.append(issue_from_exception(owner_path, scope, exc))
+        return None, True
+
+
 def _load_optional_json(path: Path) -> dict[str, Any] | None:
     if not path.exists():
         return None
@@ -235,13 +269,13 @@ def _load_optional_json(path: Path) -> dict[str, Any] | None:
     try:
         with open(path, "r", encoding="utf-8") as file:
             data = json.load(file)
-    except (JSONDecodeError, OSError) as exc:
-        logger.warning(f"Skipping metadata update for invalid file {path}: {exc}")
-        return None
+    except JSONDecodeError as exc:
+        raise MetadataJsonError(f"Invalid JSON in metadata file {path}: {exc.msg}") from exc
+    except OSError as exc:
+        raise MetadataIOError(f"Unable to read metadata file {path}: {exc}") from exc
 
     if not isinstance(data, dict):
-        logger.warning(f"Skipping metadata update for invalid file {path}: metadata file must contain a JSON object")
-        return None
+        raise MetadataShapeError(f"Metadata file must contain a JSON object: {path}")
 
     return data
 

@@ -16,12 +16,14 @@ from PIL import Image
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.build_issues import BuildIssue, BuildIssueError, IssueCode, IssueScope
 from cr4te.build_metrics import AssetStatistics
-from cr4te.cr4te import _apply_cli_overrides_from_args, _build_cmd_handler, _create_parser, _file_uri
+from cr4te.build_runner import BuildPhase, BuildPhaseError, BuildRunResult
+from cr4te.build_summary import BuildSummary
+from cr4te.cr4te import ExitCode, _apply_cli_overrides_from_args, _build_cmd_handler, _create_parser, _file_uri, main
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
 from cr4te.enums.portrait_discovery import PortraitDiscovery
 from cr4te.enums.portrait_visibility import PortraitVisibility
-from cr4te.html_builder import HtmlBuildResult, build_html_pages_streaming
+from cr4te.html_builder import build_html_pages_streaming
 from cr4te.library_builder import build_library_index, load_indexed_creator
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
 from cr4te.media_counts import MediaCounts
@@ -162,13 +164,12 @@ class HtmlBuildTests(unittest.TestCase):
             with (
                 patch("cr4te.render_assets.os.symlink", side_effect=OSError("no symlink")),
                 patch("cr4te.render_assets.os.link", side_effect=OSError("no hardlink")),
-                self.assertLogs(level="ERROR") as logs,
+                self.assertRaises(BuildIssueError) as caught,
             ):
-                with self.assertRaises(SystemExit) as exit_context:
-                    _build_cmd_handler(args)
+                _build_cmd_handler(args)
 
-            self.assertEqual(exit_context.exception.code, 1)
-            self.assertIn("will not copy media files automatically", "\n".join(logs.output))
+            self.assertEqual(caught.exception.issue.code, IssueCode.MEDIA_STAGING_FAILURE)
+            self.assertIn("will not copy media files automatically", caught.exception.issue.message)
 
     def test_build_command_combines_theme_issues_into_final_summary(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -220,6 +221,13 @@ class HtmlBuildTests(unittest.TestCase):
                 source_thumbnails_generated=3,
                 source_hash_checks=1,
             )
+            summary = BuildSummary(
+                input_dir=root,
+                creator_count=0,
+                project_count=0,
+                issues=(issue,),
+                asset_statistics=asset_statistics,
+            )
             args = SimpleNamespace(
                 config=None,
                 input=str(root),
@@ -236,19 +244,13 @@ class HtmlBuildTests(unittest.TestCase):
             )
 
             with (
-                patch(
-                    "cr4te.cr4te.build_html_pages_streaming",
-                    return_value=HtmlBuildResult(output_dir / "index.html", (issue,), asset_statistics),
-                ),
-                patch("cr4te.cr4te.perf_counter", side_effect=range(10)),
+                patch("cr4te.cr4te.run_build", return_value=BuildRunResult(summary, output_dir / "index.html", object())),
                 patch("cr4te.cr4te.log_build_summary") as log_build_summary,
             ):
                 _build_cmd_handler(args)
 
-            summary = log_build_summary.call_args.args[0]
-            self.assertEqual(summary.issues, (issue,))
-            self.assertIs(summary.asset_statistics, asset_statistics)
-            self.assertEqual(summary.timings.total_seconds, 5)
+            logged_summary = log_build_summary.call_args.args[0]
+            self.assertIs(logged_summary, summary)
 
     def test_build_command_aborts_before_side_effects_for_missing_themes_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -272,12 +274,82 @@ class HtmlBuildTests(unittest.TestCase):
                 themes_dir=str(missing_themes_dir),
             )
 
-            with self.assertRaises(BuildIssueError) as caught:
+            with self.assertRaises(ValueError) as caught:
                 _build_cmd_handler(args)
 
-            self.assertEqual(caught.exception.issue.path, missing_themes_dir.resolve())
-            self.assertEqual(caught.exception.issue.code, IssueCode.MISSING_REFERENCE)
+            self.assertIn(str(missing_themes_dir.resolve()), str(caught.exception))
             self.assertFalse(output_dir.exists())
+
+    def test_main_returns_build_failure_for_structured_build_errors(self):
+        issue = BuildIssue(
+            path=Path("Artists") / "Noomi",
+            scope=IssueScope.CREATOR,
+            code=IssueCode.INVALID_METADATA,
+            message="invalid metadata",
+        )
+
+        with (
+            patch("cr4te.cr4te._build_cmd_handler", side_effect=BuildIssueError(issue)),
+            self.assertLogs(level="ERROR") as logs,
+        ):
+            exit_code = main(["build", "-i", "Artists", "-o", "site"])
+
+        self.assertEqual(exit_code, ExitCode.BUILD_FAILURE)
+        self.assertIn("invalid metadata", "\n".join(logs.output))
+
+    def test_main_returns_build_failure_with_phase_context_for_operational_errors(self):
+        error = BuildPhaseError(BuildPhase.OUTPUT_PREPARATION, OSError("access denied"))
+
+        with (
+            patch("cr4te.cr4te._build_cmd_handler", side_effect=error),
+            self.assertLogs(level="ERROR") as logs,
+        ):
+            exit_code = main(["build", "-i", "Artists", "-o", "site"])
+
+        self.assertEqual(exit_code, ExitCode.BUILD_FAILURE)
+        self.assertIn("output preparation", "\n".join(logs.output))
+
+    def test_main_does_not_hide_unexpected_value_errors(self):
+        with (
+            patch("cr4te.cr4te._build_cmd_handler", side_effect=ValueError("bug")),
+            self.assertRaisesRegex(ValueError, "bug"),
+        ):
+            main(["build", "-i", "Artists", "-o", "site"])
+
+    def test_main_uses_usage_exit_for_invalid_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            missing_input = Path(tmp) / "missing"
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+                main(["build", "-i", str(missing_input), "-o", str(Path(tmp) / "site"), "--force"])
+
+        self.assertEqual(caught.exception.code, 2)
+
+    def test_build_command_treats_user_cancellation_as_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            output_dir = Path(tmp) / "site"
+            root.mkdir()
+            output_dir.mkdir()
+            args = SimpleNamespace(
+                config=None,
+                input=str(root),
+                output=str(output_dir),
+                domain=Domain.ART.value,
+                image_sample_strategy=None,
+                portrait_discovery=None,
+                portrait_visibility=None,
+                open=False,
+                force=False,
+                clean=False,
+                strict=False,
+                themes_dir=None,
+            )
+
+            with patch("cr4te.cr4te._confirm_action", return_value=False), patch("cr4te.cr4te.run_build") as run_build:
+                exit_code = _build_cmd_handler(args)
+
+            self.assertEqual(exit_code, ExitCode.SUCCESS)
+            run_build.assert_not_called()
 
     def test_build_command_uses_configured_project_facets_without_domain_arg(self):
         with tempfile.TemporaryDirectory() as tmp:

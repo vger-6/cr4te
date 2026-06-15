@@ -275,6 +275,24 @@ class PageContextTests(unittest.TestCase):
 
             self.assertEqual(page.collaborations[0].label, "Displayed Bob Missing Member")
 
+    def test_missing_collaboration_reference_is_reported_as_structured_issue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(name="Ada", portrait="", collaborations=["Missing Collaboration"])
+            ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(
+                ctx,
+                creator,
+                lambda name: None,
+                compute_creator_stats(creator),
+            )
+
+            self.assertEqual(page.collaborations, [])
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.INVALID_COLLABORATION_REFERENCE)
+
     def test_project_summary_search_uses_enum_facet_keys_only(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"

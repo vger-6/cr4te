@@ -40,6 +40,8 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **BUILD-005:** Repeated failures with the same scope, issue code, and path must be reported only once per build.
 - **BUILD-006:** Every successful build must report final phase timings for theme discovery, output preparation, metadata reconciliation, library indexing, HTML rendering, and their total.
 - **BUILD-007:** Every successful build must report constant-memory asset statistics that distinguish created symbolic links, created hard links, reused media links, generated and reused source thumbnails, default-thumbnail uses, and source-hash checks.
+- **BUILD-008:** Expected operational failures during a build phase must report the failed phase and return exit status `1`. Invalid command arguments, configuration, or paths must return exit status `2`. Successful builds, completed best-effort builds, and explicit user cancellation must return exit status `0`.
+- **BUILD-009:** Metadata reconciliation skips must retain structured issue reasons and participate in final build reporting. Issues repeated by later build phases with the same scope, issue code, and path must appear only once.
 
 ## Asset Staging And Failure Handling
 

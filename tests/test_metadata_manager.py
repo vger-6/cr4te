@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from cr4te.config_manager import apply_cli_overrides, load_config
+from cr4te.build_issues import IssueCode, IssueScope
 from cr4te.enums.domain import Domain
 from cr4te.metadata_manager import clean_metadata_files, reconcile_metadata_files
 
@@ -240,6 +241,24 @@ class MetadataManagerTests(unittest.TestCase):
 
             self.assertEqual(len(result.created), 1)
             self.assertFalse((root / "Noomi" / "cr4te.json").exists())
+
+    def test_invalid_metadata_reconciliation_returns_structured_issue(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            metadata_path = root / "Noomi" / "cr4te.json"
+            metadata_path.parent.mkdir(parents=True)
+            metadata_path.write_text("{invalid", encoding="utf-8")
+
+            result = self.reconcile_art_metadata(root)
+
+            self.assertEqual(result.skipped, [metadata_path])
+            self.assertEqual(len(result.issues), 1)
+            self.assertEqual(result.issues[0].scope, IssueScope.CREATOR)
+            self.assertEqual(result.issues[0].code, IssueCode.INVALID_JSON)
+            self.assertEqual(
+                result.summary_line(),
+                "Metadata summary: created=0, updated=0, unchanged=0, skipped=1",
+            )
 
     def test_clean_metadata_files_recurses_through_projects(self):
         with tempfile.TemporaryDirectory() as tmp:

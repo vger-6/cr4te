@@ -3,24 +3,20 @@ import argparse
 import webbrowser
 import json
 import sys
-from time import perf_counter
+from enum import IntEnum
 from pathlib import Path
 from importlib.metadata import version, PackageNotFoundError
 
 from .build_issues import BuildIssueError
-from .build_metrics import BuildTimings
-from .build_summary import BuildSummary, log_build_summary
+from .build_runner import BuildPhaseError, BuildRequest, run_build
+from .build_summary import log_build_summary
 from .config_manager import load_config, apply_cli_overrides
 from .schemas.config_schema import AppConfig
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.portrait_discovery import PortraitDiscovery
 from .enums.portrait_visibility import PortraitVisibility
 from .enums.domain import Domain
-from .html_builder import build_html_pages_streaming
-from .library_builder import build_library_index, load_indexed_creator
-from .metadata_manager import clean_metadata_files, reconcile_metadata_files
-from .output_preparation import clear_output_folder
-from .themes import discover_themes
+from .metadata_manager import clean_metadata_files
 
 # Short flags
 FLAG_INPUT_SHORT = "-i"
@@ -34,6 +30,16 @@ FLAG_FORCE = "--force"
 FLAG_CLEAN = "--clean"
 FLAG_THEMES_DIR = "--themes-dir"
 
+
+class ExitCode(IntEnum):
+    SUCCESS = 0
+    BUILD_FAILURE = 1
+
+
+class CommandUsageError(ValueError):
+    pass
+
+
 def _setup_logging():
     """Configures the global logging settings."""
     logging.basicConfig(
@@ -43,9 +49,17 @@ def _setup_logging():
         stream=sys.stderr
     )
 
-def _load_config(rel_config_path_arg: str) -> AppConfig:
-    config_path = Path(rel_config_path_arg).resolve() if rel_config_path_arg else None
-    return load_config(config_path)
+def _load_config(rel_config_path_arg: str | None) -> AppConfig:
+    if not rel_config_path_arg:
+        return load_config()
+
+    config_path = Path(rel_config_path_arg).resolve()
+    if not config_path.is_file():
+        raise CommandUsageError(f"Config path does not exist or is not a file: {config_path}")
+    try:
+        return load_config(config_path)
+    except (OSError, ValueError) as exc:
+        raise CommandUsageError(f"Unable to load config file {config_path}: {exc}") from exc
     
 def _confirm_action(prompt: str, force: bool = False) -> bool:
     if force:
@@ -57,25 +71,38 @@ def _domain_from_args(args) -> Domain | None:
     return Domain(args.domain) if args.domain else None
 
 def _apply_cli_overrides_from_args(config: AppConfig, args) -> AppConfig:
-    return apply_cli_overrides(
-        config,
-        image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
-        portrait_discovery=PortraitDiscovery(args.portrait_discovery) if args.portrait_discovery else None,
-        portrait_visibility=PortraitVisibility(args.portrait_visibility) if args.portrait_visibility else None,
-        domain=_domain_from_args(args)
-    )
+    try:
+        return apply_cli_overrides(
+            config,
+            image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
+            portrait_discovery=PortraitDiscovery(args.portrait_discovery) if args.portrait_discovery else None,
+            portrait_visibility=PortraitVisibility(args.portrait_visibility) if args.portrait_visibility else None,
+            domain=_domain_from_args(args)
+        )
+    except ValueError as exc:
+        raise CommandUsageError(f"Invalid configuration override: {exc}") from exc
 
-def _build_paths_are_safe(input_dir: Path, output_dir: Path) -> bool:
+def _validate_input_dir(input_dir: Path) -> None:
+    if not input_dir.is_dir():
+        raise CommandUsageError(f"Input path does not exist or is not a directory: {input_dir}")
+
+
+def _validate_build_paths(input_dir: Path, output_dir: Path) -> None:
     if input_dir == output_dir:
-        logging.info(f"Input and output paths must be different: {input_dir}")
-        return False
+        raise CommandUsageError(f"Input and output paths must be different: {input_dir}")
     if output_dir.is_relative_to(input_dir):
-        logging.info(f"Output path must not be inside the input path: {output_dir} is inside {input_dir}")
-        return False
+        raise CommandUsageError(f"Output path must not be inside the input path: {output_dir} is inside {input_dir}")
     if input_dir.is_relative_to(output_dir):
-        logging.info(f"Output path must not contain the input path: {input_dir} is inside {output_dir}")
-        return False
-    return True
+        raise CommandUsageError(f"Output path must not contain the input path: {input_dir} is inside {output_dir}")
+
+
+def _resolve_optional_directory(path_arg: str | None, label: str) -> Path | None:
+    if not path_arg:
+        return None
+    path = Path(path_arg).resolve()
+    if not path.is_dir():
+        raise CommandUsageError(f"{label} does not exist or is not a directory: {path}")
+    return path
 
 
 def _file_uri(path: Path) -> str:
@@ -124,26 +151,17 @@ def _create_parser() -> argparse.ArgumentParser:
 
     return parser
     
-def _build_cmd_handler(args):
+def _build_cmd_handler(args) -> int:
     config = _load_config(args.config)
     config = _apply_cli_overrides_from_args(config, args)
 
     input_dir = Path(args.input).resolve()
-    if not input_dir.is_dir():
-        logging.info(f"Input path does not exist or is not a directory: {input_dir}")
-        logging.info("Aborting.")
-        return
+    _validate_input_dir(input_dir)
 
     output_dir = Path(args.output).resolve()
-    if not _build_paths_are_safe(input_dir, output_dir):
-        logging.info("Aborting.")
-        return
+    _validate_build_paths(input_dir, output_dir)
 
-    custom_themes_dir = Path(args.themes_dir).resolve() if getattr(args, "themes_dir", None) else None
-    phase_started = perf_counter()
-    logging.info("Discovering themes...")
-    theme_registry = discover_themes(custom_themes_dir, strict=args.strict)
-    theme_discovery_seconds = perf_counter() - phase_started
+    custom_themes_dir = _resolve_optional_directory(getattr(args, "themes_dir", None), "Custom themes path")
 
     if output_dir.exists():
         msg = (
@@ -152,98 +170,51 @@ def _build_cmd_handler(args):
         )
         if not _confirm_action(msg, force=args.force):
             logging.info("Aborting.")
-            return
+            return ExitCode.SUCCESS
 
-    phase_started = perf_counter()
-    if output_dir.exists():
-        clear_output_folder(output_dir, args.clean)
-    else:
-        output_dir.mkdir(parents=True, exist_ok=True)
-    output_preparation_seconds = perf_counter() - phase_started
-
-    project_facet_fields = config.site_rendering.project_metadata.configured_fields()
-
-    phase_started = perf_counter()
-    logging.info("Reconciling metadata...")
-    metadata_result = reconcile_metadata_files(input_dir, config.media_rules, project_facet_fields=project_facet_fields)
-    metadata_reconciliation_seconds = perf_counter() - phase_started
-    logging.info(
-        f"Metadata summary: created={len(metadata_result.created)}, "
-        f"updated={len(metadata_result.updated)}, unchanged={len(metadata_result.unchanged)}, "
-        f"skipped={len(metadata_result.skipped)}"
-    )
-
-    phase_started = perf_counter()
-    logging.info("Indexing media library...")
-    library_index = build_library_index(input_dir, config.media_rules, strict=args.strict)
-    library_indexing_seconds = perf_counter() - phase_started
-
-    phase_started = perf_counter()
-    logging.info("Building HTML site...")
-    try:
-        html_result = build_html_pages_streaming(
-            library_index,
-            theme_registry,
-            output_dir,
-            config.site_labels,
-            config.site_rendering,
-            lambda summary: load_indexed_creator(
-                library_index,
-                summary,
-                config.media_rules,
-            ),
+    result = run_build(
+        BuildRequest(
+            input_dir=input_dir,
+            output_dir=output_dir,
+            config=config,
+            custom_themes_dir=custom_themes_dir,
+            clear_thumbnails=args.clean,
             strict=args.strict,
         )
-    except BuildIssueError as exc:
-        logging.error(str(exc))
-        logging.info("Aborting.")
-        raise SystemExit(1) from exc
-    html_rendering_seconds = perf_counter() - phase_started
-
-    log_build_summary(
-        BuildSummary.from_library_index(
-            library_index,
-            additional_issues=(*theme_registry.issues, *html_result.issues),
-            timings=BuildTimings(
-                theme_discovery_seconds=theme_discovery_seconds,
-                output_preparation_seconds=output_preparation_seconds,
-                metadata_reconciliation_seconds=metadata_reconciliation_seconds,
-                library_indexing_seconds=library_indexing_seconds,
-                html_rendering_seconds=html_rendering_seconds,
-            ),
-            asset_statistics=html_result.asset_statistics,
-        ),
-        logging.getLogger(__name__),
     )
+    log_build_summary(result.summary, logging.getLogger(__name__))
 
     if args.open:
         logging.info("Opening index.html...")
-        webbrowser.open(_file_uri(html_result.index_html_path))
-        
-def _print_config_cmd_handler(args):
+        webbrowser.open(_file_uri(result.index_html_path))
+
+    return ExitCode.SUCCESS
+
+
+def _print_config_cmd_handler(args) -> int:
     config = _load_config(args.config)
     config = _apply_cli_overrides_from_args(config, args)
     print(json.dumps(config.model_dump(mode="json"), indent=4))
+    return ExitCode.SUCCESS
 
-def _clean_json_cmd_handler(args):
+
+def _clean_json_cmd_handler(args) -> int:
     input_dir = Path(args.input).resolve()
-    if not input_dir.exists() or not input_dir.is_dir():
-        logging.info(f"Input path does not exist or is not a directory: {input_dir}")
-        logging.info("Aborting.")
-        return
+    _validate_input_dir(input_dir)
 
     if not args.dry_run and not _confirm_action(f"Delete all creator and project cr4te.json files in '{input_dir}'?", force=args.force):
         logging.info("Aborting.")
-        return
+        return ExitCode.SUCCESS
 
     clean_metadata_files(input_dir, dry_run=args.dry_run)
+    return ExitCode.SUCCESS
 
 
-def main():
+def main(argv: list[str] | None = None) -> int:
     _setup_logging()
     
     parser = _create_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     
     command_map = {
         "build": _build_cmd_handler,
@@ -254,13 +225,17 @@ def main():
     command_func = command_map.get(args.command)
     if not command_func:
         parser.print_help()
-        return
+        return ExitCode.SUCCESS
     
     try:
-        command_func(args)
-    except ValueError as e:
-        parser.error(str(e))
+        return command_func(args)
+    except (BuildIssueError, BuildPhaseError) as exc:
+        logging.error(str(exc))
+        return ExitCode.BUILD_FAILURE
+    except CommandUsageError as exc:
+        parser.error(str(exc))
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
 

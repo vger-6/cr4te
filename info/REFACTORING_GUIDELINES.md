@@ -38,6 +38,8 @@ These guidelines are for future refactors after the metadata/library refactor. D
 - Keep build issues structured with scope, severity, code, path, and message.
 - Log/report at command and summary boundaries. Avoid deep scan/helper code that logs instead of returning structured issues, unless the event is genuinely local and recoverable.
 - Best-effort behavior should be explicit and tested; strict-mode failures should remain easy to trace.
+- Translate command outcomes into process exit statuses only at the CLI boundary. Build orchestration should return results or raise structured/phase-aware failures.
+- Add phase context to expected operational failures, but do not catch and disguise unexpected programming errors as recoverable build issues.
 
 ## Tests And Validation
 

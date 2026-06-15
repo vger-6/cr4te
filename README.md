@@ -95,6 +95,8 @@ Useful build options:
 - `--strict`: fail fast on invalid metadata instead of skipping invalid entries
 - `--open`: open `index.html` after a successful build
 
+The CLI returns exit status `0` for successful or completed best-effort builds, `1` for build-phase failures, and `2` for invalid arguments, configuration, or paths. Explicit user cancellation is not treated as a build failure.
+
 ## Output
 
 The generated site includes:

@@ -11,6 +11,7 @@ __all__ = [
     "IssueCode",
     "IssueScope",
     "IssueSeverity",
+    "deduplicate_issues",
 ]
 
 
@@ -73,3 +74,15 @@ class BuildIssuePolicy:
 
         self._keys.add(key)
         self.issues.append(issue)
+
+
+def deduplicate_issues(issues: tuple[BuildIssue, ...]) -> tuple[BuildIssue, ...]:
+    unique: list[BuildIssue] = []
+    keys: set[tuple[IssueScope, IssueCode, str]] = set()
+    for issue in issues:
+        key = (issue.scope, issue.code, str(issue.path.resolve(strict=False)))
+        if key in keys:
+            continue
+        keys.add(key)
+        unique.append(issue)
+    return tuple(unique)

@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .build_issues import BuildIssue, IssueSeverity
+from .build_issues import BuildIssue, IssueSeverity, deduplicate_issues
 from .build_metrics import AssetStatistics, BuildTimings
 from .library_index import LibraryIndex
 
@@ -35,7 +35,7 @@ class BuildSummary:
             input_dir=index.input_dir,
             creator_count=len(index.creators),
             project_count=index.project_count,
-            issues=(*index.issues, *additional_issues),
+            issues=deduplicate_issues((*index.issues, *additional_issues)),
             timings=timings or BuildTimings(),
             asset_statistics=asset_statistics or AssetStatistics(),
         )

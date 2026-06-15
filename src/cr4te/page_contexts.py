@@ -12,6 +12,7 @@ from .enums.portrait_visibility import PortraitVisibility
 from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CreatorField, ProjectField
 from .html_paths import build_rel_creator_html_path, build_rel_project_html_path
+from .library_issues import invalid_collaboration_reference_issue
 from .media_counts import count_media_groups
 from .render_assets import build_thumbnail_context, get_image_orientation
 from .render_media import build_media_group_contexts
@@ -267,7 +268,9 @@ def _build_collaboration_entries(
     for collab_name in creator.collaborations:
         collab = get_creator(collab_name)
         if not collab:
-            logger.warning(f"Missing creator reference: {collab_name}")
+            ctx.report_issue(
+                invalid_collaboration_reference_issue(ctx.input_dir / creator.name, [collab_name]),
+            )
             continue
 
         collab_entries.append(

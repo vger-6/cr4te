@@ -221,6 +221,19 @@ class BuildSummaryTests(unittest.TestCase):
         self.assertIn(str(Path("themes") / "invalid.css"), summary.issue_lines()[0])
         self.assertIn("[invalid_theme]", summary.issue_lines()[0])
 
+    def test_summary_deduplicates_issues_from_separate_build_phases(self):
+        issue = BuildIssue(
+            path=Path("Artists") / "Noomi",
+            scope=IssueScope.CREATOR,
+            code=IssueCode.INVALID_METADATA,
+            message="invalid metadata",
+        )
+        index = LibraryIndex(input_dir=Path("Artists"), creators=(), issues=(issue,))
+
+        summary = BuildSummary.from_library_index(index, additional_issues=(issue,))
+
+        self.assertEqual(summary.issues, (issue,))
+
 
 if __name__ == "__main__":
     unittest.main()
