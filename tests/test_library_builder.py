@@ -135,6 +135,21 @@ class LibraryBuilderTests(unittest.TestCase):
             self.assertEqual(summary.portrait, "Noomi/photo.jpg")
             self.assertEqual(creator.media_groups[0].images, [])
 
+    def test_shared_portrait_and_cover_fallback_is_not_duplicated_in_gallery_media(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            project_dir = root / "Noomi" / "Landscapes"
+            write_image(project_dir / "photo.jpg", (80, 160))
+            config = self.build_config()
+            config.media_rules.portrait_discovery = PortraitDiscovery.AUTO
+
+            index = build_library_index(root, config.media_rules)
+            creator = load_indexed_creator(index, index.creator_by_name["Noomi"], config.media_rules)
+
+            self.assertEqual(creator.portrait, "Noomi/Landscapes/photo.jpg")
+            self.assertEqual(creator.projects[0].cover, "Noomi/Landscapes/photo.jpg")
+            self.assertEqual(creator.projects[0].media_groups[0].images, [])
+
     def test_library_index_keeps_lightweight_creator_and_project_summaries(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"

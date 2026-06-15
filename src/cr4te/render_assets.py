@@ -178,27 +178,14 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
         return ctx.get_default_thumb_path(thumb_type)
 
     try:
-        if not thumb_path.exists():
-            _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
-            sidecar_path.unlink(missing_ok=True)
-            return thumb_path
-
-        thumb_stat = thumb_path.stat()
-        if source_path.stat().st_mtime_ns > thumb_stat.st_mtime_ns:
-            _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
-            sidecar_path.unlink(missing_ok=True)
-            return thumb_path
-
-        parent_mtime_ns = source_path.parent.stat().st_mtime_ns
-        if parent_mtime_ns <= thumb_stat.st_mtime_ns:
-            ctx.asset_statistics.source_thumbnails_reused += 1
-            return thumb_path
-
         ctx.asset_statistics.source_hash_checks += 1
         source_hash = file_utils.calculate_sha256(source_path)
-        stored_hash = sidecar_path.read_text(encoding="ascii") if sidecar_path.exists() else None
-        if source_hash == stored_hash:
-            os.utime(thumb_path, ns=(thumb_stat.st_atime_ns, parent_mtime_ns))
+        try:
+            stored_hash = sidecar_path.read_text(encoding="ascii")
+        except (OSError, UnicodeError):
+            stored_hash = None
+
+        if thumb_path.exists() and source_hash == stored_hash:
             ctx.asset_statistics.source_thumbnails_reused += 1
             return thumb_path
 

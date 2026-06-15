@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Collection, Iterable
+from typing import Collection, Iterable, Mapping
 
 from .constants import README_FILE_NAME
 from .enums.image_sample_strategy import ImageSampleStrategy
@@ -15,11 +15,9 @@ from .utils import image_utils
 
 __all__ = [
     "CreatorScan",
-    "MediaBucket",
     "iter_creator_dirs",
     "iter_media_files",
     "iter_project_dirs",
-    "media_groups_from_buckets",
     "rel_to_input",
 ]
 
@@ -62,12 +60,13 @@ def iter_media_files(creator_dir: Path, media_rules: MediaRules) -> Iterable[Pat
         yield media_path
 
 
-def media_groups_from_buckets(
-    buckets: dict[Path, MediaBucket],
+def _media_groups_from_buckets(
+    buckets: dict[Path, _MediaBucket],
     media_rules: MediaRules,
+    video_posters: Mapping[str, str],
     excluded_images: Collection[str] = (),
 ) -> list[MediaGroup]:
-    def group_sort_key(item: tuple[Path, MediaBucket]) -> tuple[int, str]:
+    def group_sort_key(item: tuple[Path, _MediaBucket]) -> tuple[int, str]:
         rel_folder, bucket = item
         if bucket.is_root and rel_folder.name != media_rules.metadata_folder_name:
             priority = 0
@@ -81,6 +80,7 @@ def media_groups_from_buckets(
         bucket.to_media_group(
             media_rules.image_gallery_sample_max,
             media_rules.image_gallery_sample_strategy,
+            video_posters,
             excluded_images,
         )
         for _, bucket in sorted(buckets.items(), key=group_sort_key)
@@ -113,91 +113,48 @@ def _sample_images(rel_image_paths: list[str], max_images: int, strategy: ImageS
             return sorted_paths
 
 
-@dataclass
-class ImageSelector:
-    basename: str
-    orientation: Orientation
-    preferred_dir: Path
-    allow_orientation_fallback: bool = False
-    allow_any_fallback: bool = False
-    _direct_named_candidate: Path | None = None
-    _nested_named_candidate: Path | None = None
-    _orientation_candidate: Path | None = None
-    _fallback_candidate: Path | None = None
-
-    def consider(self, image_path: Path) -> None:
-        stem = image_path.stem.lower()
-        if stem == self.basename.lower():
-            if image_path.parent == self.preferred_dir:
-                self._direct_named_candidate = _lexicographic_min(self._direct_named_candidate, image_path)
-            else:
-                self._nested_named_candidate = _lexicographic_min(self._nested_named_candidate, image_path)
-            return
-
-        if self._direct_named_candidate is not None or self._nested_named_candidate is not None:
-            return
-
-        if self.allow_orientation_fallback:
-            if image_utils.infer_image_orientation(image_path) == self.orientation:
-                self._orientation_candidate = _lexicographic_min(self._orientation_candidate, image_path)
-
-        if self.allow_any_fallback:
-            self._fallback_candidate = _lexicographic_min(self._fallback_candidate, image_path)
-
-    def best(self) -> Path | None:
-        return (
-            self._direct_named_candidate
-            or self._nested_named_candidate
-            or self._orientation_candidate
-            or self._fallback_candidate
-        )
+def _lexicographic_path_key(path: Path) -> tuple[str, str]:
+    value = path.as_posix()
+    return value.casefold(), value
 
 
-def _lexicographic_min(current: Path | None, candidate: Path) -> Path:
-    if current is None:
-        return candidate
+def _named_candidates(image_paths: Iterable[Path], basename: str) -> list[Path]:
+    normalized_basename = basename.casefold()
+    return sorted(
+        (image_path for image_path in image_paths if image_path.stem.casefold() == normalized_basename),
+        key=_lexicographic_path_key,
+    )
 
-    def key(path: Path) -> tuple[str, str]:
-        value = path.as_posix()
-        return value.casefold(), value
 
-    return min(current, candidate, key=key)
+def _select_named_candidate(candidates: list[Path], preferred_dir: Path) -> Path | None:
+    return next((candidate for candidate in candidates if candidate.parent == preferred_dir), None) or (
+        candidates[0] if candidates else None
+    )
 
 
 @dataclass
-class MediaBucket:
+class _MediaBucket:
     rel_dir_path: Path
     is_root: bool
     input_dir: Path
-    videos: list[Video] = field(default_factory=list)
+    videos: list[str] = field(default_factory=list)
     tracks: list[str] = field(default_factory=list)
     images: list[str] = field(default_factory=list)
     documents: list[str] = field(default_factory=list)
     texts: list[str] = field(default_factory=list)
 
-    def add(self, media_path: Path, cover_selector: ImageSelector | None, portrait_selector: ImageSelector) -> None:
+    def add(self, media_path: Path) -> None:
         suffix = media_path.suffix.lower()
-        stem = media_path.stem.lower()
         rel_path = rel_to_input(media_path, self.input_dir)
 
         if suffix in VIDEO_EXTS:
-            poster = self._find_video_poster(media_path)
-            self.videos.append(Video(file=rel_path, poster=poster or ""))
+            self.videos.append(rel_path)
 
         elif suffix in AUDIO_EXTS:
             self.tracks.append(rel_path)
 
-        elif suffix in IMAGE_EXTS and not self._is_video_poster_candidate(media_path):
-            role_basenames = (
-                cover_selector.basename if cover_selector else "",
-                portrait_selector.basename,
-            )
-            if stem not in role_basenames:
-                self.images.append(rel_path)
-
-            portrait_selector.consider(media_path)
-            if cover_selector is not None:
-                cover_selector.consider(media_path)
+        elif suffix in IMAGE_EXTS:
+            self.images.append(rel_path)
 
         elif suffix in DOC_EXTS:
             self.documents.append(rel_path)
@@ -205,25 +162,16 @@ class MediaBucket:
         elif suffix in TEXT_EXTS and media_path.name.lower() != README_FILE_NAME.lower():
             self.texts.append(rel_path)
 
-    def _find_video_poster(self, video_path: Path) -> str:
-        for image_ext in IMAGE_EXTS:
-            candidate = video_path.with_suffix(image_ext)
-            if candidate.exists():
-                return rel_to_input(candidate, self.input_dir)
-        return ""
-
-    def _is_video_poster_candidate(self, image_path: Path) -> bool:
-        return any(image_path.with_suffix(video_ext).exists() for video_ext in VIDEO_EXTS)
-
     def to_media_group(
         self,
         image_sample_max: int,
         image_sample_strategy: ImageSampleStrategy,
+        video_posters: Mapping[str, str],
         excluded_images: Collection[str] = (),
     ) -> MediaGroup:
         return MediaGroup(
             is_root=self.is_root,
-            videos=sorted(self.videos, key=lambda video: video.file),
+            videos=[Video(file=video, poster=video_posters.get(video, "")) for video in sorted(self.videos)],
             tracks=sorted(self.tracks),
             images=_sample_images(
                 [image for image in self.images if image not in excluded_images],
@@ -241,19 +189,16 @@ class CreatorScan:
     creator_dir: Path
     input_dir: Path
     media_rules: MediaRules
-    creator_buckets: dict[Path, MediaBucket] = field(default_factory=dict)
-    project_buckets: dict[str, dict[Path, MediaBucket]] = field(default_factory=dict)
-    portrait_selector: ImageSelector = field(init=False)
-    cover_selectors: dict[str, ImageSelector] = field(init=False)
-
-    def __post_init__(self) -> None:
-        self.portrait_selector = ImageSelector(
-            self.media_rules.portrait_basename,
-            Orientation.PORTRAIT,
-            self.creator_dir,
-            allow_orientation_fallback=self.media_rules.portrait_discovery == PortraitDiscovery.AUTO,
-        )
-        self.cover_selectors = {}
+    _creator_buckets: dict[Path, _MediaBucket] = field(default_factory=dict, init=False)
+    _project_buckets: dict[str, dict[Path, _MediaBucket]] = field(default_factory=dict, init=False)
+    _image_paths: list[Path] = field(default_factory=list, init=False)
+    _video_paths: list[Path] = field(default_factory=list, init=False)
+    _special_images_resolved: bool = field(default=False, init=False)
+    _selected_portrait: Path | None = field(default=None, init=False)
+    _selected_covers: dict[str, Path | None] = field(default_factory=dict, init=False)
+    _video_posters: dict[str, str] = field(default_factory=dict, init=False)
+    _gallery_excluded_images: set[str] = field(default_factory=set, init=False)
+    _image_orientations: dict[Path, Orientation] = field(default_factory=dict, init=False)
 
     def add_media(self, media_path: Path) -> None:
         if media_path.suffix.lower() not in MEDIA_EXTS:
@@ -266,12 +211,15 @@ class CreatorScan:
 
         if project_name is None:
             bucket = self._creator_bucket(rel_folder, parts)
-            cover_selector = None
         else:
             bucket = self._project_bucket(project_name, rel_folder, parts)
-            cover_selector = self._cover_selector(project_name)
 
-        bucket.add(media_path, cover_selector, self.portrait_selector)
+        bucket.add(media_path)
+        if media_path.suffix.lower() in IMAGE_EXTS:
+            self._image_paths.append(media_path)
+        elif media_path.suffix.lower() in VIDEO_EXTS:
+            self._video_paths.append(media_path)
+        self._special_images_resolved = False
 
     def _project_name(self, parts: tuple[str, ...]) -> str | None:
         if len(parts) <= 2:
@@ -284,36 +232,122 @@ class CreatorScan:
         is_in_metadata = len(parts) > depth and parts[-2] == self.media_rules.metadata_folder_name
         return is_direct_child or is_in_metadata
 
-    def _creator_bucket(self, rel_folder: Path, parts: tuple[str, ...]) -> MediaBucket:
-        bucket = self.creator_buckets.get(rel_folder)
+    def _creator_bucket(self, rel_folder: Path, parts: tuple[str, ...]) -> _MediaBucket:
+        bucket = self._creator_buckets.get(rel_folder)
         if bucket is None:
-            bucket = MediaBucket(rel_folder, self._is_root(parts, 1), self.input_dir)
-            self.creator_buckets[rel_folder] = bucket
+            bucket = _MediaBucket(rel_folder, self._is_root(parts, 1), self.input_dir)
+            self._creator_buckets[rel_folder] = bucket
         return bucket
 
-    def _project_bucket(self, project_name: str, rel_folder: Path, parts: tuple[str, ...]) -> MediaBucket:
-        project_buckets = self.project_buckets.setdefault(project_name, {})
+    def _project_bucket(self, project_name: str, rel_folder: Path, parts: tuple[str, ...]) -> _MediaBucket:
+        project_buckets = self._project_buckets.setdefault(project_name, {})
         bucket = project_buckets.get(rel_folder)
         if bucket is None:
-            bucket = MediaBucket(rel_folder, self._is_root(parts, 2), self.input_dir)
+            bucket = _MediaBucket(rel_folder, self._is_root(parts, 2), self.input_dir)
             project_buckets[rel_folder] = bucket
         return bucket
 
     def selected_portrait(self) -> Path | None:
-        return self.portrait_selector.best()
+        self._resolve_special_images()
+        return self._selected_portrait
 
     def selected_cover(self, project_name: str) -> Path | None:
-        return self._cover_selector(project_name).best()
+        self._resolve_special_images()
+        return self._selected_covers.get(project_name)
 
-    def _cover_selector(self, project_name: str) -> ImageSelector:
-        selector = self.cover_selectors.get(project_name)
-        if selector is None:
-            selector = ImageSelector(
-                self.media_rules.cover_basename,
-                Orientation.LANDSCAPE,
-                self.creator_dir / project_name,
-                allow_orientation_fallback=True,
-                allow_any_fallback=True,
+    def discovered_project_names(self) -> set[str]:
+        return set(self._project_buckets)
+
+    def creator_media_groups(self) -> list[MediaGroup]:
+        self._resolve_special_images()
+        return _media_groups_from_buckets(
+            self._creator_buckets,
+            self.media_rules,
+            self._video_posters,
+            self._gallery_excluded_images,
+        )
+
+    def project_media_groups(self, project_name: str) -> list[MediaGroup]:
+        self._resolve_special_images()
+        return _media_groups_from_buckets(
+            self._project_buckets.get(project_name, {}),
+            self.media_rules,
+            self._video_posters,
+            self._gallery_excluded_images,
+        )
+
+    def _resolve_special_images(self) -> None:
+        if self._special_images_resolved:
+            return
+
+        sorted_images = sorted(set(self._image_paths), key=_lexicographic_path_key)
+        poster_candidates = self._resolve_video_posters(sorted_images)
+        project_images = self._project_images(sorted_images)
+        self._gallery_excluded_images = {rel_to_input(path, self.input_dir) for path in poster_candidates}
+
+        portrait_candidates = _named_candidates(sorted_images, self.media_rules.portrait_basename)
+        self._gallery_excluded_images.update(rel_to_input(path, self.input_dir) for path in portrait_candidates)
+        self._selected_portrait = _select_named_candidate(portrait_candidates, self.creator_dir)
+        if self._selected_portrait is None and self.media_rules.portrait_discovery == PortraitDiscovery.AUTO:
+            self._selected_portrait = next(
+                (
+                    image_path
+                    for image_path in sorted_images
+                    if image_path not in poster_candidates and self._orientation(image_path) == Orientation.PORTRAIT
+                ),
+                None,
             )
-            self.cover_selectors[project_name] = selector
-        return selector
+            if self._selected_portrait is not None:
+                self._gallery_excluded_images.add(rel_to_input(self._selected_portrait, self.input_dir))
+
+        self._selected_covers = {}
+        for project_name, images in project_images.items():
+            cover_candidates = _named_candidates(images, self.media_rules.cover_basename)
+            self._gallery_excluded_images.update(rel_to_input(path, self.input_dir) for path in cover_candidates)
+            selected_cover = _select_named_candidate(cover_candidates, self.creator_dir / project_name)
+            if selected_cover is None:
+                eligible_images = [image_path for image_path in images if image_path not in poster_candidates]
+                selected_cover = next(
+                    (
+                        image_path
+                        for image_path in eligible_images
+                        if self._orientation(image_path) == Orientation.LANDSCAPE
+                    ),
+                    eligible_images[0] if eligible_images else None,
+                )
+                if selected_cover is not None:
+                    self._gallery_excluded_images.add(rel_to_input(selected_cover, self.input_dir))
+            self._selected_covers[project_name] = selected_cover
+
+        self._special_images_resolved = True
+
+    def _resolve_video_posters(self, sorted_images: list[Path]) -> set[Path]:
+        images_by_folder_and_stem: dict[tuple[Path, str], list[Path]] = {}
+        for image_path in sorted_images:
+            key = image_path.parent, image_path.stem.casefold()
+            images_by_folder_and_stem.setdefault(key, []).append(image_path)
+
+        self._video_posters = {}
+        poster_candidates: set[Path] = set()
+        for video_path in sorted(set(self._video_paths), key=_lexicographic_path_key):
+            candidates = images_by_folder_and_stem.get((video_path.parent, video_path.stem.casefold()), [])
+            if not candidates:
+                continue
+            poster_candidates.update(candidates)
+            self._video_posters[rel_to_input(video_path, self.input_dir)] = rel_to_input(candidates[0], self.input_dir)
+        return poster_candidates
+
+    def _project_images(self, sorted_images: list[Path]) -> dict[str, list[Path]]:
+        project_images: dict[str, list[Path]] = {}
+        for image_path in sorted_images:
+            project_name = self._project_name(image_path.relative_to(self.input_dir).parts)
+            if project_name is not None:
+                project_images.setdefault(project_name, []).append(image_path)
+        return project_images
+
+    def _orientation(self, image_path: Path) -> Orientation:
+        orientation = self._image_orientations.get(image_path)
+        if orientation is None:
+            orientation = image_utils.infer_image_orientation(image_path)
+            self._image_orientations[image_path] = orientation
+        return orientation

@@ -21,11 +21,9 @@ from .library_metadata import (
 )
 from .library_scan import (
     CreatorScan,
-    MediaBucket,
     iter_creator_dirs,
     iter_media_files,
     iter_project_dirs,
-    media_groups_from_buckets,
     rel_to_input,
 )
 from .schemas.config_schema import MediaRules
@@ -45,11 +43,8 @@ def _build_project(
     creator_dir: Path,
     project_dir: Path,
     project_metadata: ProjectMetadata,
-    project_buckets: dict[Path, MediaBucket],
     scan: CreatorScan,
-    media_rules: MediaRules,
     input_dir: Path,
-    excluded_images: tuple[str, ...],
 ) -> Project:
     project_name = project_dir.name
     selected_cover = scan.selected_cover(project_name)
@@ -63,7 +58,7 @@ def _build_project(
         info=text_utils.read_text(project_dir / README_FILE_NAME),
         tags=project_metadata.tags,
         facets=project_metadata.facets,
-        media_groups=media_groups_from_buckets(project_buckets, media_rules, excluded_images),
+        media_groups=scan.project_media_groups(project_name),
     )
 
 
@@ -89,10 +84,9 @@ def _build_creator(
     creator_type = _infer_creator_type(creator_name, metadata, media_rules)
     selected_portrait = scan.selected_portrait()
     portrait = rel_to_input(selected_portrait, input_dir) if selected_portrait else ""
-    excluded_images = (portrait,) if portrait else ()
 
     project_dirs = {project_dir.name: project_dir for project_dir in iter_project_dirs(creator_dir, media_rules)}
-    project_names = sorted(set(project_dirs) | set(scan.project_buckets))
+    project_names = sorted(set(project_dirs) | scan.discovered_project_names())
     projects = []
     for project_name in project_names:
         if project_name not in project_dirs:
@@ -105,11 +99,8 @@ def _build_creator(
                 creator_dir,
                 project_dir,
                 project_metadata,
-                scan.project_buckets.get(project_name, {}),
                 scan,
-                media_rules,
                 input_dir,
-                excluded_images,
             ))
         except (MetadataLoadError, ValidationError, ValueError, OSError) as exc:
             policy.handle(issue_from_exception(project_dir, IssueScope.PROJECT, exc), exc)
@@ -121,7 +112,7 @@ def _build_creator(
 
     active_since = normalize_metadata_date(type_metadata.active_since, "active_since", creator_name)
     info = text_utils.read_text(creator_dir / README_FILE_NAME)
-    media_groups = media_groups_from_buckets(scan.creator_buckets, media_rules, excluded_images)
+    media_groups = scan.creator_media_groups()
 
     if creator_type == CreatorType.COLLABORATION:
         members = metadata.collaboration.members

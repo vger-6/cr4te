@@ -70,7 +70,7 @@ Musicians/
 ```
 
 `cr4te.json` contains editable structured metadata. `README.md` contains narrative/descriptive text.
-Portraits and covers are selected from image filenames. Portrait discovery can use only named matches or also fall back to a portrait-oriented image. Portrait visibility independently controls whether discovered portraits appear nowhere, only on detail pages, or everywhere; it does not change library discovery or classification. Covers use named matches, then landscape-oriented and arbitrary image fallbacks.
+Portraits and covers are selected from image filenames. Portrait discovery can use only named matches or also fall back to a portrait-oriented image anywhere below the creator folder, including projects. Portrait visibility independently controls whether discovered portraits appear nowhere, only on detail pages, or everywhere; it does not change library discovery or classification. Covers use project-local named matches, then landscape-oriented and arbitrary image fallbacks. Named role candidates, same-stem video-poster candidates, and selected fallback images are reserved from galleries.
 
 ## Commands
 

@@ -50,16 +50,18 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **ASSET-005:** `--strict` must abort immediately on asset errors but not on asset warnings.
 - **ASSET-006:** Media staging during `build` must not silently copy source media when links cannot be created. It may use symbolic links or hard links.
 - **ASSET-007:** If neither symbolic nor hard links can be created, media staging must abort with a structured asset error and a clear message regardless of strict mode.
-- **ASSET-008:** Named portrait and cover discovery must select the lexicographically first image with the configured basename directly inside the creator or project folder it describes. If none exists there, discovery must select the lexicographically first matching image below that folder.
-- **ASSET-009:** Named portrait discovery must use only named matches. Auto portrait discovery may fall back to a portrait-oriented image. Images matching the portrait basename are portrait-role candidates rather than gallery media, and an image selected as an automatic portrait fallback must not additionally appear as gallery media.
-- **ASSET-010:** Cover discovery must fall back from named matches to a landscape-oriented image, then to any available image, then to the generated default cover.
+- **ASSET-008:** Special-image candidate selection must use deterministic case-insensitive lexicographical path ordering with original spelling as the tie-breaker. Named portrait and cover discovery must match configured basenames case-insensitively and prefer matching images directly inside the creator or project folder they describe before matching images below that folder.
+- **ASSET-009:** Named portrait discovery must use only images matching the configured portrait basename. Auto portrait discovery may fall back to the first portrait-oriented eligible image anywhere below the creator folder, including project folders.
+- **ASSET-010:** Cover discovery must search only below the corresponding project folder and fall back from named matches to the first landscape-oriented eligible image, then to the first eligible image, then to the generated default cover.
+- **ASSET-011:** An image in the same folder as a video and with the same case-insensitive stem is a poster candidate. The first poster candidate must be selected for the video. Poster candidates may serve as portraits or covers through explicit basename matches, but must not participate in portrait or cover fallback selection.
+- **ASSET-012:** Images matching the portrait or project-cover basename, all video-poster candidates, and images selected as portrait or cover fallbacks must be excluded from gallery media before sampling. Unselected ordinary fallback candidates must remain eligible for galleries, and one image may serve multiple selected special-image roles.
 
 ## Thumbnail Freshness
 
-- **THUMB-001:** A source-derived thumbnail must be regenerated when its source image has a newer modified time than the existing thumbnail.
-- **THUMB-002:** When only the source image's parent folder is newer, thumbnail freshness must be determined by comparing the source image's SHA-256 hash with a sidecar containing only the hash.
-- **THUMB-003:** A thumbnail must be regenerated when the required hash sidecar is missing or differs, and reused when the hash matches.
-- **THUMB-004:** Source hashes must be calculated only for the parent-folder freshness check. Other thumbnail regeneration paths must remove any stale hash sidecar.
+- **THUMB-001:** Source-derived thumbnail freshness must be determined by comparing the source image's SHA-256 hash with the thumbnail's hash sidecar, independently of source, parent-folder, or thumbnail modified times.
+- **THUMB-002:** Every generated source-derived thumbnail must have a sidecar containing only the SHA-256 hash of the source content used for that thumbnail.
+- **THUMB-003:** An existing source-derived thumbnail may be reused only when its readable hash sidecar exactly matches the current source hash. A missing, unreadable, or different sidecar must cause regeneration and replacement of the sidecar.
+- **THUMB-004:** Thumbnail freshness must remain correct when source files are replaced or synchronized while preserving, decreasing, or coarsening their modified times.
 
 ## Generated Site Behavior
 
