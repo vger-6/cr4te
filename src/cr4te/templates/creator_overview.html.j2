@@ -9,7 +9,7 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
-  {% set search_text_placeholder = site_labels.controls.search_placeholder %}
+  {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
   {% include "partials/_search_bar.html.j2" %}
 
   {% set portrait_image_cards = site_rendering.portraits.visibility == PortraitVisibility.ALL %}
@@ -51,7 +51,7 @@
                data-width="{{ creator.image_wrapper_width }}"
                data-height="{{ creator.image_wrapper_height }}">
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}">
-                <img class="card-image" src="{{ creator.rel_thumbnail_path }}" alt="Poster for {{ creator.name }}" loading="lazy">
+                <img class="card-image" src="{{ creator.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.creator_thumbnail_description_format | format_phrase(creator=creator.name) }}" loading="lazy">
                 {{ media_badges.creator_badges(creator.project_count, creator.media_counts, site_labels) }}
               <div class=image-caption>
                 <span>{{ creator.name }}</span>

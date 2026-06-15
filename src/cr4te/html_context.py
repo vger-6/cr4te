@@ -38,6 +38,8 @@ from .constants import (
     COVER_THUMB_HEIGHT,
 )
 from .themes import ThemeDefinition, discover_builtin_themes, get_default_theme
+from .utils.format_utils import format_named
+
 
 @dataclass
 class HtmlBuildContext:
@@ -133,7 +135,8 @@ class HtmlBuildContext:
 
     def format_date_and_place(self, date: str, place: str) -> str:
         if date and place:
-            return self.site_labels.metadata.date_and_place_format.format(
+            return format_named(
+                self.site_labels.metadata.date_and_place_format,
                 date=date,
                 place=place,
             )

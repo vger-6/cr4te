@@ -2,7 +2,7 @@
   <nav class="top-link" aria-label="Primary">
     <a class="site-logo-link"
        href="{{ page_shell.navigation_items[0].href }}"
-       aria-label="cr4te {{ page_shell.navigation_items[0].label }} overview">
+       aria-label="{{ site_labels.accessibility.site_logo_overview_label_format | format_phrase(overview=page_shell.navigation_items[0].label) }}">
       <img class="site-logo"
            src="{{ path_to_root | default('') }}assets/favicon.svg"
            alt=""

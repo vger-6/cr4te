@@ -230,6 +230,115 @@ class ConfigManagerTests(unittest.TestCase):
 
                 self.assertIn("date_and_place_format", str(caught.exception))
 
+    def test_complete_phrase_formats_are_configurable_and_reorder_named_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_labels": {
+                        "controls": {
+                            "search_placeholder_format": "{tags}; {projects}; {creators}: search",
+                        },
+                        "pages": {
+                            "creator_collaboration_projects_title_format": "{collaborator}: {projects}",
+                        },
+                        "accessibility": {
+                            "creator_portrait_description_format": "{creator}, portrait",
+                            "project_preview_description_format": "{project}, preview",
+                        },
+                    }
+                },
+            )
+
+            labels = load_config(config_path).site_labels
+
+            self.assertEqual(
+                labels.controls.search_placeholder_format.format(
+                    creators="Artists",
+                    projects="Works",
+                    tags="Tags",
+                ),
+                "Tags; Works; Artists: search",
+            )
+            self.assertEqual(
+                labels.pages.creator_collaboration_projects_title_format.format(
+                    collaborator="Ada",
+                    projects="Works",
+                ),
+                "Ada: Works",
+            )
+            self.assertEqual(
+                labels.accessibility.creator_portrait_description_format.format(creator="Ada"),
+                "Ada, portrait",
+            )
+            self.assertEqual(
+                labels.accessibility.project_preview_description_format.format(project="Notes"),
+                "Notes, preview",
+            )
+
+    def test_complete_phrase_formats_reject_missing_or_unknown_placeholders(self):
+        invalid_formats = (
+            ("controls", "search_placeholder_format", "Search {creators}"),
+            ("pages", "creator_collaboration_projects_title_format", "{projects}"),
+            ("accessibility", "creator_portrait_description_format", "Portrait"),
+            ("accessibility", "project_preview_description_format", "Preview of {creator}"),
+        )
+
+        for section, key, value in invalid_formats:
+            with self.subTest(section=section, key=key, value=value), tempfile.TemporaryDirectory() as tmp:
+                config_path = Path(tmp) / "config.json"
+                write_json(config_path, {"site_labels": {section: {key: value}}})
+
+                with self.assertRaises(ValueError) as caught:
+                    load_config(config_path)
+
+                self.assertIn(key, str(caught.exception))
+
+    def test_domain_presets_resolve_complete_phrase_formats_from_domain_labels(self):
+        film = apply_cli_overrides(load_config(), domain=Domain.FILM).site_labels
+        model = apply_cli_overrides(load_config(), domain=Domain.MODEL).site_labels
+        art = apply_cli_overrides(load_config(), domain=Domain.ART).site_labels
+
+        self.assertEqual(
+            film.pages.creator_collaboration_projects_title_format.format(
+                projects=film.entity.projects,
+                collaborator="Ada",
+            ),
+            "Codirected with Ada",
+        )
+        self.assertEqual(
+            model.pages.creator_collaboration_projects_title_format.format(
+                projects=model.entity.projects,
+                collaborator="Ada",
+            ),
+            "Scenes with Ada",
+        )
+        self.assertEqual(
+            art.controls.search_placeholder_format.format(
+                creators=art.entity.creators,
+                projects=art.entity.projects,
+                tags=art.entity.tags,
+            ),
+            "Search Artists, Works, Tags...",
+        )
+
+    def test_removed_fragment_label_fields_are_rejected(self):
+        old_fields = (
+            ("controls", "search_placeholder", "Search creators, projects, tags..."),
+            ("pages", "creator_collabs_title_prefix", "With"),
+        )
+
+        for section, key, value in old_fields:
+            with self.subTest(section=section, key=key), tempfile.TemporaryDirectory() as tmp:
+                config_path = Path(tmp) / "config.json"
+                write_json(config_path, {"site_labels": {section: {key: value}}})
+
+                with self.assertRaises(ValueError) as caught:
+                    load_config(config_path)
+
+                self.assertIn(key, str(caught.exception))
+
     def test_removed_metadata_presentation_rendering_section_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"

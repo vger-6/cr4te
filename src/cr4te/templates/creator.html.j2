@@ -22,7 +22,7 @@
           <div class="info-block{% if creator.portrait_orientation %} info-block--{{ creator.portrait_orientation.value }}{% endif %}">
             {% if creator.rel_portrait_path %}
               <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ creator.name }}">
-                <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
+                <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=creator.name) }}">
               </a>
             {% endif %}
             {{ utils.render_meta_entries(creator.meta_entries, path_to_root) }}
@@ -48,7 +48,7 @@
             <div class="info-block{% if member.rel_thumbnail_path %} info-block--portrait{% endif %}">
               {% if member.rel_thumbnail_path %}
                 <a href="{{ path_to_root }}{{ member.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ member.name }}">
-                  <img class="primary-image" src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="Portrait of {{ member.name }}">
+                  <img class="primary-image" src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=member.name) }}">
                 </a>
               {% endif %}
               {{ utils.render_meta_entries(member.meta_entries, path_to_root) }}
@@ -93,7 +93,7 @@
             {% for project in creator.projects %}
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
-                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
                 {{ media_badges.media_badges(project.media_counts, site_labels) }}
                 <div class=image-caption>
                   <span>{{ project.title }}</span>
@@ -108,7 +108,7 @@
 
       {% for collab in creator.collaborations %}
       <div class="section-box">
-        <div class="section-title">{{ site_labels.entity.projects }} with {{ collab.label }}</div>
+        <div class="section-title">{{ site_labels.pages.creator_collaboration_projects_title_format | format_phrase(projects=site_labels.entity.projects, collaborator=collab.label) }}</div>
         <hr>
         <div class="section-content">
           <div class="{{ image_gallery_class }}"
@@ -118,7 +118,7 @@
             {% for project in collab.projects %}
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
               <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
-                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Thumbnail for {{ project.title }}" loading="lazy">
+                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
                 {{ media_badges.media_badges(project.media_counts, site_labels) }}
                 <div class=image-caption>
                   <span>{{ project.title }}</span>

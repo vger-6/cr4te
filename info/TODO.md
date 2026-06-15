@@ -14,12 +14,6 @@ These items come from the full-codebase review of the Python build pipeline, gen
 
 ### Low Priority
 
-- [ ] Review generated human-readable phrases and replace fragment concatenation with complete named-placeholder label formats where it improves domain wording or localization.
-  - Replace the currently unused `creator_collabs_title_prefix` with a complete collaboration-title format and use it instead of the hardcoded `{{ projects }} with {{ collaborator }}` template phrase. Support domain presets such as `{projects} with {collaborator}`, `Codirected with {collaborator}`, and `Scenes with {collaborator}`.
-  - Consider deriving the search placeholder from a complete format such as `Search {creators}, {projects}, {tags}...` while preserving the option for domains to provide different complete wording.
-  - Consider configurable complete formats for accessible image descriptions such as `Portrait of {creator}`, `Thumbnail for {project}`, and `Preview of {project}` if broader localization becomes a goal.
-  - Revisit count summaries and badge descriptions only if broader localization requires word orders that cannot be expressed cleanly as `count` plus singular/plural labels.
-  - Keep standalone nouns and control names as ordinary labels; use formats only when multiple dynamic or configurable values form one human-readable phrase.
 - [ ] Consider an academic research domain preset.
   - Map creator folders to researchers or research groups and project folders to publications or studies.
   - Keep the existing person/collaboration creator model; research groups can use collaboration metadata.

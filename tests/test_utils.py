@@ -15,6 +15,7 @@ from cr4te.media_cache import ImageDimensions
 from cr4te.utils import file_utils, path_utils, text_utils
 from cr4te.utils.audio_utils import get_audio_duration_seconds
 from cr4te.utils.date_utils import calculate_age_from_strings, format_age, parse_date
+from cr4te.utils.format_utils import format_named, validate_named_format
 from cr4te.utils.image_utils import create_centered_text_image, generate_thumbnail
 from cr4te.utils.json_utils import load_json
 from cr4te.utils.sorting_utils import dated_title_sort_key
@@ -117,6 +118,50 @@ class TextUtilsTests(unittest.TestCase):
         self.assertEqual(text_utils.slugify("Ada Lovelace!"), "ada_lovelace")
         with self.assertRaises(ValueError):
             text_utils.slugify(None)
+
+
+class FormatUtilsTests(unittest.TestCase):
+    def test_format_named_interpolates_named_values(self):
+        self.assertEqual(
+            format_named("{project} by {creator}", project="Notes", creator="Ada"),
+            "Notes by Ada",
+        )
+
+    def test_validate_named_format_accepts_optional_and_reordered_placeholders(self):
+        self.assertEqual(
+            validate_named_format(
+                "{collaborator}: {projects}",
+                allowed_fields=frozenset({"collaborator", "projects"}),
+                required_fields=frozenset({"collaborator"}),
+            ),
+            "{collaborator}: {projects}",
+        )
+        self.assertEqual(
+            validate_named_format(
+                "With {collaborator}",
+                allowed_fields=frozenset({"collaborator", "projects"}),
+                required_fields=frozenset({"collaborator"}),
+            ),
+            "With {collaborator}",
+        )
+
+    def test_validate_named_format_rejects_unsafe_or_ambiguous_fields(self):
+        invalid_formats = (
+            "{0}",
+            "{creator.name}",
+            "{creator!r}",
+            "{creator:>10}",
+            "{creator} and {creator}",
+            "Portrait",
+        )
+
+        for value in invalid_formats:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                validate_named_format(
+                    value,
+                    allowed_fields=frozenset({"creator"}),
+                    required_fields=frozenset({"creator"}),
+                )
 
 
 class ImageUtilsExtraTests(unittest.TestCase):

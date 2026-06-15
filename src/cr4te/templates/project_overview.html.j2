@@ -9,7 +9,7 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
-  {% set search_text_placeholder = site_labels.controls.search_placeholder %}
+  {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
   {% include "partials/_search_bar.html.j2" %}
 
   <div class="overview-layout">
@@ -32,7 +32,7 @@
                data-width="{{ project.image_wrapper_width }}"
                data-height="{{ project.image_wrapper_height }}">
             <a href="{{ project.rel_html_path }}" title="{{ project.title }}">
-              <img class="card-image" src="{{ project.rel_thumbnail_path }}" alt="Poster for {{ project.title }}" loading="lazy">
+              <img class="card-image" src="{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
               {{ media_badges.media_badges(project.media_counts, site_labels) }}
               <div class=image-caption>
                 <span>{{ project.title }}</span><br>

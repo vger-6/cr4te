@@ -81,7 +81,7 @@ DEFAULT_COUNT_LABELS = {
 }
 
 DEFAULT_CONTROL_LABELS = {
-    "search_placeholder": "Search creators, projects, tags...",
+    "search_placeholder_format": "Search {creators}, {projects}, {tags}...",
     "clear_search": "Clear search",
     "themes": "Themes",
     "fullscreen": "Fullscreen",
@@ -102,11 +102,19 @@ DEFAULT_CONTROL_LABELS = {
 DEFAULT_PAGE_LABELS = {
     "creator_profile_title": "Profile",
     "creator_about_title": "About",
-    "creator_collabs_title_prefix": "With",
+    "creator_collaboration_projects_title_format": "{projects} with {collaborator}",
     "project_overview_title": "Overview",
     "project_description_title": "Description",
     "audio_section_default_title": "Audio",
     "image_section_default_title": "Images",
+}
+
+DEFAULT_ACCESSIBILITY_LABELS = {
+    "site_logo_overview_label_format": "cr4te {overview} overview",
+    "creator_thumbnail_description_format": "Thumbnail for {creator}",
+    "creator_portrait_description_format": "Portrait of {creator}",
+    "project_thumbnail_description_format": "Thumbnail for {project}",
+    "project_preview_description_format": "Preview of {project}",
 }
 
 DEFAULT_METADATA_LABELS = {
@@ -135,6 +143,7 @@ DEFAULT_SITE_LABELS = {
     "counts": DEFAULT_COUNT_LABELS,
     "controls": DEFAULT_CONTROL_LABELS,
     "pages": DEFAULT_PAGE_LABELS,
+    "accessibility": DEFAULT_ACCESSIBILITY_LABELS,
     "metadata": DEFAULT_METADATA_LABELS,
     "project_facets": get_project_facet_label_defaults(),
 }
@@ -230,10 +239,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Movies",
                     },
                     "counts": {"project": "movie", "projects": "movies"},
-                    "controls": {"search_placeholder": "Search directors, movies, tags..."},
                     "pages": {
                         "audio_section_default_title": "Soundtrack",
-                        "creator_collabs_title_prefix": "Codirected with",
+                        "creator_collaboration_projects_title_format": "Codirected with {collaborator}",
                     },
                 },
                 site_rendering={
@@ -251,9 +259,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Albums",
                     },
                     "counts": {"project": "album", "projects": "albums"},
-                    "controls": {"search_placeholder": "Search musicians, albums, tags..."},
                     "pages": {
-                        "creator_collabs_title_prefix": "With",
                         "audio_section_default_title": "Tracks",
                     },
                 },
@@ -286,7 +292,6 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Works",
                     },
                     "counts": {"project": "work", "projects": "works"},
-                    "controls": {"search_placeholder": "Search artists, works, tags..."},
                 },
                 site_rendering={
                     "media": {
@@ -312,10 +317,8 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Books",
                     },
                     "counts": {"project": "book", "projects": "books"},
-                    "controls": {"search_placeholder": "Search author, books, tags..."},
                     "pages": {
                         "audio_section_default_title": "Audio",
-                        "creator_collabs_title_prefix": "With",
                     },
                 },
                 site_rendering={
@@ -350,8 +353,6 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Scenes",
                     },
                     "counts": {"project": "scene", "projects": "scenes"},
-                    "controls": {"search_placeholder": "Search models, scenes, tags..."},
-                    "pages": {"creator_collabs_title_prefix": "Scenes with"},
                     "metadata": {"members": "Featuring"},
                 },
                 site_rendering={

@@ -17,8 +17,11 @@ from cr4te.enums.orientation import Orientation
 from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.media_counts import MediaCounts
 from cr4te.render_models import (
+    CollaborationProjectsContext,
     CreatorOverviewEntry,
+    CreatorPageContext,
     CreatorProfileContext,
+    CreatorStats,
     DocumentContext,
     GalleryImageContext,
     MediaGroupContext,
@@ -193,6 +196,7 @@ class TemplateRendererTests(unittest.TestCase):
             )
 
             self.assertIn('class="card-image"', rendered)
+            self.assertIn('alt="Thumbnail for Displayed Noomi"', rendered)
             self.assertIn("media-type-badges", rendered)
             self.assertIn('title="1 work"', rendered)
             self.assertIn('aria-label="1 work"', rendered)
@@ -417,9 +421,48 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('src="assets/favicon.svg"\n           alt=""\n           width="24"\n           height="24"', rendered)
             self.assertIn('<span class="nav-current" aria-current="page">Artists</span>', rendered)
             self.assertIn('<button type="button" id="clear-search"', rendered)
+            self.assertIn('placeholder="Search Artists, Works, Tags..."', rendered)
             self.assertIn('aria-haspopup="menu"', rendered)
             self.assertIn('role="menuitemradio"', rendered)
             self.assertNotIn("body { display: none; }", rendered)
+
+    def test_creator_template_resolves_domain_specific_collaboration_title_format(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = apply_cli_overrides(load_config(), domain=Domain.FILM)
+            ctx = HtmlBuildContext(Path(tmp) / "input", Path(tmp) / "site", config.site_labels, config.site_rendering)
+            page = CreatorPageContext(
+                type=CreatorType.PERSON.value,
+                name="Noomi",
+                rel_portrait_path="",
+                portrait_orientation=None,
+                info_html="",
+                tags=TagCollection(),
+                projects=[],
+                media_groups=[],
+                collaborations=[CollaborationProjectsContext(label="Ada", projects=[])],
+                creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
+                meta_entries=[],
+            )
+
+            rendered = env.get_template("creator.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator=page,
+                project_image_max_height=450,
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title=page.name,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            )
+
+            self.assertIn('<div class="section-title">Codirected with Ada</div>', rendered)
+            self.assertNotIn("Movies with Ada", rendered)
 
     def test_page_templates_use_shared_document_head_and_page_header(self):
         template_dir = ROOT / "src" / "cr4te" / "templates"
@@ -444,6 +487,8 @@ class TemplateRendererTests(unittest.TestCase):
         tags_source = (template_dir / "tags.html.j2").read_text(encoding="utf-8")
 
         self.assertIn("utils.render_meta_entries(member.meta_entries, path_to_root)", creator_source)
+        self.assertIn("creator_collaboration_projects_title_format | format_phrase", creator_source)
+        self.assertNotIn("site_labels.entity.projects }} with {{ collab.label", creator_source)
         self.assertNotIn('<div class="info-block__meta">', creator_source)
         for source in (creator_source, project_source, tags_source):
             self.assertIn('<span class="tag-category-label data-label">{{ group.category }}</span>', source)

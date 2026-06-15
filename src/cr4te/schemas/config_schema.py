@@ -1,6 +1,4 @@
 from typing import Dict, List
-from string import Formatter
-
 from pydantic import BaseModel, ConfigDict, conint, field_validator
 
 from ..enums.image_sample_strategy import ImageSampleStrategy
@@ -9,7 +7,9 @@ from ..enums.media_type import MediaType
 from ..enums.portrait_discovery import PortraitDiscovery
 from ..enums.portrait_visibility import PortraitVisibility
 from ..enums.visible_fields import CollaborationField, CreatorField, ProjectField
+from ..utils.format_utils import validate_named_format
 from ..utils.image_utils import parse_aspect_ratio
+
 
 class StrictConfigModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -46,7 +46,7 @@ class CountLabels(StrictConfigModel):
 
 
 class ControlLabels(StrictConfigModel):
-    search_placeholder: str
+    search_placeholder_format: str
     clear_search: str
     themes: str
     fullscreen: str
@@ -63,15 +63,74 @@ class ControlLabels(StrictConfigModel):
     show_captions: str
     hide_captions: str
 
+    @field_validator("search_placeholder_format")
+    @classmethod
+    def validate_search_placeholder_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"creators", "projects", "tags"}),
+            required_fields=frozenset({"creators", "projects", "tags"}),
+        )
+
 
 class PageLabels(StrictConfigModel):
     creator_profile_title: str
     creator_about_title: str
-    creator_collabs_title_prefix: str
+    creator_collaboration_projects_title_format: str
     project_overview_title: str
     project_description_title: str
     audio_section_default_title: str
     image_section_default_title: str
+
+    @field_validator("creator_collaboration_projects_title_format")
+    @classmethod
+    def validate_creator_collaboration_projects_title_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"collaborator", "projects"}),
+            required_fields=frozenset({"collaborator"}),
+        )
+
+
+class AccessibilityLabels(StrictConfigModel):
+    site_logo_overview_label_format: str
+    creator_thumbnail_description_format: str
+    creator_portrait_description_format: str
+    project_thumbnail_description_format: str
+    project_preview_description_format: str
+
+    @field_validator(
+        "creator_thumbnail_description_format",
+        "creator_portrait_description_format",
+    )
+    @classmethod
+    def validate_creator_description_formats(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"creator"}),
+            required_fields=frozenset({"creator"}),
+        )
+
+    @field_validator(
+        "project_thumbnail_description_format",
+        "project_preview_description_format",
+    )
+    @classmethod
+    def validate_project_description_formats(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"project"}),
+            required_fields=frozenset({"project"}),
+        )
+
+    @field_validator("site_logo_overview_label_format")
+    @classmethod
+    def validate_site_logo_overview_label_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"overview"}),
+            required_fields=frozenset({"overview"}),
+        )
 
 
 class MetadataLabels(StrictConfigModel):
@@ -96,23 +155,11 @@ class MetadataLabels(StrictConfigModel):
     @field_validator("date_and_place_format")
     @classmethod
     def validate_date_and_place_format(cls, value: str) -> str:
-        try:
-            parsed = list(Formatter().parse(value))
-        except ValueError as exc:
-            raise ValueError("must be a valid format string") from exc
-
-        fields = []
-        for _, field_name, format_spec, conversion in parsed:
-            if field_name is None:
-                continue
-            if field_name not in {"date", "place"} or format_spec or conversion:
-                raise ValueError("must use only the named placeholders {date} and {place}")
-            fields.append(field_name)
-
-        if fields.count("date") != 1 or fields.count("place") != 1:
-            raise ValueError("must contain each of {date} and {place} exactly once")
-
-        return value
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"date", "place"}),
+            required_fields=frozenset({"date", "place"}),
+        )
 
 
 class ProjectFacetLabels(StrictConfigModel):
@@ -129,6 +176,7 @@ class SiteLabels(StrictConfigModel):
     counts: CountLabels
     controls: ControlLabels
     pages: PageLabels
+    accessibility: AccessibilityLabels
     metadata: MetadataLabels
     project_facets: Dict[ProjectField, ProjectFacetLabels]
 

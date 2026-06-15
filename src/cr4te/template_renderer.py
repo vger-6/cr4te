@@ -25,6 +25,7 @@ from .render_models import (
 )
 from .schemas.library_schema import Creator as CreatorModel, Project as ProjectModel
 from .tag_contexts import TagSource, merge_tag_maps
+from .utils.format_utils import format_named
 
 __all__ = [
     "render_creator_overview_page",
@@ -42,6 +43,7 @@ env = Environment(
 )
 env.globals["MediaType"] = MediaType
 env.globals["PortraitVisibility"] = PortraitVisibility
+env.filters["format_phrase"] = format_named
 
 
 def _theme_render_context(ctx: HtmlBuildContext) -> dict:

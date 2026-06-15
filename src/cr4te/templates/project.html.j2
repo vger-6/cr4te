@@ -20,7 +20,7 @@
         <div class="section-content markdown">
           <div class="info-block info-block--{{ project.thumbnail_orientation.value }}">
             <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ project.title }}">
-              <img class="primary-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="Preview of {{ project.title }}">
+              <img class="primary-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_preview_description_format | format_phrase(project=project.title) }}">
             </a>
             {{ utils.render_meta_entries(project.meta_entries, path_to_root) }}
           </div>
@@ -47,7 +47,7 @@
             <div class="info-block{% if creator.rel_portrait_path %} info-block--portrait{% endif %}">
               {% if creator.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ creator.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ creator.name }}">
-                  <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="Portrait of {{ creator.name }}">
+                  <img class="primary-image" src="{{ path_to_root }}{{ creator.rel_portrait_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=creator.name) }}">
                 </a>
               {% endif %}
               {{ utils.render_meta_entries(creator.meta_entries, path_to_root) }}
@@ -65,7 +65,7 @@
             <div class="info-block{% if collaboration.rel_portrait_path %} info-block--portrait{% endif %}">
               {% if collaboration.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ collaboration.name }}">
-                  <img class="primary-image" src="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" alt="Portrait of {{ collaboration.name }}">
+                  <img class="primary-image" src="{{ path_to_root }}{{ collaboration.rel_portrait_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=collaboration.name) }}">
                 </a>
               {% endif %}
               {{ utils.render_meta_entries(collaboration.meta_entries, path_to_root) }}
@@ -82,7 +82,7 @@
             <div class="info-block{% if participant.rel_portrait_path %} info-block--portrait{% endif %}">
               {% if participant.rel_portrait_path %}
                 <a href="{{ path_to_root }}{{ participant.rel_portrait_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ participant.name }}">
-                  <img class="primary-image" src="{{ path_to_root }}{{ participant.rel_portrait_path}}" alt="Portrait of {{ participant.name }}">
+                  <img class="primary-image" src="{{ path_to_root }}{{ participant.rel_portrait_path}}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=participant.name) }}">
                 </a>
               {% endif %}
               {{ utils.render_meta_entries(participant.meta_entries, path_to_root) }}
