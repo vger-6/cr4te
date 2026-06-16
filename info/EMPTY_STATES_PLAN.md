@@ -12,7 +12,7 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Do not render an empty-state panel for every absent optional section.
 - Preserve the current panel sizes, spacing, colors, typography, and general page appearance unless a specific empty-state style is agreed before implementation.
 - Reuse existing theme tokens wherever possible instead of introducing theme-specific empty-state styling.
-- Stop for UI/UX review before finalizing the empty-state appearance, message wording, and any interactive action.
+- Keep the agreed minimal appearance unless a later UI/UX review explicitly changes it.
 - Avoid unrelated template, context-model, pagination, search, CSS, or JavaScript refactors unless they directly block a correct implementation.
 - Record newly discovered non-blocking issues in `TODO.md` instead of expanding the feature.
 
@@ -21,6 +21,7 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Introduce one reusable empty-state template macro or partial with consistent semantic markup and CSS classes.
 - Use the shared component for both static build-time states and dynamic search-result states.
 - Keep messages contextual: an empty library, missing optional content, and a search with no matches are different situations.
+- Render empty states as a simple message block in the affected content area, not as fake creator/project cards.
 - Show an empty state only when an otherwise-visible major panel or page region would be blank.
 - Continue omitting optional sections such as tags, descriptions, individual media types, and project galleries when their absence does not leave a confusing blank region.
 - Keep static empty states present in generated HTML without requiring JavaScript.
@@ -44,14 +45,14 @@ Prevent major panels and page regions from appearing unintentionally blank when 
 - Empty-state wording follows configured entity labels where appropriate so domain presets can continue using terms such as artists, albums, books, or movies.
 - Domain-aware defaults use complete formats such as `No {creators} available`, `No {projects} available`, and `No {projects} or media available`; the renderer supplies the configured entity labels through named placeholders.
 
-## UI And Accessibility Decisions To Confirm
+## UI And Accessibility Decisions
 
-- Confirm whether empty states should include only a short message or also a small secondary explanation.
-- Confirm whether the dynamic search empty state should include a visible clear-search button in addition to the existing clear icon.
-- Confirm whether static overview empty states should retain the search bar in a disabled state or omit it. The recommended choice is to omit it.
-- Confirm that the empty-state component should use existing section padding, muted theme text, and normal body text without illustrations, large icons, or oversized typography.
-- Confirm whether messages should end with punctuation. Apply the decision consistently.
-- Confirm the final default English wording before implementation.
+- Empty states show one short message only, without a secondary explanation.
+- The dynamic search empty state does not add a visible clear-search button; the existing clear icon remains the clearing control.
+- Static overview empty states omit the search bar instead of showing it disabled.
+- The empty-state component uses existing section padding, muted theme text, and normal body text.
+- Empty states do not use illustrations, decorative icons, oversized typography, or fake overview cards.
+- Default messages do not end with punctuation.
 
 ## Implementation Steps
 

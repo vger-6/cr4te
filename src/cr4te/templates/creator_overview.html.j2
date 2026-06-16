@@ -1,5 +1,6 @@
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_media_badges.html.j2" as media_badges %}
+{% import "partials/_empty_state.html.j2" as empty_states %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -9,8 +10,10 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
-  {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
-  {% include "partials/_search_bar.html.j2" %}
+  {% if creator_entries %}
+    {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
+    {% include "partials/_search_bar.html.j2" %}
+  {% endif %}
 
   {% set portrait_image_cards = site_rendering.portraits.visibility == PortraitVisibility.ALL %}
   {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) if portrait_image_cards else 'creator-card-grid' %}
@@ -20,6 +23,7 @@
 
     <div class="section-box">
       <div class="section-content">
+        {% if creator_entries %}
         <div class="{{ image_gallery_class }}"
              id="imageGallery"
              data-image-max-height="{{ gallery_image_max_height }}"
@@ -61,6 +65,11 @@
             {% endif %}
           {% endfor %}
         </div>
+        {{ empty_states.render(site_labels.empty_states.no_search_results, "empty-state--search", hidden=true, live=true) }}
+        {% else %}
+          {% set no_creators_message = site_labels.empty_states.no_creators_format | format_phrase(creators=site_labels.entity.creators) %}
+          {{ empty_states.render(no_creators_message) }}
+        {% endif %}
       </div>
     </div>
 

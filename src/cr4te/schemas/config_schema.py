@@ -92,6 +92,42 @@ class PageLabels(StrictConfigModel):
         )
 
 
+class EmptyStateLabels(StrictConfigModel):
+    no_creators_format: str
+    no_projects_format: str
+    no_tags_format: str
+    no_projects_or_media_format: str
+    no_search_results: str
+    no_media: str
+
+    @field_validator("no_creators_format")
+    @classmethod
+    def validate_no_creators_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"creators"}),
+            required_fields=frozenset({"creators"}),
+        )
+
+    @field_validator("no_projects_format", "no_projects_or_media_format")
+    @classmethod
+    def validate_project_empty_state_formats(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"projects"}),
+            required_fields=frozenset({"projects"}),
+        )
+
+    @field_validator("no_tags_format")
+    @classmethod
+    def validate_no_tags_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"tags"}),
+            required_fields=frozenset({"tags"}),
+        )
+
+
 class AccessibilityLabels(StrictConfigModel):
     site_logo_overview_label_format: str
     creator_thumbnail_description_format: str
@@ -176,6 +212,7 @@ class SiteLabels(StrictConfigModel):
     counts: CountLabels
     controls: ControlLabels
     pages: PageLabels
+    empty_states: EmptyStateLabels
     accessibility: AccessibilityLabels
     metadata: MetadataLabels
     project_facets: Dict[ProjectField, ProjectFacetLabels]

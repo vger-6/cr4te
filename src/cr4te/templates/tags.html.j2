@@ -1,3 +1,5 @@
+{% import "partials/_empty_state.html.j2" as empty_states %}
+
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
 {% include "partials/_document_head.html.j2" %}
@@ -9,8 +11,9 @@
   <div class="overview-layout">
 
     <div class="section-box">
-      <div class="section-content tag-list">
+      <div class="section-content{% if tags.groups %} tag-list{% endif %}">
 
+        {% if tags.groups %}
         {% for group in tags.groups %}
         <div class="tag-category" id="{{ group.category | lower | replace(' ', '-') }}">
           <span class="tag-category-label data-label">{{ group.category }}</span>
@@ -19,6 +22,10 @@
           {% endfor %}
         </div>
         {% endfor %}
+        {% else %}
+          {% set no_tags_message = site_labels.empty_states.no_tags_format | format_phrase(tags=site_labels.entity.tags) %}
+          {{ empty_states.render(no_tags_message) }}
+        {% endif %}
 
      </div>
     </div>

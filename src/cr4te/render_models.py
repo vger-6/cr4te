@@ -133,12 +133,20 @@ class MediaSectionContext:
     texts: list[TextContext] = field(default_factory=list)
     total_duration_seconds: float = 0.0
 
+    @property
+    def has_content(self) -> bool:
+        return bool(self.videos or self.tracks or self.images or self.documents or self.texts)
+
 
 @dataclass(frozen=True)
 class MediaGroupContext:
     audio_section_title: str
     image_section_title: str
     sections: list[MediaSectionContext]
+
+    @property
+    def has_content(self) -> bool:
+        return any(section.has_content for section in self.sections)
 
 
 @dataclass(frozen=True)
@@ -172,6 +180,10 @@ class CollaborationProjectsContext:
     label: str
     projects: list[ProjectCardContext]
 
+    @property
+    def has_projects(self) -> bool:
+        return bool(self.projects)
+
 
 @dataclass(frozen=True)
 class CreatorPageContext:
@@ -188,6 +200,14 @@ class CreatorPageContext:
     meta_entries: list[MetaEntry]
     members: list[CreatorLinkContext] = field(default_factory=list)
 
+    @property
+    def has_right_column_content(self) -> bool:
+        return bool(
+            self.projects
+            or any(collaboration.has_projects for collaboration in self.collaborations)
+            or any(group.has_content for group in self.media_groups)
+        )
+
 
 @dataclass(frozen=True)
 class ProjectPageContext:
@@ -202,6 +222,10 @@ class ProjectPageContext:
     creator: CreatorProfileContext | None = None
     collaboration: CreatorProfileContext | None = None
     participants: list[CreatorProfileContext] = field(default_factory=list)
+
+    @property
+    def has_media(self) -> bool:
+        return any(group.has_content for group in self.media_groups)
 
 
 @dataclass(frozen=True)

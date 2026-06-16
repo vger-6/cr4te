@@ -1,6 +1,7 @@
 {% import "partials/_media_sections.html.j2" as media_macros %}
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_media_badges.html.j2" as media_badges %}
+{% import "partials/_empty_state.html.j2" as empty_states %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -80,7 +81,9 @@
       
       {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.project_cards.building_strategy) %}
       {% set aspect_ratio = site_rendering.galleries.project_cards.aspect_ratio or '1/1' %}
+      {% set collaboration_project_groups = creator.collaborations | selectattr('projects') | list %}
 
+      {% if creator.has_right_column_content %}
       {% if creator.projects %}
       <div class="section-box">
         <div class="section-title">{{ site_labels.entity.projects }}</div>
@@ -106,7 +109,7 @@
       </div>
       {% endif %}
 
-      {% for collab in creator.collaborations %}
+      {% for collab in collaboration_project_groups %}
       <div class="section-box">
         <div class="section-title">{{ site_labels.pages.creator_collaboration_projects_title_format | format_phrase(projects=site_labels.entity.projects, collaborator=collab.label) }}</div>
         <hr>
@@ -132,6 +135,14 @@
       {% endfor %}
         
       {{ media_macros.render_media_groups(path_to_root, creator.media_groups, gallery_image_max_height, site_rendering.creator_page.media_gallery_page_size, site_labels) }}
+      {% else %}
+      <div class="section-box">
+        <div class="section-content">
+          {% set no_right_column_content_message = site_labels.empty_states.no_projects_or_media_format | format_phrase(projects=site_labels.entity.projects) %}
+          {{ empty_states.render(no_right_column_content_message) }}
+        </div>
+      </div>
+      {% endif %}
 
       </div>
 

@@ -56,6 +56,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.entity.creator, "Creator")
             self.assertEqual(config.site_labels.counts.project, "project")
             self.assertEqual(config.site_labels.controls.play, "Play")
+            self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
 
     def test_project_count_labels_are_configurable_independently_from_entity_labels(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -247,6 +248,12 @@ class ConfigManagerTests(unittest.TestCase):
                             "creator_portrait_description_format": "{creator}, portrait",
                             "project_preview_description_format": "{project}, preview",
                         },
+                        "empty_states": {
+                            "no_creators_format": "{creators}: none",
+                            "no_projects_format": "{projects}: none",
+                            "no_tags_format": "{tags}: none",
+                            "no_projects_or_media_format": "No media or {projects}",
+                        },
                     }
                 },
             )
@@ -276,6 +283,10 @@ class ConfigManagerTests(unittest.TestCase):
                 labels.accessibility.project_preview_description_format.format(project="Notes"),
                 "Notes, preview",
             )
+            self.assertEqual(labels.empty_states.no_creators_format.format(creators="Artists"), "Artists: none")
+            self.assertEqual(labels.empty_states.no_projects_format.format(projects="Works"), "Works: none")
+            self.assertEqual(labels.empty_states.no_tags_format.format(tags="Keywords"), "Keywords: none")
+            self.assertEqual(labels.empty_states.no_projects_or_media_format.format(projects="Works"), "No media or Works")
 
     def test_complete_phrase_formats_reject_missing_or_unknown_placeholders(self):
         invalid_formats = (
@@ -283,6 +294,10 @@ class ConfigManagerTests(unittest.TestCase):
             ("pages", "creator_collaboration_projects_title_format", "{projects}"),
             ("accessibility", "creator_portrait_description_format", "Portrait"),
             ("accessibility", "project_preview_description_format", "Preview of {creator}"),
+            ("empty_states", "no_creators_format", "No creators"),
+            ("empty_states", "no_projects_format", "No {creators}"),
+            ("empty_states", "no_tags_format", "No {projects}"),
+            ("empty_states", "no_projects_or_media_format", "No media"),
         )
 
         for section, key, value in invalid_formats:
@@ -321,6 +336,10 @@ class ConfigManagerTests(unittest.TestCase):
                 tags=art.entity.tags,
             ),
             "Search Artists, Works, Tags...",
+        )
+        self.assertEqual(
+            art.empty_states.no_projects_format.format(projects=art.entity.projects),
+            "No Works available",
         )
 
     def test_removed_fragment_label_fields_are_rejected(self):

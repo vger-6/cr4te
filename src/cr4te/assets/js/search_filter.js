@@ -38,9 +38,20 @@
   cr4te.onReady(() => {
     const input = document.getElementById("search-input");
     const clearBtn = document.getElementById("clear-search");
+    const noResults = document.querySelector(".empty-state--search");
     const { gallery, allWrappers } = getAllWrappers("#imageGallery");
 
     if (!input || !clearBtn || !gallery) return;
+
+    function setNoResultsState(show) {
+      if (noResults) {
+        const shouldBeHidden = !show;
+        if (noResults.hidden !== shouldBeHidden) {
+          noResults.hidden = shouldBeHidden;
+        }
+      }
+      gallery.hidden = show;
+    }
 
     function filter() {
       const terms = extractTerms(input.value);
@@ -48,9 +59,13 @@
         const searchText = entry.dataset.searchText?.toLowerCase() || "";
         return terms.every(term => searchText.includes(term));
       });
+      const hasQuery = terms.length > 0;
+      const showNoResults = hasQuery && visible.length === 0;
 
       clearBtn.style.display = input.value ? "block" : "none";
+      gallery.hidden = false;
       filterAndPaginate(gallery, visible);
+      setNoResultsState(showNoResults);
     }
 
     const params = new URLSearchParams(window.location.search);

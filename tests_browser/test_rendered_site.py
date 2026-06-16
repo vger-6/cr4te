@@ -291,11 +291,25 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(cards.count(), 1)
         self.assertIn("Nia Solen", self.page.locator("#imageGallery").inner_text())
         self.assertTrue(self.page.locator("#clear-search").is_visible())
+        self.assertTrue(self.page.locator(".empty-state--search").is_hidden())
+
+        self.page.fill("#search-input", "no-such-musician")
+        self.page.wait_for_timeout(150)
+
+        empty_state = self.page.locator(".empty-state--search")
+        self.assertEqual(cards.count(), 0)
+        self.assertFalse(empty_state.is_hidden())
+        self.assertEqual(empty_state.inner_text(), "No results match your search")
+        self.assertEqual(empty_state.get_attribute("role"), "status")
+        self.assertEqual(empty_state.get_attribute("aria-live"), "polite")
+        self.assertTrue(self.page.locator("#imageGallery").is_hidden())
 
         self.page.click("#clear-search")
         self.page.wait_for_timeout(150)
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 3)
+        self.assertTrue(self.page.locator(".empty-state--search").is_hidden())
+        self.assertFalse(self.page.locator("#imageGallery").is_hidden())
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 

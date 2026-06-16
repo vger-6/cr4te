@@ -109,6 +109,15 @@ DEFAULT_PAGE_LABELS = {
     "image_section_default_title": "Images",
 }
 
+DEFAULT_EMPTY_STATE_LABELS = {
+    "no_creators_format": "No {creators} available",
+    "no_projects_format": "No {projects} available",
+    "no_tags_format": "No {tags} available",
+    "no_projects_or_media_format": "No {projects} or media available",
+    "no_search_results": "No results match your search",
+    "no_media": "No media available",
+}
+
 DEFAULT_ACCESSIBILITY_LABELS = {
     "site_logo_overview_label_format": "cr4te {overview} overview",
     "creator_thumbnail_description_format": "Thumbnail for {creator}",
@@ -143,6 +152,7 @@ DEFAULT_SITE_LABELS = {
     "counts": DEFAULT_COUNT_LABELS,
     "controls": DEFAULT_CONTROL_LABELS,
     "pages": DEFAULT_PAGE_LABELS,
+    "empty_states": DEFAULT_EMPTY_STATE_LABELS,
     "accessibility": DEFAULT_ACCESSIBILITY_LABELS,
     "metadata": DEFAULT_METADATA_LABELS,
     "project_facets": get_project_facet_label_defaults(),

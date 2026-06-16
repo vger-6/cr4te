@@ -1,0 +1,5 @@
+{% macro render(message, extra_classes="", hidden=false, live=false) -%}
+<div class="empty-state{% if extra_classes %} {{ extra_classes }}{% endif %}"{% if live %} role="status" aria-live="polite"{% endif %}{% if hidden %} hidden{% endif %}>
+  <p class="empty-state__message">{{ message }}</p>
+</div>
+{%- endmacro %}

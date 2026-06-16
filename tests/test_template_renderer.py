@@ -29,6 +29,8 @@ from cr4te.render_models import (
     MetaEntry,
     NavigationItem,
     PageShellContext,
+    ProjectCardContext,
+    ProjectOverviewEntry,
     ProjectPageContext,
     TagCollection,
     TrackContext,
@@ -93,6 +95,37 @@ def project() -> Project:
         tags={},
         facets={},
         media_groups=[],
+    )
+
+
+def project_card() -> ProjectCardContext:
+    return ProjectCardContext(
+        title="Displayed Landscapes",
+        rel_html_path="html/landscapes.html",
+        rel_thumbnail_path="thumb.jpg",
+        image_wrapper_width=120,
+        image_wrapper_height=80,
+        media_counts=MediaCounts(image=1),
+    )
+
+
+def overview_shell(ctx: HtmlBuildContext, title: str) -> PageShellContext:
+    return PageShellContext(
+        title=title,
+        layout_stylesheet="overview-layout.css",
+        navigation_items=(
+            NavigationItem(
+                ctx.site_labels.entity.creators,
+                "index.html",
+                current=title == ctx.site_labels.entity.creators,
+            ),
+            NavigationItem(
+                ctx.site_labels.entity.projects,
+                "projects.html",
+                current=title == ctx.site_labels.entity.projects,
+            ),
+            NavigationItem(ctx.site_labels.entity.tags, "tags.html", current=title == ctx.site_labels.entity.tags),
+        ),
     )
 
 
@@ -202,6 +235,103 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('aria-label="1 work"', rendered)
             self.assertNotIn('title="1 Work"', rendered)
             self.assertNotIn("creator-text-card", rendered)
+
+    def test_empty_overview_templates_render_static_empty_state_without_search_or_cards(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+
+            creator_rendered = env.get_template("creator_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator_entries=[],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.creators),
+            )
+
+            self.assertIn("No Artists available", creator_rendered)
+            self.assertIn('class="empty-state"', creator_rendered)
+            self.assertNotIn('id="search-input"', creator_rendered)
+            self.assertNotIn('id="imageGallery"', creator_rendered)
+            self.assertNotIn("image-card", creator_rendered)
+
+            project_rendered = env.get_template("project_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                projects=[],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.projects),
+            )
+
+            self.assertIn("No Works available", project_rendered)
+            self.assertIn('class="empty-state"', project_rendered)
+            self.assertNotIn('id="search-input"', project_rendered)
+            self.assertNotIn('id="imageGallery"', project_rendered)
+            self.assertNotIn("image-card", project_rendered)
+
+    def test_populated_overview_templates_render_hidden_dynamic_search_empty_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            creator_entry = CreatorOverviewEntry(
+                name="Displayed Noomi",
+                rel_html_path="html/noomi.html",
+                search_text="displayed noomi",
+                rel_thumbnail_path="thumb.jpg",
+                image_wrapper_width=80,
+                image_wrapper_height=160,
+                project_count=1,
+                media_counts=MediaCounts(image=2),
+                project_count_summary="1 work",
+                media_count_summary="2 images",
+            )
+            project_entry = ProjectOverviewEntry(
+                title="Displayed Landscapes",
+                rel_html_path="html/landscapes.html",
+                rel_thumbnail_path="thumb.jpg",
+                image_wrapper_width=120,
+                image_wrapper_height=80,
+                creator_name="Displayed Noomi",
+                search_text="displayed landscapes",
+                media_counts=MediaCounts(image=1),
+            )
+
+            creator_rendered = env.get_template("creator_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator_entries=[creator_entry],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.creators),
+            )
+            project_rendered = env.get_template("project_overview.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                projects=[project_entry],
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.projects),
+            )
+
+            for rendered in (creator_rendered, project_rendered):
+                with self.subTest():
+                    self.assertIn('id="search-input"', rendered)
+                    self.assertIn('id="imageGallery"', rendered)
+                    self.assertIn(
+                        '<div class="empty-state empty-state--search" role="status" aria-live="polite" hidden>',
+                        rendered,
+                    )
+                    self.assertIn("No results match your search", rendered)
+                    self.assertNotIn("No Artists available", rendered)
+                    self.assertNotIn("No Works available", rendered)
 
     def test_gallery_class_macro_supports_justified_strategy(self):
         macro = env.get_template("partials/_utils.html.j2").module.get_image_gallery_class
@@ -387,13 +517,43 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(page_shell.layout_stylesheet, "overview-layout.css")
             self.assertEqual([item.current for item in page_shell.navigation_items], [False, False, True])
 
+    def test_empty_tags_template_renders_static_empty_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+
+            rendered = env.get_template("tags.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                tags=TagCollection(),
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.tags),
+            )
+
+            self.assertIn("No Tags available", rendered)
+            self.assertIn('class="empty-state"', rendered)
+            self.assertNotIn("tag-list", rendered)
+            self.assertNotIn("tag-category", rendered)
+
     def test_overview_template_renders_registry_stylesheets_and_visible_default_body(self):
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            entry = CreatorOverviewEntry(
+                name="Displayed Noomi",
+                rel_html_path="html/noomi.html",
+                search_text="displayed noomi",
+                rel_thumbnail_path="thumb.jpg",
+                image_wrapper_width=80,
+                image_wrapper_height=160,
+                project_count=1,
+                media_counts=MediaCounts(image=2),
+                project_count_summary="1 work",
+                media_count_summary="2 images",
+            )
             rendered = env.get_template("creator_overview.html.j2").render(
                 site_labels=ctx.site_labels,
                 site_rendering=ctx.site_rendering,
-                creator_entries=[],
+                creator_entries=[entry],
                 gallery_image_max_height=450,
                 ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
                 themes=ctx.themes,
@@ -432,6 +592,126 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('role="menuitemradio"', rendered)
             self.assertNotIn("body { display: none; }", rendered)
 
+    def test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            creator_page = CreatorPageContext(
+                type=CreatorType.PERSON.value,
+                name="Noomi",
+                rel_portrait_path="",
+                portrait_orientation=None,
+                info_html="",
+                tags=TagCollection(),
+                projects=[],
+                media_groups=[],
+                collaborations=[],
+                creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
+                meta_entries=[],
+            )
+            creator_render_data = {
+                "site_labels": ctx.site_labels,
+                "site_rendering": ctx.site_rendering,
+                "project_image_max_height": 450,
+                "gallery_image_max_height": 450,
+                "ImageGalleryBuildingStrategy": ImageGalleryBuildingStrategy,
+                "themes": ctx.themes,
+                "default_theme": ctx.default_theme,
+                "path_to_root": "../",
+                "page_shell": PageShellContext(
+                    title=creator_page.name,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            }
+
+            creator_empty = env.get_template("creator.html.j2").render(
+                creator=creator_page,
+                **creator_render_data,
+            )
+            creator_with_project = env.get_template("creator.html.j2").render(
+                creator=replace(creator_page, projects=[project_card()]),
+                **creator_render_data,
+            )
+            creator_with_empty_collaboration = env.get_template("creator.html.j2").render(
+                creator=replace(
+                    creator_page,
+                    collaborations=[CollaborationProjectsContext(label="Ada", projects=[])],
+                ),
+                **creator_render_data,
+            )
+            empty_media_group = MediaGroupContext(
+                audio_section_title="Audio",
+                image_section_title="Images",
+                sections=[MediaSectionContext(type=MediaType.IMAGE)],
+            )
+            creator_with_empty_media_group = env.get_template("creator.html.j2").render(
+                creator=replace(creator_page, media_groups=[empty_media_group]),
+                **creator_render_data,
+            )
+
+            self.assertIn("No Works or media available", creator_empty)
+            self.assertNotIn("No Works or media available", creator_with_project)
+            self.assertIn("No Works or media available", creator_with_empty_collaboration)
+            self.assertNotIn('<div class="section-title">Works with Ada</div>', creator_with_empty_collaboration)
+            self.assertIn("No Works or media available", creator_with_empty_media_group)
+
+            project_page = ProjectPageContext(
+                title="Landscapes",
+                release_date="",
+                meta_entries=[],
+                rel_thumbnail_path="cover.jpg",
+                thumbnail_orientation=Orientation.LANDSCAPE,
+                info_html="",
+                tags=TagCollection(),
+                media_groups=[],
+                creator=CreatorProfileContext(
+                    name="Displayed Noomi",
+                    rel_html_path="creator.html",
+                    rel_portrait_path="",
+                ),
+            )
+            project_render_data = {
+                "site_labels": ctx.site_labels,
+                "site_rendering": ctx.site_rendering,
+                "gallery_image_max_height": 450,
+                "themes": ctx.themes,
+                "default_theme": ctx.default_theme,
+                "path_to_root": "../",
+                "page_shell": PageShellContext(
+                    title=project_page.title,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            }
+            media_group = MediaGroupContext(
+                audio_section_title="Audio",
+                image_section_title="Images",
+                sections=[
+                    MediaSectionContext(
+                        type=MediaType.AUDIO,
+                        tracks=[TrackContext(rel_path="song.mp3", title="Song", duration_seconds=10)],
+                    )
+                ],
+            )
+
+            project_empty = env.get_template("project.html.j2").render(
+                project=project_page,
+                **project_render_data,
+            )
+            project_with_empty_media_group = env.get_template("project.html.j2").render(
+                project=replace(project_page, media_groups=[empty_media_group]),
+                **project_render_data,
+            )
+            project_with_media = env.get_template("project.html.j2").render(
+                project=replace(project_page, media_groups=[media_group]),
+                **project_render_data,
+            )
+
+            self.assertIn("No media available", project_empty)
+            self.assertIn("No media available", project_with_empty_media_group)
+            self.assertNotIn("No media available", project_with_media)
+            self.assertIn("audio-gallery", project_with_media)
+
     def test_creator_template_resolves_domain_specific_collaboration_title_format(self):
         with tempfile.TemporaryDirectory() as tmp:
             config = apply_cli_overrides(load_config(), domain=Domain.FILM)
@@ -445,7 +725,7 @@ class TemplateRendererTests(unittest.TestCase):
                 tags=TagCollection(),
                 projects=[],
                 media_groups=[],
-                collaborations=[CollaborationProjectsContext(label="Ada", projects=[])],
+                collaborations=[CollaborationProjectsContext(label="Ada", projects=[project_card()])],
                 creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
                 meta_entries=[],
             )

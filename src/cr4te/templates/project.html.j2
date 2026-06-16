@@ -1,5 +1,6 @@
 {% import "partials/_media_sections.html.j2" as media_macros %}
 {% import "partials/_utils.html.j2" as utils %}
+{% import "partials/_empty_state.html.j2" as empty_states %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -112,7 +113,15 @@
 
       <div class="right-column">
 
+      {% if project.has_media %}
       {{ media_macros.render_media_groups(path_to_root, project.media_groups, gallery_image_max_height, site_rendering.project_page.media_gallery_page_size, site_labels) }}
+      {% else %}
+      <div class="section-box">
+        <div class="section-content">
+          {{ empty_states.render(site_labels.empty_states.no_media) }}
+        </div>
+      </div>
+      {% endif %}
 
       </div>
     </div>

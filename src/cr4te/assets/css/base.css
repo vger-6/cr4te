@@ -377,6 +377,15 @@ img {
   padding-bottom: var(--theme-section-content-padding-bottom);
 }
 
+.empty-state {
+  color: var(--theme-text-muted);
+  line-height: 1.4;
+}
+
+.empty-state__message {
+  margin: 0;
+}
+
 .meta-list {
   display: flex;
   flex-direction: column;
