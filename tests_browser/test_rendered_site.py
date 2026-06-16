@@ -327,11 +327,14 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         project_summary_box = self.page.locator("#imageGallery .creator-text-card__project-summary").first.bounding_box()
         media_summary_box = self.page.locator("#imageGallery .creator-text-card__media-summary").first.bounding_box()
         self.assertGreater(media_summary_box["y"], project_summary_box["y"])
+        unfiltered_card_width = cards.first.bounding_box()["width"]
 
         self.page.fill("#search-input", "nia")
         self.page.wait_for_timeout(150)
         self.assertEqual(self.page.locator("#imageGallery .creator-text-card").count(), 1)
         self.assertIn("Nia Solen", self.page.locator("#imageGallery").inner_text())
+        filtered_card_width = self.page.locator("#imageGallery .creator-text-card").first.bounding_box()["width"]
+        self.assertAlmostEqual(filtered_card_width, unfiltered_card_width, delta=1)
 
         self.open_details_page(self.creator_path)
         self.assertGreater(self.page.locator(".info-block__media img[alt^='Portrait of']").count(), 0)
