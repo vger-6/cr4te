@@ -88,6 +88,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-019:** Creator and project media must be presented as folder-derived groups. The actual root group must appear first, groups whose final folder name matches the configured metadata folder must appear second, and remaining groups must follow in lexicographical order by their complete relative folder paths. Within each group, media sections must follow the resolved configured media-type order. Media directly in a creator or project folder and media in its configured metadata folder must use root-group section labels.
 - **SITE-020:** Generated pages must respect reduced-motion preferences by removing nonessential interface transition durations and avoiding smooth programmatic scrolling.
 - **SITE-021:** Generated human-readable phrases that combine dynamic or configurable values must use validated complete named-placeholder label formats where wording or word order may vary. Collaboration project titles, overview search placeholders, site-logo accessible labels, and creator/project image descriptions must not be assembled from hardcoded sentence fragments. Standalone nouns, control names, and count labels must remain ordinary labels.
+- **SITE-022:** Generated pages must apply a previously selected available theme before visible page content is rendered. JavaScript-enhanced image galleries must not expose their unbuilt startup layout during normal JavaScript initialization, while generated pages must retain usable no-JavaScript gallery fallback markup.
 
 ## Themes
 

@@ -730,10 +730,74 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         loading_modes = self.page.evaluate(
             "() => Array.from(document.querySelectorAll('#imageGallery img')).map(img => img.loading)"
         )
+        startup_state = self.page.evaluate(
+            """
+            () => {
+                const gallery = document.querySelector("#imageGallery");
+                return {
+                    ready: gallery.classList.contains("gallery-ready"),
+                    visibility: getComputedStyle(gallery).visibility,
+                };
+            }
+            """
+        )
 
         self.assertIn("lazy", loading_modes)
+        self.assertTrue(startup_state["ready"])
+        self.assertEqual(startup_state["visibility"], "visible")
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
+
+    def test_js_gallery_startup_layout_is_hidden_until_builder_runs(self):
+        self.page.route("**/aspect_gallery_builder.js", lambda route: route.abort())
+        self.page.goto(f"{self.base_url}/site/index.html")
+        self.page.wait_for_load_state("load")
+
+        startup_state = self.page.evaluate(
+            """
+            () => {
+                const gallery = document.querySelector("#imageGallery");
+                return {
+                    jsEnabled: document.documentElement.classList.contains("cr4te-js"),
+                    ready: gallery.classList.contains("gallery-ready"),
+                    visibility: getComputedStyle(gallery).visibility,
+                    wrappers: gallery.querySelectorAll(".image-wrapper").length,
+                };
+            }
+            """
+        )
+
+        self.assertTrue(startup_state["jsEnabled"])
+        self.assertFalse(startup_state["ready"])
+        self.assertEqual(startup_state["visibility"], "hidden")
+        self.assertGreater(startup_state["wrappers"], 0)
+
+    def test_no_javascript_overview_gallery_fallback_remains_visible(self):
+        page = self.browser.new_page(java_script_enabled=False)
+        try:
+            page.goto(f"{self.base_url}/site/index.html")
+            page.wait_for_load_state("load")
+
+            startup_state = page.evaluate(
+                """
+                () => {
+                    const gallery = document.querySelector("#imageGallery");
+                    return {
+                        jsEnabled: document.documentElement.classList.contains("cr4te-js"),
+                        ready: gallery.classList.contains("gallery-ready"),
+                        visibility: getComputedStyle(gallery).visibility,
+                        wrappers: gallery.querySelectorAll(".image-wrapper").length,
+                    };
+                }
+                """
+            )
+
+            self.assertFalse(startup_state["jsEnabled"])
+            self.assertFalse(startup_state["ready"])
+            self.assertEqual(startup_state["visibility"], "visible")
+            self.assertGreater(startup_state["wrappers"], 0)
+        finally:
+            page.close()
 
     def test_aspect_gallery_builder_falls_back_for_malformed_aspect_ratios(self):
         self.open_page("index.html")
@@ -886,9 +950,35 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertTrue(self.page.locator("#theme-panel").is_visible())
         self.page.click("[data-theme='theme-forest-night']")
 
+        root_class = self.page.locator("html").get_attribute("class") or ""
         body_class = self.page.locator("body").get_attribute("class") or ""
+        self.assertIn("theme-forest-night", root_class)
         self.assertIn("theme-forest-night", body_class)
         self.assertFalse(self.page.locator("#theme-panel").is_visible())
+
+    def test_saved_theme_is_applied_before_theme_menu_initializes(self):
+        self.page.add_init_script("localStorage.setItem('cr4te_theme', 'theme-forest-night');")
+        self.page.route("**/theme_selector.js", lambda route: route.abort())
+
+        self.page.goto(f"{self.base_url}/site/index.html")
+        self.page.wait_for_load_state("domcontentloaded")
+
+        theme_state = self.page.evaluate(
+            """
+            () => ({
+                rootClass: document.documentElement.className,
+                bodyClass: document.body.className,
+                resolvedTheme: document.documentElement.dataset.resolvedTheme,
+                bodyBackground: getComputedStyle(document.body).backgroundColor,
+            })
+            """
+        )
+
+        self.assertIn("theme-forest-night", theme_state["rootClass"])
+        self.assertNotIn("theme-frozen-aurora", theme_state["rootClass"])
+        self.assertNotIn("theme-frozen-aurora", theme_state["bodyClass"])
+        self.assertEqual(theme_state["resolvedTheme"], "theme-forest-night")
+        self.assertEqual(theme_state["bodyBackground"], "rgb(13, 27, 30)")
 
     def test_theme_dropdown_supports_keyboard_navigation_and_escape(self):
         self.open_page("index.html")

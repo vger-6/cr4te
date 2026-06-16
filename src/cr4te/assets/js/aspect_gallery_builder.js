@@ -58,6 +58,8 @@
         img.parentNode.replaceChild(aspectBox, img);
         aspectBox.appendChild(img);
       });
+
+      cr4te.galleries.markReady?.(gallery);
     });
   }
 

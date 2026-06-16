@@ -2,9 +2,9 @@
 {% import "partials/_utils.html.j2" as utils %}
 
 <!DOCTYPE html>
-<html lang="en">
+{% include "partials/_document_open.html.j2" %}
 {% include "partials/_document_head.html.j2" %}
-<body class="{{ default_theme.css_class }}" data-default-theme="{{ default_theme.css_class }}">
+<body data-default-theme="{{ default_theme.css_class }}">
 
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}

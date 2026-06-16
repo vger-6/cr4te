@@ -409,7 +409,13 @@ class TemplateRendererTests(unittest.TestCase):
                 ),
             )
 
-            self.assertIn('<body class="theme-frozen-aurora" data-default-theme="theme-frozen-aurora">', rendered)
+            self.assertIn('class="theme-frozen-aurora"', rendered)
+            self.assertIn('data-default-theme="theme-frozen-aurora"', rendered)
+            self.assertIn('data-theme-classes="', rendered)
+            self.assertIn('theme-forest-night', rendered)
+            self.assertIn('theme-mono-terminal', rendered)
+            self.assertIn('<body data-default-theme="theme-frozen-aurora">', rendered)
+            self.assertLess(rendered.index("assets/js/theme_bootstrap.js"), rendered.index("assets/css/tokens.css"))
             self.assertIn('assets/css/themes/frozen-aurora.css', rendered)
             self.assertIn('data-theme="theme-forest-night"', rendered)
             self.assertIn('<nav class="top-link" aria-label="Primary">', rendered)
@@ -476,8 +482,10 @@ class TemplateRendererTests(unittest.TestCase):
         ):
             with self.subTest(template_name=template_name):
                 source = (template_dir / template_name).read_text(encoding="utf-8")
+                self.assertIn('{% include "partials/_document_open.html.j2" %}', source)
                 self.assertIn('{% include "partials/_document_head.html.j2" %}', source)
                 self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
+                self.assertNotIn('<html lang="en">', source)
                 self.assertNotIn('<div class="page-header">', source)
 
     def test_detail_templates_use_shared_metadata_renderer_and_shared_tag_label_style(self):

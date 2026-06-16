@@ -105,7 +105,10 @@
       );
       const galleryWidth = gallery.clientWidth;
 
-      if (!galleryWidth) return;
+      if (!galleryWidth) {
+        cr4te.galleries.markReady?.(gallery);
+        return;
+      }
 
       const items = Array.from(gallery.querySelectorAll('.image-wrapper')).map(wrapper => ({
         wrapper,
@@ -114,6 +117,7 @@
       }));
 
       renderRows(gallery, buildRows(items, galleryWidth, gap, maxHeight), galleryWidth, gap);
+      cr4te.galleries.markReady?.(gallery);
     });
   }
 

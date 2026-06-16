@@ -8,6 +8,12 @@ window.utils = window.cr4te.utils;
 
 window.cr4te.readyCallbacks = window.cr4te.readyCallbacks || [];
 
+window.cr4te.galleries.markReady = function (gallery) {
+  if (!gallery) return;
+
+  gallery.classList.add("gallery-ready");
+};
+
 window.cr4te.onReady = function (callback) {
   if (document.readyState === 'loading') {
     window.cr4te.readyCallbacks.push(callback);

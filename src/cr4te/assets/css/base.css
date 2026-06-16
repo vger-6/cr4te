@@ -24,6 +24,11 @@ html, body {
   overflow: hidden;
 }
 
+.cr4te-js .image-gallery--justified:not(.gallery-ready),
+.cr4te-js .image-gallery--aspect:not(.gallery-ready) {
+  visibility: hidden;
+}
+
 .overview-layout,
 .left-column,
 .right-column,

@@ -2,7 +2,14 @@ const THEME_KEY = "cr4te_theme";
 const cr4te = window.cr4te = window.cr4te || {};
 cr4te.lightbox = cr4te.lightbox || {};
 
+function getThemeRoot() {
+  return document.documentElement;
+}
+
 function getThemeClasses() {
+  const rootThemes = (getThemeRoot().dataset.themeClasses || "").split(/\s+/).filter(Boolean);
+  if (rootThemes.length) return rootThemes;
+
   return [...document.querySelectorAll(".theme-option")]
     .map(el => el.dataset.theme)
     .filter(Boolean);
@@ -10,13 +17,17 @@ function getThemeClasses() {
 
 function applyTheme(theme) {
   const themeClasses = getThemeClasses();
-  const defaultTheme = document.body.dataset.defaultTheme;
+  const defaultTheme = getThemeRoot().dataset.defaultTheme || document.body.dataset.defaultTheme;
   const selectedTheme = themeClasses.includes(theme) ? theme : defaultTheme;
 
-  document.body.classList.remove(...themeClasses);
-  if (selectedTheme) {
-    document.body.classList.add(selectedTheme);
-  }
+  [getThemeRoot(), document.body].forEach(element => {
+    element.classList.remove(...themeClasses);
+    if (selectedTheme) {
+      element.classList.add(selectedTheme);
+    }
+  });
+
+  getThemeRoot().dataset.resolvedTheme = selectedTheme;
 
   // Highlight selected option
   document.querySelectorAll('.theme-option').forEach(el => {
@@ -53,7 +64,7 @@ function refreshThemeSensitiveLayout() {
 }
 
 function initThemeDropdown() {
-  const savedTheme = loadSavedTheme() || document.body.dataset.defaultTheme;
+  const savedTheme = loadSavedTheme() || getThemeRoot().dataset.resolvedTheme || getThemeRoot().dataset.defaultTheme;
   applyTheme(savedTheme);
 
   const toggle = document.getElementById("theme-toggle");
