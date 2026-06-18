@@ -16,7 +16,7 @@ from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.portrait_discovery import PortraitDiscovery
 from .enums.portrait_visibility import PortraitVisibility
 from .enums.domain import Domain
-from .metadata_manager import clean_metadata_files
+from .metadata_manager import delete_metadata_files
 
 # Short flags
 FLAG_INPUT_SHORT = "-i"
@@ -27,7 +27,7 @@ FLAG_INPUT = "--input"
 FLAG_OUTPUT = "--output"
 FLAG_OPEN = "--open"
 FLAG_FORCE = "--force"
-FLAG_CLEAN = "--clean"
+FLAG_CLEAR_THUMBNAIL_CACHE = "--clear-thumbnail-cache"
 FLAG_THEMES_DIR = "--themes-dir"
 
 
@@ -110,7 +110,11 @@ def _file_uri(path: Path) -> str:
 
 
 def _create_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Media Organizer CLI")
+    parser = argparse.ArgumentParser(
+        prog="cr4te",
+        description="Build static sites for personal media libraries.",
+        epilog="Run 'cr4te COMMAND --help' for command-specific options and examples.",
+    )
     
     try:
         __version__ = version("cr4te")
@@ -122,32 +126,76 @@ def _create_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     def _add_config_arguments(p: argparse.ArgumentParser):
-        p.add_argument("--config", help="Path to configuration file (optional)")
-        p.add_argument("--domain", choices=[m.value for m in Domain], help="Apply a domain-specific configuration preset")
-        p.add_argument("--image-sample-strategy", choices=[s.value for s in ImageSampleStrategy], help="Strategy to sample images per folder")
-        p.add_argument("--portrait-discovery", choices=[mode.value for mode in PortraitDiscovery], help="Control portrait discovery")
-        p.add_argument("--portrait-visibility", choices=[mode.value for mode in PortraitVisibility], help="Control where portraits are rendered")
+        p.add_argument("--config", help="Load configuration from FILE before applying CLI overrides", metavar="FILE")
+        p.add_argument(
+            "--domain",
+            choices=[m.value for m in Domain],
+            help="Apply a built-in domain preset after loading configuration",
+        )
+        p.add_argument(
+            "--image-sample-strategy",
+            choices=[s.value for s in ImageSampleStrategy],
+            help="Override gallery sampling: none selects no images, head selects the first images, spread distributes selections, and all selects every image",
+        )
+        p.add_argument(
+            "--portrait-discovery",
+            choices=[mode.value for mode in PortraitDiscovery],
+            help="Override portrait discovery: named uses basename matches; auto also permits orientation fallback",
+        )
+        p.add_argument(
+            "--portrait-visibility",
+            choices=[mode.value for mode in PortraitVisibility],
+            help="Override portrait rendering: disabled hides portraits, details limits them to detail pages, and all includes overview cards",
+        )
 
     # Build subcommand
-    build_parser = subparsers.add_parser("build", help="Scan metadata and build HTML site")
-    build_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, required=True, help="Path to the Creators folder")
-    build_parser.add_argument(FLAG_OUTPUT_SHORT, FLAG_OUTPUT, required=True, help="Path to the HTML output folder")
+    build_parser = subparsers.add_parser(
+        "build",
+        help="Reconcile metadata and build the static site",
+        description="Reconcile library metadata and generate a static HTML site.",
+        epilog="Example: cr4te build -i path/to/library -o path/to/site --domain music",
+    )
+    build_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, required=True, help="Library root containing creator folders")
+    build_parser.add_argument(FLAG_OUTPUT_SHORT, FLAG_OUTPUT, required=True, help="Folder for the generated static site")
     _add_config_arguments(build_parser)
-    build_parser.add_argument(FLAG_OPEN, action="store_true", help="Open index.html after building")
-    build_parser.add_argument(FLAG_FORCE, action="store_true", help="Force delete output folder")
-    build_parser.add_argument(FLAG_CLEAN, action="store_true", help=f"Also delete thumbnails folder (with {FLAG_FORCE})")
-    build_parser.add_argument(FLAG_THEMES_DIR, help="Path to a folder containing custom theme CSS files")
+    build_parser.add_argument(FLAG_OPEN, action="store_true", help="Open index.html after a successful build")
+    build_parser.add_argument(FLAG_FORCE, action="store_true", help="Skip confirmation before replacing existing output")
+    build_parser.add_argument(
+        FLAG_CLEAR_THUMBNAIL_CACHE,
+        action="store_true",
+        help="Remove cached thumbnails before building",
+    )
+    build_parser.add_argument(FLAG_THEMES_DIR, help="Folder containing custom theme CSS files", metavar="DIR")
     build_parser.add_argument("--strict", action="store_true", help="Fail immediately on invalid metadata instead of skipping entries")
+    build_parser.set_defaults(_command_parser=build_parser)
 
     # Print-config
-    print_config_parser = subparsers.add_parser("print-config", help="Print resolved configuration")
+    print_config_parser = subparsers.add_parser(
+        "print-config",
+        help="Print the resolved configuration",
+        description="Print the fully resolved configuration after applying a file, domain preset, and CLI overrides.",
+        epilog="Example: cr4te print-config --domain music",
+    )
     _add_config_arguments(print_config_parser)
+    print_config_parser.set_defaults(_command_parser=print_config_parser)
 
-    # Clean-json
-    clean_parser = subparsers.add_parser("clean-json", help="Delete creator and project cr4te.json metadata files")
-    clean_parser.add_argument(FLAG_INPUT_SHORT, FLAG_INPUT, required=True, help="Path to input folder containing creators")
-    clean_parser.add_argument("--dry-run", action="store_true", help="Show what would be deleted without removing anything")
-    clean_parser.add_argument(FLAG_FORCE, action="store_true", help="Actually delete files instead of showing a preview")
+    # Delete metadata
+    delete_metadata_parser = subparsers.add_parser(
+        "delete-metadata",
+        help="Delete creator and project metadata files",
+        description="Delete cr4te.json metadata files below a library root. This does not delete media files.",
+        epilog="Example: cr4te delete-metadata -i path/to/library --dry-run",
+    )
+    delete_metadata_parser.add_argument(
+        FLAG_INPUT_SHORT,
+        FLAG_INPUT,
+        required=True,
+        help="Library root containing creator folders",
+    )
+    delete_mode = delete_metadata_parser.add_mutually_exclusive_group()
+    delete_mode.add_argument("--dry-run", action="store_true", help="List metadata files that would be deleted")
+    delete_mode.add_argument(FLAG_FORCE, action="store_true", help="Skip deletion confirmation")
+    delete_metadata_parser.set_defaults(_command_parser=delete_metadata_parser)
 
     return parser
     
@@ -166,7 +214,7 @@ def _build_cmd_handler(args) -> int:
     if output_dir.exists():
         msg = (
             f"Output folder '{output_dir}' exists. "
-            f"Delete everything {'INCLUDING thumbnails' if args.clean else 'except thumbnails'}?"
+            f"Replace it and {'clear' if args.clear_thumbnail_cache else 'preserve'} the thumbnail cache?"
         )
         if not _confirm_action(msg, force=args.force):
             logging.info("Aborting.")
@@ -178,7 +226,7 @@ def _build_cmd_handler(args) -> int:
             output_dir=output_dir,
             config=config,
             custom_themes_dir=custom_themes_dir,
-            clear_thumbnails=args.clean,
+            clear_thumbnail_cache=args.clear_thumbnail_cache,
             strict=args.strict,
         )
     )
@@ -198,7 +246,7 @@ def _print_config_cmd_handler(args) -> int:
     return ExitCode.SUCCESS
 
 
-def _clean_json_cmd_handler(args) -> int:
+def _delete_metadata_cmd_handler(args) -> int:
     input_dir = Path(args.input).resolve()
     _validate_input_dir(input_dir)
 
@@ -206,7 +254,7 @@ def _clean_json_cmd_handler(args) -> int:
         logging.info("Aborting.")
         return ExitCode.SUCCESS
 
-    clean_metadata_files(input_dir, dry_run=args.dry_run)
+    delete_metadata_files(input_dir, dry_run=args.dry_run)
     return ExitCode.SUCCESS
 
 
@@ -219,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
     command_map = {
         "build": _build_cmd_handler,
         "print-config": _print_config_cmd_handler,
-        "clean-json": _clean_json_cmd_handler,
+        "delete-metadata": _delete_metadata_cmd_handler,
     }
     
     command_func = command_map.get(args.command)
@@ -233,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
         logging.error(str(exc))
         return ExitCode.BUILD_FAILURE
     except CommandUsageError as exc:
-        parser.error(str(exc))
+        args._command_parser.error(str(exc))
 
 
 if __name__ == "__main__":

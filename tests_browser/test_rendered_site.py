@@ -511,6 +511,14 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertTrue(narrow_landscape_layout)
         self.assertNoBrowserErrors()
 
+    def test_markdown_text_starts_with_compact_top_spacing(self):
+        self.open_page(self.creator_path)
+        first_text_block = self.page.locator(".text-content > :first-child").first
+
+        self.assertGreater(first_text_block.count(), 0)
+        self.assertEqual(first_text_block.evaluate("element => getComputedStyle(element).marginTop"), "8px")
+        self.assertNoBrowserErrors()
+
     def test_image_less_detail_metadata_uses_responsive_equal_columns(self):
         self.open_disabled_portraits_page(self.creator_path)
 

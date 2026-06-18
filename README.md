@@ -78,22 +78,26 @@ Portraits and covers are selected from image filenames. Portrait discovery can u
 cr4te build -i path/to/Creators -o path/to/site
 cr4te build -i path/to/Creators -o path/to/site --domain film
 cr4te build -i path/to/Creators -o path/to/site --strict
-cr4te build -i path/to/Creators -o path/to/site --clean --force
+cr4te build -i path/to/Creators -o path/to/site --clear-thumbnail-cache --force
 cr4te print-config
 cr4te print-config --domain music
-cr4te clean-json -i path/to/Creators --dry-run
-cr4te clean-json -i path/to/Creators --force
+cr4te delete-metadata -i path/to/Creators --dry-run
+cr4te delete-metadata -i path/to/Creators --force
 ```
 
 Useful build options:
 
 - `--config my_config.json`: load a JSON configuration file
 - `--domain art|music|film|book|model|creator`: apply a domain preset
-- `--image-sample-strategy none|spread|head|all`: choose how gallery images are sampled per folder
-- `--portrait-discovery named|auto`: control how portrait images are selected
-- `--portrait-visibility disabled|details|all`: control where portraits are rendered
+- `--image-sample-strategy none|spread|head|all`: select no gallery images, distribute selections, select the first images, or select every image
+- `--portrait-discovery named|auto`: use only configured basename matches, or also permit portrait-oriented fallback images
+- `--portrait-visibility disabled|details|all`: hide portraits, show them only on detail pages, or also show them on overview cards
 - `--strict`: fail fast on invalid metadata instead of skipping invalid entries
 - `--open`: open `index.html` after a successful build
+- `--force`: skip confirmation before replacing an existing output folder
+- `--clear-thumbnail-cache`: remove cached thumbnails before building
+
+Use `delete-metadata --dry-run` to list creator and project `cr4te.json` files before deleting them. `delete-metadata --force` performs the deletion without a confirmation prompt; media files are never removed by this command.
 
 The CLI returns exit status `0` for successful or completed best-effort builds, `1` for build-phase failures, and `2` for invalid arguments, configuration, or paths. Explicit user cancellation is not treated as a build failure.
 

@@ -3,7 +3,7 @@ import json
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -41,6 +41,92 @@ def write_image(path: Path, size: tuple[int, int] = (120, 90)) -> None:
 
 
 class HtmlBuildTests(unittest.TestCase):
+    def test_cli_help_describes_commands_and_destructive_options_precisely(self):
+        parser = _create_parser()
+
+        self.assertEqual(parser.prog, "cr4te")
+        self.assertIn("Build static sites for personal media libraries", parser.format_help())
+        self.assertIn("delete-metadata", parser.format_help())
+        self.assertNotIn("clean-json", parser.format_help())
+
+        build_help = io.StringIO()
+        with redirect_stdout(build_help), self.assertRaises(SystemExit):
+            parser.parse_args(["build", "--help"])
+        self.assertIn("Reconcile library metadata and generate a static HTML site", build_help.getvalue())
+        self.assertIn("--clear-thumbnail-cache", build_help.getvalue())
+        self.assertIn("Remove cached thumbnails before building", build_help.getvalue())
+        self.assertNotIn("--clean", build_help.getvalue())
+
+        delete_help = io.StringIO()
+        with redirect_stdout(delete_help), self.assertRaises(SystemExit):
+            parser.parse_args(["delete-metadata", "--help"])
+        self.assertIn("does not delete media files", " ".join(delete_help.getvalue().split()))
+        self.assertIn("Skip deletion confirmation", delete_help.getvalue())
+
+    def test_cli_accepts_revised_destructive_names_and_rejects_removed_names(self):
+        parser = _create_parser()
+        build_args = parser.parse_args([
+            "build",
+            "--input",
+            "library",
+            "--output",
+            "site",
+            "--clear-thumbnail-cache",
+        ])
+        delete_args = parser.parse_args(["delete-metadata", "--input", "library", "--dry-run"])
+
+        self.assertTrue(build_args.clear_thumbnail_cache)
+        self.assertEqual(delete_args.command, "delete-metadata")
+        for argv in (
+            ["build", "--input", "library", "--output", "site", "--clean"],
+            ["clean-json", "--input", "library", "--dry-run"],
+            ["delete-metadata", "--input", "library", "--dry-run", "--force"],
+        ):
+            with self.subTest(argv=argv), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                parser.parse_args(argv)
+
+    def test_delete_metadata_command_previews_then_deletes_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            metadata_path = root / "Noomi" / "cr4te.json"
+            metadata_path.parent.mkdir(parents=True)
+            write_json(metadata_path, {})
+
+            self.assertEqual(main(["delete-metadata", "--input", str(root), "--dry-run"]), ExitCode.SUCCESS)
+            self.assertTrue(metadata_path.exists())
+
+            self.assertEqual(main(["delete-metadata", "--input", str(root), "--force"]), ExitCode.SUCCESS)
+            self.assertFalse(metadata_path.exists())
+
+    def test_build_clear_thumbnail_cache_flag_controls_cached_thumbnail_reuse(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "Artists"
+            root.mkdir()
+
+            for clear_thumbnail_cache in (False, True):
+                with self.subTest(clear_thumbnail_cache=clear_thumbnail_cache):
+                    output_dir = Path(tmp) / f"site-{clear_thumbnail_cache}"
+                    cached_thumbnail = output_dir / "thumbnails" / "cached.png"
+                    cached_thumbnail.parent.mkdir(parents=True)
+                    cached_thumbnail.write_bytes(b"cached")
+
+                    _build_cmd_handler(SimpleNamespace(
+                        config=None,
+                        input=str(root),
+                        output=str(output_dir),
+                        domain=Domain.ART.value,
+                        image_sample_strategy=None,
+                        portrait_discovery=None,
+                        portrait_visibility=None,
+                        open=False,
+                        force=True,
+                        clear_thumbnail_cache=clear_thumbnail_cache,
+                        strict=True,
+                        themes_dir=None,
+                    ))
+
+                    self.assertEqual(cached_thumbnail.exists(), not clear_thumbnail_cache)
+
     def test_cli_accepts_portrait_overrides_and_rejects_removed_portrait_options(self):
         parser = _create_parser()
         args = parser.parse_args([
@@ -89,7 +175,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=True,
             ))
 
@@ -130,7 +216,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=True,
             ))
 
@@ -157,7 +243,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=True,
             )
 
@@ -191,7 +277,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=False,
                 themes_dir=str(themes_dir),
             )
@@ -238,7 +324,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=False,
                 themes_dir=None,
             )
@@ -269,7 +355,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=False,
                 themes_dir=str(missing_themes_dir),
             )
@@ -319,10 +405,13 @@ class HtmlBuildTests(unittest.TestCase):
     def test_main_uses_usage_exit_for_invalid_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             missing_input = Path(tmp) / "missing"
-            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit) as caught:
+            stderr = io.StringIO()
+            with redirect_stderr(stderr), self.assertRaises(SystemExit) as caught:
                 main(["build", "-i", str(missing_input), "-o", str(Path(tmp) / "site"), "--force"])
 
         self.assertEqual(caught.exception.code, 2)
+        self.assertIn("usage: cr4te build", stderr.getvalue())
+        self.assertNotIn("{build,print-config,delete-metadata}", stderr.getvalue())
 
     def test_build_command_treats_user_cancellation_as_success(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -340,7 +429,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=False,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=False,
                 themes_dir=None,
             )
@@ -371,7 +460,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=True,
             ))
 
@@ -415,7 +504,7 @@ class HtmlBuildTests(unittest.TestCase):
                 portrait_visibility=None,
                 open=False,
                 force=True,
-                clean=False,
+                clear_thumbnail_cache=False,
                 strict=True,
             ))
 

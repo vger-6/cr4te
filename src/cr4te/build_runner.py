@@ -49,7 +49,7 @@ class BuildRequest:
     output_dir: Path
     config: AppConfig
     custom_themes_dir: Path | None = None
-    clear_thumbnails: bool = False
+    clear_thumbnail_cache: bool = False
     strict: bool = False
 
 
@@ -73,7 +73,7 @@ def _run_phase(phase: BuildPhase, action: Callable[[], PhaseResult]) -> tuple[Ph
 
 def _prepare_output(request: BuildRequest) -> None:
     if request.output_dir.exists():
-        clear_output_folder(request.output_dir, request.clear_thumbnails)
+        clear_output_folder(request.output_dir, request.clear_thumbnail_cache)
     else:
         request.output_dir.mkdir(parents=True, exist_ok=True)
 

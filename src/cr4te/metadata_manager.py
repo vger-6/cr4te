@@ -27,7 +27,7 @@ from .utils import text_utils
 
 __all__ = [
     "MetadataWriteResult",
-    "clean_metadata_files",
+    "delete_metadata_files",
     "reconcile_metadata_files",
 ]
 
@@ -286,7 +286,7 @@ def _write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(rendered + "\n", encoding="utf-8")
 
 
-def clean_metadata_files(input_dir: Path, dry_run: bool = False) -> None:
+def delete_metadata_files(input_dir: Path, dry_run: bool = False) -> None:
     metadata_files = sorted(path for path in input_dir.rglob(CR4TE_JSON_FILE_NAME) if path.is_file())
 
     for json_path in metadata_files:

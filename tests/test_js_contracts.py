@@ -271,6 +271,14 @@ class JavaScriptContractTests(unittest.TestCase):
 
         self.assertNotIn("--layout-mobile-breakpoint:", tokens)
 
+    def test_text_content_uses_compact_first_block_spacing(self):
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        self.assertRegex(
+            base,
+            r"\.text-content\s*>\s*:first-child\s*\{[^}]*margin-top:\s*var\(--space-sm\)",
+        )
+
     def test_css_transitions_use_shared_motion_tokens_and_explicit_properties(self):
         source = read_all(sorted(ASSET_CSS_DIR.glob("*.css")))
 

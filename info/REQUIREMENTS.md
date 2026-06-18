@@ -43,6 +43,12 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **BUILD-008:** Expected operational failures during a build phase must report the failed phase and return exit status `1`. Invalid command arguments, configuration, or paths must return exit status `2`. Successful builds, completed best-effort builds, and explicit user cancellation must return exit status `0`.
 - **BUILD-009:** Metadata reconciliation skips must retain structured issue reasons and participate in final build reporting. Issues repeated by later build phases with the same scope, issue code, and path must appear only once.
 
+## Command-Line Interface
+
+- **CLI-001:** The command-line interface must expose `build`, `print-config`, and `delete-metadata` as its top-level commands. `delete-metadata` must recursively target creator and project `cr4te.json` files while preserving all media files.
+- **CLI-002:** `--force` must consistently skip the confirmation prompt for the command that receives it. `build --clear-thumbnail-cache` must remove cached thumbnails before rebuilding, while `delete-metadata --dry-run` must list deletion candidates without removing them. Metadata dry-run and forced deletion modes must be mutually exclusive.
+- **CLI-003:** Top-level and command-specific help must describe command purpose, option behavior, constrained values, and representative examples. Usage errors discovered after argument parsing must display usage for the active command.
+
 ## Asset Staging And Failure Handling
 
 - **ASSET-001:** Best-effort builds must continue after recoverable asset failures without generating known-broken references.

@@ -31,9 +31,9 @@ def copy_static_assets(ctx: HtmlBuildContext) -> None:
         shutil.copy2(theme.source_path, ctx.themes_dir / theme.output_filename)
 
 
-def clear_output_folder(output_dir: Path, clear_thumbnails: bool) -> None:
+def clear_output_folder(output_dir: Path, clear_thumbnail_cache: bool) -> None:
     for item in output_dir.iterdir():
-        if clear_thumbnails or item.name != OUTPUT_THUMBNAILS_DIRNAME:
+        if clear_thumbnail_cache or item.name != OUTPUT_THUMBNAILS_DIRNAME:
             if item.is_dir():
                 shutil.rmtree(item)
             else:

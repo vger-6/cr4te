@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.build_issues import IssueCode, IssueScope
 from cr4te.enums.domain import Domain
-from cr4te.metadata_manager import clean_metadata_files, reconcile_metadata_files
+from cr4te.metadata_manager import delete_metadata_files, reconcile_metadata_files
 
 
 def write_image(path: Path) -> None:
@@ -260,7 +260,7 @@ class MetadataManagerTests(unittest.TestCase):
                 "Metadata summary: created=0, updated=0, unchanged=0, skipped=1",
             )
 
-    def test_clean_metadata_files_recurses_through_projects(self):
+    def test_delete_metadata_files_recurses_through_projects(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "Artists"
             creator_meta = root / "Noomi" / "cr4te.json"
@@ -268,11 +268,11 @@ class MetadataManagerTests(unittest.TestCase):
             write_json(creator_meta, {})
             write_json(project_meta, {})
 
-            clean_metadata_files(root, dry_run=True)
+            delete_metadata_files(root, dry_run=True)
             self.assertTrue(creator_meta.exists())
             self.assertTrue(project_meta.exists())
 
-            clean_metadata_files(root)
+            delete_metadata_files(root)
             self.assertFalse(creator_meta.exists())
             self.assertFalse(project_meta.exists())
 
