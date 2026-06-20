@@ -72,6 +72,7 @@ class NavigationItem:
     label: str
     href: str
     current: bool = False
+    starts_section: bool = False
 
 
 @dataclass(frozen=True)

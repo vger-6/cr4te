@@ -139,7 +139,11 @@ def render_project_page(
     path_to_root = build_path_to_root(page_path, ctx.output_dir)
     creator_base = page_context.creator or page_context.collaboration
     extra_navigation_items = (
-        NavigationItem(creator_base.name, f"{path_to_root}{creator_base.rel_html_path}"),
+        NavigationItem(
+            creator_base.name,
+            f"{path_to_root}{creator_base.rel_html_path}",
+            starts_section=True,
+        ),
     ) if creator_base else ()
     template = env.get_template("project.html.j2")
     rendered = template.render(

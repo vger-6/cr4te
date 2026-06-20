@@ -486,12 +486,12 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(page_shell.title, "Landscapes")
             self.assertEqual(page_shell.layout_stylesheet, "two-column-layout.css")
             self.assertEqual(
-                [(item.label, item.href, item.current) for item in page_shell.navigation_items],
+                [(item.label, item.href, item.current, item.starts_section) for item in page_shell.navigation_items],
                 [
-                    (ctx.site_labels.entity.creators, "../../../index.html", False),
-                    (ctx.site_labels.entity.projects, "../../../projects.html", False),
-                    (ctx.site_labels.entity.tags, "../../../tags.html", False),
-                    ("Displayed Noomi", "../../../creator.html", False),
+                    (ctx.site_labels.entity.creators, "../../../index.html", False, False),
+                    (ctx.site_labels.entity.projects, "../../../projects.html", False, False),
+                    (ctx.site_labels.entity.tags, "../../../tags.html", False, False),
+                    ("Displayed Noomi", "../../../creator.html", False, True),
                 ],
             )
             self.assertEqual(fake_env.calls[0][1]["default_theme"].id, "frozen-aurora")
@@ -586,11 +586,42 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('href="index.html"\n       aria-label="cr4te Artists overview"', rendered)
             self.assertIn('src="assets/favicon.svg"\n           alt=""\n           width="24"\n           height="24"', rendered)
             self.assertIn('<span class="nav-current" aria-current="page">Artists</span>', rendered)
+            self.assertNotIn('class="breadcrumb-section"', rendered)
+            self.assertNotIn("<h1", rendered)
             self.assertIn('<button type="button" id="clear-search"', rendered)
             self.assertIn('placeholder="Search Artists, Works, Tags..."', rendered)
             self.assertIn('aria-haspopup="menu"', rendered)
             self.assertIn('role="menuitemradio"', rendered)
             self.assertNotIn("body { display: none; }", rendered)
+
+    def test_detail_header_renders_context_and_title_as_separate_breadcrumb_section(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            rendered = env.get_template("partials/_page_header.html.j2").render(
+                site_labels=ctx.site_labels,
+                themes=ctx.themes,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title="Displayed Landscapes",
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(
+                        NavigationItem(ctx.site_labels.entity.creators, "../index.html"),
+                        NavigationItem(ctx.site_labels.entity.projects, "../projects.html"),
+                        NavigationItem(ctx.site_labels.entity.tags, "../tags.html"),
+                        NavigationItem("Displayed Noomi", "creator.html", starts_section=True),
+                    ),
+                ),
+            )
+
+            self.assertIn('class="breadcrumb-section"', rendered)
+            self.assertIn('class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>', rendered)
+            self.assertIn('<a href="creator.html">Displayed Noomi</a>', rendered)
+            self.assertIn(
+                '<span class="nav-current nav-page-title" aria-current="page" '
+                'title="Displayed Landscapes">Displayed Landscapes</span>',
+                rendered,
+            )
+            self.assertNotIn("<h1", rendered)
 
     def test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
