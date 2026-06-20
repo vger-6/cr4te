@@ -17,10 +17,11 @@
   --scrollbar-border-width: 3px;
 
   /* Layout and component tokens */
-  --layout-body-padding: var(--space-md);
-  --layout-body-padding-inline: var(--space-md);
-  --layout-two-column-gap: var(--space-md);
-  --layout-section-gap: 2.5rem;
+  --layout-body-padding-top: var(--space-sm);
+  --layout-body-padding-bottom: var(--space-sm);
+  --layout-body-padding-inline: var(--space-sm);
+  --layout-two-column-gap: var(--space-sm);
+  --layout-section-gap: 2rem;
 
   --type-h1-size: 1.6rem;
   --type-h2-size: 1.4rem;
@@ -67,6 +68,7 @@
   --theme-link-visited: var(--theme-accent-visited);
   --theme-link-hover: var(--theme-accent-hover);
   --theme-link-disabled: var(--theme-accent-muted);
+  --theme-breadcrumb-separator: var(--theme-text-muted);
   --theme-data-label-text: var(--theme-text-muted);
 
   --theme-title-bg: var(--theme-surface-raised-bg);
@@ -90,8 +92,8 @@
   --theme-overview-padding-left: 0;
   --theme-overview-padding-right: 0;
   --theme-overview-bg: transparent;
-  --theme-overview-border: transparent;
-  --theme-overview-border-width: 0;
+  --theme-overview-border: var(--theme-panel-border);
+  --theme-overview-border-width: var(--theme-panel-border-width);
   --theme-overview-radius: 0;
 
   --theme-layout-column-padding-top: 0;
@@ -99,8 +101,8 @@
   --theme-layout-column-padding-left: 0;
   --theme-layout-column-padding-right: 0;
   --theme-layout-column-bg: transparent;
-  --theme-layout-column-border: transparent;
-  --theme-layout-column-border-width: 0;
+  --theme-layout-column-border: var(--theme-panel-border);
+  --theme-layout-column-border-width: var(--theme-panel-border-width);
   --theme-layout-column-radius: 0;
 
   --theme-section-bg: var(--theme-surface-bg);

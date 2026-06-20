@@ -616,6 +616,139 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAlmostEqual(centers["logo"], centers["theme"], delta=0.25)
         self.assertNoBrowserErrors()
 
+    def test_detail_breadcrumb_wraps_without_moving_primary_header_controls(self):
+        self.open_page(self.audio_project_path)
+
+        self.assertEqual(self.page.locator(".page-container > h1").count(), 0)
+        self.assertEqual(self.page.locator(".breadcrumb-section .nav-page-title").count(), 1)
+        self.assertEqual(
+            self.page.locator(".breadcrumb-section > .breadcrumb-separator--section").all_inner_texts(),
+            ["|", "|"],
+        )
+
+        colors = self.page.evaluate(
+            """
+            () => {
+                const resolveColor = value => {
+                    const probe = document.createElement('span');
+                    probe.style.color = value;
+                    document.body.appendChild(probe);
+                    const color = getComputedStyle(probe).color;
+                    probe.remove();
+                    return color;
+                };
+                return {
+                    current: getComputedStyle(document.querySelector('.nav-page-title')).color,
+                    expectedCurrent: resolveColor('var(--theme-text-strong)'),
+                    separator: getComputedStyle(document.querySelector('.breadcrumb-separator')).color,
+                    expectedSeparator: resolveColor('var(--theme-breadcrumb-separator)'),
+                    separatorWeight: getComputedStyle(document.querySelector('.breadcrumb-separator')).fontWeight,
+                };
+            }
+            """
+        )
+        self.assertEqual(colors["current"], colors["expectedCurrent"])
+        self.assertEqual(colors["separator"], colors["expectedSeparator"])
+        self.assertNotEqual(colors["current"], colors["separator"])
+        self.assertEqual(colors["separatorWeight"], "700")
+
+        self.page.set_viewport_size({"width": 640, "height": 900})
+        narrow = self.page.evaluate(
+            """
+            () => {
+                const rect = selector => document.querySelector(selector).getBoundingClientRect();
+                const logo = rect('.site-logo-link');
+                const primary = rect('.breadcrumb-list');
+                const theme = rect('#theme-toggle');
+                const section = rect('.breadcrumb-section');
+                const centers = [logo, primary, theme].map(box => box.top + box.height / 2);
+                return {
+                    firstRowCenterSpread: Math.max(...centers) - Math.min(...centers),
+                    firstRowBottom: Math.max(logo.bottom, primary.bottom, theme.bottom),
+                    sectionTop: section.top,
+                    leadingSeparatorDisplay: getComputedStyle(
+                        document.querySelector('.breadcrumb-section > .breadcrumb-separator:first-child')
+                    ).display,
+                };
+            }
+            """
+        )
+        self.assertLessEqual(narrow["firstRowCenterSpread"], 0.5)
+        self.assertGreater(narrow["sectionTop"], narrow["firstRowBottom"])
+        self.assertEqual(narrow["leadingSeparatorDisplay"], "none")
+        self.assertNoBrowserErrors()
+
+    def test_page_spacing_and_panel_borders_follow_layout_and_theme_tokens(self):
+        self.open_page("index.html")
+
+        overview = self.page.evaluate(
+            """
+            () => {
+                const body = getComputedStyle(document.body);
+                const nav = document.querySelector('.top-link').getBoundingClientRect();
+                const search = document.querySelector('.search-bar-wrapper').getBoundingClientRect();
+                const panel = document.querySelector('.overview-layout').getBoundingClientRect();
+                const panelStyle = getComputedStyle(document.querySelector('.overview-layout'));
+                return {
+                    bodyPadding: [body.paddingTop, body.paddingRight, body.paddingBottom, body.paddingLeft],
+                    navGap: search.top - nav.bottom,
+                    searchPanelGap: panel.top - search.bottom,
+                    bottomGap: innerHeight - panel.bottom,
+                    borderWidth: panelStyle.borderTopWidth,
+                    borderColor: panelStyle.borderTopColor,
+                };
+            }
+            """
+        )
+        self.assertEqual(overview["bodyPadding"], ["8px", "8px", "8px", "8px"])
+        self.assertAlmostEqual(overview["navGap"], 8, delta=0.25)
+        self.assertAlmostEqual(overview["searchPanelGap"], 8, delta=0.25)
+        self.assertAlmostEqual(overview["bottomGap"], 8, delta=0.25)
+        self.assertEqual(overview["borderWidth"], "1px")
+        self.assertEqual(overview["borderColor"], "rgb(85, 188, 215)")
+
+        self.page.get_by_role("button", name="Themes").click()
+        self.page.get_by_role("menuitemradio", name="Forest Night").click()
+        self.assertEqual(
+            self.page.locator(".overview-layout").evaluate("element => getComputedStyle(element).borderTopColor"),
+            "rgb(63, 107, 102)",
+        )
+
+        self.open_page(self.creator_path)
+        detail = self.page.evaluate(
+            """
+            () => {
+                const nav = document.querySelector('.top-link').getBoundingClientRect();
+                const layout = document.querySelector('.two-column-layout').getBoundingClientRect();
+                const left = document.querySelector('.left-column').getBoundingClientRect();
+                const right = document.querySelector('.right-column').getBoundingClientRect();
+                const leftStyle = getComputedStyle(document.querySelector('.left-column'));
+                const rightStyle = getComputedStyle(document.querySelector('.right-column'));
+                return {
+                    navGap: layout.top - nav.bottom,
+                    paneGap: right.left - left.right,
+                    leftGap: layout.left,
+                    rightGap: innerWidth - layout.right,
+                    bottomGap: innerHeight - layout.bottom,
+                    borders: [
+                        [leftStyle.borderTopWidth, leftStyle.borderTopColor],
+                        [rightStyle.borderTopWidth, rightStyle.borderTopColor],
+                    ],
+                };
+            }
+            """
+        )
+        self.assertAlmostEqual(detail["navGap"], 8, delta=0.25)
+        self.assertAlmostEqual(detail["paneGap"], 8, delta=0.25)
+        self.assertAlmostEqual(detail["leftGap"], 8, delta=0.25)
+        self.assertAlmostEqual(detail["rightGap"], 8, delta=0.25)
+        self.assertAlmostEqual(detail["bottomGap"], 8, delta=0.25)
+        self.assertEqual(
+            detail["borders"],
+            [["1px", "rgb(63, 107, 102)"], ["1px", "rgb(63, 107, 102)"]],
+        )
+        self.assertNoBrowserErrors()
+
     def test_search_clear_button_works_from_keyboard(self):
         self.open_page("index.html")
         self.page.fill("#search-input", "nia")
@@ -1623,7 +1756,6 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                             const left = document.querySelector('.left-column');
                             const right = document.querySelector('.right-column');
                             const layoutRect = layout.getBoundingClientRect();
-                            const contentRect = content.getBoundingClientRect();
                             const leftRect = left.getBoundingClientRect();
                             const rightRect = right.getBoundingClientRect();
                             return {
@@ -1634,7 +1766,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                                 leftHeight: leftRect.height,
                                 rightHeight: rightRect.height,
                                 leftBeforeRight: leftRect.bottom <= rightRect.top,
-                                outerBottomSpace: layoutRect.bottom - contentRect.bottom,
+                                viewportBottomSpace: innerHeight - layoutRect.bottom,
                                 innerBottomPadding: parseFloat(getComputedStyle(content).paddingBottom),
                             };
                         }
@@ -1648,7 +1780,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                     self.assertGreater(mobile_layout["leftHeight"], 0)
                     self.assertGreater(mobile_layout["rightHeight"], 0)
                     self.assertTrue(mobile_layout["leftBeforeRight"])
-                    self.assertGreater(mobile_layout["outerBottomSpace"], 0)
+                    self.assertAlmostEqual(mobile_layout["viewportBottomSpace"], 8, delta=0.25)
                     self.assertGreater(mobile_layout["innerBottomPadding"], 0)
 
                     page.set_viewport_size({"width": 1280, "height": 900})

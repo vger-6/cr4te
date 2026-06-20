@@ -6,7 +6,6 @@
   padding-left: var(--theme-overview-padding-left);
   padding-right: var(--theme-overview-padding-right);
   border-radius: var(--theme-overview-radius);
-  margin-bottom: 2rem;
   background-color: var(--theme-overview-bg);
   border: var(--theme-overview-border-width) solid var(--theme-overview-border);
 }

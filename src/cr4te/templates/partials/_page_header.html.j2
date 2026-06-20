@@ -9,8 +9,11 @@
            width="24"
            height="24">
     </a>
+    {% set current_navigation_items = page_shell.navigation_items | selectattr('current') | list %}
+    {% set primary_navigation_items = page_shell.navigation_items | rejectattr('starts_section') | list %}
+    {% set section_navigation_items = page_shell.navigation_items | selectattr('starts_section') | list %}
     <div class="breadcrumb-list">
-      {% for item in page_shell.navigation_items %}
+      {% for item in primary_navigation_items %}
         {% if not loop.first %}<span class="breadcrumb-separator" aria-hidden="true">&middot;</span>{% endif %}
         {% if item.current %}
           <span class="nav-current" aria-current="page">{{ item.label }}</span>
@@ -19,8 +22,23 @@
         {% endif %}
       {% endfor %}
     </div>
+    {% if section_navigation_items or not current_navigation_items %}
+    <span class="breadcrumb-section">
+      <span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>
+      {% for item in section_navigation_items %}
+        {% if not loop.first %}<span class="breadcrumb-separator" aria-hidden="true">&middot;</span>{% endif %}
+        {% if item.current %}
+          <span class="nav-current" aria-current="page">{{ item.label }}</span>
+        {% else %}
+          <a href="{{ item.href }}">{{ item.label }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if not current_navigation_items %}
+        {% if section_navigation_items %}<span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>{% endif %}
+      <span class="nav-current nav-page-title" aria-current="page" title="{{ page_shell.title }}">{{ page_shell.title }}</span>
+      {% endif %}
+    </span>
+    {% endif %}
     {% include "partials/_theme_dropdown.html.j2" %}
   </nav>
-
-  <h1>{{ page_shell.title }}</h1>
 </div>

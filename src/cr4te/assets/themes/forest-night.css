@@ -46,19 +46,19 @@
   --theme-overview-padding-bottom: 1rem;
   --theme-overview-padding-left: 1rem;
   --theme-overview-padding-right: 1rem;
-  --theme-overview-radius: 0.5rem;
+  --theme-overview-radius: 0;
   --theme-overview-bg: #1c3a3e;
-  --theme-overview-border: transparent;
-  --theme-overview-border-width: 0;
+  --theme-overview-border: var(--theme-panel-border);
+  --theme-overview-border-width: var(--theme-panel-border-width);
 
   --theme-layout-column-padding-top: 1rem;
   --theme-layout-column-padding-bottom: 1rem;
   --theme-layout-column-padding-left: 1rem;
   --theme-layout-column-padding-right: 1rem;
-  --theme-layout-column-radius: 0.5rem;
+  --theme-layout-column-radius: 0;
   --theme-layout-column-bg: #1c3a3e;
-  --theme-layout-column-border: transparent;
-  --theme-layout-column-border-width: 0;
+  --theme-layout-column-border: var(--theme-panel-border);
+  --theme-layout-column-border-width: var(--theme-panel-border-width);
 
   --theme-section-bg: #1c3a3e;
   --theme-section-border: #3f6b66;
