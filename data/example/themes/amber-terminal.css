@@ -66,8 +66,6 @@
   --theme-overview-border-width: var(--theme-terminal-line-width);
   --theme-overview-radius: 0;
 
-  --theme-layout-column-padding-top: 1rem;
-  --theme-layout-column-padding-bottom: 1rem;
   --theme-layout-column-padding-left: 1rem;
   --theme-layout-column-padding-right: 1rem;
   --theme-layout-column-bg: transparent;
@@ -86,7 +84,6 @@
   --theme-section-title-padding-bottom: 0.1rem;
   --theme-section-title-padding-left: 0;
   --theme-section-title-padding-right: 0;
-  --theme-section-content-padding-top: 1rem;
   --theme-section-content-padding-bottom: 0rem;
   --theme-section-content-padding-left: 0;
   --theme-section-content-padding-right: 0;

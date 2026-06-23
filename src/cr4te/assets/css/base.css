@@ -15,6 +15,8 @@ body {
   color: var(--theme-text);
   box-sizing: border-box;
   font-family: var(--theme-font-family);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
   margin: 0;
   padding: var(--layout-body-padding-top) var(--layout-body-padding-inline) var(--layout-body-padding-bottom);
   background-color: var(--theme-page-bg);
@@ -82,15 +84,22 @@ html, body {
   overflow: hidden;
 }
 
-h1 {
-  font-size: var(--type-h1-size);
+.page-title {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--layout-title-search-height);
+  display: flex;
+  align-items: center;
+  font-size: var(--type-page-title-size);
+  line-height: var(--type-heading-line-height);
   font-weight: bold;
   color: var(--theme-title-text);
   background-color: var(--theme-title-bg);
   border: var(--theme-title-border-width) solid var(--theme-title-border);
-  padding: 0.5rem 1rem;
-  margin-bottom: 1rem;
+  padding: var(--space-xs) var(--space-md);
+  margin: 0 0 var(--space-sm);
   border-radius: var(--theme-title-radius);
+  overflow-wrap: anywhere;
 }
 
 .top-link {
@@ -139,12 +148,6 @@ h1 {
   min-width: 0;
 }
 
-.nav-page-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .theme-dropdown-container {
   flex: 0 0 auto;
   margin-left: auto;
@@ -168,42 +171,42 @@ h1 {
   }
 }
 
-.markdown h1, .markdown h2 {
-  margin-top: 1rem;
+.markdown :is(h1, h2, h3, h4, h5, h6) {
+  font-size: var(--type-markdown-heading-size);
+  line-height: var(--type-body-line-height);
+  margin: var(--space-md) 0 var(--space-sm);
   color: var(--theme-text);
-  background-color: initial;
-  padding: initial;
-  margin-bottom: initial;
-  border-radius: initial;
-  border: initial;
 }
 
 .markdown h1 {
-  font-size: var(--type-h3-size);
+  font-weight: 700;
+  font-style: normal;
 }
 
 .markdown h2 {
-  font-size: var(--type-h4-size);
+  font-weight: 600;
+  font-style: normal;
 }
 
 .markdown h3 {
-  font-size: var(--type-h5-size);
+  font-weight: 700;
+  font-style: italic;
 }
 
 .markdown h4 {
-  font-size: var(--type-h6-size);
-  font-weight: bold;
+  font-weight: 600;
+  font-style: italic;
 }
 
 .markdown h5 {
-  font-size: var(--type-h6-size);
-  font-weight: bold;
+  font-weight: 400;
   font-style: italic;
 }
 
 .markdown h6 {
-  font-size: var(--type-h6-size);
+  font-weight: 400;
   font-style: italic;
+  color: var(--theme-text-muted);
 }
 
 .markdown ul {
@@ -380,7 +383,8 @@ img {
   padding-left: var(--theme-section-title-padding-left);
   padding-right: var(--theme-section-title-padding-right);
   font-weight: bold;
-  font-size: var(--type-h2-size);
+  font-size: var(--type-section-title-size);
+  line-height: var(--type-heading-line-height);
   display: flex;
   align-items: center;
 }
@@ -413,6 +417,12 @@ img {
   padding-left: var(--theme-section-content-padding-left);
   padding-right: var(--theme-section-content-padding-right);
   padding-bottom: var(--theme-section-content-padding-bottom);
+}
+
+.section-content--document {
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
 }
 
 .empty-state {
@@ -450,25 +460,32 @@ img {
 }
 
 .text-content {
-  padding-top: 0rem;
   padding-bottom: 0rem;
   text-align: justify;
-  line-height: 1.3;
+  line-height: var(--type-prose-line-height);
 }
 
 .text-content > :first-child {
-  margin-top: var(--space-sm);
+  margin-top: 0;
+}
+
+.text-content > :last-child {
+  margin-bottom: 0;
 }
 
 .image-gallery--justified {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--layout-gallery-gap);
 }
 
 .image-gallery--aspect {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--layout-gallery-gap);
+}
+
+.card-gallery {
+  gap: var(--layout-card-gap);
 }
 
 .image-gallery--aspect .aspect-ratio-box {
@@ -489,7 +506,7 @@ img {
 
 .image-row {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--layout-gallery-gap);
   width: 100%;
 }
 
@@ -508,8 +525,8 @@ img {
 }
 
 .image-caption {
-  margin-top: 0.5rem;
-  margin-left: 0.5rem;
+  margin-top: var(--space-xs);
+  margin-left: 0;
   display: block;
 }
 
@@ -541,7 +558,7 @@ img {
 
 .image-card {
   background: var(--theme-card-bg);
-  padding-bottom: 0.5rem;
+  padding-bottom: var(--space-xs);
   border: var(--theme-card-border-width) solid var(--theme-card-border);
   border-radius: var(--theme-card-radius);
   box-shadow: var(--theme-card-shadow);
@@ -557,7 +574,7 @@ img {
   width: 100%;
   margin-top: 0;
   margin-left: 0;
-  padding-top: 0.5rem;
+  padding-top: var(--space-xs);
   padding-left: 0.5rem;
   border-top: var(--theme-card-separator-width) solid var(--theme-card-separator);
   color: var(--theme-card-caption);
@@ -599,7 +616,7 @@ a:focus img {
 .creator-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-  gap: var(--space-md);
+  gap: var(--layout-card-gap);
 }
 
 .creator-text-card {
@@ -615,7 +632,7 @@ a:focus img {
   gap: 0.35rem;
   justify-content: center;
   min-height: 5rem;
-  padding: 0.75rem;
+  padding: var(--space-sm);
   width: 100%;
 }
 
@@ -663,7 +680,7 @@ a:focus img {
   width: 100%;
   justify-content: space-between;
   border: 0;
-  padding: 0.4rem 0.6rem;
+  padding: var(--space-xs) var(--space-sm);
   background-color: var(--theme-track-bg-odd);
   color: var(--theme-track-text);
   font: inherit;
@@ -699,7 +716,7 @@ a:focus img {
 
 .pagination-controls {
   background: var(--theme-pagination-bg);
-  padding-top: var(--space-md);
+  padding-top: var(--space-sm);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -738,8 +755,10 @@ a:focus img {
 .search-box {
   display: block;
   width: 100%;
-  font-size: 1.1rem;
-  padding: 0.75rem 2.5rem 0.75rem 1rem; /* extra right padding for icon */
+  height: var(--layout-title-search-height);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  padding: 0 2.5rem 0 var(--space-md); /* extra right padding for icon */
   color: var(--theme-search-text);
   background-color: var(--theme-search-bg);
   border: var(--theme-search-border-width) solid var(--theme-search-border);
@@ -862,7 +881,7 @@ a:focus img {
   gap: var(--space-sm);
   flex-wrap: wrap;
   background: var(--theme-audio-controls-bg);
-  padding: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
   border: var(--theme-audio-controls-border-width) solid var(--theme-audio-controls-border);
   border-radius: var(--theme-audio-controls-radius);
 }
@@ -878,7 +897,7 @@ a:focus img {
 .audio-controls-wrapper  {
   position: sticky;
   bottom: 0rem;
-  padding-top: var(--space-md);
+  padding-top: var(--space-sm);
   background: var(--theme-audio-controls-wrapper-bg);
   box-shadow: 0 1rem 0 var(--theme-audio-controls-wrapper-bg);
   z-index: 3; /* Above track list, below sticky controls */
@@ -1047,7 +1066,7 @@ a:focus img {
   bottom: 0;
   left: 0;
   right: 0;
-  padding: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
   background: var(--theme-video-controls-bg);
   color: var(--theme-video-controls-text);
   border-radius: var(--theme-video-controls-radius);

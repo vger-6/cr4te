@@ -4,7 +4,14 @@
   --space-sm: 0.5rem;
   --space-md: 1rem;
 
-  --type-small-size: 0.875rem;
+  --type-body-size: 1rem;
+  --type-page-title-size: 1.25rem;
+  --type-section-title-size: 1.125rem;
+  --type-markdown-heading-size: var(--type-body-size);
+  --type-label-size: 0.875rem;
+  --type-body-line-height: 1.4;
+  --type-prose-line-height: 1.45;
+  --type-heading-line-height: 1.25;
 
   --icon-size: 1.5rem;
   --icon-size-compact: 1rem;
@@ -21,18 +28,14 @@
   --layout-body-padding-bottom: var(--space-sm);
   --layout-body-padding-inline: var(--space-sm);
   --layout-two-column-gap: var(--space-sm);
-  --layout-section-gap: 2rem;
+  --layout-section-gap: 1.5rem;
+  --layout-title-search-height: 2.25rem;
+  --layout-gallery-gap: var(--space-sm);
+  --layout-card-gap: var(--space-md);
 
-  --type-h1-size: 1.6rem;
-  --type-h2-size: 1.4rem;
-  --type-h3-size: 1.2rem;
-  --type-h4-size: 1rem;
-  --type-h5-size: 0.8rem;
-  --type-h6-size: 0.6rem;
-
-  --meta-label-value-gap: var(--space-xs);
-  --meta-entry-gap: var(--space-md);
-  --data-label-size: var(--type-small-size);
+  --meta-label-value-gap: 0;
+  --meta-entry-gap: var(--space-sm);
+  --data-label-size: var(--type-label-size);
 
   /* Theme tokens */
   --theme-font-family: sans-serif;
@@ -75,7 +78,7 @@
   --theme-title-text: var(--theme-text-strong);
   --theme-title-border: var(--theme-border);
   --theme-title-border-width: 1px;
-  --theme-title-radius: 0.5rem;
+  --theme-title-radius: 0;
 
   --theme-panel-bg: var(--theme-surface-bg);
   --theme-panel-border: var(--theme-border);
@@ -96,8 +99,8 @@
   --theme-overview-border-width: var(--theme-panel-border-width);
   --theme-overview-radius: 0;
 
-  --theme-layout-column-padding-top: 0;
-  --theme-layout-column-padding-bottom: 0;
+  --theme-layout-column-padding-top: var(--space-sm);
+  --theme-layout-column-padding-bottom: var(--space-md);
   --theme-layout-column-padding-left: 0;
   --theme-layout-column-padding-right: 0;
   --theme-layout-column-bg: transparent;
@@ -116,7 +119,7 @@
   --theme-section-title-padding-bottom: var(--space-sm);
   --theme-section-title-padding-left: var(--space-md);
   --theme-section-title-padding-right: var(--space-md);
-  --theme-section-content-padding-top: var(--space-md);
+  --theme-section-content-padding-top: var(--space-sm);
   --theme-section-content-padding-bottom: var(--space-md);
   --theme-section-content-padding-left: var(--space-md);
   --theme-section-content-padding-right: var(--space-md);

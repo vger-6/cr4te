@@ -10,14 +10,16 @@
   border: var(--theme-overview-border-width) solid var(--theme-overview-border);
 }
 
-.tag-list {
-  column-count: 2;
-  column-gap: 2rem;
+.overview-layout > .section-box > .section-content {
+  padding-top: var(--space-md);
 }
 
-/* Small screen behavior */
-@media (max-width: 96rem) {
-  .tag-list {
-    column-count: 1;
-  }
+.tag-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-md);
+}
+
+.tag-list > .tag-category {
+  margin-bottom: 0;
 }

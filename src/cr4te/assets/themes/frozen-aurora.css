@@ -3,7 +3,7 @@
   --theme-surface-bg: #162d42;
   --theme-surface-muted-bg: #18374f;
   --theme-surface-raised-bg: #162d42;
-  --theme-border: #55bcd7;
+  --theme-border: #3b6578;
   --theme-border-muted: #89ecf5;
   --theme-text: #d9f2ff;
   --theme-text-muted: #a6c4d8;
@@ -32,10 +32,10 @@
 
   --theme-title-bg: #162d42;
   --theme-title-text: #e0faff;
-  --theme-title-border: transparent;
+  --theme-title-border: var(--theme-panel-border);
 
   --theme-panel-bg: #162d42;
-  --theme-panel-border: #55bcd7;
+  --theme-panel-border: var(--theme-border);
 
   --theme-menu-hover-bg: #1f4660;
   --theme-menu-hover-text: #d9f2ff;
@@ -51,8 +51,6 @@
   --theme-overview-border: var(--theme-panel-border);
   --theme-overview-border-width: var(--theme-panel-border-width);
 
-  --theme-layout-column-padding-top: 1rem;
-  --theme-layout-column-padding-bottom: 1rem;
   --theme-layout-column-padding-left: 1rem;
   --theme-layout-column-padding-right: 1rem;
   --theme-layout-column-radius: 0;
@@ -61,16 +59,15 @@
   --theme-layout-column-border-width: var(--theme-panel-border-width);
 
   --theme-section-bg: #162d42;
-  --theme-section-border: #55bcd7;
+  --theme-section-border: var(--theme-border);
   --theme-section-border-width: 0px;
-  --theme-section-divider: #89ecf5;
+  --theme-section-divider: var(--theme-text-muted);
   --theme-section-title-bg: #162d42;
   --theme-section-title-text: #e0faff;
   --theme-section-title-padding-top: 0rem;
   --theme-section-title-padding-bottom: 0.1rem;
   --theme-section-title-padding-left: 0rem;
   --theme-section-title-padding-right: 0rem;
-  --theme-section-content-padding-top: 1rem;
   --theme-section-content-padding-bottom: 0rem;
   --theme-section-content-padding-left: 0rem;
   --theme-section-content-padding-right: 0rem;
@@ -87,6 +84,11 @@
   --theme-tag-hover-bg: #ffffff;
   --theme-tag-hover-text: #1c3b52;
 
+  --theme-search-bg: var(--theme-page-bg);
+  --theme-search-text: var(--theme-text);
+  --theme-search-placeholder: var(--theme-text-muted);
+  --theme-search-border: var(--theme-border);
+
   --theme-track-bg-odd: #18374f;
   --theme-track-bg-even: #18374f;
   --theme-track-text: #d9f2ff;
@@ -96,7 +98,7 @@
   --theme-track-playing-text: #002633;
 
   --theme-audio-controls-bg: #162d42;
-  --theme-audio-controls-border: #55bcd7;
+  --theme-audio-controls-border: var(--theme-border);
   --theme-audio-controls-wrapper-bg: #162d42;
 
   --theme-control-icon: #d9f2ff;

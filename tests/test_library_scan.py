@@ -64,6 +64,7 @@ class LibraryScanTests(unittest.TestCase):
             self.assertEqual(project_groups[0].videos[0].poster, "Ada/Project/video.jpg")
 
     def test_media_groups_prioritize_root_then_configured_metadata_folder(self):
+        """Covers SITE-019."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "Artists"
             creator_dir = input_dir / "Ada"

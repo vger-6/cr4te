@@ -291,7 +291,7 @@
     window.utils.applyMediaVolume();
 
     const audioSections = document.querySelectorAll('.section-box.audio-gallery-section');
-    const threshold = 100;
+    const threshold = 60;
     let currentScrollContainer = null;
 
     audioSections.forEach(section => {

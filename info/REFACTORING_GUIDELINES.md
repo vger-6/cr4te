@@ -44,6 +44,10 @@ These guidelines are for future refactors after the metadata/library refactor. D
 ## Tests And Validation
 
 - Add or adjust focused unit tests with each design-moving refactor.
+- Test durable behavior at the lowest useful layer: data and context behavior in unit tests, rendered semantics and accessibility in template tests, and responsive or browser-dependent behavior in browser tests.
+- Visual tests should compare semantic relationships and resolved theme or design tokens instead of repeating literal pixel, color, font, or radius values. Assert an exact visual value only when that value is itself a durable external contract.
+- Avoid assertions that depend on template whitespace, complete class strings, or exact source formatting when an element's semantics, state, or behavior can be asserted instead.
+- A test whose main purpose is to protect a durable requirement should name the relevant requirement ID in its docstring.
 - Run dead-code and accidental compatibility-path scans after meaningful refactors.
 - Before considering a refactor complete, run the established validation set: linter, unit tests, pyflakes, vulture, diff whitespace check, and the example build.
 - Update docs and the plan/audit files when a refactor changes a durable decision or user-facing config shape.

@@ -271,13 +271,50 @@ class JavaScriptContractTests(unittest.TestCase):
 
         self.assertNotIn("--layout-mobile-breakpoint:", tokens)
 
-    def test_text_content_uses_compact_first_block_spacing(self):
+    def test_typography_tokens_keep_content_first_hierarchy(self):
+        """Covers SITE-026 by protecting shared typography-token ownership."""
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
         base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
 
+        for token in (
+            "--type-body-size",
+            "--type-page-title-size",
+            "--type-section-title-size",
+            "--type-markdown-heading-size",
+            "--type-label-size",
+            "--type-prose-line-height",
+        ):
+            with self.subTest(token=token):
+                self.assertRegex(tokens, rf"{token}:\s*[^;]+;")
+
+        self.assertNotRegex(tokens, r"--type-h[1-6]-size:")
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*font-size:\s*var\(--type-page-title-size\)")
+        self.assertRegex(base, r"\.section-title\s*\{[^}]*font-size:\s*var\(--type-section-title-size\)")
         self.assertRegex(
             base,
-            r"\.text-content\s*>\s*:first-child\s*\{[^}]*margin-top:\s*var\(--space-sm\)",
+            r"\.markdown :is\(h1, h2, h3, h4, h5, h6\)\s*\{[^}]*"
+            r"font-size:\s*var\(--type-markdown-heading-size\)",
         )
+
+    def test_layout_tokens_define_title_search_and_content_spacing(self):
+        """Covers SITE-025 and SITE-027 by protecting shared layout-token ownership."""
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        for token in (
+            "--layout-title-search-height",
+            "--layout-gallery-gap",
+            "--layout-card-gap",
+            "--theme-section-content-padding-top",
+        ):
+            with self.subTest(token=token):
+                self.assertRegex(tokens, rf"{token}:\s*[^;]+;")
+
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*min-height:\s*var\(--layout-title-search-height\)")
+        self.assertRegex(base, r"\.search-box\s*\{[^}]*height:\s*var\(--layout-title-search-height\)")
+        self.assertRegex(base, r"\.image-gallery--aspect\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
+        self.assertRegex(base, r"\.image-gallery--justified\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
+        self.assertRegex(base, r"\.card-gallery\s*\{[^}]*gap:\s*var\(--layout-card-gap\)")
 
     def test_css_transitions_use_shared_motion_tokens_and_explicit_properties(self):
         source = read_all(sorted(ASSET_CSS_DIR.glob("*.css")))

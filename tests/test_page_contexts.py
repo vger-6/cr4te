@@ -100,6 +100,7 @@ class PageContextTests(unittest.TestCase):
             self.assertIsNone(page.portrait_orientation)
 
     def test_details_portraits_render_discovered_portrait_without_missing_default(self):
+        """Covers SITE-015 and SITE-028."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"

@@ -51,6 +51,12 @@ COLLABORATION_VISIBLE_FIELDS = [
     CollaborationField.DISSOLUTION_DATE,
 ]
 
+COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME = [
+    field
+    for field in COLLABORATION_VISIBLE_FIELDS
+    if field != CollaborationField.NAME
+]
+
 DEFAULT_ENTITY_LABELS = {
     "creator": "Creator",
     "creators": "Creators",
@@ -182,10 +188,10 @@ DEFAULT_CONFIG = {
                 "aspect_ratio": "3/2",
                 "page_size": 100,
                 "image_max_height": 350,
-                "creator_page_image_max_height": 450,
+                "creator_page_image_max_height": 350,
             },
             "media_groups": {
-                "image_max_height": 350,
+                "image_max_height": 300,
             },
         },
         "creator_page": {
@@ -249,13 +255,20 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Movies",
                     },
                     "counts": {"project": "movie", "projects": "movies"},
+                    "metadata": {"members": "Directors'"},
                     "pages": {
                         "audio_section_default_title": "Soundtrack",
                         "creator_collaboration_projects_title_format": "Codirected with {collaborator}",
                     },
                 },
                 site_rendering={
+                    "creator_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                    },
                     "galleries": {"project_cards": {"aspect_ratio": "2/3"}},
+                    "project_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                    },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.FILM)},
                 },
             )
@@ -327,11 +340,15 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Books",
                     },
                     "counts": {"project": "book", "projects": "books"},
+                    "metadata": {"members": "Authors"},
                     "pages": {
                         "audio_section_default_title": "Audio",
                     },
                 },
                 site_rendering={
+                    "creator_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                    },
                     "media": {
                         "type_order": [
                             MediaType.DOCUMENT,
@@ -346,6 +363,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                             "building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                             "aspect_ratio": "1000/1414",
                         },
+                    },
+                    "project_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.BOOK)},
                 },
@@ -363,9 +383,12 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         "projects": "Scenes",
                     },
                     "counts": {"project": "scene", "projects": "scenes"},
-                    "metadata": {"members": "Featuring"},
+                    "metadata": {"members": "Models"},
                 },
                 site_rendering={
+                    "creator_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                    },
                     "media": {
                         "type_order": [
                             MediaType.VIDEO,
@@ -374,6 +397,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                             MediaType.DOCUMENT,
                             MediaType.AUDIO,
                         ],
+                    },
+                    "project_page": {
+                        "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.MODEL)},
                 },

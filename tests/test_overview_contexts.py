@@ -34,6 +34,7 @@ def context_for(
 
 class OverviewContextTests(unittest.TestCase):
     def test_disabled_portraits_build_text_summary_without_thumbnail_work(self):
+        """Covers SITE-014 and SITE-029."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
@@ -92,6 +93,7 @@ class OverviewContextTests(unittest.TestCase):
             self.assertEqual(empty_entry.media_count_summary, "")
 
     def test_details_portraits_use_text_overview_without_thumbnail_work(self):
+        """Covers SITE-028."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"

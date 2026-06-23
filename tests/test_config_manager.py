@@ -59,6 +59,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
 
     def test_project_count_labels_are_configurable_independently_from_entity_labels(self):
+        """Covers SITE-031."""
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"
             write_json(
@@ -232,6 +233,7 @@ class ConfigManagerTests(unittest.TestCase):
                 self.assertIn("date_and_place_format", str(caught.exception))
 
     def test_complete_phrase_formats_are_configurable_and_reorder_named_values(self):
+        """Covers SITE-021."""
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"
             write_json(
@@ -341,6 +343,48 @@ class ConfigManagerTests(unittest.TestCase):
             art.empty_states.no_projects_format.format(projects=art.entity.projects),
             "No Works available",
         )
+
+    def test_selected_domain_presets_hide_only_collaboration_names(self):
+        expected_members_labels = {
+            Domain.BOOK: "Authors",
+            Domain.FILM: "Directors'",
+            Domain.MODEL: "Models",
+        }
+
+        for domain, members_label in expected_members_labels.items():
+            with self.subTest(domain=domain):
+                config = apply_cli_overrides(load_config(), domain=domain)
+
+                self.assertNotIn(
+                    CollaborationField.NAME,
+                    config.site_rendering.creator_page.visible_collaboration_fields,
+                )
+                self.assertNotIn(
+                    CollaborationField.NAME,
+                    config.site_rendering.project_page.visible_collaboration_fields,
+                )
+                self.assertIn(
+                    CreatorField.NAME,
+                    config.site_rendering.creator_page.visible_creator_fields,
+                )
+                self.assertIn(
+                    CreatorField.NAME,
+                    config.site_rendering.project_page.visible_creator_fields,
+                )
+                self.assertEqual(config.site_labels.metadata.members, members_label)
+
+        for domain in (Domain.CREATOR, Domain.MUSIC, Domain.ART):
+            with self.subTest(domain=domain):
+                config = apply_cli_overrides(load_config(), domain=domain)
+
+                self.assertIn(
+                    CollaborationField.NAME,
+                    config.site_rendering.creator_page.visible_collaboration_fields,
+                )
+                self.assertIn(
+                    CollaborationField.NAME,
+                    config.site_rendering.project_page.visible_collaboration_fields,
+                )
 
     def test_removed_fragment_label_fields_are_rejected(self):
         old_fields = (

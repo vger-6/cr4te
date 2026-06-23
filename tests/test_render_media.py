@@ -27,6 +27,7 @@ def write_image(path: Path, size: tuple[int, int] = (120, 80)) -> None:
 
 class RenderMediaTests(unittest.TestCase):
     def test_sort_media_sections_accepts_enum_and_string_order(self):
+        """Covers SITE-030."""
         sections = [
             MediaSectionContext(type=MediaType.DOCUMENT),
             MediaSectionContext(type=MediaType.VIDEO),

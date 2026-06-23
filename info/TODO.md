@@ -20,6 +20,25 @@ These items come from the full-codebase review of the Python build pipeline, gen
 - [ ] Add a `--prune-thumbnails` build option that removes orphaned cached thumbnails and hash sidecars without regenerating valid thumbnails.
 - [ ] Add optional progress reporting for large folder trees.
 - [ ] Avoid repeated full creator reloads while rendering collaboration/member links; use lightweight summaries where practical to preserve the streaming build shape.
+- [ ] Reconsider placing overview-page search bars inside the scrollable panel.
+  - Decide whether the search should read as page-level filtering chrome or as a control belonging to the card collection.
+  - If it moves inside the panel, align it with the left and right card edges while accounting for the panel scrollbar.
+  - Consider sticky behavior so filtering stays available while scrolling long overview pages.
+  - Give the sticky search area its own vertical breathing room, including the desired top distance from the panel edge and the gap before the cards.
+  - Ensure the sticky layer sits above cards, media badges, and other card overlays so content never bleeds over the search bar.
+  - Decide whether the search input should use the panel background, a distinct input background, or a subtle inset/shadow treatment.
+  - Confirm that search text, placeholder, border, focus, and clear-button colors remain readable and theme-consistent in each theme.
+  - Check narrow-screen behavior and empty-result states before making this a durable layout requirement.
+- [ ] Consider making the left panel on two-column detail pages collapsible.
+  - Treat this as a content-first affordance: collapsing the overview/context panel should make more room for the right-column content.
+  - Keep a visible full-height collapsed rail instead of hiding the left panel completely.
+  - Show a rotated "Overview" label on the rail and pair it with a recognizable expand/collapse icon so the control is discoverable.
+  - Reuse the existing theme-specific panel border/background language so the rail still feels like the collapsed left panel.
+  - Decide whether the collapsed state should be per-page only, persisted across detail pages, or not persisted at all for the first version.
+  - Make the control keyboard-accessible with clear labels, focus styling, and `aria-expanded` state.
+  - Ensure the right panel expands cleanly and media/document sizing is recalculated where needed after toggling.
+  - Avoid applying the rail behavior on narrow screens unless a separate mobile interaction is designed; the current stacked layout may be better there.
+  - Add browser coverage for expanded, collapsed, keyboard, responsive, and iframe/document-sizing behavior if the feature becomes durable.
 - [ ] Add a shuffle mode to the audio player.
   - Introduce a page-local shuffle toggle while preserving the currently playing track when the mode changes.
   - Play every track once in randomized order before starting a new shuffled queue, rather than choosing each next track independently and allowing immediate repeats.

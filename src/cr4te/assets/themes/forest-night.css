@@ -32,7 +32,7 @@
 
   --theme-title-bg: #1c3a3e;
   --theme-title-text: #d8e5dd;
-  --theme-title-border: transparent;
+  --theme-title-border: var(--theme-panel-border);
 
   --theme-panel-bg: #1c3a3e;
   --theme-panel-border: #3f6b66;
@@ -51,8 +51,6 @@
   --theme-overview-border: var(--theme-panel-border);
   --theme-overview-border-width: var(--theme-panel-border-width);
 
-  --theme-layout-column-padding-top: 1rem;
-  --theme-layout-column-padding-bottom: 1rem;
   --theme-layout-column-padding-left: 1rem;
   --theme-layout-column-padding-right: 1rem;
   --theme-layout-column-radius: 0;
@@ -63,14 +61,13 @@
   --theme-section-bg: #1c3a3e;
   --theme-section-border: #3f6b66;
   --theme-section-border-width: 0px;
-  --theme-section-divider: #d8e5dd;
+  --theme-section-divider: var(--theme-text-muted);
   --theme-section-title-bg: #1c3a3e;
   --theme-section-title-text: #d8e5dd;
   --theme-section-title-padding-top: 0rem;
   --theme-section-title-padding-bottom: 0.1rem;
   --theme-section-title-padding-left: 0rem;
   --theme-section-title-padding-right: 0rem;
-  --theme-section-content-padding-top: 1rem;
   --theme-section-content-padding-bottom: 0rem;
   --theme-section-content-padding-left: 0rem;
   --theme-section-content-padding-right: 0rem;
@@ -86,6 +83,11 @@
   --theme-tag-text: #fefae0;
   --theme-tag-hover-bg: #fefae0;
   --theme-tag-hover-text: #2b4742;
+
+  --theme-search-bg: var(--theme-page-bg);
+  --theme-search-text: var(--theme-text);
+  --theme-search-placeholder: var(--theme-text-muted);
+  --theme-search-border: var(--theme-border);
 
   --theme-track-bg-odd: #24494d;
   --theme-track-bg-even: #24494d;

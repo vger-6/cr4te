@@ -25,6 +25,7 @@
 
 .info-block--landscape {
   flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .info-block--landscape .info-block__media,

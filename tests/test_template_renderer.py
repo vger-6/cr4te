@@ -169,7 +169,10 @@ class TemplateRendererTests(unittest.TestCase):
                         **render_data,
                     )
 
-                    self.assertIn('class="creator-card-grid"', rendered)
+                    self.assertRegex(
+                        rendered,
+                        r'class="[^"]*\bcreator-card-grid\b[^"]*\bcard-gallery\b[^"]*"',
+                    )
                     self.assertIn('class="image-wrapper image-card creator-text-card"', rendered)
                     self.assertIn('class="creator-text-card__summary creator-text-card__project-summary">1 work</small>', rendered)
                     self.assertIn('class="creator-text-card__summary creator-text-card__media-summary">2 images</small>', rendered)
@@ -237,6 +240,7 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertNotIn("creator-text-card", rendered)
 
     def test_empty_overview_templates_render_static_empty_state_without_search_or_cards(self):
+        """Covers SITE-023."""
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
 
@@ -448,6 +452,11 @@ class TemplateRendererTests(unittest.TestCase):
         self.assertIn('aria-label="Volume"', rendered)
         self.assertIn('aria-pressed="false"', rendered)
         self.assertIn('<iframe class="auto-height-iframe" title="Book"', rendered)
+        self.assertRegex(
+            rendered,
+            r'class="[^"]*\bsection-content\b[^"]*\bsection-content--document\b[^"]*"',
+        )
+        self.assertNotIn('class="section-content" style="padding: 0"', rendered)
 
     def test_project_page_renderer_writes_unique_html_path_and_common_template_data(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -518,6 +527,7 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual([item.current for item in page_shell.navigation_items], [False, False, True])
 
     def test_empty_tags_template_renders_static_empty_state(self):
+        """Covers SITE-033."""
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
 
@@ -587,14 +597,14 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('src="assets/favicon.svg"\n           alt=""\n           width="24"\n           height="24"', rendered)
             self.assertIn('<span class="nav-current" aria-current="page">Artists</span>', rendered)
             self.assertNotIn('class="breadcrumb-section"', rendered)
-            self.assertNotIn("<h1", rendered)
+            self.assertRegex(rendered, r'<h1\b[^>]*>Artists</h1>')
             self.assertIn('<button type="button" id="clear-search"', rendered)
             self.assertIn('placeholder="Search Artists, Works, Tags..."', rendered)
             self.assertIn('aria-haspopup="menu"', rendered)
             self.assertIn('role="menuitemradio"', rendered)
             self.assertNotIn("body { display: none; }", rendered)
 
-    def test_detail_header_renders_context_and_title_as_separate_breadcrumb_section(self):
+    def test_detail_header_renders_project_creator_as_only_contextual_breadcrumb(self):
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
             rendered = env.get_template("partials/_page_header.html.j2").render(
@@ -613,17 +623,32 @@ class TemplateRendererTests(unittest.TestCase):
                 ),
             )
 
-            self.assertIn('class="breadcrumb-section"', rendered)
-            self.assertIn('class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>', rendered)
+            self.assertIn('breadcrumb-section', rendered)
+            self.assertEqual(rendered.count('breadcrumb-separator--section'), 1)
             self.assertIn('<a href="creator.html">Displayed Noomi</a>', rendered)
-            self.assertIn(
-                '<span class="nav-current nav-page-title" aria-current="page" '
-                'title="Displayed Landscapes">Displayed Landscapes</span>',
-                rendered,
+            self.assertNotIn('nav-page-title', rendered)
+            self.assertRegex(rendered, r'<h1\b[^>]*>Displayed Landscapes</h1>')
+
+            creator_rendered = env.get_template("partials/_page_header.html.j2").render(
+                site_labels=ctx.site_labels,
+                themes=ctx.themes,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title="Displayed Noomi",
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(
+                        NavigationItem(ctx.site_labels.entity.creators, "../index.html"),
+                        NavigationItem(ctx.site_labels.entity.projects, "../projects.html"),
+                        NavigationItem(ctx.site_labels.entity.tags, "../tags.html"),
+                    ),
+                ),
             )
-            self.assertNotIn("<h1", rendered)
+
+            self.assertNotIn('breadcrumb-section', creator_rendered)
+            self.assertRegex(creator_rendered, r'<h1\b[^>]*>Displayed Noomi</h1>')
 
     def test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty(self):
+        """Covers SITE-033."""
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
             creator_page = CreatorPageContext(
