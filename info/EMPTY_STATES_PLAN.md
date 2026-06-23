@@ -1,6 +1,6 @@
-# Empty States Implementation Plan
+# Empty States Implementation Record
 
-This plan describes the intended implementation shape for contextual empty states in the generated site. It is a feature plan, not a durable requirement. Durable product behavior must be added to `REQUIREMENTS.md` when the implementation is accepted.
+This document records the implementation shape used for contextual empty states in the generated site. The accepted durable behavior now lives in `REQUIREMENTS.md`, primarily under `SITE-023` and `SITE-033`.
 
 ## Goal
 

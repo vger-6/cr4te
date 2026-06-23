@@ -19,7 +19,11 @@ These items come from the full-codebase review of the Python build pipeline, gen
 - [ ] Add `--dry-run` flag to `build`.
 - [ ] Add a `--prune-thumbnails` build option that removes orphaned cached thumbnails and hash sidecars without regenerating valid thumbnails.
 - [ ] Add optional progress reporting for large folder trees.
+- [ ] Make scan exclusions relative to the configured library root.
+  - A library below a dot-prefixed ancestor directory is currently treated as empty because exclusion checks inspect absolute path components.
+  - Preserve hidden and configured-prefix exclusion inside the library while ignoring ancestors above the selected input root.
 - [ ] Avoid repeated full creator reloads while rendering collaboration/member links; use lightweight summaries where practical to preserve the streaming build shape.
+  - Keep lightweight summaries free of payloads unused by indexing and overview rendering, including creator README narrative content.
 - [ ] Reconsider placing overview-page search bars inside the scrollable panel.
   - Decide whether the search should read as page-level filtering chrome or as a control belonging to the card collection.
   - If it moves inside the panel, align it with the left and right card edges while accounting for the panel scrollbar.

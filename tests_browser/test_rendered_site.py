@@ -380,6 +380,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 return {
                     labelToken,
                     linkToken,
+                    blockGap: parseFloat(getComputedStyle(block).columnGap),
                     labelColor: getComputedStyle(label).color,
                     labelSize: parseFloat(getComputedStyle(label).fontSize),
                     valueSize: parseFloat(getComputedStyle(value).fontSize),
@@ -400,7 +401,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertGreaterEqual(layout["labelValueGap"], 0)
         self.assertGreater(layout["entryGap"], layout["labelValueGap"])
         self.assertTrue(layout["metadataBesidePortrait"])
-        self.assertGreater(layout["portraitMetadataGap"], 0)
+        self.assertAlmostEqual(layout["portraitMetadataGap"], layout["blockGap"], delta=0.25)
 
         for theme in ("theme-frozen-aurora", "theme-forest-night", "theme-mono-terminal", "theme-amber-terminal"):
             colors = self.page.evaluate(
@@ -463,6 +464,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const firstRect = entries[0].getBoundingClientRect();
                 const secondRect = entries[1].getBoundingClientRect();
                 return {
+                    blockGap: parseFloat(getComputedStyle(block).rowGap),
                     metadataBelowImage: metaRect.top >= mediaRect.bottom,
                     imageMetadataGap: metaRect.top - mediaRect.bottom,
                     entriesShareRow: Math.abs(firstRect.top - secondRect.top) < 1,
@@ -474,9 +476,10 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertTrue(landscape_layout["metadataBelowImage"])
         self.assertAlmostEqual(
             landscape_layout["imageMetadataGap"],
-            layout["portraitMetadataGap"],
+            landscape_layout["blockGap"],
             delta=0.25,
         )
+        self.assertLess(landscape_layout["blockGap"], layout["blockGap"])
         self.assertTrue(landscape_layout["entriesShareRow"])
         self.assertTrue(landscape_layout["entriesEqualWidth"])
 

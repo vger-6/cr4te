@@ -8,6 +8,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - `must` and `must not` describe required behavior.
 - Requirements describe durable outcomes and relationships. Exact visual values belong in the shared design tokens unless the value is itself a user-facing contract.
 - Tests that primarily protect a requirement should identify its requirement ID in the test docstring.
+- Every durable requirement must appear in the checked requirement-to-test map in `tests/test_requirement_traceability.py`.
 - Implementation and refactoring guidance belongs in [REFACTORING_GUIDELINES.md](REFACTORING_GUIDELINES.md).
 - Planned but uncommitted product ideas belong in [TODO.md](TODO.md).
 
