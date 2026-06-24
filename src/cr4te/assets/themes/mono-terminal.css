@@ -41,6 +41,9 @@
   --theme-link-disabled: var(--theme-accent-muted);
   --theme-data-label-text: var(--theme-text-muted);
 
+  --theme-navigation-bg: #090909;
+  --theme-navigation-border: var(--theme-terminal-disabled);
+
   --theme-title-bg: transparent;
   --theme-title-text: var(--theme-text-strong);
   --theme-title-border: var(--theme-border);

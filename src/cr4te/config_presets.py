@@ -181,14 +181,14 @@ DEFAULT_CONFIG = {
                 "building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                 "aspect_ratio": "2/3",
                 "page_size": 100,
-                "image_max_height": 350,
+                "image_max_height": 300,
             },
             "project_cards": {
                 "building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                 "aspect_ratio": "3/2",
                 "page_size": 100,
-                "image_max_height": 350,
-                "creator_page_image_max_height": 350,
+                "image_max_height": 300,
+                "creator_page_image_max_height": 300,
             },
             "media_groups": {
                 "image_max_height": 300,

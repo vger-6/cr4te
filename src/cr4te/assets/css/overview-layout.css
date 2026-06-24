@@ -1,5 +1,6 @@
 .overview-layout {
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   padding-top: var(--theme-overview-padding-top);
   padding-bottom: var(--theme-overview-padding-bottom);

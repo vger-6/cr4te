@@ -302,6 +302,11 @@ class JavaScriptContractTests(unittest.TestCase):
         base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
 
         for token in (
+            "--layout-navigation-padding-block",
+            "--layout-navigation-padding-inline",
+            "--layout-content-padding-top",
+            "--layout-content-padding-bottom",
+            "--layout-content-padding-inline",
             "--layout-title-search-height",
             "--layout-gallery-gap",
             "--layout-card-gap",
@@ -310,11 +315,50 @@ class JavaScriptContractTests(unittest.TestCase):
             with self.subTest(token=token):
                 self.assertRegex(tokens, rf"{token}:\s*[^;]+;")
 
-        self.assertRegex(base, r"\.page-title\s*\{[^}]*min-height:\s*var\(--layout-title-search-height\)")
+        self.assertRegex(
+            base,
+            r"\.page-content\s*\{[^}]*padding:\s*var\(--layout-content-padding-top\)"
+            r" var\(--layout-content-padding-inline\)[^;]*var\(--layout-content-padding-bottom\)",
+        )
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*background-color:\s*transparent")
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*border:\s*0")
         self.assertRegex(base, r"\.search-box\s*\{[^}]*height:\s*var\(--layout-title-search-height\)")
         self.assertRegex(base, r"\.image-gallery--aspect\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
         self.assertRegex(base, r"\.image-gallery--justified\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
         self.assertRegex(base, r"\.card-gallery\s*\{[^}]*gap:\s*var\(--layout-card-gap\)")
+
+    def test_public_theme_tokens_cover_navigation_pagination_and_track_separators(self):
+        """Covers THEME-008."""
+        tokens = (ASSET_CSS_DIR / "tokens.css").read_text(encoding="utf-8")
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+        forest = (ROOT / "src" / "cr4te" / "assets" / "themes" / "forest-night.css").read_text(encoding="utf-8")
+        frozen = (ROOT / "src" / "cr4te" / "assets" / "themes" / "frozen-aurora.css").read_text(encoding="utf-8")
+
+        for token in (
+            "--theme-navigation-bg",
+            "--theme-navigation-border",
+            "--theme-navigation-border-width",
+            "--theme-pagination-button-radius",
+            "--theme-track-separator",
+            "--theme-track-separator-width",
+        ):
+            with self.subTest(token=token):
+                self.assertRegex(tokens, rf"{token}:\s*[^;]+;")
+
+        self.assertRegex(tokens, r"--theme-pagination-button-radius:\s*0;")
+        self.assertRegex(tokens, r"--theme-track-separator-width:\s*0;")
+        self.assertIn("background-color: var(--theme-navigation-bg)", base)
+        self.assertIn("border-radius: var(--theme-pagination-button-radius)", base)
+        self.assertIn(
+            "border-bottom: var(--theme-track-separator-width) solid var(--theme-track-separator)",
+            base,
+        )
+        self.assertRegex(forest, r"--theme-pagination-button-radius:\s*[^;]+;")
+        self.assertRegex(forest, r"--theme-track-bg-odd:\s*transparent;")
+        self.assertRegex(forest, r"--theme-track-bg-even:\s*transparent;")
+        self.assertNotIn("--theme-track-separator:", forest)
+        self.assertNotIn("--theme-track-separator-width:", forest)
+        self.assertRegex(frozen, r"--theme-pagination-button-radius:\s*[^;]+;")
 
     def test_css_transitions_use_shared_motion_tokens_and_explicit_properties(self):
         source = read_all(sorted(ASSET_CSS_DIR.glob("*.css")))

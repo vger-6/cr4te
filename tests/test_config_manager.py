@@ -164,7 +164,8 @@ class ConfigManagerTests(unittest.TestCase):
 
             self.assertEqual(config.site_rendering.galleries.project_cards.aspect_ratio, "4/5")
             self.assertEqual(config.site_rendering.galleries.project_cards.page_size, 25)
-            self.assertEqual(config.site_rendering.galleries.project_cards.image_max_height, 350)
+            self.assertEqual(config.site_rendering.galleries.project_cards.image_max_height, 300)
+            self.assertEqual(config.site_rendering.galleries.project_cards.creator_page_image_max_height, 300)
 
     def test_gallery_aspect_ratio_config_normalizes_supported_values(self):
         valid_ratios = {

@@ -628,7 +628,8 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         """Covers SITE-024."""
         self.open_page(self.audio_project_path)
 
-        self.assertEqual(self.page.locator(".page-header > h1").count(), 1)
+        self.assertEqual(self.page.locator(".page-header > h1").count(), 0)
+        self.assertEqual(self.page.locator(".page-content > h1").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section > a").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section .nav-page-title").count(), 0)
@@ -683,64 +684,105 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(narrow["leadingSeparatorDisplay"], "none")
 
         self.open_page(self.creator_path)
-        self.assertEqual(self.page.locator(".page-header > h1").count(), 1)
+        self.assertEqual(self.page.locator(".page-header > h1").count(), 0)
+        self.assertEqual(self.page.locator(".page-content > h1").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section").count(), 0)
         self.assertNoBrowserErrors()
 
-    def test_page_title_and_search_share_compact_geometry(self):
+    def test_navigation_and_page_content_use_distinct_aligned_geometry(self):
         """Covers SITE-025."""
         self.open_page("index.html")
 
         geometry = self.page.evaluate(
             """
             () => {
-                const nav = document.querySelector('.top-link').getBoundingClientRect();
-                const title = document.querySelector('.page-title').getBoundingClientRect();
-                const search = document.querySelector('.search-bar-wrapper').getBoundingClientRect();
+                const headerElement = document.querySelector('.page-header');
+                const contentElement = document.querySelector('.page-content');
+                const titleElement = document.querySelector('.page-title');
+                const searchElement = document.querySelector('.search-bar-wrapper');
+                const panelElement = document.querySelector('.overview-layout');
+                const header = headerElement.getBoundingClientRect();
+                const content = contentElement.getBoundingClientRect();
+                const title = titleElement.getBoundingClientRect();
+                const search = searchElement.getBoundingClientRect();
+                const panel = panelElement.getBoundingClientRect();
+                const contentStyle = getComputedStyle(contentElement);
+                const titleStyle = getComputedStyle(titleElement);
                 const searchStyle = getComputedStyle(document.querySelector('.search-box'));
                 return {
-                    navTitleGap: title.top - nav.bottom,
-                    titleContentGap: search.top - title.bottom,
-                    titleWidth: title.width,
-                    titleHeight: title.height,
+                    viewportWidth: innerWidth,
+                    headerLeft: header.left,
+                    headerRight: header.right,
+                    contentLeft: content.left,
+                    contentRight: content.right,
+                    contentPaddingLeft: parseFloat(contentStyle.paddingLeft),
+                    contentPaddingRight: parseFloat(contentStyle.paddingRight),
+                    titleLeft: title.left,
+                    titleRight: title.right,
+                    searchLeft: search.left,
+                    searchRight: search.right,
+                    panelLeft: panel.left,
+                    panelRight: panel.right,
+                    titleBackground: titleStyle.backgroundColor,
+                    titleBorderWidths: [
+                        titleStyle.borderTopWidth,
+                        titleStyle.borderRightWidth,
+                        titleStyle.borderBottomWidth,
+                        titleStyle.borderLeftWidth,
+                    ],
                     searchHeight: search.height,
-                    headerWidth: document.querySelector('.page-header').getBoundingClientRect().width,
                     searchFontSize: searchStyle.fontSize,
                     bodyFontSize: getComputedStyle(document.body).fontSize,
                 };
             }
             """
         )
-        self.assertGreater(geometry["navTitleGap"], 0)
-        self.assertLessEqual(geometry["navTitleGap"], geometry["titleContentGap"])
-        self.assertAlmostEqual(geometry["titleWidth"], geometry["headerWidth"], delta=0.25)
-        self.assertAlmostEqual(geometry["searchHeight"], geometry["titleHeight"], delta=0.25)
+        self.assertAlmostEqual(geometry["headerLeft"], 0, delta=0.25)
+        self.assertAlmostEqual(geometry["headerRight"], geometry["viewportWidth"], delta=0.25)
+        self.assertAlmostEqual(geometry["contentLeft"], 0, delta=0.25)
+        self.assertAlmostEqual(geometry["contentRight"], geometry["viewportWidth"], delta=0.25)
+        self.assertGreater(geometry["contentPaddingLeft"], 0)
+        self.assertGreater(geometry["contentPaddingRight"], 0)
+        self.assertAlmostEqual(geometry["titleLeft"], geometry["searchLeft"], delta=0.25)
+        self.assertAlmostEqual(geometry["searchLeft"], geometry["panelLeft"], delta=0.25)
+        self.assertAlmostEqual(geometry["titleRight"], geometry["searchRight"], delta=0.25)
+        self.assertAlmostEqual(geometry["searchRight"], geometry["panelRight"], delta=0.25)
+        self.assertEqual(geometry["titleBackground"], "rgba(0, 0, 0, 0)")
+        self.assertEqual(geometry["titleBorderWidths"], ["0px", "0px", "0px", "0px"])
+        self.assertGreater(geometry["searchHeight"], 0)
         self.assertEqual(geometry["searchFontSize"], geometry["bodyFontSize"])
 
-        for theme in ("theme-frozen-aurora", "theme-forest-night"):
-            search_colors = self.page.evaluate(
+        for theme in ("theme-frozen-aurora", "theme-forest-night", "theme-mono-terminal"):
+            colors = self.page.evaluate(
                 """
                 theme => {
                     document.body.className = theme;
+                    const headerStyle = getComputedStyle(document.querySelector('.page-header'));
                     const searchStyle = getComputedStyle(document.querySelector('.search-box'));
                     const bodyStyle = getComputedStyle(document.body);
                     const probe = document.createElement('span');
+                    probe.style.backgroundColor = 'var(--theme-navigation-bg)';
                     probe.style.color = 'var(--theme-text)';
                     document.body.appendChild(probe);
+                    const navigationBackground = getComputedStyle(probe).backgroundColor;
                     const themeText = getComputedStyle(probe).color;
                     probe.remove();
                     return {
-                        background: searchStyle.backgroundColor,
+                        navigationBackground: headerStyle.backgroundColor,
+                        navigationToken: navigationBackground,
                         pageBackground: bodyStyle.backgroundColor,
-                        text: searchStyle.color,
+                        searchBackground: searchStyle.backgroundColor,
+                        searchText: searchStyle.color,
                         themeText,
                     };
                 }
                 """,
                 theme,
             )
-            self.assertEqual(search_colors["background"], search_colors["pageBackground"])
-            self.assertEqual(search_colors["text"], search_colors["themeText"])
+            self.assertEqual(colors["navigationBackground"], colors["navigationToken"])
+            self.assertNotEqual(colors["navigationBackground"], colors["pageBackground"])
+            self.assertEqual(colors["searchBackground"], colors["pageBackground"])
+            self.assertEqual(colors["searchText"], colors["themeText"])
         self.assertNoBrowserErrors()
 
     def test_content_first_typography_hierarchy(self):
@@ -776,8 +818,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         overview = self.page.evaluate(
             """
             () => {
-                const body = getComputedStyle(document.body);
+                const contentElement = document.querySelector('.page-content');
+                const content = contentElement.getBoundingClientRect();
+                const contentStyle = getComputedStyle(contentElement);
                 const search = document.querySelector('.search-bar-wrapper').getBoundingClientRect();
+                const searchStyle = getComputedStyle(document.querySelector('.search-bar-wrapper'));
                 const panelElement = document.querySelector('.overview-layout');
                 const panel = panelElement.getBoundingClientRect();
                 const panelStyle = getComputedStyle(panelElement);
@@ -786,9 +831,17 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const card = document.querySelector('.image-card');
                 const cardCaption = card.querySelector('.image-caption');
                 return {
-                    bodyPadding: [body.paddingTop, body.paddingRight, body.paddingBottom, body.paddingLeft],
+                    contentPadding: [
+                        contentStyle.paddingTop,
+                        contentStyle.paddingRight,
+                        contentStyle.paddingBottom,
+                        contentStyle.paddingLeft,
+                    ],
+                    contentLeft: content.left,
+                    contentRight: content.right,
                     searchPanelGap: panel.top - search.bottom,
-                    bottomGap: innerHeight - panel.bottom,
+                    searchMarginBottom: searchStyle.marginBottom,
+                    bottomGap: content.bottom - panel.bottom,
                     cardGap: getComputedStyle(galleryElement).gap,
                     cardPaddingBottom: getComputedStyle(card).paddingBottom,
                     cardCaptionPaddingTop: getComputedStyle(cardCaption).paddingTop,
@@ -797,16 +850,19 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             }
             """
         )
-        body_space = float(overview["bodyPadding"][0].removesuffix("px"))
+        content_padding = [float(value.removesuffix("px")) for value in overview["contentPadding"]]
         card_gap = float(overview["cardGap"].removesuffix("px"))
         card_text_space = float(overview["cardPaddingBottom"].removesuffix("px"))
-        self.assertEqual(len(set(overview["bodyPadding"])), 1)
-        self.assertGreater(body_space, 0)
-        self.assertAlmostEqual(overview["searchPanelGap"], body_space, delta=0.25)
-        self.assertAlmostEqual(overview["bottomGap"], body_space, delta=0.25)
-        self.assertGreater(card_gap, body_space)
+        self.assertTrue(all(value > 0 for value in content_padding))
+        self.assertAlmostEqual(
+            overview["searchPanelGap"],
+            float(overview["searchMarginBottom"].removesuffix("px")),
+            delta=0.25,
+        )
+        self.assertAlmostEqual(overview["bottomGap"], content_padding[2], delta=0.25)
+        self.assertGreater(card_gap, overview["searchPanelGap"])
         self.assertEqual(overview["cardPaddingBottom"], overview["cardCaptionPaddingTop"])
-        self.assertLess(card_text_space, body_space)
+        self.assertLess(card_text_space, card_gap)
         self.assertAlmostEqual(overview["overviewTopGap"], card_gap, delta=0.25)
 
         self.open_page(self.creator_path)
@@ -817,6 +873,10 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const left = document.querySelector('.left-column').getBoundingClientRect();
                 const right = document.querySelector('.right-column').getBoundingClientRect();
                 const leftStyle = getComputedStyle(document.querySelector('.left-column'));
+                const contentElement = document.querySelector('.page-content');
+                const content = contentElement.getBoundingClientRect();
+                const contentStyle = getComputedStyle(contentElement);
+                const detailStyle = getComputedStyle(document.querySelector('.detail-content'));
                 const regularSectionContent = document.querySelector(
                     '.section-box > hr + .section-content:not(.text-content)'
                 );
@@ -824,9 +884,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const regularFirstChild = regularSectionContent.firstElementChild;
                 return {
                     paneGap: right.left - left.right,
-                    leftGap: layout.left,
-                    rightGap: innerWidth - layout.right,
-                    bottomGap: innerHeight - layout.bottom,
+                    configuredPaneGap: detailStyle.gap,
+                    leftGap: layout.left - content.left,
+                    rightGap: content.right - layout.right,
+                    bottomGap: content.bottom - layout.bottom,
+                    contentPaddingRight: contentStyle.paddingRight,
+                    contentPaddingBottom: contentStyle.paddingBottom,
+                    contentPaddingLeft: contentStyle.paddingLeft,
                     panelPaddingTop: leftStyle.paddingTop,
                     panelPaddingBottom: leftStyle.paddingBottom,
                     sectionContentPaddingTop: getComputedStyle(regularSectionContent).paddingTop,
@@ -836,17 +900,34 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             }
             """
         )
-        self.assertAlmostEqual(detail["paneGap"], body_space, delta=0.25)
-        self.assertAlmostEqual(detail["leftGap"], body_space, delta=0.25)
-        self.assertAlmostEqual(detail["rightGap"], body_space, delta=0.25)
-        self.assertAlmostEqual(detail["bottomGap"], body_space, delta=0.25)
+        self.assertAlmostEqual(
+            detail["paneGap"],
+            float(detail["configuredPaneGap"].removesuffix("px")),
+            delta=0.25,
+        )
+        self.assertAlmostEqual(
+            detail["leftGap"],
+            float(detail["contentPaddingLeft"].removesuffix("px")),
+            delta=0.25,
+        )
+        self.assertAlmostEqual(
+            detail["rightGap"],
+            float(detail["contentPaddingRight"].removesuffix("px")),
+            delta=0.25,
+        )
+        self.assertAlmostEqual(
+            detail["bottomGap"],
+            float(detail["contentPaddingBottom"].removesuffix("px")),
+            delta=0.25,
+        )
         panel_padding_top = float(detail["panelPaddingTop"].removesuffix("px"))
         panel_padding_bottom = float(detail["panelPaddingBottom"].removesuffix("px"))
         self.assertGreater(panel_padding_top, 0)
         self.assertGreaterEqual(panel_padding_bottom, panel_padding_top)
-        self.assertEqual(detail["panelPaddingTop"], overview["bodyPadding"][0])
-        self.assertEqual(detail["sectionContentPaddingTop"], overview["bodyPadding"][0])
-        self.assertAlmostEqual(detail["sectionContentDividerGap"], body_space, delta=0.25)
+        section_padding_top = float(detail["sectionContentPaddingTop"].removesuffix("px"))
+        self.assertGreater(section_padding_top, 0)
+        self.assertGreaterEqual(panel_padding_top, section_padding_top)
+        self.assertAlmostEqual(detail["sectionContentDividerGap"], section_padding_top, delta=0.25)
 
         markdown_last_margin = self.page.locator(".text-content > :last-child").first.evaluate(
             "element => getComputedStyle(element).marginBottom"
@@ -857,7 +938,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         gallery_gap = self.page.locator(".image-gallery--justified").first.evaluate(
             "element => getComputedStyle(element).gap"
         )
-        self.assertEqual(gallery_gap, overview["bodyPadding"][0])
+        self.assertGreater(float(gallery_gap.removesuffix("px")), 0)
         caption_spacing = self.page.locator(".image-gallery--justified .image-caption").first.evaluate(
             "element => ({ top: getComputedStyle(element).marginTop, left: getComputedStyle(element).marginLeft })"
         )
@@ -868,7 +949,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertNoBrowserErrors()
 
-    def test_panel_borders_and_section_dividers_follow_selected_theme(self):
+    def test_navigation_panels_and_unboxed_titles_follow_selected_theme(self):
         """Covers SITE-025."""
         self.open_page("index.html")
 
@@ -878,17 +959,48 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 "getComputedStyle(element).borderTopColor]"
             )
 
-        frozen_title_border = border(".page-title")
         frozen_panel_border = border(".overview-layout")
-        self.assertEqual(frozen_title_border, frozen_panel_border)
-        self.assertGreater(float(frozen_title_border[0].removesuffix("px")), 0)
+        frozen_shell = self.page.evaluate(
+            """
+            () => {
+                const header = getComputedStyle(document.querySelector('.page-header'));
+                const title = getComputedStyle(document.querySelector('.page-title'));
+                return {
+                    bodyBackground: getComputedStyle(document.body).backgroundColor,
+                    navigationBackground: header.backgroundColor,
+                    navigationBorder: [header.borderBottomWidth, header.borderBottomColor],
+                    titleBackground: title.backgroundColor,
+                    titleBorders: [
+                        title.borderTopWidth,
+                        title.borderRightWidth,
+                        title.borderBottomWidth,
+                        title.borderLeftWidth,
+                    ],
+                };
+            }
+            """
+        )
+        self.assertNotEqual(frozen_shell["navigationBackground"], frozen_shell["bodyBackground"])
+        self.assertGreater(float(frozen_shell["navigationBorder"][0].removesuffix("px")), 0)
+        self.assertEqual(frozen_shell["titleBackground"], "rgba(0, 0, 0, 0)")
+        self.assertEqual(frozen_shell["titleBorders"], ["0px", "0px", "0px", "0px"])
+        self.assertGreater(float(frozen_panel_border[0].removesuffix("px")), 0)
 
         self.page.get_by_role("button", name="Themes").click()
         self.page.get_by_role("menuitemradio", name="Forest Night").click()
-        forest_title_border = border(".page-title")
         forest_panel_border = border(".overview-layout")
-        self.assertEqual(forest_title_border, forest_panel_border)
-        self.assertNotEqual(forest_title_border[1], frozen_title_border[1])
+        forest_shell = self.page.evaluate(
+            """
+            () => ({
+                bodyBackground: getComputedStyle(document.body).backgroundColor,
+                navigationBackground: getComputedStyle(document.querySelector('.page-header')).backgroundColor,
+                titleBackground: getComputedStyle(document.querySelector('.page-title')).backgroundColor,
+            })
+            """
+        )
+        self.assertNotEqual(forest_shell["navigationBackground"], forest_shell["bodyBackground"])
+        self.assertEqual(forest_shell["titleBackground"], "rgba(0, 0, 0, 0)")
+        self.assertNotEqual(forest_panel_border[1], frozen_panel_border[1])
 
         self.open_page(self.creator_path)
         self.assertEqual(border(".left-column"), forest_panel_border)
@@ -913,9 +1025,58 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             })
             """
         )
-        self.assertNotEqual(frozen_divider_and_title["divider"], frozen_title_border[1])
+        self.assertNotEqual(frozen_divider_and_title["divider"], frozen_panel_border[1])
         self.assertNotEqual(frozen_divider_and_title["divider"], frozen_divider_and_title["title"])
         self.assertNotEqual(frozen_divider_and_title["divider"], divider_and_title["divider"])
+        self.assertNoBrowserErrors()
+
+    def test_theme_specific_pagination_radius_and_optional_audio_track_separators_resolve(self):
+        self.open_paginated_page("index.html")
+        pagination = self.page.evaluate(
+            """
+            () => {
+                const button = document.querySelector('.pagination-controls button');
+                const style = getComputedStyle(button);
+                const probe = document.createElement('span');
+                probe.style.borderRadius = 'var(--theme-pagination-button-radius)';
+                document.body.appendChild(probe);
+                const token = getComputedStyle(probe).borderRadius;
+                probe.remove();
+                return {
+                    radius: style.borderRadius,
+                    token,
+                };
+            }
+            """
+        )
+        self.assertEqual(pagination["radius"], pagination["token"])
+        self.assertGreater(float(pagination["radius"].removesuffix("px")), 0)
+
+        self.open_page(self.audio_project_path)
+        tracks = self.page.locator(".audio-gallery li")
+        self.assertGreater(tracks.count(), 1)
+        track_separators = self.page.evaluate(
+            """
+            () => {
+                const rows = document.querySelectorAll('.audio-gallery li');
+                const before = getComputedStyle(rows[0]).borderBottomWidth;
+                document.body.style.setProperty('--theme-track-separator', 'rgb(12, 34, 56)');
+                document.body.style.setProperty('--theme-track-separator-width', '2px');
+                const firstRow = getComputedStyle(rows[0]);
+                const lastRow = getComputedStyle(rows[rows.length - 1]);
+                return {
+                    defaultWidth: before,
+                    firstSeparatorWidth: firstRow.borderBottomWidth,
+                    firstSeparatorColor: firstRow.borderBottomColor,
+                    lastSeparatorWidth: lastRow.borderBottomWidth,
+                };
+            }
+            """
+        )
+        self.assertEqual(track_separators["defaultWidth"], "0px")
+        self.assertEqual(track_separators["firstSeparatorWidth"], "2px")
+        self.assertEqual(track_separators["firstSeparatorColor"], "rgb(12, 34, 56)")
+        self.assertEqual(track_separators["lastSeparatorWidth"], "0px")
         self.assertNoBrowserErrors()
 
     def test_search_clear_button_works_from_keyboard(self):
@@ -1972,6 +2133,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                         """
                         () => {
                             const layout = document.querySelector('.two-column-layout');
+                            const pageContent = document.querySelector('.page-content');
                             const content = document.querySelector('.detail-content');
                             const left = document.querySelector('.left-column');
                             const right = document.querySelector('.right-column');
@@ -1987,6 +2149,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                                 rightHeight: rightRect.height,
                                 leftBeforeRight: leftRect.bottom <= rightRect.top,
                                 viewportBottomSpace: innerHeight - layoutRect.bottom,
+                                outerBottomPadding: parseFloat(getComputedStyle(pageContent).paddingBottom),
                                 innerBottomPadding: parseFloat(getComputedStyle(content).paddingBottom),
                             };
                         }
@@ -2000,7 +2163,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                     self.assertGreater(mobile_layout["leftHeight"], 0)
                     self.assertGreater(mobile_layout["rightHeight"], 0)
                     self.assertTrue(mobile_layout["leftBeforeRight"])
-                    self.assertAlmostEqual(mobile_layout["viewportBottomSpace"], 8, delta=0.25)
+                    self.assertAlmostEqual(
+                        mobile_layout["viewportBottomSpace"],
+                        mobile_layout["outerBottomPadding"],
+                        delta=0.25,
+                    )
                     self.assertGreater(mobile_layout["innerBottomPadding"], 0)
 
                     page.set_viewport_size({"width": 1280, "height": 900})

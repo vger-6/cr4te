@@ -18,7 +18,7 @@ body {
   font-size: var(--type-body-size);
   line-height: var(--type-body-line-height);
   margin: 0;
-  padding: var(--layout-body-padding-top) var(--layout-body-padding-inline) var(--layout-body-padding-bottom);
+  padding: 0;
   background-color: var(--theme-page-bg);
 }
 
@@ -75,6 +75,11 @@ html, body {
   position: sticky;
   top: 0;
   z-index: 1000;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  padding: var(--layout-navigation-padding-block) var(--layout-navigation-padding-inline);
+  background-color: var(--theme-navigation-bg);
+  border-bottom: var(--theme-navigation-border-width) solid var(--theme-navigation-border);
 }
 
 .page-container {
@@ -84,28 +89,36 @@ html, body {
   overflow: hidden;
 }
 
+.page-content {
+  box-sizing: border-box;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--layout-content-padding-top) var(--layout-content-padding-inline)
+    var(--layout-content-padding-bottom);
+}
+
 .page-title {
   box-sizing: border-box;
   width: 100%;
-  min-height: var(--layout-title-search-height);
-  display: flex;
-  align-items: center;
   font-size: var(--type-page-title-size);
   line-height: var(--type-heading-line-height);
   font-weight: bold;
   color: var(--theme-title-text);
-  background-color: var(--theme-title-bg);
-  border: var(--theme-title-border-width) solid var(--theme-title-border);
-  padding: var(--space-xs) var(--space-md);
+  background-color: transparent;
+  border: 0;
+  padding: 0;
   margin: 0 0 var(--space-sm);
-  border-radius: var(--theme-title-radius);
+  border-radius: 0;
   overflow-wrap: anywhere;
 }
 
 .top-link {
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-sm);
+  margin: 0;
   font-weight: bold;
 }
 
@@ -689,6 +702,10 @@ a:focus img {
   transition: color var(--motion-interaction), background-color var(--motion-interaction);
 }
 
+.audio-gallery li:not(:last-child) {
+  border-bottom: var(--theme-track-separator-width) solid var(--theme-track-separator);
+}
+
 .audio-gallery li:nth-child(even) > .track-title {
   background-color: var(--theme-track-bg-even);
 }
@@ -728,6 +745,7 @@ a:focus img {
   font-weight: bold;
   background: var(--theme-pagination-button-bg);
   border: var(--theme-pagination-button-border-width) solid var(--theme-pagination-button-border);
+  border-radius: var(--theme-pagination-button-radius);
   height: 1.5rem;
   width: 2rem;
   cursor: pointer;
@@ -748,7 +766,8 @@ a:focus img {
 
 .search-bar-wrapper {
   position: relative;
-  margin: 0 2rem var(--space-sm) 0;
+  box-sizing: border-box;
+  margin: 0 0 var(--space-sm);
   width: 100%;
 }
 

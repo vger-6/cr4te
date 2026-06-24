@@ -588,6 +588,7 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertLess(rendered.index("assets/js/theme_bootstrap.js"), rendered.index("assets/css/tokens.css"))
             self.assertIn('assets/css/themes/frozen-aurora.css', rendered)
             self.assertIn('data-theme="theme-forest-night"', rendered)
+            self.assertIn('<header class="page-header">', rendered)
             self.assertIn('<nav class="top-link" aria-label="Primary">', rendered)
             self.assertIn('class="site-logo-link"', rendered)
             self.assertIn('<div class="breadcrumb-list">', rendered)
@@ -602,6 +603,8 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('placeholder="Search Artists, Works, Tags..."', rendered)
             self.assertIn('aria-haspopup="menu"', rendered)
             self.assertIn('role="menuitemradio"', rendered)
+            self.assertIn('<main class="page-content">', rendered)
+            self.assertIn('<h1 class="page-title">Artists</h1>', rendered)
             self.assertNotIn("body { display: none; }", rendered)
 
     def test_detail_header_renders_project_creator_as_only_contextual_breadcrumb(self):
@@ -627,7 +630,7 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertEqual(rendered.count('breadcrumb-separator--section'), 1)
             self.assertIn('<a href="creator.html">Displayed Noomi</a>', rendered)
             self.assertNotIn('nav-page-title', rendered)
-            self.assertRegex(rendered, r'<h1\b[^>]*>Displayed Landscapes</h1>')
+            self.assertNotRegex(rendered, r"<h1\b")
 
             creator_rendered = env.get_template("partials/_page_header.html.j2").render(
                 site_labels=ctx.site_labels,
@@ -645,7 +648,7 @@ class TemplateRendererTests(unittest.TestCase):
             )
 
             self.assertNotIn('breadcrumb-section', creator_rendered)
-            self.assertRegex(creator_rendered, r'<h1\b[^>]*>Displayed Noomi</h1>')
+            self.assertNotRegex(creator_rendered, r"<h1\b")
 
     def test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty(self):
         """Covers SITE-033."""
@@ -821,6 +824,8 @@ class TemplateRendererTests(unittest.TestCase):
                 self.assertIn('{% include "partials/_document_open.html.j2" %}', source)
                 self.assertIn('{% include "partials/_document_head.html.j2" %}', source)
                 self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
+                self.assertIn('<main class="page-content">', source)
+                self.assertIn('<h1 class="page-title">{{ page_shell.title }}</h1>', source)
                 self.assertNotIn('<html lang="en">', source)
                 self.assertNotIn('<div class="page-header">', source)
 

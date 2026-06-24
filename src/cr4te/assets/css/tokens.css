@@ -5,7 +5,7 @@
   --space-md: 1rem;
 
   --type-body-size: 1rem;
-  --type-page-title-size: 1.25rem;
+  --type-page-title-size: 1.75rem;
   --type-section-title-size: 1.125rem;
   --type-markdown-heading-size: var(--type-body-size);
   --type-label-size: 0.875rem;
@@ -27,7 +27,12 @@
   --layout-body-padding-top: var(--space-sm);
   --layout-body-padding-bottom: var(--space-sm);
   --layout-body-padding-inline: var(--space-sm);
-  --layout-two-column-gap: var(--space-sm);
+  --layout-navigation-padding-block: var(--space-sm);
+  --layout-navigation-padding-inline: var(--space-sm);
+  --layout-content-padding-top: var(--space-sm);
+  --layout-content-padding-bottom: var(--space-md);
+  --layout-content-padding-inline: clamp(var(--space-md), 3vw, 2rem);
+  --layout-two-column-gap: var(--space-md);
   --layout-section-gap: 1.5rem;
   --layout-title-search-height: 2.25rem;
   --layout-gallery-gap: var(--space-sm);
@@ -74,6 +79,10 @@
   --theme-breadcrumb-separator: var(--theme-text-muted);
   --theme-data-label-text: var(--theme-text-muted);
 
+  --theme-navigation-bg: color-mix(in srgb, var(--theme-page-bg) 80%, black);
+  --theme-navigation-border: color-mix(in srgb, var(--theme-page-bg) 70%, var(--theme-text));
+  --theme-navigation-border-width: 1px;
+
   --theme-title-bg: var(--theme-surface-raised-bg);
   --theme-title-text: var(--theme-text-strong);
   --theme-title-border: var(--theme-border);
@@ -99,7 +108,7 @@
   --theme-overview-border-width: var(--theme-panel-border-width);
   --theme-overview-radius: 0;
 
-  --theme-layout-column-padding-top: var(--space-sm);
+  --theme-layout-column-padding-top: var(--space-md);
   --theme-layout-column-padding-bottom: var(--space-md);
   --theme-layout-column-padding-left: 0;
   --theme-layout-column-padding-right: 0;
@@ -193,6 +202,8 @@
   --theme-track-hover-text: var(--theme-hover-text);
   --theme-track-playing-bg: var(--theme-selected-bg);
   --theme-track-playing-text: var(--theme-selected-text);
+  --theme-track-separator: transparent;
+  --theme-track-separator-width: 0;
 
   --theme-audio-controls-bg: var(--theme-surface-bg);
   --theme-audio-controls-border: var(--theme-border);
@@ -217,6 +228,7 @@
   --theme-pagination-button-bg: var(--theme-surface-bg);
   --theme-pagination-button-border: var(--theme-control-icon);
   --theme-pagination-button-border-width: 1px;
+  --theme-pagination-button-radius: 0;
   --theme-pagination-button-hover-bg: var(--theme-hover-bg);
   --theme-pagination-button-hover-text: var(--theme-hover-text);
   --theme-pagination-wrapper-bg: var(--theme-surface-bg);

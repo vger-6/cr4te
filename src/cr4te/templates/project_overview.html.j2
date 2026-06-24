@@ -10,6 +10,9 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
+  <main class="page-content">
+  <h1 class="page-title">{{ page_shell.title }}</h1>
+
   {% if projects %}
     {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
     {% include "partials/_search_bar.html.j2" %}
@@ -55,6 +58,7 @@
     </div>
 
   </div>
+  </main>
 </div>
 
 <script src="assets/js/utils.js" defer></script>

@@ -11,6 +11,9 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
+  <main class="page-content">
+  <h1 class="page-title">{{ page_shell.title }}</h1>
+
   <div class="two-column-layout">
     <div class="detail-content">
 
@@ -148,6 +151,7 @@
 
     </div>
   </div>
+  </main>
 </div>
 
 <script src="{{ path_to_root }}assets/js/utils.js" defer></script>

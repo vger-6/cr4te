@@ -1,5 +1,5 @@
 .theme-frozen-aurora {
-  --theme-page-bg: #0e1b2a;
+  --theme-page-bg: #0b1c2b;
   --theme-surface-bg: #162d42;
   --theme-surface-muted-bg: #18374f;
   --theme-surface-raised-bg: #162d42;
@@ -30,6 +30,9 @@
   --theme-link-disabled: #669ea6;
   --theme-data-label-text: #aad8ef;
 
+  --theme-navigation-bg: #06121e;
+  --theme-navigation-border: #24465d;
+
   --theme-title-bg: #162d42;
   --theme-title-text: #e0faff;
   --theme-title-border: var(--theme-panel-border);
@@ -46,14 +49,14 @@
   --theme-overview-padding-bottom: 1rem;
   --theme-overview-padding-left: 1rem;
   --theme-overview-padding-right: 1rem;
-  --theme-overview-radius: 0;
+  --theme-overview-radius: 0.5rem;
   --theme-overview-bg: #162d42;
   --theme-overview-border: var(--theme-panel-border);
   --theme-overview-border-width: var(--theme-panel-border-width);
 
   --theme-layout-column-padding-left: 1rem;
   --theme-layout-column-padding-right: 1rem;
-  --theme-layout-column-radius: 0;
+  --theme-layout-column-radius: 0.5rem;
   --theme-layout-column-bg: #162d42;
   --theme-layout-column-border: var(--theme-panel-border);
   --theme-layout-column-border-width: var(--theme-panel-border-width);
@@ -115,6 +118,7 @@
   --theme-pagination-bg: #162d42;
   --theme-pagination-button-bg: #162d42;
   --theme-pagination-button-border: #d9f2ff;
+  --theme-pagination-button-radius: var(--space-xs);
   --theme-pagination-wrapper-bg: #162d42;
 
   --theme-scrollbar-track: transparent;
