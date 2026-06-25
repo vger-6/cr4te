@@ -231,6 +231,16 @@ def _collect_collaborator_entry(
     )
 
 
+def _format_collaboration_members(names: list[str]) -> str:
+    if not names:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} & {names[1]}"
+    return f"{', '.join(names[:-2])}, {names[-2]} & {names[-1]}"
+
+
 def _get_collaboration_label(collab: CreatorModel, creator_name: str, get_creator: CreatorLoader) -> str:
     if creator_name in collab.members:
         others = [
@@ -238,7 +248,9 @@ def _get_collaboration_label(collab: CreatorModel, creator_name: str, get_creato
             for name in collab.members
             if name != creator_name
         ]
-        return " ".join(others)
+        if others:
+            return _format_collaboration_members(others)
+        return collab.display_name
     return collab.display_name
 
 

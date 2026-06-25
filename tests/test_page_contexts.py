@@ -274,7 +274,70 @@ class PageContextTests(unittest.TestCase):
                 compute_creator_stats(creator),
             )
 
-            self.assertEqual(page.collaborations[0].label, "Displayed Bob Missing Member")
+            self.assertEqual(page.collaborations[0].label, "Displayed Bob & Missing Member")
+
+    def test_collaboration_label_uses_single_name_when_there_are_no_other_members(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(name="Ada", display_name="Displayed Creator Ada", portrait="", collaborations=["Ada"])
+            collaboration = Creator(
+                name="Ada",
+                display_name="Displayed Collaboration Ada",
+                type=CreatorType.COLLABORATION,
+                active_since="",
+                members=["Ada"],
+                portrait="",
+                info="",
+                projects=[],
+                media_groups=[],
+            )
+            ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(
+                ctx,
+                creator,
+                lambda name: collaboration if name == collaboration.name else None,
+                compute_creator_stats(creator),
+            )
+
+            self.assertEqual(page.collaborations[0].label, "Displayed Collaboration Ada")
+
+    def test_collaboration_label_uses_comma_and_ampersand_for_multiple_members(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(name="Ada", display_name="Displayed Ada", portrait="", collaborations=["Ada & Bob & Charlie & Dana"])
+            bob = person(name="Bob", display_name="Displayed Bob", portrait="")
+            charlie = person(name="Charlie", display_name="Displayed Charlie", portrait="")
+            dana = person(name="Dana", display_name="Displayed Dana", portrait="")
+            collaboration = Creator(
+                name="Ada & Bob & Charlie & Dana",
+                display_name="The Quartet",
+                type=CreatorType.COLLABORATION,
+                active_since="",
+                members=["Ada", "Bob", "Charlie", "Dana"],
+                portrait="",
+                info="",
+                projects=[],
+                media_groups=[],
+            )
+            creators = {
+                bob.name: bob,
+                charlie.name: charlie,
+                dana.name: dana,
+                collaboration.name: collaboration,
+            }
+            ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(
+                ctx,
+                creator,
+                creators.get,
+                compute_creator_stats(creator),
+            )
+
+            self.assertEqual(page.collaborations[0].label, "Displayed Bob, Displayed Charlie & Displayed Dana")
 
     def test_missing_collaboration_reference_is_reported_as_structured_issue(self):
         with tempfile.TemporaryDirectory() as tmp:
