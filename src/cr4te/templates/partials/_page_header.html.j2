@@ -25,11 +25,11 @@
     <span class="breadcrumb-section">
       <span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>
       {% for item in section_navigation_items %}
-        {% if not loop.first %}<span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>{% endif %}
+        {% if not loop.first %}<span class="breadcrumb-separator breadcrumb-separator--section breadcrumb-separator--relation" aria-hidden="true">&rsaquo;</span>{% endif %}
         {% if item.current %}
-          <span class="nav-current" aria-current="page">{{ item.label }}</span>
+          <span class="nav-current breadcrumb-item" aria-current="page" data-overflow-title="{{ item.label }}">{{ item.label }}</span>
         {% else %}
-          <a href="{{ item.href }}">{{ item.label }}</a>
+          <a href="{{ item.href }}" class="breadcrumb-item" data-overflow-title="{{ item.label }}">{{ item.label }}</a>
         {% endif %}
       {% endfor %}
     </span>

@@ -80,6 +80,7 @@ class JavaScriptContractTests(unittest.TestCase):
         feature_scripts = [
             "aspect_gallery_builder.js",
             "audio_player.js",
+            "breadcrumb_tooltips.js",
             "image_captions_toggle.js",
             "justified_gallery_builder.js",
             "lightbox.js",
@@ -135,6 +136,7 @@ class JavaScriptContractTests(unittest.TestCase):
         cr4te_feature_scripts = {
             "aspect_gallery_builder.js",
             "audio_player.js",
+            "breadcrumb_tooltips.js",
             "image_captions_toggle.js",
             "justified_gallery_builder.js",
             "lightbox.js",
@@ -165,6 +167,19 @@ class JavaScriptContractTests(unittest.TestCase):
                 scripts = script_pattern.findall((TEMPLATE_DIR / template_name).read_text(encoding="utf-8"))
 
                 self.assertLess(scripts.index("pagination.js"), scripts.index("search_filter.js"))
+
+    def test_breadcrumb_tooltips_are_added_only_for_overflowing_items(self):
+        source = (ASSET_JS_DIR / "breadcrumb_tooltips.js").read_text(encoding="utf-8")
+
+        self.assertIn('const SELECTOR = ".breadcrumb-section [data-overflow-title]"', source)
+        self.assertIn("element.scrollWidth > element.clientWidth", source)
+        self.assertIn('element.setAttribute("title", title)', source)
+        self.assertIn('element.removeAttribute("title")', source)
+        self.assertIn("ResizeObserver", source)
+        self.assertIn("window.cr4te.breadcrumbTooltips.resizeObserver = observer", source)
+        self.assertIn("window.addEventListener(\"resize\", updateTooltips)", source)
+        self.assertIn("document.fonts.ready.then(updateTooltips)", source)
+        self.assertIn("cr4te.onReady(initBreadcrumbTooltips)", source)
 
     def test_pagination_reuses_per_gallery_instance_and_can_remove_resize_listener(self):
         source = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")

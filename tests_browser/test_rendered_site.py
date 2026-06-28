@@ -624,7 +624,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAlmostEqual(centers["logo"], centers["theme"], delta=0.25)
         self.assertNoBrowserErrors()
 
-    def test_detail_breadcrumb_wraps_without_moving_primary_header_controls(self):
+    def test_detail_breadcrumb_truncates_without_moving_primary_header_controls(self):
         """Covers SITE-024."""
         self.open_page(self.audio_project_path)
 
@@ -637,6 +637,134 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             self.page.locator(".breadcrumb-section > .breadcrumb-separator--section").count(),
             2,
         )
+        self.assertEqual(self.page.locator(".breadcrumb-separator--relation").inner_text(), "›")
+
+        separator_alignment = self.page.evaluate(
+            """
+            () => {
+                const primaryItems = Array.from(document.querySelector('.breadcrumb-list').children);
+                const tags = primaryItems[primaryItems.length - 1].getBoundingClientRect();
+                const separator = document
+                    .querySelector('.breadcrumb-section > .breadcrumb-separator')
+                    .getBoundingClientRect();
+                const creator = document
+                    .querySelector('.breadcrumb-section .breadcrumb-item')
+                    .getBoundingClientRect();
+                const separatorCenter = separator.left + separator.width / 2;
+                return {
+                    tagsToSeparator: separatorCenter - tags.right,
+                    separatorToCreator: creator.left - separatorCenter,
+                };
+            }
+            """
+        )
+        self.assertAlmostEqual(
+            separator_alignment["tagsToSeparator"],
+            separator_alignment["separatorToCreator"],
+            delta=0.5,
+        )
+
+        breadcrumb_behavior = self.page.evaluate(
+            """
+            async () => {
+                const section = document.querySelector('.breadcrumb-section');
+                const items = Array.from(section.querySelectorAll('.breadcrumb-item'));
+                const relation = section.querySelector('.breadcrumb-separator--relation');
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+                items[0].textContent = 'Creator';
+                items[0].dataset.overflowTitle = 'Creator';
+                items[1].textContent = 'Project';
+                items[1].dataset.overflowTitle = 'Project';
+                section.style.maxWidth = 'none';
+                section.style.flex = '1 1 auto';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                const shortTitles = items.map(item => item.getAttribute('title'));
+
+                const longCreator = 'Creator With A Very Long Display Name That Needs Ellipsis';
+                const longProject = 'Project With A Very Long Display Title That Needs Ellipsis';
+                items[0].textContent = longCreator;
+                items[0].dataset.overflowTitle = longCreator;
+                items[1].textContent = longProject;
+                items[1].dataset.overflowTitle = longProject;
+                section.style.maxWidth = '12rem';
+                section.style.flex = '0 1 12rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const sectionRect = section.getBoundingClientRect();
+                const itemRects = items.map(item => item.getBoundingClientRect());
+                return {
+                    sectionWhiteSpace: getComputedStyle(section).whiteSpace,
+                    itemTextOverflows: items.map(item => getComputedStyle(item).textOverflow),
+                    itemOverflows: items.map(item => item.scrollWidth > item.clientWidth),
+                    itemTitles: items.map(item => item.getAttribute('title')),
+                    shortTitles,
+                    relationText: relation.textContent.trim(),
+                    sameLine: Math.abs(itemRects[0].top - itemRects[1].top) < 0.5,
+                    sectionHeight: sectionRect.height,
+                    itemHeight: Math.max(...itemRects.map(rect => rect.height)),
+                };
+            }
+            """
+        )
+        self.assertEqual(breadcrumb_behavior["sectionWhiteSpace"], "nowrap")
+        self.assertTrue(all(value == "ellipsis" for value in breadcrumb_behavior["itemTextOverflows"]))
+        self.assertTrue(all(breadcrumb_behavior["itemOverflows"]))
+        self.assertEqual(breadcrumb_behavior["shortTitles"], [None, None])
+        self.assertEqual(
+            breadcrumb_behavior["itemTitles"],
+            [
+                "Creator With A Very Long Display Name That Needs Ellipsis",
+                "Project With A Very Long Display Title That Needs Ellipsis",
+            ],
+        )
+        self.assertEqual(breadcrumb_behavior["relationText"], "›")
+        self.assertTrue(breadcrumb_behavior["sameLine"])
+        self.assertLessEqual(breadcrumb_behavior["sectionHeight"], breadcrumb_behavior["itemHeight"] * 1.5)
+
+        self.page.evaluate(
+            """
+            () => {
+                const section = document.querySelector('.breadcrumb-section');
+                section.style.maxWidth = '';
+                section.style.flex = '';
+                window.dispatchEvent(new Event('resize'));
+            }
+            """
+        )
+        self.page.set_viewport_size({"width": 820, "height": 900})
+        squeezed = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                await tick();
+                const primary = document.querySelector('.breadcrumb-list').getBoundingClientRect();
+                const section = document.querySelector('.breadcrumb-section').getBoundingClientRect();
+                const leadingSeparator = document.querySelector(
+                    '.breadcrumb-section > .breadcrumb-separator'
+                ).getBoundingClientRect();
+                const theme = document.querySelector('#theme-toggle').getBoundingClientRect();
+                const sectionStyle = getComputedStyle(document.querySelector('.breadcrumb-section'));
+                return {
+                    primaryRight: primary.right,
+                    sectionLeft: section.left,
+                    sectionRight: section.right,
+                    leadingSeparatorLeft: leadingSeparator.left,
+                    themeLeft: theme.left,
+                    sectionOverflow: sectionStyle.overflowX,
+                    sectionWidth: section.width,
+                };
+            }
+            """
+        )
+        self.assertGreaterEqual(squeezed["sectionLeft"], squeezed["primaryRight"] - 0.5)
+        self.assertGreaterEqual(squeezed["leadingSeparatorLeft"], squeezed["primaryRight"] - 0.5)
+        self.assertLessEqual(squeezed["sectionRight"], squeezed["themeLeft"] + 0.5)
+        self.assertEqual(squeezed["sectionOverflow"], "hidden")
+        self.assertGreaterEqual(squeezed["sectionWidth"], 0)
 
         colors = self.page.evaluate(
             """
@@ -666,14 +794,16 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 const logo = rect('.site-logo-link');
                 const primary = rect('.breadcrumb-list');
                 const theme = rect('#theme-toggle');
-                const section = rect('.breadcrumb-section');
+                const sectionElement = document.querySelector('.breadcrumb-section');
+                const section = sectionElement.getBoundingClientRect();
                 const centers = [logo, primary, theme].map(box => box.top + box.height / 2);
                 return {
                     firstRowCenterSpread: Math.max(...centers) - Math.min(...centers),
                     firstRowBottom: Math.max(logo.bottom, primary.bottom, theme.bottom),
                     sectionTop: section.top,
+                    sectionWhiteSpace: getComputedStyle(sectionElement).whiteSpace,
                     leadingSeparatorDisplay: getComputedStyle(
-                        document.querySelector('.breadcrumb-section > .breadcrumb-separator:first-child')
+                        sectionElement.querySelector('.breadcrumb-separator')
                     ).display,
                 };
             }
@@ -681,6 +811,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertLessEqual(narrow["firstRowCenterSpread"], 0.5)
         self.assertGreater(narrow["sectionTop"], narrow["firstRowBottom"])
+        self.assertEqual(narrow["sectionWhiteSpace"], "nowrap")
         self.assertEqual(narrow["leadingSeparatorDisplay"], "none")
 
         self.open_page(self.creator_path)

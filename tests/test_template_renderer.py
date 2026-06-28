@@ -632,8 +632,18 @@ class TemplateRendererTests(unittest.TestCase):
 
             self.assertIn('breadcrumb-section', rendered)
             self.assertEqual(rendered.count('breadcrumb-separator--section'), 2)
-            self.assertIn('<a href="creator.html">Displayed Noomi</a>', rendered)
-            self.assertIn('<span class="nav-current" aria-current="page">Displayed Landscapes</span>', rendered)
+            self.assertIn('breadcrumb-separator--relation" aria-hidden="true">&rsaquo;</span>', rendered)
+            self.assertIn(
+                '<a href="creator.html" class="breadcrumb-item" data-overflow-title="Displayed Noomi">'
+                'Displayed Noomi</a>',
+                rendered,
+            )
+            self.assertIn(
+                '<span class="nav-current breadcrumb-item" aria-current="page" '
+                'data-overflow-title="Displayed Landscapes">Displayed Landscapes</span>',
+                rendered,
+            )
+            self.assertNotRegex(rendered, r'\stitle="Displayed Landscapes"')
             self.assertNotIn('nav-page-title', rendered)
             self.assertNotRegex(rendered, r"<h1\b")
 
@@ -655,7 +665,13 @@ class TemplateRendererTests(unittest.TestCase):
 
             self.assertIn('breadcrumb-section', creator_rendered)
             self.assertEqual(creator_rendered.count('breadcrumb-separator--section'), 1)
-            self.assertIn('<span class="nav-current" aria-current="page">Displayed Noomi</span>', creator_rendered)
+            self.assertNotIn('breadcrumb-separator--relation', creator_rendered)
+            self.assertIn(
+                '<span class="nav-current breadcrumb-item" aria-current="page" '
+                'data-overflow-title="Displayed Noomi">Displayed Noomi</span>',
+                creator_rendered,
+            )
+            self.assertNotRegex(creator_rendered, r'\stitle="Displayed Noomi"')
             self.assertNotRegex(creator_rendered, r"<h1\b")
 
     def test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty(self):

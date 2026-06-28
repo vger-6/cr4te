@@ -78,7 +78,7 @@ REQUIREMENT_TESTS = {
     "SITE-021": ("tests/test_config_manager.py::ConfigManagerTests.test_complete_phrase_formats_are_configurable_and_reorder_named_values",),
     "SITE-022": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_saved_theme_is_applied_before_theme_menu_initializes",),
     "SITE-023": ("tests/test_template_renderer.py::TemplateRendererTests.test_empty_overview_templates_render_static_empty_state_without_search_or_cards",),
-    "SITE-024": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_breadcrumb_wraps_without_moving_primary_header_controls",),
+    "SITE-024": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_breadcrumb_truncates_without_moving_primary_header_controls",),
     "SITE-025": (
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_and_page_content_use_distinct_aligned_geometry",
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_surfaces_and_panels_follow_selected_theme",
