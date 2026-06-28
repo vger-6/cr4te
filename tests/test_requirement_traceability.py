@@ -81,7 +81,7 @@ REQUIREMENT_TESTS = {
     "SITE-024": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_breadcrumb_wraps_without_moving_primary_header_controls",),
     "SITE-025": (
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_and_page_content_use_distinct_aligned_geometry",
-        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_title_surfaces_and_panels_follow_selected_theme",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_surfaces_and_panels_follow_selected_theme",
     ),
     "SITE-026": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_content_first_typography_hierarchy",),
     "SITE-027": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_page_section_and_gallery_spacing_follow_layout_tokens",),

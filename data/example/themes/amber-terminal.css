@@ -41,12 +41,6 @@
   --theme-link-hover: var(--theme-accent-hover);
   --theme-link-disabled: var(--theme-accent-muted);
 
-  --theme-title-bg: transparent;
-  --theme-title-text: var(--theme-text-strong);
-  --theme-title-border: var(--theme-border);
-  --theme-title-border-width: var(--theme-terminal-line-width);
-  --theme-title-radius: 0;
-
   --theme-panel-bg: var(--theme-page-bg);
   --theme-panel-border: var(--theme-border);
   --theme-panel-border-width: var(--theme-terminal-line-width);

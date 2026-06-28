@@ -5,7 +5,6 @@
   --space-md: 1rem;
 
   --type-body-size: 1rem;
-  --type-page-title-size: 1.25rem;
   --type-section-title-size: 1.125rem;
   --type-markdown-heading-size: var(--type-body-size);
   --type-label-size: 0.875rem;
@@ -24,9 +23,6 @@
   --scrollbar-border-width: 3px;
 
   /* Layout and component tokens */
-  --layout-body-padding-top: var(--space-sm);
-  --layout-body-padding-bottom: var(--space-sm);
-  --layout-body-padding-inline: var(--space-sm);
   --layout-navigation-padding-block: var(--space-sm);
   --layout-navigation-padding-inline: var(--space-md);
   --layout-content-padding-top: var(--space-md);
@@ -34,7 +30,7 @@
   --layout-content-padding-inline: var(--space-md);
   --layout-two-column-gap: var(--space-md);
   --layout-section-gap: 1.5rem;
-  --layout-title-search-height: 2.25rem;
+  --layout-search-height: 2.25rem;
   --layout-gallery-gap: var(--space-sm);
   --layout-card-gap: var(--space-md);
 
@@ -82,13 +78,6 @@
   --theme-navigation-bg: color-mix(in srgb, var(--theme-page-bg) 80%, black);
   --theme-navigation-border: color-mix(in srgb, var(--theme-page-bg) 70%, var(--theme-text));
   --theme-navigation-border-width: 1px;
-
-  --theme-title-bg: var(--theme-surface-raised-bg);
-  --theme-title-text: var(--theme-text-strong);
-  --theme-title-border: var(--theme-border);
-  --theme-title-border-width: 1px;
-  --theme-title-margin: 0 0 var(--space-sm);
-  --theme-title-radius: 0;
 
   --theme-panel-bg: var(--theme-surface-bg);
   --theme-panel-border: var(--theme-border);

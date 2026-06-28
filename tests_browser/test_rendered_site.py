@@ -632,10 +632,10 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(self.page.locator(".page-content > h1").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section").count(), 1)
         self.assertEqual(self.page.locator(".breadcrumb-section > a").count(), 1)
-        self.assertEqual(self.page.locator(".breadcrumb-section .nav-page-title").count(), 0)
+        self.assertEqual(self.page.locator(".breadcrumb-section .nav-current").count(), 1)
         self.assertEqual(
             self.page.locator(".breadcrumb-section > .breadcrumb-separator--section").count(),
-            1,
+            2,
         )
 
         colors = self.page.evaluate(
@@ -686,7 +686,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.open_page(self.creator_path)
         self.assertEqual(self.page.locator(".page-header > h1").count(), 0)
         self.assertEqual(self.page.locator(".page-content > h1").count(), 1)
-        self.assertEqual(self.page.locator(".breadcrumb-section").count(), 0)
+        self.assertEqual(self.page.locator(".breadcrumb-section").count(), 1)
+        self.assertEqual(self.page.locator(".breadcrumb-section > a").count(), 0)
+        self.assertEqual(self.page.locator(".breadcrumb-section .nav-current").count(), 1)
+        self.assertEqual(
+            self.page.locator(".breadcrumb-section > .breadcrumb-separator--section").count(),
+            1,
+        )
         self.assertNoBrowserErrors()
 
     def test_navigation_and_page_content_use_distinct_aligned_geometry(self):
@@ -795,16 +801,16 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 markdown.appendChild(heading);
                 const result = {
                     body: parseFloat(getComputedStyle(document.body).fontSize),
-                    pageTitle: parseFloat(getComputedStyle(document.querySelector('.page-title')).fontSize),
                     sectionTitle: parseFloat(getComputedStyle(document.querySelector('.section-title')).fontSize),
                     markdownHeading: parseFloat(getComputedStyle(heading).fontSize),
+                    visibleTitleCount: document.querySelectorAll('.page-title').length,
                 };
                 heading.remove();
                 return result;
             }
             """
         )
-        self.assertGreater(sizes["pageTitle"], sizes["sectionTitle"])
+        self.assertEqual(sizes["visibleTitleCount"], 0)
         self.assertGreater(sizes["sectionTitle"], sizes["body"])
         self.assertLessEqual(sizes["markdownHeading"], sizes["body"])
         self.assertNoBrowserErrors()
@@ -947,7 +953,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertNoBrowserErrors()
 
-    def test_navigation_title_surfaces_and_panels_follow_selected_theme(self):
+    def test_navigation_surfaces_and_panels_follow_selected_theme(self):
         """Covers SITE-025."""
         self.open_page(self.creator_path)
 
@@ -962,43 +968,18 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             """
             () => {
                 const header = getComputedStyle(document.querySelector('.page-header'));
-                const title = getComputedStyle(document.querySelector('.page-title'));
-                const probe = document.createElement('span');
-                probe.style.backgroundColor = 'var(--theme-title-bg)';
-                probe.style.border = 'var(--theme-title-border-width) solid var(--theme-title-border)';
-                document.body.appendChild(probe);
-                const probeStyle = getComputedStyle(probe);
-                const titleTokenBackground = probeStyle.backgroundColor;
-                const titleTokenBorders = [
-                    probeStyle.borderTopWidth,
-                    probeStyle.borderRightWidth,
-                    probeStyle.borderBottomWidth,
-                    probeStyle.borderLeftWidth,
-                ];
-                probe.remove();
                 return {
                     bodyBackground: getComputedStyle(document.body).backgroundColor,
                     navigationBackground: header.backgroundColor,
                     navigationBorder: [header.borderBottomWidth, header.borderBottomColor],
-                    titleBackground: title.backgroundColor,
-                    titleTokenBackground,
-                    titleMarginBottom: title.marginBottom,
-                    titleRadius: title.borderTopLeftRadius,
-                    titleTokenBorders,
-                    titleBorders: [
-                        title.borderTopWidth,
-                        title.borderRightWidth,
-                        title.borderBottomWidth,
-                        title.borderLeftWidth,
-                    ],
+                    visibleTitleCount: document.querySelectorAll('.page-title').length,
                 };
             }
             """
         )
         self.assertNotEqual(frozen_shell["navigationBackground"], frozen_shell["bodyBackground"])
         self.assertGreater(float(frozen_shell["navigationBorder"][0].removesuffix("px")), 0)
-        self.assertEqual(frozen_shell["titleBackground"], frozen_shell["titleTokenBackground"])
-        self.assertEqual(frozen_shell["titleBorders"], frozen_shell["titleTokenBorders"])
+        self.assertEqual(frozen_shell["visibleTitleCount"], 0)
         self.assertGreater(float(frozen_panel_border[0].removesuffix("px")), 0)
 
         self.page.get_by_role("button", name="Themes").click()
@@ -1007,24 +988,16 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         forest_shell = self.page.evaluate(
             """
             () => {
-                const probe = document.createElement('span');
-                probe.style.backgroundColor = 'var(--theme-title-bg)';
-                document.body.appendChild(probe);
-                const titleTokenBackground = getComputedStyle(probe).backgroundColor;
-                probe.remove();
                 return {
                     bodyBackground: getComputedStyle(document.body).backgroundColor,
                     navigationBackground: getComputedStyle(document.querySelector('.page-header')).backgroundColor,
-                    titleBackground: getComputedStyle(document.querySelector('.page-title')).backgroundColor,
-                    titleMarginBottom: getComputedStyle(document.querySelector('.page-title')).marginBottom,
-                    titleRadius: getComputedStyle(document.querySelector('.page-title')).borderTopLeftRadius,
-                    titleTokenBackground,
+                    visibleTitleCount: document.querySelectorAll('.page-title').length,
                 };
             }
             """
         )
         self.assertNotEqual(forest_shell["navigationBackground"], forest_shell["bodyBackground"])
-        self.assertEqual(forest_shell["titleBackground"], forest_shell["titleTokenBackground"])
+        self.assertEqual(forest_shell["visibleTitleCount"], 0)
         self.assertNotEqual(forest_panel_border[1], frozen_panel_border[1])
 
         self.assertEqual(border(".left-column"), forest_panel_border)

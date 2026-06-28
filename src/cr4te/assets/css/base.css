@@ -113,21 +113,6 @@ html, body {
     var(--layout-content-padding-bottom);
 }
 
-.page-title {
-  box-sizing: border-box;
-  width: 100%;
-  font-size: var(--type-page-title-size);
-  line-height: var(--type-heading-line-height);
-  font-weight: bold;
-  color: var(--theme-title-text);
-  background-color: var(--theme-title-bg);
-  border: var(--theme-title-border-width) solid var(--theme-title-border);
-  padding: var(--space-xs) var(--space-md);
-  margin: var(--theme-title-margin);
-  border-radius: var(--theme-title-radius);
-  overflow-wrap: anywhere;
-}
-
 .top-link {
   display: flex;
   align-items: center;
@@ -787,7 +772,7 @@ a:focus img {
 .search-box {
   display: block;
   width: 100%;
-  height: var(--layout-title-search-height);
+  height: var(--layout-search-height);
   font-size: var(--type-body-size);
   line-height: var(--type-body-line-height);
   padding: 0 2.5rem 0 var(--space-md); /* extra right padding for icon */
@@ -1003,6 +988,10 @@ a:focus img {
     linear-gradient(var(--theme-slider-fill), var(--theme-slider-fill))
     0 0 / 0% 100% no-repeat var(--theme-slider-track);
   outline: none;
+}
+
+.media-slider:focus-visible {
+  box-shadow: 0 0 0 var(--theme-focus-outline-width) var(--theme-slider-focus-ring);
 }
 
 .media-slider::-webkit-slider-runnable-track {
