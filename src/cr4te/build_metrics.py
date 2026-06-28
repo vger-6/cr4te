@@ -16,7 +16,7 @@ class AssetStatistics:
     source_thumbnails_generated: int = 0
     source_thumbnails_reused: int = 0
     default_thumbnail_uses: int = 0
-    source_hash_checks: int = 0
+    source_freshness_checks: int = 0
 
 
 @dataclass(frozen=True)

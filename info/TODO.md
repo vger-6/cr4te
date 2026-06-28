@@ -17,7 +17,7 @@ These items come from the full-codebase review of the Python build pipeline, gen
   - Confirm whether `Publication` or the broader `Study` is the better default project label.
   - Add the preset only when its labels, facet set, media ordering, gallery defaults, tests, and wiki documentation form a coherent built-in domain.
 - [ ] Add `--dry-run` flag to `build`.
-- [ ] Add a `--prune-thumbnails` build option that removes orphaned cached thumbnails and hash sidecars without regenerating valid thumbnails.
+- [ ] Add a `--prune-thumbnails` build option that removes orphaned cached thumbnails and freshness sidecars without regenerating valid thumbnails.
 - [ ] Add optional progress reporting for large folder trees.
 - [ ] Make scan exclusions relative to the configured library root.
   - A library below a dot-prefixed ancestor directory is currently treated as empty because exclusion checks inspect absolute path components.

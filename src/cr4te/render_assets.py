@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +19,7 @@ from .enums.portrait_visibility import PortraitVisibility
 from .enums.thumb_type import ThumbType
 from .media_cache import ImageDimensions
 from .render_models import ThumbnailContext
-from .utils import file_utils, image_utils, path_utils
+from .utils import image_utils, path_utils
 
 __all__ = [
     "build_thumbnail_context",
@@ -30,6 +31,8 @@ __all__ = [
     "resolve_thumbnail_or_default",
     "stage_media_file",
 ]
+
+THUMBNAIL_FRESHNESS_VERSION = 1
 
 @dataclass(frozen=True)
 class DefaultThumbnailSpec:
@@ -145,8 +148,39 @@ def get_image_orientation(ctx: HtmlBuildContext, path: Path) -> Orientation:
     return get_image_dimensions(ctx, path).orientation
 
 
-def _source_hash_sidecar_path(thumb_path: Path) -> Path:
-    return thumb_path.with_suffix(f"{thumb_path.suffix}.sha256")
+def _freshness_sidecar_path(thumb_path: Path) -> Path:
+    return thumb_path.with_suffix(f"{thumb_path.suffix}.json")
+
+
+def _thumbnail_freshness_metadata(
+    source_path: Path,
+    rel_image_path: Path,
+    thumb_path: Path,
+    thumb_type: ThumbType,
+    generated_height: int,
+) -> dict[str, int | str]:
+    source_stat = source_path.stat()
+    return {
+        "version": THUMBNAIL_FRESHNESS_VERSION,
+        "source_path": rel_image_path.as_posix(),
+        "source_size": source_stat.st_size,
+        "source_mtime_ns": source_stat.st_mtime_ns,
+        "thumb_type": thumb_type.value,
+        "generated_height": generated_height,
+        "thumbnail_suffix": thumb_path.suffix.lower(),
+    }
+
+
+def _read_freshness_sidecar(sidecar_path: Path) -> dict[str, object] | None:
+    try:
+        data = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _write_freshness_sidecar(sidecar_path: Path, metadata: dict[str, int | str]) -> None:
+    sidecar_path.write_text(json.dumps(metadata, sort_keys=True), encoding="utf-8")
 
 
 def _regenerate_thumbnail(ctx: HtmlBuildContext, source_path: Path, thumb_path: Path, thumb_type: ThumbType) -> None:
@@ -170,7 +204,7 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
     thumb_path = ctx.thumbs_dir / path_utils.build_unique_path(rel_image_path)
     thumb_path = path_utils.tag_path(thumb_path, thumb_type.value)
     source_path = ctx.input_dir / rel_image_path
-    sidecar_path = _source_hash_sidecar_path(thumb_path)
+    sidecar_path = _freshness_sidecar_path(thumb_path)
 
     if not source_path.is_file():
         ctx.report_issue(missing_media_issue(source_path))
@@ -178,19 +212,23 @@ def _get_or_create_thumbnail(ctx: HtmlBuildContext, rel_image_path: Path, thumb_
         return ctx.get_default_thumb_path(thumb_type)
 
     try:
-        ctx.asset_statistics.source_hash_checks += 1
-        source_hash = file_utils.calculate_sha256(source_path)
-        try:
-            stored_hash = sidecar_path.read_text(encoding="ascii")
-        except (OSError, UnicodeError):
-            stored_hash = None
+        ctx.asset_statistics.source_freshness_checks += 1
+        generated_height = ctx.get_generated_thumb_height(thumb_type)
+        current_freshness = _thumbnail_freshness_metadata(
+            source_path,
+            rel_image_path,
+            thumb_path,
+            thumb_type,
+            generated_height,
+        )
+        stored_freshness = _read_freshness_sidecar(sidecar_path)
 
-        if thumb_path.exists() and source_hash == stored_hash:
+        if thumb_path.exists() and current_freshness == stored_freshness:
             ctx.asset_statistics.source_thumbnails_reused += 1
             return thumb_path
 
         _regenerate_thumbnail(ctx, source_path, thumb_path, thumb_type)
-        sidecar_path.write_text(source_hash, encoding="ascii")
+        _write_freshness_sidecar(sidecar_path, current_freshness)
     except Exception as exc:
         ctx.report_issue(thumbnail_failure_issue(source_path, exc), exc)
         ctx.asset_statistics.default_thumbnail_uses += 1

@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import tempfile
@@ -23,6 +24,14 @@ from cr4te.render_assets import (
     resolve_thumbnail_or_default,
     stage_media_file,
 )
+
+
+def freshness_sidecar_path(thumb_path: Path) -> Path:
+    return thumb_path.with_suffix(f"{thumb_path.suffix}.json")
+
+
+def read_freshness_metadata(thumb_path: Path) -> dict[str, object]:
+    return json.loads(freshness_sidecar_path(thumb_path).read_text(encoding="utf-8"))
 
 
 class MediaStagingTests(unittest.TestCase):
@@ -144,118 +153,7 @@ class MediaStagingTests(unittest.TestCase):
             self.assertEqual(thumbnail, ctx.get_default_thumb_path(ThumbType.GALLERY))
             self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
 
-    def test_generated_thumbnail_stores_authoritative_source_hash(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "input"
-            output_dir = Path(tmp) / "site"
-            image_path = root / "Noomi" / "image.png"
-            image_path.parent.mkdir(parents=True)
-            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
-
-            config = apply_cli_overrides(load_config(), domain=Domain.ART)
-            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
-            prepare_output_dirs(ctx)
-
-            with patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="source-hash") as calculate_sha256:
-                thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            calculate_sha256.assert_called_once_with(image_path)
-            self.assertEqual(thumb_path.with_suffix(".png.sha256").read_text(encoding="ascii"), "source-hash")
-            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
-            self.assertEqual(ctx.asset_statistics.source_hash_checks, 1)
-
-    def test_existing_thumbnail_is_reused_only_when_source_hash_matches(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "input"
-            output_dir = Path(tmp) / "site"
-            image_path = root / "Noomi" / "image.png"
-            image_path.parent.mkdir(parents=True)
-            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
-
-            config = apply_cli_overrides(load_config(), domain=Domain.ART)
-            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
-            prepare_output_dirs(ctx)
-
-            with patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="source-hash"):
-                thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            with (
-                patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="source-hash") as calculate_sha256,
-                patch("cr4te.render_assets.image_utils.generate_thumbnail") as generate_thumbnail,
-            ):
-                reused_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            calculate_sha256.assert_called_once_with(image_path)
-            generate_thumbnail.assert_not_called()
-            self.assertEqual(reused_path, thumb_path)
-            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
-            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
-            self.assertEqual(ctx.asset_statistics.source_hash_checks, 2)
-
-    def test_thumbnail_is_regenerated_when_sidecar_is_missing(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "input"
-            output_dir = Path(tmp) / "site"
-            image_path = root / "Noomi" / "image.png"
-            image_path.parent.mkdir(parents=True)
-            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
-
-            config = apply_cli_overrides(load_config(), domain=Domain.ART)
-            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
-            prepare_output_dirs(ctx)
-
-            with patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="old-source-hash"):
-                thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-            thumb_path.with_suffix(".png.sha256").unlink()
-
-            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
-            with (
-                patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="new-source-hash") as calculate_sha256,
-                patch(
-                    "cr4te.render_assets.image_utils.generate_thumbnail",
-                    return_value=replacement_thumb,
-                ) as generate_thumbnail,
-            ):
-                regenerated_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            self.assertEqual(regenerated_path, thumb_path)
-            calculate_sha256.assert_called_once_with(image_path)
-            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
-            self.assertEqual(ctx.asset_statistics.source_hash_checks, 2)
-            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
-            self.assertEqual(
-                thumb_path.with_suffix(".png.sha256").read_text(encoding="ascii"),
-                "new-source-hash",
-            )
-
-    def test_thumbnail_is_regenerated_when_sidecar_is_unreadable(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "input"
-            output_dir = Path(tmp) / "site"
-            image_path = root / "Noomi" / "image.png"
-            image_path.parent.mkdir(parents=True)
-            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
-
-            config = apply_cli_overrides(load_config(), domain=Domain.ART)
-            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
-            prepare_output_dirs(ctx)
-
-            with patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="old-source-hash"):
-                thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-            sidecar_path = thumb_path.with_suffix(".png.sha256")
-            sidecar_path.write_bytes(b"\xff")
-
-            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
-            with (
-                patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="new-source-hash"),
-                patch("cr4te.render_assets.image_utils.generate_thumbnail", return_value=replacement_thumb) as generate_thumbnail,
-            ):
-                resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
-            self.assertEqual(sidecar_path.read_text(encoding="ascii"), "new-source-hash")
-
-    def test_thumbnail_is_regenerated_when_content_changes_with_preserved_timestamps(self):
+    def test_generated_thumbnail_stores_authoritative_source_freshness_metadata(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
@@ -268,23 +166,204 @@ class MediaStagingTests(unittest.TestCase):
             prepare_output_dirs(ctx)
 
             thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-            sidecar_path = thumb_path.with_suffix(".png.sha256")
-            original_hash = sidecar_path.read_text(encoding="ascii")
+
             source_stat = image_path.stat()
-            parent_stat = image_path.parent.stat()
+            self.assertEqual(
+                read_freshness_metadata(thumb_path),
+                {
+                    "version": 1,
+                    "source_path": "Noomi/image.png",
+                    "source_size": source_stat.st_size,
+                    "source_mtime_ns": source_stat.st_mtime_ns,
+                    "thumb_type": "gallery",
+                    "generated_height": ctx.get_generated_thumb_height(ThumbType.GALLERY),
+                    "thumbnail_suffix": ".png",
+                },
+            )
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 1)
 
-            Image.new("RGB", (40, 80), color=(20, 120, 80)).save(image_path)
-            os.utime(image_path, ns=(source_stat.st_atime_ns, source_stat.st_mtime_ns))
-            os.utime(image_path.parent, ns=(parent_stat.st_atime_ns, parent_stat.st_mtime_ns))
+    def test_existing_thumbnail_is_reused_when_source_freshness_matches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
 
-            resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
 
-            self.assertNotEqual(sidecar_path.read_text(encoding="ascii"), original_hash)
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail") as generate_thumbnail:
+                reused_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            generate_thumbnail.assert_not_called()
+            self.assertEqual(reused_path, thumb_path)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 2)
+
+    def test_thumbnail_is_regenerated_when_freshness_sidecar_is_missing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            freshness_sidecar_path(thumb_path).unlink()
+
+            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
+            with patch(
+                "cr4te.render_assets.image_utils.generate_thumbnail",
+                return_value=replacement_thumb,
+            ) as generate_thumbnail:
+                regenerated_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(regenerated_path, thumb_path)
+            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 2)
             self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
-            self.assertEqual(ctx.asset_statistics.source_hash_checks, 2)
-            with Image.open(thumb_path) as image:
-                self.assertEqual(image.height, ctx.get_generated_thumb_height(ThumbType.GALLERY))
-                self.assertEqual(image.width, 225)
+            self.assertEqual(read_freshness_metadata(thumb_path)["source_path"], "Noomi/image.png")
+
+    def test_thumbnail_is_regenerated_when_freshness_sidecar_is_unreadable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            sidecar_path = freshness_sidecar_path(thumb_path)
+            sidecar_path.write_bytes(b"\xff")
+
+            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail", return_value=replacement_thumb) as generate_thumbnail:
+                resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(read_freshness_metadata(thumb_path)["source_path"], "Noomi/image.png")
+
+    def test_thumbnail_is_reused_when_content_changes_with_same_size_and_mtime(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            original_metadata = read_freshness_metadata(thumb_path)
+            source_stat = image_path.stat()
+            image_bytes = bytearray(image_path.read_bytes())
+            image_bytes[-1] = (image_bytes[-1] + 1) % 256
+            image_path.write_bytes(image_bytes)
+            os.utime(image_path, ns=(source_stat.st_atime_ns, source_stat.st_mtime_ns))
+
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail") as generate_thumbnail:
+                reused_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            generate_thumbnail.assert_not_called()
+            self.assertEqual(reused_path, thumb_path)
+            self.assertEqual(read_freshness_metadata(thumb_path), original_metadata)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 1)
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 2)
+
+    def test_thumbnail_is_regenerated_when_source_size_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            image_path.write_bytes(image_path.read_bytes() + b"changed-size")
+
+            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail", return_value=replacement_thumb) as generate_thumbnail:
+                regenerated_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(regenerated_path, thumb_path)
+            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 2)
+            self.assertEqual(read_freshness_metadata(thumb_path)["source_size"], image_path.stat().st_size)
+
+    def test_thumbnail_is_regenerated_when_source_mtime_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            source_stat = image_path.stat()
+            newer_ns = source_stat.st_mtime_ns + 1_000_000_000
+            os.utime(image_path, ns=(source_stat.st_atime_ns, newer_ns))
+
+            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail", return_value=replacement_thumb) as generate_thumbnail:
+                regenerated_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(regenerated_path, thumb_path)
+            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
+            self.assertEqual(ctx.asset_statistics.source_freshness_checks, 2)
+            self.assertEqual(read_freshness_metadata(thumb_path)["source_mtime_ns"], image_path.stat().st_mtime_ns)
+
+    def test_thumbnail_is_regenerated_when_recipe_metadata_changes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            image_path = root / "Noomi" / "image.png"
+            image_path.parent.mkdir(parents=True)
+            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
+
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
+            prepare_output_dirs(ctx)
+
+            thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+            metadata = read_freshness_metadata(thumb_path)
+            metadata["generated_height"] = 1
+            freshness_sidecar_path(thumb_path).write_text(json.dumps(metadata), encoding="utf-8")
+
+            replacement_thumb = Image.new("RGB", (32, 32), color=(20, 120, 80))
+            with patch("cr4te.render_assets.image_utils.generate_thumbnail", return_value=replacement_thumb) as generate_thumbnail:
+                regenerated_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
+
+            self.assertEqual(regenerated_path, thumb_path)
+            generate_thumbnail.assert_called_once_with(image_path, ctx.get_generated_thumb_height(ThumbType.GALLERY))
+            self.assertEqual(ctx.asset_statistics.source_thumbnails_generated, 2)
+            self.assertEqual(read_freshness_metadata(thumb_path)["generated_height"], ctx.get_generated_thumb_height(ThumbType.GALLERY))
 
     def test_thumbnail_failure_uses_default_and_reports_issue(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -329,34 +408,6 @@ class MediaStagingTests(unittest.TestCase):
                 resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
 
             self.assertEqual(caught.exception.issue.code, IssueCode.THUMBNAIL_FAILURE)
-
-    def test_thumbnail_is_reused_when_timestamp_changes_but_hash_matches(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp) / "input"
-            output_dir = Path(tmp) / "site"
-            image_path = root / "Noomi" / "image.png"
-            image_path.parent.mkdir(parents=True)
-            Image.new("RGB", (120, 80), color=(120, 80, 160)).save(image_path)
-
-            config = apply_cli_overrides(load_config(), domain=Domain.ART)
-            ctx = HtmlBuildContext(root, output_dir, config.site_labels, config.site_rendering)
-            prepare_output_dirs(ctx)
-
-            with patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="same-source-hash"):
-                thumb_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-            newer_ns = thumb_path.stat().st_mtime_ns + 1_000_000_000
-            os.utime(image_path, ns=(newer_ns, newer_ns))
-
-            with (
-                patch("cr4te.render_assets.file_utils.calculate_sha256", return_value="same-source-hash"),
-                patch("cr4te.render_assets.image_utils.generate_thumbnail") as generate_thumbnail,
-            ):
-                reused_path = resolve_thumbnail_or_default(ctx, "Noomi/image.png", ThumbType.GALLERY)
-
-            self.assertEqual(reused_path, thumb_path)
-            generate_thumbnail.assert_not_called()
-            self.assertEqual(ctx.asset_statistics.source_hash_checks, 2)
-            self.assertEqual(ctx.asset_statistics.source_thumbnails_reused, 1)
 
     def test_output_preparation_copies_static_files_and_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:

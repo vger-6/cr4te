@@ -305,7 +305,7 @@ class HtmlBuildTests(unittest.TestCase):
             asset_statistics = AssetStatistics(
                 hard_links_created=2,
                 source_thumbnails_generated=3,
-                source_hash_checks=1,
+                source_freshness_checks=1,
             )
             summary = BuildSummary(
                 input_dir=root,

@@ -42,7 +42,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **BUILD-004:** Render-time asset failures must be represented as structured build issues and included in the final build summary instead of existing only as logs.
 - **BUILD-005:** Repeated failures with the same scope, issue code, and path must be reported only once per build.
 - **BUILD-006:** Every successful build must report final phase timings for theme discovery, output preparation, metadata reconciliation, library indexing, HTML rendering, and their total.
-- **BUILD-007:** Every successful build must report constant-memory asset statistics that distinguish created symbolic links, created hard links, reused media links, generated and reused source thumbnails, default-thumbnail uses, and source-hash checks.
+- **BUILD-007:** Every successful build must report constant-memory asset statistics that distinguish created symbolic links, created hard links, reused media links, generated and reused source thumbnails, default-thumbnail uses, and source-thumbnail freshness checks.
 - **BUILD-008:** Expected operational failures during a build phase must report the failed phase and return exit status `1`. Invalid command arguments, configuration, or paths must return exit status `2`. Successful builds, completed best-effort builds, and explicit user cancellation must return exit status `0`.
 - **BUILD-009:** Metadata reconciliation skips must retain structured issue reasons and participate in final build reporting. Issues repeated by later build phases with the same scope, issue code, and path must appear only once.
 
@@ -69,10 +69,10 @@ These are durable product and design requirements for cr4te. They must hold unle
 
 ## Thumbnail Freshness
 
-- **THUMB-001:** Source-derived thumbnail freshness must be determined by comparing the source image's SHA-256 hash with the thumbnail's hash sidecar, independently of source, parent-folder, or thumbnail modified times.
-- **THUMB-002:** Every generated source-derived thumbnail must have a sidecar containing only the SHA-256 hash of the source content used for that thumbnail.
-- **THUMB-003:** An existing source-derived thumbnail may be reused only when its readable hash sidecar exactly matches the current source hash. A missing, unreadable, or different sidecar must cause regeneration and replacement of the sidecar.
-- **THUMB-004:** Thumbnail freshness must remain correct when source files are replaced or synchronized while preserving, decreasing, or coarsening their modified times.
+- **THUMB-001:** Source-derived thumbnail freshness must be determined by comparing the source image's relative path, byte size, nanosecond modified time, and thumbnail recipe metadata against the thumbnail freshness sidecar.
+- **THUMB-002:** Every generated source-derived thumbnail must have a freshness sidecar containing the cache version, source relative path, source byte size, source nanosecond modified time, thumbnail type, generated height, and thumbnail file suffix used for that thumbnail.
+- **THUMB-003:** An existing source-derived thumbnail may be reused only when the thumbnail exists and its readable freshness sidecar exactly matches the current source metadata and thumbnail recipe. A missing, unreadable, or different sidecar must cause regeneration and replacement of the sidecar.
+- **THUMB-004:** Thumbnail freshness deliberately does not inspect source file contents when byte size and nanosecond modified time are unchanged. Users who do not trust preserved source timestamps must be able to force regeneration with `build --clear-thumbnail-cache`.
 
 ## Generated Site Behavior
 

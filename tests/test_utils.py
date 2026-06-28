@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from cr4te.media_cache import ImageDimensions
-from cr4te.utils import file_utils, path_utils, text_utils
+from cr4te.utils import path_utils, text_utils
 from cr4te.utils.audio_utils import get_audio_duration_seconds
 from cr4te.utils.date_utils import calculate_age_from_strings, format_age, parse_date
 from cr4te.utils.format_utils import format_named, validate_named_format
@@ -78,18 +78,6 @@ class PathUtilsTests(unittest.TestCase):
 
     def test_tag_path(self):
         self.assertEqual(path_utils.tag_path(Path("thumbs") / "cover.jpg", "card"), Path("thumbs") / "cover_card.jpg")
-
-
-class FileUtilsTests(unittest.TestCase):
-    def test_calculate_sha256_streams_file_contents(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            file_path = Path(tmp) / "content.bin"
-            file_path.write_bytes(b"cr4te")
-
-            self.assertEqual(
-                file_utils.calculate_sha256(file_path, chunk_size=2),
-                "4d7ed336a0ec4d613c5b7b6169fb10626cde39f0b9e63647301cae80b82ffc95",
-            )
 
 
 class TextUtilsTests(unittest.TestCase):

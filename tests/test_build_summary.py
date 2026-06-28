@@ -121,7 +121,7 @@ class BuildSummaryTests(unittest.TestCase):
                 "INFO:cr4te.tests.build_summary:Asset links: symbolic=0, hard=0, reused=0",
                 (
                     "INFO:cr4te.tests.build_summary:Source thumbnails: "
-                    "generated=0, reused=0, default_uses=0, hash_checks=0"
+                    "generated=0, reused=0, default_uses=0, freshness_checks=0"
                 ),
             ],
         )
@@ -188,7 +188,7 @@ class BuildSummaryTests(unittest.TestCase):
                 source_thumbnails_generated=4,
                 source_thumbnails_reused=5,
                 default_thumbnail_uses=6,
-                source_hash_checks=7,
+                source_freshness_checks=7,
             ),
         )
 
@@ -200,7 +200,7 @@ class BuildSummaryTests(unittest.TestCase):
             summary.asset_statistic_lines(),
             (
                 "Asset links: symbolic=1, hard=2, reused=3",
-                "Source thumbnails: generated=4, reused=5, default_uses=6, hash_checks=7",
+                "Source thumbnails: generated=4, reused=5, default_uses=6, freshness_checks=7",
             ),
         )
         self.assertEqual(summary.lines()[1:], (summary.timing_line(), *summary.asset_statistic_lines()))

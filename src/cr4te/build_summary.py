@@ -93,7 +93,7 @@ class BuildSummary:
                 f"generated={stats.source_thumbnails_generated}, "
                 f"reused={stats.source_thumbnails_reused}, "
                 f"default_uses={stats.default_thumbnail_uses}, "
-                f"hash_checks={stats.source_hash_checks}"
+                f"freshness_checks={stats.source_freshness_checks}"
             ),
         )
 
