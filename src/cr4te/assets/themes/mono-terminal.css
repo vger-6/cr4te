@@ -48,6 +48,7 @@
   --theme-title-text: var(--theme-text-strong);
   --theme-title-border: var(--theme-border);
   --theme-title-border-width: var(--theme-terminal-line-width);
+  --theme-title-margin: 0 0 var(--space-sm);
   --theme-title-radius: 0;
 
   --theme-panel-bg: var(--theme-page-bg);

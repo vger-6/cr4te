@@ -5,7 +5,7 @@
   --space-md: 1rem;
 
   --type-body-size: 1rem;
-  --type-page-title-size: 1.75rem;
+  --type-page-title-size: 1.25rem;
   --type-section-title-size: 1.125rem;
   --type-markdown-heading-size: var(--type-body-size);
   --type-label-size: 0.875rem;
@@ -28,10 +28,10 @@
   --layout-body-padding-bottom: var(--space-sm);
   --layout-body-padding-inline: var(--space-sm);
   --layout-navigation-padding-block: var(--space-sm);
-  --layout-navigation-padding-inline: var(--space-sm);
+  --layout-navigation-padding-inline: var(--space-md);
   --layout-content-padding-top: var(--space-sm);
   --layout-content-padding-bottom: var(--space-md);
-  --layout-content-padding-inline: clamp(var(--space-md), 3vw, 2rem);
+  --layout-content-padding-inline: var(--space-md);
   --layout-two-column-gap: var(--space-md);
   --layout-section-gap: 1.5rem;
   --layout-title-search-height: 2.25rem;
@@ -87,6 +87,7 @@
   --theme-title-text: var(--theme-text-strong);
   --theme-title-border: var(--theme-border);
   --theme-title-border-width: 1px;
+  --theme-title-margin: 0 0 var(--space-sm);
   --theme-title-radius: 0;
 
   --theme-panel-bg: var(--theme-surface-bg);

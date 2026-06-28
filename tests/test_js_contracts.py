@@ -310,6 +310,7 @@ class JavaScriptContractTests(unittest.TestCase):
             "--layout-title-search-height",
             "--layout-gallery-gap",
             "--layout-card-gap",
+            "--theme-title-margin",
             "--theme-section-content-padding-top",
         ):
             with self.subTest(token=token):
@@ -320,8 +321,14 @@ class JavaScriptContractTests(unittest.TestCase):
             r"\.page-content\s*\{[^}]*padding:\s*var\(--layout-content-padding-top\)"
             r" var\(--layout-content-padding-inline\)[^;]*var\(--layout-content-padding-bottom\)",
         )
-        self.assertRegex(base, r"\.page-title\s*\{[^}]*background-color:\s*transparent")
-        self.assertRegex(base, r"\.page-title\s*\{[^}]*border:\s*0")
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*background-color:\s*var\(--theme-title-bg\)")
+        self.assertRegex(
+            base,
+            r"\.page-title\s*\{[^}]*border:\s*var\(--theme-title-border-width\) solid var\(--theme-title-border\)",
+        )
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*padding:\s*var\(--space-xs\) var\(--space-md\)")
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*margin:\s*var\(--theme-title-margin\)")
+        self.assertRegex(base, r"\.page-title\s*\{[^}]*border-radius:\s*var\(--theme-title-radius\)")
         self.assertRegex(base, r"\.search-box\s*\{[^}]*height:\s*var\(--layout-title-search-height\)")
         self.assertRegex(base, r"\.image-gallery--aspect\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
         self.assertRegex(base, r"\.image-gallery--justified\s*\{[^}]*gap:\s*var\(--layout-gallery-gap\)")
@@ -338,6 +345,10 @@ class JavaScriptContractTests(unittest.TestCase):
             "--theme-navigation-bg",
             "--theme-navigation-border",
             "--theme-navigation-border-width",
+            "--theme-title-border",
+            "--theme-title-border-width",
+            "--theme-title-margin",
+            "--theme-title-radius",
             "--theme-pagination-button-radius",
             "--theme-track-separator",
             "--theme-track-separator-width",
@@ -348,17 +359,24 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertRegex(tokens, r"--theme-pagination-button-radius:\s*0;")
         self.assertRegex(tokens, r"--theme-track-separator-width:\s*0;")
         self.assertIn("background-color: var(--theme-navigation-bg)", base)
+        self.assertIn("border: var(--theme-title-border-width) solid var(--theme-title-border)", base)
+        self.assertIn("margin: var(--theme-title-margin)", base)
+        self.assertIn("border-radius: var(--theme-title-radius)", base)
         self.assertIn("border-radius: var(--theme-pagination-button-radius)", base)
         self.assertIn(
             "border-bottom: var(--theme-track-separator-width) solid var(--theme-track-separator)",
             base,
         )
         self.assertRegex(forest, r"--theme-pagination-button-radius:\s*[^;]+;")
+        self.assertRegex(forest, r"--theme-title-margin:\s*[^;]+;")
+        self.assertRegex(forest, r"--theme-title-radius:\s*[^;]+;")
         self.assertRegex(forest, r"--theme-track-bg-odd:\s*transparent;")
         self.assertRegex(forest, r"--theme-track-bg-even:\s*transparent;")
         self.assertNotIn("--theme-track-separator:", forest)
         self.assertNotIn("--theme-track-separator-width:", forest)
         self.assertRegex(frozen, r"--theme-pagination-button-radius:\s*[^;]+;")
+        self.assertRegex(frozen, r"--theme-title-margin:\s*[^;]+;")
+        self.assertRegex(frozen, r"--theme-title-radius:\s*[^;]+;")
 
     def test_css_transitions_use_shared_motion_tokens_and_explicit_properties(self):
         source = read_all(sorted(ASSET_CSS_DIR.glob("*.css")))

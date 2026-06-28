@@ -603,8 +603,9 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('placeholder="Search Artists, Works, Tags..."', rendered)
             self.assertIn('aria-haspopup="menu"', rendered)
             self.assertIn('role="menuitemradio"', rendered)
-            self.assertIn('<main class="page-content">', rendered)
-            self.assertIn('<h1 class="page-title">Artists</h1>', rendered)
+            self.assertIn('<main class="page-content" aria-labelledby="page-title">', rendered)
+            self.assertIn('<h1 id="page-title" class="visually-hidden">Artists</h1>', rendered)
+            self.assertNotIn('<h1 class="page-title">Artists</h1>', rendered)
             self.assertNotIn("body { display: none; }", rendered)
 
     def test_detail_header_renders_project_creator_as_only_contextual_breadcrumb(self):
@@ -812,20 +813,20 @@ class TemplateRendererTests(unittest.TestCase):
     def test_page_templates_use_shared_document_head_and_page_header(self):
         template_dir = ROOT / "src" / "cr4te" / "templates"
 
-        for template_name in (
-            "creator.html.j2",
-            "creator_overview.html.j2",
-            "project.html.j2",
-            "project_overview.html.j2",
-            "tags.html.j2",
-        ):
+        visible_title_templates = ("creator.html.j2", "project.html.j2")
+        hidden_overview_title_templates = ("creator_overview.html.j2", "project_overview.html.j2", "tags.html.j2")
+        for template_name in (*visible_title_templates, *hidden_overview_title_templates):
             with self.subTest(template_name=template_name):
                 source = (template_dir / template_name).read_text(encoding="utf-8")
                 self.assertIn('{% include "partials/_document_open.html.j2" %}', source)
                 self.assertIn('{% include "partials/_document_head.html.j2" %}', source)
                 self.assertIn('{% include "partials/_page_header.html.j2" %}', source)
-                self.assertIn('<main class="page-content">', source)
-                self.assertIn('<h1 class="page-title">{{ page_shell.title }}</h1>', source)
+                if template_name in visible_title_templates:
+                    self.assertIn('<main class="page-content">', source)
+                    self.assertIn('<h1 class="page-title">{{ page_shell.title }}</h1>', source)
+                else:
+                    self.assertIn('<main class="page-content" aria-labelledby="page-title">', source)
+                    self.assertIn('<h1 id="page-title" class="visually-hidden">{{ page_shell.title }}</h1>', source)
                 self.assertNotIn('<html lang="en">', source)
                 self.assertNotIn('<div class="page-header">', source)
 

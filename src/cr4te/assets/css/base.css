@@ -89,6 +89,19 @@ html, body {
   overflow: hidden;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .page-content {
   box-sizing: border-box;
   display: flex;
@@ -107,11 +120,11 @@ html, body {
   line-height: var(--type-heading-line-height);
   font-weight: bold;
   color: var(--theme-title-text);
-  background-color: transparent;
-  border: 0;
-  padding: 0;
-  margin: 0 0 var(--space-sm);
-  border-radius: 0;
+  background-color: var(--theme-title-bg);
+  border: var(--theme-title-border-width) solid var(--theme-title-border);
+  padding: var(--space-xs) var(--space-md);
+  margin: var(--theme-title-margin);
+  border-radius: var(--theme-title-radius);
   overflow-wrap: anywhere;
 }
 

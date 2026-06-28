@@ -79,7 +79,10 @@ REQUIREMENT_TESTS = {
     "SITE-022": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_saved_theme_is_applied_before_theme_menu_initializes",),
     "SITE-023": ("tests/test_template_renderer.py::TemplateRendererTests.test_empty_overview_templates_render_static_empty_state_without_search_or_cards",),
     "SITE-024": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_breadcrumb_wraps_without_moving_primary_header_controls",),
-    "SITE-025": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_and_page_content_use_distinct_aligned_geometry",),
+    "SITE-025": (
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_and_page_content_use_distinct_aligned_geometry",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_title_surfaces_and_panels_follow_selected_theme",
+    ),
     "SITE-026": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_content_first_typography_hierarchy",),
     "SITE-027": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_page_section_and_gallery_spacing_follow_layout_tokens",),
     "SITE-028": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_details_portrait_visibility_uses_text_overview_and_detail_portraits",),

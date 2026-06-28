@@ -33,9 +33,11 @@
   --theme-navigation-bg: #031114;
   --theme-navigation-border: #16343a;
 
-  --theme-title-bg: #1c3a3e;
+  --theme-title-bg: var(--theme-panel-bg);
   --theme-title-text: #d8e5dd;
   --theme-title-border: var(--theme-panel-border);
+  --theme-title-margin: 0 0 var(--space-sm);
+  --theme-title-radius: 0.5rem;
 
   --theme-panel-bg: #102729;
   --theme-panel-border: #3f6b66;

@@ -698,16 +698,15 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             () => {
                 const headerElement = document.querySelector('.page-header');
                 const contentElement = document.querySelector('.page-content');
-                const titleElement = document.querySelector('.page-title');
+                const hiddenTitleElement = document.querySelector('#page-title.visually-hidden');
                 const searchElement = document.querySelector('.search-bar-wrapper');
                 const panelElement = document.querySelector('.overview-layout');
                 const header = headerElement.getBoundingClientRect();
                 const content = contentElement.getBoundingClientRect();
-                const title = titleElement.getBoundingClientRect();
                 const search = searchElement.getBoundingClientRect();
                 const panel = panelElement.getBoundingClientRect();
                 const contentStyle = getComputedStyle(contentElement);
-                const titleStyle = getComputedStyle(titleElement);
+                const hiddenTitleStyle = getComputedStyle(hiddenTitleElement);
                 const searchStyle = getComputedStyle(document.querySelector('.search-box'));
                 return {
                     viewportWidth: innerWidth,
@@ -717,19 +716,16 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                     contentRight: content.right,
                     contentPaddingLeft: parseFloat(contentStyle.paddingLeft),
                     contentPaddingRight: parseFloat(contentStyle.paddingRight),
-                    titleLeft: title.left,
-                    titleRight: title.right,
+                    contentLabel: contentElement.getAttribute('aria-labelledby'),
+                    hiddenTitleText: hiddenTitleElement.textContent.trim(),
+                    hiddenTitlePosition: hiddenTitleStyle.position,
+                    hiddenTitleWidth: hiddenTitleStyle.width,
+                    hiddenTitleHeight: hiddenTitleStyle.height,
+                    visibleTitleCount: document.querySelectorAll('.page-title').length,
                     searchLeft: search.left,
                     searchRight: search.right,
                     panelLeft: panel.left,
                     panelRight: panel.right,
-                    titleBackground: titleStyle.backgroundColor,
-                    titleBorderWidths: [
-                        titleStyle.borderTopWidth,
-                        titleStyle.borderRightWidth,
-                        titleStyle.borderBottomWidth,
-                        titleStyle.borderLeftWidth,
-                    ],
                     searchHeight: search.height,
                     searchFontSize: searchStyle.fontSize,
                     bodyFontSize: getComputedStyle(document.body).fontSize,
@@ -743,12 +739,14 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAlmostEqual(geometry["contentRight"], geometry["viewportWidth"], delta=0.25)
         self.assertGreater(geometry["contentPaddingLeft"], 0)
         self.assertGreater(geometry["contentPaddingRight"], 0)
-        self.assertAlmostEqual(geometry["titleLeft"], geometry["searchLeft"], delta=0.25)
+        self.assertEqual(geometry["contentLabel"], "page-title")
+        self.assertGreater(len(geometry["hiddenTitleText"]), 0)
+        self.assertEqual(geometry["hiddenTitlePosition"], "absolute")
+        self.assertEqual(geometry["hiddenTitleWidth"], "1px")
+        self.assertEqual(geometry["hiddenTitleHeight"], "1px")
+        self.assertEqual(geometry["visibleTitleCount"], 0)
         self.assertAlmostEqual(geometry["searchLeft"], geometry["panelLeft"], delta=0.25)
-        self.assertAlmostEqual(geometry["titleRight"], geometry["searchRight"], delta=0.25)
         self.assertAlmostEqual(geometry["searchRight"], geometry["panelRight"], delta=0.25)
-        self.assertEqual(geometry["titleBackground"], "rgba(0, 0, 0, 0)")
-        self.assertEqual(geometry["titleBorderWidths"], ["0px", "0px", "0px", "0px"])
         self.assertGreater(geometry["searchHeight"], 0)
         self.assertEqual(geometry["searchFontSize"], geometry["bodyFontSize"])
 
@@ -949,9 +947,9 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertNoBrowserErrors()
 
-    def test_navigation_panels_and_unboxed_titles_follow_selected_theme(self):
+    def test_navigation_title_surfaces_and_panels_follow_selected_theme(self):
         """Covers SITE-025."""
-        self.open_page("index.html")
+        self.open_page(self.creator_path)
 
         def border(selector):
             return self.page.locator(selector).evaluate(
@@ -959,17 +957,34 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 "getComputedStyle(element).borderTopColor]"
             )
 
-        frozen_panel_border = border(".overview-layout")
+        frozen_panel_border = border(".left-column")
         frozen_shell = self.page.evaluate(
             """
             () => {
                 const header = getComputedStyle(document.querySelector('.page-header'));
                 const title = getComputedStyle(document.querySelector('.page-title'));
+                const probe = document.createElement('span');
+                probe.style.backgroundColor = 'var(--theme-title-bg)';
+                probe.style.border = 'var(--theme-title-border-width) solid var(--theme-title-border)';
+                document.body.appendChild(probe);
+                const probeStyle = getComputedStyle(probe);
+                const titleTokenBackground = probeStyle.backgroundColor;
+                const titleTokenBorders = [
+                    probeStyle.borderTopWidth,
+                    probeStyle.borderRightWidth,
+                    probeStyle.borderBottomWidth,
+                    probeStyle.borderLeftWidth,
+                ];
+                probe.remove();
                 return {
                     bodyBackground: getComputedStyle(document.body).backgroundColor,
                     navigationBackground: header.backgroundColor,
                     navigationBorder: [header.borderBottomWidth, header.borderBottomColor],
                     titleBackground: title.backgroundColor,
+                    titleTokenBackground,
+                    titleMarginBottom: title.marginBottom,
+                    titleRadius: title.borderTopLeftRadius,
+                    titleTokenBorders,
                     titleBorders: [
                         title.borderTopWidth,
                         title.borderRightWidth,
@@ -982,27 +997,36 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertNotEqual(frozen_shell["navigationBackground"], frozen_shell["bodyBackground"])
         self.assertGreater(float(frozen_shell["navigationBorder"][0].removesuffix("px")), 0)
-        self.assertEqual(frozen_shell["titleBackground"], "rgba(0, 0, 0, 0)")
-        self.assertEqual(frozen_shell["titleBorders"], ["0px", "0px", "0px", "0px"])
+        self.assertEqual(frozen_shell["titleBackground"], frozen_shell["titleTokenBackground"])
+        self.assertEqual(frozen_shell["titleBorders"], frozen_shell["titleTokenBorders"])
         self.assertGreater(float(frozen_panel_border[0].removesuffix("px")), 0)
 
         self.page.get_by_role("button", name="Themes").click()
         self.page.get_by_role("menuitemradio", name="Forest Night").click()
-        forest_panel_border = border(".overview-layout")
+        forest_panel_border = border(".left-column")
         forest_shell = self.page.evaluate(
             """
-            () => ({
-                bodyBackground: getComputedStyle(document.body).backgroundColor,
-                navigationBackground: getComputedStyle(document.querySelector('.page-header')).backgroundColor,
-                titleBackground: getComputedStyle(document.querySelector('.page-title')).backgroundColor,
-            })
+            () => {
+                const probe = document.createElement('span');
+                probe.style.backgroundColor = 'var(--theme-title-bg)';
+                document.body.appendChild(probe);
+                const titleTokenBackground = getComputedStyle(probe).backgroundColor;
+                probe.remove();
+                return {
+                    bodyBackground: getComputedStyle(document.body).backgroundColor,
+                    navigationBackground: getComputedStyle(document.querySelector('.page-header')).backgroundColor,
+                    titleBackground: getComputedStyle(document.querySelector('.page-title')).backgroundColor,
+                    titleMarginBottom: getComputedStyle(document.querySelector('.page-title')).marginBottom,
+                    titleRadius: getComputedStyle(document.querySelector('.page-title')).borderTopLeftRadius,
+                    titleTokenBackground,
+                };
+            }
             """
         )
         self.assertNotEqual(forest_shell["navigationBackground"], forest_shell["bodyBackground"])
-        self.assertEqual(forest_shell["titleBackground"], "rgba(0, 0, 0, 0)")
+        self.assertEqual(forest_shell["titleBackground"], forest_shell["titleTokenBackground"])
         self.assertNotEqual(forest_panel_border[1], frozen_panel_border[1])
 
-        self.open_page(self.creator_path)
         self.assertEqual(border(".left-column"), forest_panel_border)
         self.assertEqual(border(".right-column"), forest_panel_border)
         divider_and_title = self.page.evaluate(
