@@ -25,7 +25,7 @@
     <span class="breadcrumb-section">
       <span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>
       {% for item in section_navigation_items %}
-        {% if not loop.first %}<span class="breadcrumb-separator" aria-hidden="true">&middot;</span>{% endif %}
+        {% if not loop.first %}<span class="breadcrumb-separator breadcrumb-separator--section" aria-hidden="true">|</span>{% endif %}
         {% if item.current %}
           <span class="nav-current" aria-current="page">{{ item.label }}</span>
         {% else %}

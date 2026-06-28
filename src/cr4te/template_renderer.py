@@ -144,6 +144,12 @@ def render_project_page(
             f"{path_to_root}{creator_base.rel_html_path}",
             starts_section=True,
         ),
+        NavigationItem(
+            page_context.title,
+            "",
+            current=True,
+            starts_section=True,
+        ),
     ) if creator_base else ()
     template = env.get_template("project.html.j2")
     rendered = template.render(
@@ -188,6 +194,14 @@ def render_creator_page(
             page_context.name,
             "two-column-layout.css",
             path_to_root,
+            extra_navigation_items=(
+                NavigationItem(
+                    page_context.name,
+                    "",
+                    current=True,
+                    starts_section=True,
+                ),
+            ),
         ),
         **_theme_render_context(ctx),
     )

@@ -29,7 +29,7 @@
   --layout-body-padding-inline: var(--space-sm);
   --layout-navigation-padding-block: var(--space-sm);
   --layout-navigation-padding-inline: var(--space-md);
-  --layout-content-padding-top: var(--space-sm);
+  --layout-content-padding-top: var(--space-md);
   --layout-content-padding-bottom: var(--space-md);
   --layout-content-padding-inline: var(--space-md);
   --layout-two-column-gap: var(--space-md);

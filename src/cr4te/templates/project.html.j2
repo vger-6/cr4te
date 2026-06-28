@@ -10,8 +10,8 @@
 <div class="page-container">
   {% include "partials/_page_header.html.j2" %}
 
-  <main class="page-content">
-  <h1 class="page-title">{{ page_shell.title }}</h1>
+  <main class="page-content" aria-labelledby="page-title">
+  <h1 id="page-title" class="visually-hidden">{{ page_shell.title }}</h1>
 
   <div class="two-column-layout">
     <div class="detail-content">

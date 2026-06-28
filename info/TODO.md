@@ -19,6 +19,11 @@ These items come from the full-codebase review of the Python build pipeline, gen
 - [ ] Add `--dry-run` flag to `build`.
 - [ ] Add a `--prune-thumbnails` build option that removes orphaned cached thumbnails and freshness sidecars without regenerating valid thumbnails.
 - [ ] Add optional progress reporting for large folder trees.
+- [ ] Revisit tag-page link targets.
+  - The tags page currently links every tag chip to the creator overview, which is not always the best destination.
+  - Consider source-aware tag targets: creator tags and creator metadata values should filter the creator overview, while project tags and project facet values should filter the project overview.
+  - If a tag exists in both creator and project scopes, consider rendering both target choices instead of guessing.
+  - A larger follow-up option is to add a `creator_metadata` rendering configuration analogous to `project_metadata`, but avoid that refactor until the tag-page behavior is worth the extra model surface.
 - [ ] Make scan exclusions relative to the configured library root.
   - A library below a dot-prefixed ancestor directory is currently treated as empty because exclusion checks inspect absolute path components.
   - Preserve hidden and configured-prefix exclusion inside the library while ignoring ancestors above the selected input root.
