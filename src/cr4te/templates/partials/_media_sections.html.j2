@@ -116,7 +116,7 @@
               <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}" data-previous-label="{{ site_labels.controls.previous }}" data-next-label="{{ site_labels.controls.next }}">
                 {% for image in section.images %}
                   <div class="image-wrapper" data-width="{{ image.image_wrapper_width }}" data-height="{{ image.image_wrapper_height }}">
-                    <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank" data-lightbox-title="{{ image.caption }}">
+                    <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank" data-lightbox-title="{{ image.caption }}" title="{{ image.caption }}">
                       <img class="gallery-image" src="{{ path_to_root }}{{ image.rel_thumbnail_path }}" alt="{{ image.caption }}" loading="lazy">
                       <div class=image-caption>
                         <span>{{ image.caption }}</span>

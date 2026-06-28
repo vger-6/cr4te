@@ -391,6 +391,7 @@ class TemplateRendererTests(unittest.TestCase):
         rendered = str(macro("", [group], 450, 24, site_labels))
 
         self.assertIn('alt="Sunset over water"', rendered)
+        self.assertIn('data-lightbox-title="Sunset over water" title="Sunset over water"', rendered)
         self.assertNotIn('alt="Image for "', rendered)
 
     def test_video_source_does_not_claim_an_incorrect_media_type(self):
