@@ -1,4 +1,4 @@
-<html lang="en"
+<html lang="{{ document_language | default('en-US') }}"
       class="{{ default_theme.css_class }}"
       data-default-theme="{{ default_theme.css_class }}"
       data-theme-classes="{{ themes | map(attribute='css_class') | join(' ') }}">

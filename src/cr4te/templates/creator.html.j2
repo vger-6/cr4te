@@ -38,8 +38,20 @@
         <div class="section-box markdown">
           <div class="section-title">{{ site_labels.pages.creator_about_title }}</div>
           <hr>
-          <div class="section-content text-content">
-            {{ creator.info_html | safe }}
+          <div class="section-content text-content expandable-text expandable-text--creator-about"
+               data-expandable-text
+               style="--expandable-text-lines: {{ site_rendering.creator_page.about_collapsed_lines }}; --expandable-text-mobile-lines: {{ site_rendering.creator_page.about_collapsed_lines_mobile }};">
+            <div id="creator-about-text" class="expandable-text__content" data-expandable-text-content>
+              {{ creator.info_html | safe }}
+            </div>
+            <button type="button"
+                    class="section-action-btn expandable-text__toggle"
+                    data-expandable-text-toggle
+                    data-show-more-label="{{ site_labels.controls.show_more }}"
+                    data-show-less-label="{{ site_labels.controls.show_less }}"
+                    aria-expanded="false"
+                    aria-controls="creator-about-text"
+                    hidden>{{ site_labels.controls.show_more }}</button>
           </div>
         </div>
       {% endif %}
@@ -155,7 +167,8 @@
 </div>
 
 <script src="{{ path_to_root }}assets/js/utils.js" defer></script>
-<script src="{{ path_to_root }}assets/js/breadcrumb_tooltips.js" defer></script>
+<script src="{{ path_to_root }}assets/js/expandable_text.js" defer></script>
+<script src="{{ path_to_root }}assets/js/overflow_tooltips.js" defer></script>
 <script src="{{ path_to_root }}assets/js/playback_coordinator.js" defer></script>
 <script src="{{ path_to_root }}assets/js/theme_selector.js" defer></script>
 <script src="{{ path_to_root }}assets/js/justified_gallery_builder.js" defer></script>

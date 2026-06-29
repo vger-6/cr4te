@@ -58,10 +58,14 @@ class JavaScriptContractTests(unittest.TestCase):
                 self.assertIn(hook, source)
 
     def test_interactive_template_controls_use_native_elements(self):
+        creator_source = (TEMPLATE_DIR / "creator.html.j2").read_text(encoding="utf-8")
         media_source = (TEMPLATE_DIR / "partials" / "_media_sections.html.j2").read_text(encoding="utf-8")
+        project_source = (TEMPLATE_DIR / "project.html.j2").read_text(encoding="utf-8")
         search_source = (TEMPLATE_DIR / "partials" / "_search_bar.html.j2").read_text(encoding="utf-8")
         theme_source = (TEMPLATE_DIR / "partials" / "_theme_dropdown.html.j2").read_text(encoding="utf-8")
 
+        self.assertIn('data-expandable-text-toggle', creator_source)
+        self.assertIn('data-expandable-text-toggle', project_source)
         self.assertIn('<button type="button"', media_source)
         self.assertIn('data-audio-action="select-track"', media_source)
         self.assertIn('<button type="button" id="clear-search"', search_source)
@@ -80,10 +84,11 @@ class JavaScriptContractTests(unittest.TestCase):
         feature_scripts = [
             "aspect_gallery_builder.js",
             "audio_player.js",
-            "breadcrumb_tooltips.js",
+            "expandable_text.js",
             "image_captions_toggle.js",
             "justified_gallery_builder.js",
             "lightbox.js",
+            "overflow_tooltips.js",
             "pagination.js",
             "search_filter.js",
             "theme_selector.js",
@@ -136,10 +141,11 @@ class JavaScriptContractTests(unittest.TestCase):
         cr4te_feature_scripts = {
             "aspect_gallery_builder.js",
             "audio_player.js",
-            "breadcrumb_tooltips.js",
+            "expandable_text.js",
             "image_captions_toggle.js",
             "justified_gallery_builder.js",
             "lightbox.js",
+            "overflow_tooltips.js",
             "pagination.js",
             "playback_coordinator.js",
             "search_filter.js",
@@ -168,18 +174,57 @@ class JavaScriptContractTests(unittest.TestCase):
 
                 self.assertLess(scripts.index("pagination.js"), scripts.index("search_filter.js"))
 
-    def test_breadcrumb_tooltips_are_added_only_for_overflowing_items(self):
-        source = (ASSET_JS_DIR / "breadcrumb_tooltips.js").read_text(encoding="utf-8")
+    def test_overflow_tooltips_are_added_only_for_overflowing_items(self):
+        source = (ASSET_JS_DIR / "overflow_tooltips.js").read_text(encoding="utf-8")
 
-        self.assertIn('const SELECTOR = ".breadcrumb-section [data-overflow-title]"', source)
-        self.assertIn("element.scrollWidth > element.clientWidth", source)
-        self.assertIn('element.setAttribute("title", title)', source)
-        self.assertIn('element.removeAttribute("title")', source)
+        for selector in (
+            ".breadcrumb-section [data-overflow-title]",
+            ".section-title",
+            ".tag-category-label",
+            ".tag",
+            ".track-title-text",
+            ".image-caption",
+            ".creator-text-card__name",
+            ".creator-text-card__summary",
+        ):
+            with self.subTest(selector=selector):
+                self.assertIn(f'"{selector}"', source)
+        self.assertIn("function sectionTitleTextElement", source)
+        self.assertIn("function normalizedText", source)
+        self.assertIn("element.classList.contains(\"section-title\")", source)
+        self.assertIn("measured.scrollWidth > measured.clientWidth", source)
+        self.assertIn("measured.scrollHeight > measured.clientHeight", source)
+        self.assertIn('measured.setAttribute("title", title)', source)
+        self.assertIn('measured.removeAttribute("title")', source)
         self.assertIn("ResizeObserver", source)
-        self.assertIn("window.cr4te.breadcrumbTooltips.resizeObserver = observer", source)
+        self.assertIn("window.cr4te.overflowTooltips.resizeObserver = observer", source)
         self.assertIn("window.addEventListener(\"resize\", updateTooltips)", source)
         self.assertIn("document.fonts.ready.then(updateTooltips)", source)
-        self.assertIn("cr4te.onReady(initBreadcrumbTooltips)", source)
+        self.assertIn("cr4te.onReady(initOverflowTooltips)", source)
+
+    def test_expandable_text_collapses_only_overflowing_detail_prose(self):
+        source = (ASSET_JS_DIR / "expandable_text.js").read_text(encoding="utf-8")
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        self.assertIn('const SELECTOR = "[data-expandable-text]"', source)
+        self.assertIn("[data-expandable-text-content]", source)
+        self.assertIn("[data-expandable-text-toggle]", source)
+        self.assertIn("content.scrollHeight > content.clientHeight", source)
+        self.assertIn("button.hidden = !isCollapsible", source)
+        self.assertIn('button.setAttribute("aria-expanded"', source)
+        self.assertIn("button.dataset.showMoreLabel", source)
+        self.assertIn("button.dataset.showLessLabel", source)
+        self.assertIn("ResizeObserver", source)
+        self.assertIn("document.fonts.ready.then(updateAllExpandableText)", source)
+        self.assertIn("cr4te.onReady(initExpandableText)", source)
+        self.assertRegex(
+            base,
+            r"\.expandable-text\.is-collapsible\.is-collapsed \.expandable-text__content\s*\{[^}]*"
+            r"-webkit-line-clamp:\s*var\(--expandable-text-current-lines\)",
+        )
+        self.assertRegex(base, r"\.expandable-text__content\s*\{[^}]*hyphens:\s*auto")
+        self.assertRegex(base, r"\.expandable-text__content\s*\{[^}]*overflow-wrap:\s*break-word")
+        self.assertRegex(base, r"@media \(max-width:\s*48rem\)\s*\{[\s\S]*--expandable-text-current-lines")
 
     def test_pagination_reuses_per_gallery_instance_and_can_remove_resize_listener(self):
         source = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
@@ -311,6 +356,13 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertNotIn("--type-page-title-size", tokens)
         self.assertNotRegex(base, r"\.page-title\s*\{")
         self.assertRegex(base, r"\.section-title\s*\{[^}]*font-size:\s*var\(--type-section-title-size\)")
+        self.assertRegex(base, r"\.section-title\s*\{[^}]*text-overflow:\s*ellipsis")
+        self.assertRegex(base, r"\.section-title\s*\{[^}]*white-space:\s*nowrap")
+        self.assertRegex(base, r"\.track-title-text\s*\{[^}]*text-overflow:\s*ellipsis")
+        self.assertRegex(base, r"\.tag\s*\{[^}]*text-overflow:\s*ellipsis")
+        self.assertRegex(base, r"\.creator-text-card__name,\s*[\s\S]*?\.creator-text-card__summary\s*\{[^}]*-webkit-line-clamp:\s*2")
+        self.assertRegex(base, r"\.image-caption\s*\{[^}]*-webkit-line-clamp:\s*2")
+        self.assertNotRegex(base, r"\.meta-value\s*\{[^}]*text-overflow:\s*ellipsis")
         self.assertRegex(
             base,
             r"\.markdown :is\(h1, h2, h3, h4, h5, h6\)\s*\{[^}]*"

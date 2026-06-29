@@ -46,6 +46,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls.audio_project_path = cls._find_audio_project_page()
         cls.video_project_path = cls._find_video_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
+        cls.description_project_path = cls._find_project_page_with_description()
         cls.landscape_project_path = cls._find_landscape_project_page_with_metadata()
         cls.creator_path = cls._find_creator_page()
         cls.combined_event_creator_path = cls._find_creator_page_with_combined_event()
@@ -166,6 +167,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             if "image-caption-section" in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain an image-caption project page")
+
+    @classmethod
+    def _find_project_page_with_description(cls):
+        for path in sorted((cls.site_dir / "html").rglob("*.html")):
+            if "expandable-text--project-description" in path.read_text(encoding="utf-8"):
+                return path.relative_to(cls.site_dir).as_posix()
+        raise AssertionError("Generated example site does not contain a project page with a description")
 
     @classmethod
     def _find_landscape_project_page_with_metadata(cls):
@@ -525,6 +533,125 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         self.assertGreater(content_padding, 0)
         self.assertEqual(spacing["firstChildMarginTop"], "0px")
+        self.assertNoBrowserErrors()
+
+    def test_detail_about_and_description_text_expand_only_when_too_long(self):
+        """Covers SITE-026."""
+        self.open_page(self.creator_path)
+
+        creator_text = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const root = document.querySelector('.expandable-text--creator-about');
+                const content = root.querySelector('[data-expandable-text-content]');
+                const button = root.querySelector('[data-expandable-text-toggle]');
+                const measure = () => {
+                    const rootStyle = getComputedStyle(root);
+                    const contentStyle = getComputedStyle(content);
+                    return {
+                        documentLanguage: document.documentElement.lang,
+                        desktopLines: rootStyle.getPropertyValue('--expandable-text-lines').trim(),
+                        mobileLines: rootStyle.getPropertyValue('--expandable-text-mobile-lines').trim(),
+                        currentLines: rootStyle.getPropertyValue('--expandable-text-current-lines').trim(),
+                        lineClamp: contentStyle.webkitLineClamp,
+                        hyphens: contentStyle.hyphens,
+                        overflowWrap: contentStyle.overflowWrap,
+                        buttonHidden: button.hidden,
+                        buttonText: button.textContent.trim(),
+                        ariaExpanded: button.getAttribute('aria-expanded'),
+                        isCollapsed: root.classList.contains('is-collapsed'),
+                        isExpanded: root.classList.contains('is-expanded'),
+                        isClipped: content.scrollHeight > content.clientHeight + 1,
+                    };
+                };
+
+                content.innerHTML = '<p>Short text.</p>';
+                window.cr4te.expandableText.update();
+                await tick();
+                await tick();
+                const shortText = measure();
+
+                content.innerHTML = Array.from(
+                    { length: 16 },
+                    (_, index) => `<p>Creator biography paragraph ${index + 1} with enough prose to exceed the limit.</p>`
+                ).join('');
+                window.cr4te.expandableText.update();
+                await tick();
+                await tick();
+                const collapsed = measure();
+
+                button.click();
+                await tick();
+                const expanded = measure();
+
+                return { shortText, collapsed, expanded };
+            }
+            """
+        )
+        self.assertTrue(creator_text["shortText"]["buttonHidden"])
+        self.assertFalse(creator_text["shortText"]["isCollapsed"])
+        self.assertEqual(creator_text["collapsed"]["documentLanguage"], "en-US")
+        self.assertEqual(creator_text["collapsed"]["desktopLines"], "8")
+        self.assertEqual(creator_text["collapsed"]["mobileLines"], "2")
+        self.assertEqual(creator_text["collapsed"]["currentLines"], "8")
+        self.assertEqual(creator_text["collapsed"]["lineClamp"], "8")
+        self.assertEqual(creator_text["collapsed"]["hyphens"], "auto")
+        self.assertEqual(creator_text["collapsed"]["overflowWrap"], "break-word")
+        self.assertFalse(creator_text["collapsed"]["buttonHidden"])
+        self.assertEqual(creator_text["collapsed"]["buttonText"], "Show more")
+        self.assertEqual(creator_text["collapsed"]["ariaExpanded"], "false")
+        self.assertTrue(creator_text["collapsed"]["isCollapsed"])
+        self.assertTrue(creator_text["collapsed"]["isClipped"])
+        self.assertFalse(creator_text["expanded"]["isCollapsed"])
+        self.assertTrue(creator_text["expanded"]["isExpanded"])
+        self.assertFalse(creator_text["expanded"]["isClipped"])
+        self.assertEqual(creator_text["expanded"]["buttonText"], "Show less")
+        self.assertEqual(creator_text["expanded"]["ariaExpanded"], "true")
+
+        self.page.set_viewport_size({"width": 360, "height": 900})
+        self.open_page(self.description_project_path)
+        project_text = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const root = document.querySelector('.expandable-text--project-description');
+                const content = root.querySelector('[data-expandable-text-content]');
+                const button = root.querySelector('[data-expandable-text-toggle]');
+
+                content.innerHTML = Array.from(
+                    { length: 16 },
+                    (_, index) => `<p>Project description paragraph ${index + 1} with enough prose to exceed the limit.</p>`
+                ).join('');
+                window.cr4te.expandableText.update();
+                await tick();
+                await tick();
+
+                const rootStyle = getComputedStyle(root);
+                const contentStyle = getComputedStyle(content);
+                return {
+                    desktopLines: rootStyle.getPropertyValue('--expandable-text-lines').trim(),
+                    mobileLines: rootStyle.getPropertyValue('--expandable-text-mobile-lines').trim(),
+                    currentLines: rootStyle.getPropertyValue('--expandable-text-current-lines').trim(),
+                    lineClamp: contentStyle.webkitLineClamp,
+                    buttonHidden: button.hidden,
+                    buttonText: button.textContent.trim(),
+                    ariaExpanded: button.getAttribute('aria-expanded'),
+                    isCollapsed: root.classList.contains('is-collapsed'),
+                    isClipped: content.scrollHeight > content.clientHeight + 1,
+                };
+            }
+            """
+        )
+        self.assertEqual(project_text["desktopLines"], "8")
+        self.assertEqual(project_text["mobileLines"], "2")
+        self.assertEqual(project_text["currentLines"], "2")
+        self.assertEqual(project_text["lineClamp"], "2")
+        self.assertFalse(project_text["buttonHidden"])
+        self.assertEqual(project_text["buttonText"], "Show more")
+        self.assertEqual(project_text["ariaExpanded"], "false")
+        self.assertTrue(project_text["isCollapsed"])
+        self.assertTrue(project_text["isClipped"])
         self.assertNoBrowserErrors()
 
     def test_image_less_detail_metadata_uses_responsive_equal_columns(self):
@@ -944,6 +1071,285 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertEqual(sizes["visibleTitleCount"], 0)
         self.assertGreater(sizes["sectionTitle"], sizes["body"])
         self.assertLessEqual(sizes["markdownHeading"], sizes["body"])
+        self.assertNoBrowserErrors()
+
+    def test_section_titles_truncate_and_show_tooltips_only_on_overflow(self):
+        """Covers SITE-026."""
+        self.open_page(self.creator_path)
+
+        plain_title = self.page.evaluate(
+            """
+            async () => {
+                const title = document.querySelector('.section-title');
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+
+                title.textContent = 'Profile';
+                title.style.maxWidth = 'none';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                const shortTitle = title.getAttribute('title');
+
+                const longTitle = 'A Very Long Section Title That Should Stay On One Line And Use An Ellipsis';
+                title.textContent = longTitle;
+                title.style.maxWidth = '9rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const style = getComputedStyle(title);
+                return {
+                    whiteSpace: style.whiteSpace,
+                    textOverflow: style.textOverflow,
+                    overflowX: style.overflowX,
+                    isOverflowing: title.scrollWidth > title.clientWidth,
+                    shortTitle,
+                    longTitle: title.getAttribute('title'),
+                };
+            }
+            """
+        )
+        self.assertEqual(plain_title["whiteSpace"], "nowrap")
+        self.assertEqual(plain_title["textOverflow"], "ellipsis")
+        self.assertEqual(plain_title["overflowX"], "hidden")
+        self.assertTrue(plain_title["isOverflowing"])
+        self.assertIsNone(plain_title["shortTitle"])
+        self.assertEqual(
+            plain_title["longTitle"],
+            "A Very Long Section Title That Should Stay On One Line And Use An Ellipsis",
+        )
+
+        self.open_page(self.caption_project_path)
+        action_title = self.page.evaluate(
+            """
+            async () => {
+                const sectionTitle = document.querySelector('.image-caption-section .section-title');
+                const text = sectionTitle.querySelector(':scope > span');
+                const button = sectionTitle.querySelector('.caption-toggle-btn');
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const longTitle = 'A Very Long Image Section Title That Must Truncate Before The Action Button';
+
+                text.textContent = longTitle;
+                sectionTitle.style.maxWidth = '12rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const sectionRect = sectionTitle.getBoundingClientRect();
+                const buttonRect = button.getBoundingClientRect();
+                const textStyle = getComputedStyle(text);
+                return {
+                    textWhiteSpace: textStyle.whiteSpace,
+                    textOverflow: textStyle.textOverflow,
+                    textIsOverflowing: text.scrollWidth > text.clientWidth,
+                    textTitle: text.getAttribute('title'),
+                    sectionTitle: sectionTitle.getAttribute('title'),
+                    buttonVisible: buttonRect.width > 0 && buttonRect.right <= sectionRect.right + 0.5,
+                };
+            }
+            """
+        )
+        self.assertEqual(action_title["textWhiteSpace"], "nowrap")
+        self.assertEqual(action_title["textOverflow"], "ellipsis")
+        self.assertTrue(action_title["textIsOverflowing"])
+        self.assertEqual(
+            action_title["textTitle"],
+            "A Very Long Image Section Title That Must Truncate Before The Action Button",
+        )
+        self.assertIsNone(action_title["sectionTitle"])
+        self.assertTrue(action_title["buttonVisible"])
+        self.assertNoBrowserErrors()
+
+    def test_text_overflow_policy_matches_content_role(self):
+        """Covers SITE-026."""
+        self.open_page(self.audio_project_path)
+
+        audio = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const track = document.querySelector('.track-title-text');
+                const row = track.closest('.track-title');
+                const longTitle = 'A Very Long Track Title That Should Stay On One Line With An Ellipsis';
+
+                track.textContent = longTitle;
+                row.style.maxWidth = '8rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const style = getComputedStyle(track);
+                return {
+                    whiteSpace: style.whiteSpace,
+                    textOverflow: style.textOverflow,
+                    overflowX: style.overflowX,
+                    isOverflowing: track.scrollWidth > track.clientWidth,
+                    title: track.getAttribute('title'),
+                };
+            }
+            """
+        )
+        self.assertEqual(audio["whiteSpace"], "nowrap")
+        self.assertEqual(audio["textOverflow"], "ellipsis")
+        self.assertEqual(audio["overflowX"], "hidden")
+        self.assertTrue(audio["isOverflowing"])
+        self.assertEqual(
+            audio["title"],
+            "A Very Long Track Title That Should Stay On One Line With An Ellipsis",
+        )
+
+        self.open_page("tags.html")
+        tags = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const longTag = 'A Very Long Tag Label That Should Stay On One Line';
+                const tag = document.querySelector('.tag-category .tag');
+                const category = document.querySelector('.tag-category-label');
+
+                tag.textContent = longTag;
+                tag.style.width = '6rem';
+                category.textContent = longTag;
+                category.style.width = '6rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const measure = element => {
+                    const style = getComputedStyle(element);
+                    return {
+                        whiteSpace: style.whiteSpace,
+                        textOverflow: style.textOverflow,
+                        overflowX: style.overflowX,
+                        isOverflowing: element.scrollWidth > element.clientWidth,
+                        title: element.getAttribute('title'),
+                    };
+                };
+
+                return {
+                    tag: measure(tag),
+                    category: measure(category),
+                    longTag,
+                };
+            }
+            """
+        )
+        for label in ("tag", "category"):
+            with self.subTest(label=label):
+                self.assertEqual(tags[label]["whiteSpace"], "nowrap")
+                self.assertEqual(tags[label]["textOverflow"], "ellipsis")
+                self.assertEqual(tags[label]["overflowX"], "hidden")
+                self.assertTrue(tags[label]["isOverflowing"])
+                self.assertEqual(tags[label]["title"], tags["longTag"])
+
+        self.open_page("index.html")
+        image_caption = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const caption = document.querySelector('#imageGallery .image-card .image-caption');
+                const longCaption = 'A long image caption that should wrap naturally but stop after two displayed lines';
+
+                caption.textContent = longCaption;
+                caption.style.width = '7rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const style = getComputedStyle(caption);
+                return {
+                    lineClamp: style.webkitLineClamp,
+                    whiteSpace: style.whiteSpace,
+                    overflowY: style.overflowY,
+                    isClipped: caption.scrollHeight > caption.clientHeight + 1,
+                    title: caption.getAttribute('title'),
+                };
+            }
+            """
+        )
+        self.assertEqual(image_caption["lineClamp"], "2")
+        self.assertEqual(image_caption["whiteSpace"], "normal")
+        self.assertEqual(image_caption["overflowY"], "hidden")
+        self.assertTrue(image_caption["isClipped"])
+        self.assertEqual(
+            image_caption["title"],
+            "A long image caption that should wrap naturally but stop after two displayed lines",
+        )
+
+        self.open_disabled_portraits_page("index.html")
+        text_card = self.page.evaluate(
+            """
+            async () => {
+                const tick = () => new Promise(resolve => requestAnimationFrame(resolve));
+                const name = document.querySelector('.creator-text-card__name');
+                const summary = document.querySelector('.creator-text-card__summary');
+                const longName = 'A Very Long Creator Name That Should Wrap But Clamp After Two Lines';
+                const longSummary = 'A Very Long Count Summary That Should Wrap But Clamp After Two Lines';
+
+                name.textContent = longName;
+                name.style.width = '7rem';
+                summary.textContent = longSummary;
+                summary.style.width = '7rem';
+                window.dispatchEvent(new Event('resize'));
+                await tick();
+                await tick();
+
+                const measure = element => {
+                    const style = getComputedStyle(element);
+                    return {
+                        lineClamp: style.webkitLineClamp,
+                        whiteSpace: style.whiteSpace,
+                        overflowY: style.overflowY,
+                        isClipped: element.scrollHeight > element.clientHeight + 1,
+                        title: element.getAttribute('title'),
+                    };
+                };
+
+                return {
+                    name: measure(name),
+                    summary: measure(summary),
+                    longName,
+                    longSummary,
+                };
+            }
+            """
+        )
+        self.assertEqual(text_card["name"]["lineClamp"], "2")
+        self.assertEqual(text_card["name"]["whiteSpace"], "normal")
+        self.assertEqual(text_card["name"]["overflowY"], "hidden")
+        self.assertTrue(text_card["name"]["isClipped"])
+        self.assertEqual(text_card["name"]["title"], text_card["longName"])
+        self.assertEqual(text_card["summary"]["lineClamp"], "2")
+        self.assertEqual(text_card["summary"]["whiteSpace"], "normal")
+        self.assertEqual(text_card["summary"]["overflowY"], "hidden")
+        self.assertTrue(text_card["summary"]["isClipped"])
+        self.assertEqual(text_card["summary"]["title"], text_card["longSummary"])
+
+        self.open_page(self.creator_path)
+        detail_text = self.page.evaluate(
+            """
+            () => {
+                const prose = document.querySelector('.text-content');
+                const meta = document.querySelector('.meta-value');
+                const proseStyle = getComputedStyle(prose);
+                const metaStyle = getComputedStyle(meta);
+
+                return {
+                    proseWhiteSpace: proseStyle.whiteSpace,
+                    proseTextOverflow: proseStyle.textOverflow,
+                    proseTitle: prose.getAttribute('title'),
+                    metaWhiteSpace: metaStyle.whiteSpace,
+                    metaTextOverflow: metaStyle.textOverflow,
+                    metaTitle: meta.getAttribute('title'),
+                };
+            }
+            """
+        )
+        self.assertEqual(detail_text["proseWhiteSpace"], "normal")
+        self.assertEqual(detail_text["proseTextOverflow"], "clip")
+        self.assertIsNone(detail_text["proseTitle"])
+        self.assertEqual(detail_text["metaWhiteSpace"], "normal")
+        self.assertEqual(detail_text["metaTextOverflow"], "clip")
+        self.assertIsNone(detail_text["metaTitle"])
         self.assertNoBrowserErrors()
 
     def test_page_section_and_gallery_spacing_follow_layout_tokens(self):

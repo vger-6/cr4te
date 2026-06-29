@@ -56,7 +56,59 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.entity.creator, "Creator")
             self.assertEqual(config.site_labels.counts.project, "project")
             self.assertEqual(config.site_labels.controls.play, "Play")
+            self.assertEqual(config.site_labels.controls.show_more, "Show more")
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
+            self.assertEqual(config.site_rendering.document_language, "en-US")
+            self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines, 8)
+            self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines_mobile, 2)
+            self.assertEqual(config.site_rendering.project_page.description_collapsed_lines, 8)
+            self.assertEqual(config.site_rendering.project_page.description_collapsed_lines_mobile, 2)
+
+    def test_expandable_text_labels_and_thresholds_are_configurable_independently(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(
+                config_path,
+                {
+                    "site_labels": {
+                        "controls": {
+                            "show_more": "Read more",
+                            "show_less": "Read less",
+                        }
+                    },
+                    "site_rendering": {
+                        "document_language": "de-DE",
+                        "creator_page": {
+                            "about_collapsed_lines": 6,
+                            "about_collapsed_lines_mobile": 3,
+                        },
+                        "project_page": {
+                            "description_collapsed_lines": 10,
+                            "description_collapsed_lines_mobile": 4,
+                        },
+                    },
+                },
+            )
+
+            config = load_config(config_path)
+
+            self.assertEqual(config.site_rendering.document_language, "de-DE")
+            self.assertEqual(config.site_labels.controls.show_more, "Read more")
+            self.assertEqual(config.site_labels.controls.show_less, "Read less")
+            self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines, 6)
+            self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines_mobile, 3)
+            self.assertEqual(config.site_rendering.project_page.description_collapsed_lines, 10)
+            self.assertEqual(config.site_rendering.project_page.description_collapsed_lines_mobile, 4)
+
+    def test_document_language_must_not_be_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(config_path, {"site_rendering": {"document_language": "  "}})
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("document_language", str(caught.exception))
 
     def test_project_count_labels_are_configurable_independently_from_entity_labels(self):
         """Covers SITE-031."""

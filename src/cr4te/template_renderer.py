@@ -48,6 +48,7 @@ env.filters["format_phrase"] = format_named
 
 def _theme_render_context(ctx: HtmlBuildContext) -> dict:
     return {
+        "document_language": ctx.site_rendering.document_language,
         "themes": ctx.themes,
         "default_theme": ctx.default_theme,
     }

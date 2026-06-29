@@ -83,7 +83,12 @@ REQUIREMENT_TESTS = {
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_and_page_content_use_distinct_aligned_geometry",
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_navigation_surfaces_and_panels_follow_selected_theme",
     ),
-    "SITE-026": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_content_first_typography_hierarchy",),
+    "SITE-026": (
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_content_first_typography_hierarchy",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_about_and_description_text_expand_only_when_too_long",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_section_titles_truncate_and_show_tooltips_only_on_overflow",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_text_overflow_policy_matches_content_role",
+    ),
     "SITE-027": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_page_section_and_gallery_spacing_follow_layout_tokens",),
     "SITE-028": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_details_portrait_visibility_uses_text_overview_and_detail_portraits",),
     "SITE-029": ("tests/test_overview_contexts.py::OverviewContextTests.test_disabled_portraits_build_text_summary_without_thumbnail_work",),

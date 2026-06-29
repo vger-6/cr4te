@@ -103,6 +103,8 @@ DEFAULT_CONTROL_LABELS = {
     "volume": "Volume",
     "show_captions": "Show captions",
     "hide_captions": "Hide captions",
+    "show_more": "Show more",
+    "show_less": "Show less",
 }
 
 DEFAULT_PAGE_LABELS = {
@@ -167,6 +169,7 @@ DEFAULT_SITE_LABELS = {
 DEFAULT_CONFIG = {
     "site_labels": DEFAULT_SITE_LABELS,
     "site_rendering": {
+        "document_language": "en-US",
         "media": {
             "type_order": [
                 MediaType.VIDEO,
@@ -198,12 +201,16 @@ DEFAULT_CONFIG = {
             "visible_creator_fields": CREATOR_VISIBLE_FIELDS,
             "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS,
             "media_gallery_page_size": 15,
+            "about_collapsed_lines": 8,
+            "about_collapsed_lines_mobile": 2,
         },
         "project_page": {
             "visible_fields": [ProjectField.TITLE, ProjectField.RELEASE_DATE],
             "visible_creator_fields": CREATOR_VISIBLE_FIELDS,
             "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS,
             "media_gallery_page_size": 15,
+            "description_collapsed_lines": 8,
+            "description_collapsed_lines_mobile": 2,
         },
         "project_metadata": {
             "defaults": PROJECT_VISIBLE_METADATA_DEFAULTS,

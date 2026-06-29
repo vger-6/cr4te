@@ -62,6 +62,8 @@ class ControlLabels(StrictConfigModel):
     volume: str
     show_captions: str
     hide_captions: str
+    show_more: str
+    show_less: str
 
     @field_validator("search_placeholder_format")
     @classmethod
@@ -264,6 +266,8 @@ class CreatorPageRendering(StrictConfigModel):
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
     media_gallery_page_size: conint(ge=0)
+    about_collapsed_lines: conint(gt=0)
+    about_collapsed_lines_mobile: conint(gt=0)
 
 
 class ProjectPageRendering(StrictConfigModel):
@@ -271,6 +275,8 @@ class ProjectPageRendering(StrictConfigModel):
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
     media_gallery_page_size: conint(ge=0)
+    description_collapsed_lines: conint(gt=0)
+    description_collapsed_lines_mobile: conint(gt=0)
 
 
 class ProjectMetadataRendering(StrictConfigModel):
@@ -295,12 +301,21 @@ class PortraitRendering(StrictConfigModel):
 
 
 class SiteRendering(StrictConfigModel):
+    document_language: str
     media: MediaRendering
     galleries: GalleryRendering
     creator_page: CreatorPageRendering
     project_page: ProjectPageRendering
     project_metadata: ProjectMetadataRendering
     portraits: PortraitRendering
+
+    @field_validator("document_language")
+    @classmethod
+    def validate_document_language(cls, value: str) -> str:
+        language = value.strip()
+        if not language:
+            raise ValueError("document_language must not be empty")
+        return language
 
 
 # Media rules schema

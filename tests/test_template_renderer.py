@@ -835,6 +835,10 @@ class TemplateRendererTests(unittest.TestCase):
 
     def test_page_templates_use_shared_document_head_and_page_header(self):
         template_dir = ROOT / "src" / "cr4te" / "templates"
+        document_open_source = (template_dir / "partials" / "_document_open.html.j2").read_text(encoding="utf-8")
+
+        self.assertIn('lang="{{ document_language | default(\'en-US\') }}"', document_open_source)
+        self.assertNotIn('lang="en"', document_open_source)
 
         page_templates = (
             "creator.html.j2",
