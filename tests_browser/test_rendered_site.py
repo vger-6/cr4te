@@ -107,9 +107,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
                 {
                     "site_rendering": {
                         "galleries": {
-                            "creator_cards": {"page_size": 1, "image_max_height": 2000},
-                            "project_cards": {"page_size": 1, "image_max_height": 2000},
-                        }
+                            "creator_cards": {"page_rows": 1, "image_max_height": 2000},
+                            "project_cards": {"page_rows": 1, "image_max_height": 2000},
+                        },
+                        "creator_page": {"media_gallery_page_rows": 1},
+                        "project_page": {"media_gallery_page_rows": 1},
                     }
                 }
             ),
@@ -1863,7 +1865,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertNoBrowserErrors()
 
     def test_paginated_gallery_rebuilds_layout_after_page_change(self):
-        """Covers SITE-027 and SITE-032."""
+        """Covers SITE-027, SITE-032, and SITE-035."""
         self.open_paginated_page("index.html")
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
@@ -1879,6 +1881,83 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
         self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
+    def test_paginated_galleries_use_configured_row_count_for_aspect_and_justified_layouts(self):
+        """Covers SITE-035."""
+        self.open_page("index.html")
+
+        row_counts = self.page.evaluate(
+            """
+            () => {
+                function rowsFor(gallery) {
+                    const tops = Array.from(gallery.querySelectorAll('.image-wrapper'))
+                        .map(wrapper => Math.round(wrapper.getBoundingClientRect().top));
+                    return new Set(tops).size;
+                }
+
+                function visibleCount(gallery) {
+                    return gallery.querySelectorAll('.image-wrapper').length;
+                }
+
+                function buildGallery(id, className, width, maxHeight, wrappersHtml) {
+                    const section = document.createElement('section');
+                    section.className = 'section-box';
+                    section.innerHTML = `<div class="section-content"><div id="${id}" class="${className}" data-image-max-height="${maxHeight}" data-aspect-ratio="1/1" data-page-rows="2"></div></div>`;
+                    document.body.appendChild(section);
+
+                    const gallery = section.querySelector(`#${id}`);
+                    gallery.style.width = `${width}px`;
+                    gallery.style.maxWidth = `${width}px`;
+                    gallery.innerHTML = wrappersHtml;
+
+                    const wrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
+                    window.cr4te.pagination.mount(gallery, wrappers, 2);
+                    return gallery;
+                }
+
+                const aspectGallery = buildGallery(
+                    'synthetic-aspect-gallery',
+                    'image-gallery--aspect',
+                    600,
+                    200,
+                    Array.from({ length: 7 }, (_, index) => `<div class="image-wrapper" data-width="100" data-height="100"><img alt="Aspect ${index}"></div>`).join('')
+                );
+
+                const justifiedGallery = buildGallery(
+                    'synthetic-justified-gallery',
+                    'image-gallery--justified',
+                    600,
+                    200,
+                    Array.from({ length: 5 }, (_, index) => `<div class="image-wrapper" data-width="200" data-height="100"><img alt="Justified ${index}"></div>`).join('')
+                );
+
+                const initial = {
+                    aspectCount: visibleCount(aspectGallery),
+                    aspectRows: rowsFor(aspectGallery),
+                    justifiedCount: visibleCount(justifiedGallery),
+                    justifiedRows: rowsFor(justifiedGallery),
+                };
+
+                aspectGallery.style.width = '400px';
+                aspectGallery.style.maxWidth = '400px';
+                window.dispatchEvent(new Event('resize'));
+
+                return {
+                    ...initial,
+                    reflowedAspectCount: visibleCount(aspectGallery),
+                    reflowedAspectRows: rowsFor(aspectGallery),
+                };
+            }
+            """
+        )
+
+        self.assertEqual(row_counts["aspectCount"], 6)
+        self.assertEqual(row_counts["aspectRows"], 2)
+        self.assertEqual(row_counts["justifiedCount"], 4)
+        self.assertEqual(row_counts["justifiedRows"], 2)
+        self.assertEqual(row_counts["reflowedAspectCount"], 4)
+        self.assertEqual(row_counts["reflowedAspectRows"], 2)
         self.assertNoBrowserErrors()
 
     def test_reduced_motion_disables_shared_transitions_and_smooth_pagination_scroll(self):

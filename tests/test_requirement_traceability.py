@@ -97,6 +97,11 @@ REQUIREMENT_TESTS = {
     "SITE-032": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_no_javascript_overview_gallery_fallback_remains_visible",),
     "SITE-033": ("tests/test_template_renderer.py::TemplateRendererTests.test_detail_templates_render_region_empty_states_only_when_whole_region_is_empty",),
     "SITE-034": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_tags_page_renders_and_initializes_theme",),
+    "SITE-035": (
+        "tests/test_js_contracts.py::JavaScriptContractTests.test_gallery_pagination_uses_page_rows_contract",
+        "tests/test_template_renderer.py::TemplateRendererTests.test_creator_project_card_gallery_rows_are_configurable_independently",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_paginated_galleries_use_configured_row_count_for_aspect_and_justified_layouts",
+    ),
     "THEME-001": ("tests/test_html_build.py::HtmlBuildTests.test_streaming_html_build_copies_and_renders_custom_theme",),
     "THEME-002": ("tests/test_themes.py::ThemeTests.test_custom_theme_is_discovered_from_explicit_directory",),
     "THEME-003": ("tests/test_themes.py::ThemeTests.test_invalid_custom_themes_are_reported_and_skipped",),

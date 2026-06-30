@@ -59,6 +59,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.controls.show_more, "Show more")
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
             self.assertEqual(config.site_rendering.document_language, "en-US")
+            self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 5)
             self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines, 8)
             self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines_mobile, 2)
             self.assertEqual(config.site_rendering.project_page.description_collapsed_lines, 8)
@@ -205,9 +206,14 @@ class ConfigManagerTests(unittest.TestCase):
                         "galleries": {
                             "project_cards": {
                                 "aspect_ratio": "4/5",
-                                "page_size": 25,
+                                "page_rows": 7,
                             }
-                        }
+                        },
+                        "creator_page": {
+                            "project_card_gallery_page_rows": 3,
+                            "media_gallery_page_rows": 4,
+                        },
+                        "project_page": {"media_gallery_page_rows": 6},
                     }
                 },
             )
@@ -215,9 +221,12 @@ class ConfigManagerTests(unittest.TestCase):
             config = load_config(config_path)
 
             self.assertEqual(config.site_rendering.galleries.project_cards.aspect_ratio, "4/5")
-            self.assertEqual(config.site_rendering.galleries.project_cards.page_size, 25)
+            self.assertEqual(config.site_rendering.galleries.project_cards.page_rows, 7)
             self.assertEqual(config.site_rendering.galleries.project_cards.image_max_height, 300)
             self.assertEqual(config.site_rendering.galleries.project_cards.creator_page_image_max_height, 300)
+            self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 3)
+            self.assertEqual(config.site_rendering.creator_page.media_gallery_page_rows, 4)
+            self.assertEqual(config.site_rendering.project_page.media_gallery_page_rows, 6)
 
     def test_gallery_aspect_ratio_config_normalizes_supported_values(self):
         valid_ratios = {

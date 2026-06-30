@@ -795,6 +795,74 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertNotIn("No media available", project_with_media)
             self.assertIn("audio-gallery", project_with_media)
 
+    def test_creator_project_card_gallery_rows_are_configurable_independently(self):
+        """Covers SITE-035."""
+        with tempfile.TemporaryDirectory() as tmp:
+            config = apply_cli_overrides(load_config(), domain=Domain.ART)
+            config.site_rendering.creator_page.project_card_gallery_page_rows = 3
+            config.site_rendering.creator_page.media_gallery_page_rows = 1
+            ctx = HtmlBuildContext(Path(tmp) / "input", Path(tmp) / "site", config.site_labels, config.site_rendering)
+            page = CreatorPageContext(
+                type=CreatorType.PERSON.value,
+                name="Noomi",
+                rel_portrait_path="",
+                portrait_orientation=None,
+                info_html="",
+                tags=TagCollection(),
+                projects=[project_card()],
+                media_groups=[
+                    MediaGroupContext(
+                        audio_section_title="Audio",
+                        image_section_title="Images",
+                        sections=[
+                            MediaSectionContext(
+                                type=MediaType.IMAGE,
+                                images=[
+                                    GalleryImageContext(
+                                        rel_thumbnail_path="thumb.jpg",
+                                        image_wrapper_width=120,
+                                        image_wrapper_height=80,
+                                        rel_path="image.jpg",
+                                        caption="Image",
+                                    )
+                                ],
+                            )
+                        ],
+                    )
+                ],
+                collaborations=[],
+                creator_stats=CreatorStats(project_count=1, media_counts=MediaCounts(image=1)),
+                meta_entries=[],
+            )
+
+            rendered = env.get_template("creator.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator=page,
+                project_image_max_height=450,
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title=page.name,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            )
+
+            self.assertIn(
+                'data-lightbox="false"\n'
+                '               data-image-max-height="450"\n'
+                '               data-page-rows="3"',
+                rendered,
+            )
+            self.assertIn(
+                'class="image-gallery--justified" data-lightbox="true" data-page-rows="1"',
+                rendered,
+            )
+
     def test_creator_template_resolves_domain_specific_collaboration_title_format(self):
         with tempfile.TemporaryDirectory() as tmp:
             config = apply_cli_overrides(load_config(), domain=Domain.FILM)

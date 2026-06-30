@@ -4,14 +4,20 @@
   cr4te.galleries = cr4te.galleries || {};
   cr4te.lightbox = cr4te.lightbox || {};
 
-  const IMAGES_PER_PAGE_DEFAULT = 20;
+  const PAGE_ROWS_DEFAULT = 5;
   const instances = new WeakMap();
+  const ROW_TOP_TOLERANCE = 4;
+
+  function parsePositiveInt(value, fallback) {
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  }
 
   function rebuildGallery(gallery) {
     if (gallery.classList.contains('image-gallery--justified')) {
-      cr4te.galleries.rebuildJustified?.();
+      cr4te.galleries.rebuildJustified?.(gallery);
     } else if (gallery.classList.contains('image-gallery--aspect')) {
-      cr4te.galleries.rebuildAspect?.();
+      cr4te.galleries.rebuildAspect?.(gallery);
     }
   }
 
@@ -19,7 +25,140 @@
     cr4te.lightbox.rebind?.();
   }
 
-  function createPagination(gallery, initialWrappers, initialPageSize) {
+  function getLayoutMetrics(gallery) {
+    const computedStyle = window.getComputedStyle(gallery);
+    const gap = window.utils.parseCssLength(
+      computedStyle.columnGap || computedStyle.gap || "1rem",
+      gallery
+    );
+    const galleryWidth = gallery.clientWidth;
+    const maxHeight = parseFloat(gallery.dataset.imageMaxHeight || "200");
+
+    return {
+      gap: Number.isFinite(gap) ? gap : 16,
+      galleryWidth,
+      maxHeight: Number.isFinite(maxHeight) && maxHeight > 0 ? maxHeight : 200,
+    };
+  }
+
+  function getRatio(wrapper) {
+    const w = parseFloat(wrapper.dataset.width);
+    const h = parseFloat(wrapper.dataset.height);
+    if (!w || !h) return 1;
+    return w / h;
+  }
+
+  function chunkRows(items, rowSize) {
+    const rows = [];
+    const safeRowSize = Math.max(rowSize, 1);
+
+    for (let index = 0; index < items.length; index += safeRowSize) {
+      rows.push(items.slice(index, index + safeRowSize));
+    }
+
+    return rows;
+  }
+
+  function calculateAspectColumns(gallery, allWrappers) {
+    const { w, h } = window.utils.parseAspectRatio(gallery.dataset.aspectRatio);
+    const { gap, galleryWidth, maxHeight } = getLayoutMetrics(gallery);
+
+    if (!galleryWidth || allWrappers.length === 0) return 1;
+
+    let columns = 1;
+    while (columns < allWrappers.length) {
+      const totalGap = gap * (columns - 1);
+      const availableWidth = Math.max(galleryWidth - totalGap, 1);
+      const itemWidth = availableWidth / columns;
+      const itemHeight = itemWidth * (h / w);
+
+      if (itemHeight <= maxHeight) break;
+      columns++;
+    }
+
+    return columns;
+  }
+
+  function buildAspectRows(gallery, allWrappers) {
+    return chunkRows(allWrappers, calculateAspectColumns(gallery, allWrappers));
+  }
+
+  function buildJustifiedRows(gallery, allWrappers) {
+    const { gap, galleryWidth, maxHeight } = getLayoutMetrics(gallery);
+
+    if (!galleryWidth) return chunkRows(allWrappers, 1);
+
+    const rows = [];
+    let row = [];
+    let ratioSum = 0;
+
+    allWrappers.forEach(wrapper => {
+      row.push(wrapper);
+      ratioSum += getRatio(wrapper);
+
+      const totalGap = gap * (row.length - 1);
+      const rowHeight = (galleryWidth - totalGap) / ratioSum;
+
+      if (rowHeight <= maxHeight) {
+        rows.push(row);
+        row = [];
+        ratioSum = 0;
+      }
+    });
+
+    if (row.length > 0) {
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
+  function buildMeasuredRows(gallery, allWrappers) {
+    if (allWrappers.length === 0) return [];
+
+    gallery.innerHTML = '';
+    allWrappers.forEach(wrapper => gallery.appendChild(wrapper));
+
+    const rows = [];
+    let currentTop = null;
+
+    allWrappers.forEach(wrapper => {
+      const top = Math.round(wrapper.getBoundingClientRect().top);
+
+      if (currentTop === null || Math.abs(top - currentTop) > ROW_TOP_TOLERANCE) {
+        rows.push([]);
+        currentTop = top;
+      }
+
+      rows[rows.length - 1].push(wrapper);
+    });
+
+    return rows;
+  }
+
+  function buildRowsForGallery(gallery, allWrappers) {
+    if (gallery.classList.contains('image-gallery--justified')) {
+      return buildJustifiedRows(gallery, allWrappers);
+    }
+
+    if (gallery.classList.contains('image-gallery--aspect')) {
+      return buildAspectRows(gallery, allWrappers);
+    }
+
+    return buildMeasuredRows(gallery, allWrappers);
+  }
+
+  function chunkRowsIntoPages(rows, pageRows) {
+    const pages = [];
+
+    for (let index = 0; index < rows.length; index += pageRows) {
+      pages.push(rows.slice(index, index + pageRows).flat());
+    }
+
+    return pages;
+  }
+
+  function createPagination(gallery, initialWrappers, initialPageRows) {
     let wrapper = gallery.parentElement.querySelector('.pagination-controls-wrapper');
     let controls = wrapper ? wrapper.querySelector('.pagination-controls') : null;
 
@@ -37,138 +176,11 @@
     }
 
     let allWrappers = initialWrappers;
-    let pageSize = initialPageSize;
+    let pageRows = parsePositiveInt(initialPageRows, PAGE_ROWS_DEFAULT);
     let currentPage = 1;
 
-    function getRatio(wrapper) {
-      const w = parseFloat(wrapper.dataset.width);
-      const h = parseFloat(wrapper.dataset.height);
-      if (!w || !h) return 1;
-      return w / h;
-    }
-
-    function extendToCompleteRow(gallery, allWrappers, slice, nextIndex) {
-      if (nextIndex >= allWrappers.length) return slice;
-
-      if (gallery.classList.contains('image-gallery--justified')) {
-        return extendJustifiedRow(gallery, allWrappers, slice, nextIndex);
-      }
-
-      if (gallery.classList.contains('image-gallery--aspect')) {
-        return extendAspectRow(gallery, allWrappers, slice, nextIndex);
-      }
-
-      return slice;
-    }
-
-    function extendJustifiedRow(gallery, allWrappers, slice, nextIndex) {
-      const maxHeight = parseFloat(gallery.dataset.imageMaxHeight) || 200;
-      const computedStyle = window.getComputedStyle(gallery);
-      const gap = window.utils.parseCssLength(
-        computedStyle.columnGap || computedStyle.gap || "1rem"
-      );
-      const galleryWidth = gallery.clientWidth;
-
-      if (!galleryWidth) return slice;
-
-      let row = [];
-      let ratioSum = 0;
-
-      for (let wrapper of slice) {
-        const ratio = getRatio(wrapper);
-
-        row.push(ratio);
-        ratioSum += ratio;
-
-        const totalGap = gap * (row.length - 1);
-        const rowHeight = (galleryWidth - totalGap) / ratioSum;
-
-        if (rowHeight <= maxHeight) {
-          row = [];
-          ratioSum = 0;
-        }
-      }
-
-      const initialLength = slice.length;
-
-      while (
-        row.length > 0 &&
-        nextIndex < allWrappers.length &&
-        slice.length < initialLength + 10
-      ) {
-        const wrapper = allWrappers[nextIndex];
-        const ratio = getRatio(wrapper);
-
-        row.push(ratio);
-        ratioSum += ratio;
-        slice.push(wrapper);
-        nextIndex++;
-
-        const totalGap = gap * (row.length - 1);
-        const rowHeight = (galleryWidth - totalGap) / ratioSum;
-
-        if (rowHeight <= maxHeight) break;
-      }
-
-      return slice;
-    }
-
-    function extendAspectRow(gallery, allWrappers, slice, nextIndex) {
-      const { w, h } = window.utils.parseAspectRatio(gallery.dataset.aspectRatio);
-
-      const computedStyle = window.getComputedStyle(gallery);
-      const gap = window.utils.parseCssLength(
-        computedStyle.columnGap || computedStyle.gap || "1rem"
-      );
-      const galleryWidth = gallery.clientWidth;
-      const maxHeight = parseFloat(gallery.dataset.imageMaxHeight || "200");
-
-      if (!galleryWidth) return slice;
-
-      let columns = 1;
-      while (true) {
-        const totalGap = gap * (columns - 1);
-        const availableWidth = galleryWidth - totalGap;
-        const itemWidth = availableWidth / columns;
-        const itemHeight = itemWidth * (h / w);
-
-        if (itemHeight <= maxHeight) break;
-        columns++;
-      }
-
-      const remainder = slice.length % columns;
-      if (remainder === 0) return slice;
-
-      const needed = columns - remainder;
-
-      for (let i = 0; i < needed && nextIndex < allWrappers.length; i++) {
-        slice.push(allWrappers[nextIndex]);
-        nextIndex++;
-      }
-
-      return slice;
-    }
-
     function buildPages() {
-      const pages = [];
-      let index = 0;
-
-      while (index < allWrappers.length) {
-        let slice = allWrappers.slice(index, index + pageSize);
-
-        slice = extendToCompleteRow(
-          gallery,
-          allWrappers,
-          slice,
-          index + slice.length
-        );
-
-        pages.push(slice);
-
-        index += slice.length;
-      }
-
-      return pages;
+      return chunkRowsIntoPages(buildRowsForGallery(gallery, allWrappers), pageRows);
     }
 
     let pages = buildPages();
@@ -184,6 +196,7 @@
 
       const totalPages = pages.length;
       controls.innerHTML = '';
+      wrapper.style.display = totalPages > 1 ? '' : 'none';
 
       if (totalPages > 1) {
         const previousLabel = gallery.dataset.previousLabel || 'Previous';
@@ -239,9 +252,6 @@
           };
         }
         controls.appendChild(nextBtn);
-
-      } else {
-        wrapper.style.display = 'none';
       }
 
       if (autoScroll) {
@@ -270,9 +280,9 @@
       renderPage(currentPage);
     }
 
-    function update(nextWrappers, nextPageSize) {
+    function update(nextWrappers, nextPageRows) {
       allWrappers = nextWrappers;
-      pageSize = nextPageSize;
+      pageRows = parsePositiveInt(nextPageRows, PAGE_ROWS_DEFAULT);
       currentPage = 1;
       pages = buildPages();
       renderPage(currentPage);
@@ -289,16 +299,18 @@
     };
   }
 
-  function setupPagination(gallery, allWrappers, pageSize = IMAGES_PER_PAGE_DEFAULT) {
+  function setupPagination(gallery, allWrappers, pageRows = PAGE_ROWS_DEFAULT) {
     if (!gallery) return;
+
+    pageRows = parsePositiveInt(pageRows, PAGE_ROWS_DEFAULT);
 
     const instance = instances.get(gallery);
     if (instance) {
-      instance.update(allWrappers, pageSize);
+      instance.update(allWrappers, pageRows);
       return;
     }
 
-    instances.set(gallery, createPagination(gallery, allWrappers, pageSize));
+    instances.set(gallery, createPagination(gallery, allWrappers, pageRows));
   }
 
   cr4te.pagination.mount = setupPagination;
@@ -310,9 +322,9 @@
         if (hasSearch && gallery.id === 'imageGallery') return;
 
         const wrappers = Array.from(gallery.querySelectorAll('.image-wrapper'));
-        const pageSize = parseInt(gallery.dataset.pageSize) || IMAGES_PER_PAGE_DEFAULT;
+        const pageRows = parsePositiveInt(gallery.dataset.pageRows, PAGE_ROWS_DEFAULT);
 
-        setupPagination(gallery, wrappers, pageSize);
+        setupPagination(gallery, wrappers, pageRows);
       });
   });
 

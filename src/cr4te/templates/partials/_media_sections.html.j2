@@ -2,7 +2,7 @@
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_video_player.html.j2" as video_player %}
 
-{% macro render_media_groups(path_to_root, media_groups, gallery_image_max_height, page_size, site_labels) %}
+{% macro render_media_groups(path_to_root, media_groups, gallery_image_max_height, page_rows, site_labels) %}
   {% for group in media_groups %}
     {% for section in group.sections %}
       {% if section.type == MediaType.VIDEO %}
@@ -113,7 +113,7 @@
             </div>
             <hr>
             <div class="section-content">
-              <div class="image-gallery--justified" data-lightbox="true" data-page-size="{{ page_size }}" data-image-max-height="{{ gallery_image_max_height }}" data-previous-label="{{ site_labels.controls.previous }}" data-next-label="{{ site_labels.controls.next }}">
+              <div class="image-gallery--justified" data-lightbox="true" data-page-rows="{{ page_rows }}" data-image-max-height="{{ gallery_image_max_height }}" data-previous-label="{{ site_labels.controls.previous }}" data-next-label="{{ site_labels.controls.next }}">
                 {% for image in section.images %}
                   <div class="image-wrapper" data-width="{{ image.image_wrapper_width }}" data-height="{{ image.image_wrapper_height }}">
                     <a href="{{ path_to_root }}{{ image.rel_path }}" target="_blank" data-lightbox-title="{{ image.caption }}" title="{{ image.caption }}">

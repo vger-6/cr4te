@@ -21,11 +21,11 @@
   function filterAndPaginate(gallery, wrappers) {
     if (!gallery) return;
 
-    const pageSize = parseInt(gallery.dataset.pageSize || "0", 10);
+    const pageRows = parseInt(gallery.dataset.pageRows || "0", 10);
     const noPagination = gallery.dataset.noPagination === "true";
 
-    if (!noPagination && pageSize > 0 && typeof cr4te.pagination.mount === "function") {
-      cr4te.pagination.mount(gallery, wrappers, pageSize);
+    if (!noPagination && pageRows > 0 && typeof cr4te.pagination.mount === "function") {
+      cr4te.pagination.mount(gallery, wrappers, pageRows);
     } else {
       gallery.innerHTML = '';
       wrappers.forEach(wrapper => gallery.appendChild(wrapper));

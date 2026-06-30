@@ -240,7 +240,7 @@ class GalleryLayoutRendering(StrictConfigModel):
 
 
 class OverviewCardGalleryRendering(GalleryLayoutRendering):
-    page_size: conint(ge=0)
+    page_rows: conint(gt=0)
     image_max_height: conint(gt=0)
 
 
@@ -265,7 +265,8 @@ class MediaRendering(StrictConfigModel):
 class CreatorPageRendering(StrictConfigModel):
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
-    media_gallery_page_size: conint(ge=0)
+    project_card_gallery_page_rows: conint(gt=0)
+    media_gallery_page_rows: conint(gt=0)
     about_collapsed_lines: conint(gt=0)
     about_collapsed_lines_mobile: conint(gt=0)
 
@@ -274,7 +275,7 @@ class ProjectPageRendering(StrictConfigModel):
     visible_fields: List[ProjectField]
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
-    media_gallery_page_size: conint(ge=0)
+    media_gallery_page_rows: conint(gt=0)
     description_collapsed_lines: conint(gt=0)
     description_collapsed_lines_mobile: conint(gt=0)
 

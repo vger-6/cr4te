@@ -110,6 +110,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-032:** JavaScript-enhanced image galleries must not expose their unbuilt startup layout during normal initialization, while generated pages must retain usable no-JavaScript gallery fallback markup.
 - **SITE-033:** Empty tag pages and empty major detail-page regions must show configured contextual empty states. Absent optional sections must remain omitted rather than each receiving an empty state, and static empty states must not require JavaScript.
 - **SITE-034:** Tag overview categories must use a responsive grid that adapts its column count to the available width while keeping each category comfortably scannable.
+- **SITE-035:** JavaScript-enhanced image-gallery pagination must be configured by positive maximum row counts rather than raw image counts. Pagination must keep visual rows intact for aspect and justified galleries, recalculate page contents when responsive layout or search filtering changes the available rows, and allow creator-page project-card galleries to use a row setting independent from regular media image galleries.
 
 ## Themes
 

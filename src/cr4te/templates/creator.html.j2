@@ -107,6 +107,7 @@
           <div class="{{ image_gallery_class }} card-gallery"
                data-lightbox="false"
                data-image-max-height="{{ project_image_max_height }}"
+               data-page-rows="{{ site_rendering.creator_page.project_card_gallery_page_rows }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
@@ -132,6 +133,7 @@
           <div class="{{ image_gallery_class }} card-gallery"
                data-lightbox="false"
                data-image-max-height="{{ project_image_max_height }}"
+               data-page-rows="{{ site_rendering.creator_page.project_card_gallery_page_rows }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in collab.projects %}
             <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
@@ -149,7 +151,7 @@
       </div>
       {% endfor %}
         
-      {{ media_macros.render_media_groups(path_to_root, creator.media_groups, gallery_image_max_height, site_rendering.creator_page.media_gallery_page_size, site_labels) }}
+      {{ media_macros.render_media_groups(path_to_root, creator.media_groups, gallery_image_max_height, site_rendering.creator_page.media_gallery_page_rows, site_labels) }}
       {% else %}
       <div class="section-box">
         <div class="section-content">

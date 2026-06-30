@@ -855,7 +855,7 @@ a:focus img {
 
 .pagination-controls {
   background: var(--theme-pagination-bg);
-  padding-top: var(--space-sm);
+  padding-top: var(--space-md);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

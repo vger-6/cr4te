@@ -230,9 +230,27 @@ class JavaScriptContractTests(unittest.TestCase):
         source = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
 
         self.assertIn("const instances = new WeakMap()", source)
-        self.assertIn("instance.update(allWrappers, pageSize)", source)
+        self.assertIn("instance.update(allWrappers, pageRows)", source)
         self.assertIn("window.addEventListener('resize', handleResize)", source)
         self.assertIn("window.removeEventListener('resize', handleResize)", source)
+
+    def test_gallery_pagination_uses_page_rows_contract(self):
+        """Covers SITE-035."""
+        pagination = (ASSET_JS_DIR / "pagination.js").read_text(encoding="utf-8")
+        search_filter = (ASSET_JS_DIR / "search_filter.js").read_text(encoding="utf-8")
+        templates = read_all(sorted(TEMPLATE_DIR.rglob("*.j2")))
+
+        self.assertIn("const PAGE_ROWS_DEFAULT", pagination)
+        self.assertIn("function buildAspectRows", pagination)
+        self.assertIn("function buildJustifiedRows", pagination)
+        self.assertIn("function chunkRowsIntoPages", pagination)
+        self.assertIn("gallery.dataset.pageRows", pagination)
+        self.assertIn("gallery.dataset.pageRows", search_filter)
+        self.assertIn("data-page-rows", templates)
+        self.assertIn("site_rendering.creator_page.project_card_gallery_page_rows", templates)
+        self.assertNotIn("data-page-size", templates)
+        self.assertNotIn("dataset.pageSize", pagination)
+        self.assertNotIn("dataset.pageSize", search_filter)
 
     def test_aspect_gallery_and_pagination_use_shared_defensive_aspect_ratio_parser(self):
         utils = (ASSET_JS_DIR / "utils.js").read_text(encoding="utf-8")
