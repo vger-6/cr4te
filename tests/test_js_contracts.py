@@ -358,6 +358,15 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertRegex(base, r"\.section-title\s*\{[^}]*font-size:\s*var\(--type-section-title-size\)")
         self.assertRegex(base, r"\.section-title\s*\{[^}]*text-overflow:\s*ellipsis")
         self.assertRegex(base, r"\.section-title\s*\{[^}]*white-space:\s*nowrap")
+        self.assertRegex(
+            base,
+            r"\.section-title \.section-action-btn \.icon\s*\{[^}]*"
+            r"width:\s*var\(--icon-size\)",
+        )
+        self.assertRegex(
+            base,
+            r"\.section-title \.section-action-btn\s*\{[^}]*line-height:\s*0",
+        )
         self.assertRegex(base, r"\.track-title-text\s*\{[^}]*text-overflow:\s*ellipsis")
         self.assertRegex(base, r"\.tag\s*\{[^}]*text-overflow:\s*ellipsis")
         self.assertRegex(base, r"\.creator-text-card__name,\s*[\s\S]*?\.creator-text-card__summary\s*\{[^}]*-webkit-line-clamp:\s*2")

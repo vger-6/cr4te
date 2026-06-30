@@ -464,6 +464,20 @@ img {
   height: var(--icon-size-compact);
 }
 
+.section-title .section-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 0;
+  padding: 0;
+}
+
+.section-title .section-action-btn .icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
 .section-box hr {
   border: none;
   border-top: 1px solid var(--theme-section-divider);
