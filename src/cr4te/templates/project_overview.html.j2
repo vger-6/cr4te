@@ -1,6 +1,6 @@
 {% import "partials/_utils.html.j2" as utils %}
-{% import "partials/_media_badges.html.j2" as media_badges %}
 {% import "partials/_empty_state.html.j2" as empty_states %}
+{% import "partials/_project_cards.html.j2" as project_cards %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -33,19 +33,7 @@
              data-next-label="{{ site_labels.controls.next }}"
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for project in projects %}
-          <div class="image-wrapper image-card"
-               data-search-text="{{ project.search_text | default('') }}"
-               data-width="{{ project.image_wrapper_width }}"
-               data-height="{{ project.image_wrapper_height }}">
-            <a href="{{ project.rel_html_path }}" title="{{ project.title }}">
-              <img class="card-image" src="{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
-              {{ media_badges.media_badges(project.media_counts, site_labels) }}
-              <div class=image-caption>
-                <span>{{ project.title }}</span><br>
-                <span><small>{{ project.creator_name }}</small></span>
-              </div>
-            </a>
-          </div>
+            {{ project_cards.render_project_card(project, site_labels, subtitle=project.creator_name, search_text=project.search_text | default('')) }}
           {% endfor %}
         </div>
         {{ empty_states.render(site_labels.empty_states.no_search_results, "empty-state--search", hidden=true, live=true) }}

@@ -110,7 +110,7 @@ DEFAULT_CONTROL_LABELS = {
 DEFAULT_PAGE_LABELS = {
     "creator_profile_title": "Profile",
     "creator_about_title": "About",
-    "creator_collaboration_projects_title_format": "{projects} with {collaborator}",
+    "creator_collaboration_project_subtitle_format": "with {collaborator}",
     "project_overview_title": "Overview",
     "project_description_title": "Description",
     "audio_section_default_title": "Audio",
@@ -266,7 +266,6 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     "metadata": {"members": "Directors'"},
                     "pages": {
                         "audio_section_default_title": "Soundtrack",
-                        "creator_collaboration_projects_title_format": "Codirected with {collaborator}",
                     },
                 },
                 site_rendering={

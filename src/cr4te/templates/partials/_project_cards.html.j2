@@ -1,0 +1,17 @@
+{% import "partials/_media_badges.html.j2" as media_badges %}
+
+{% macro render_project_card(project, site_labels, path_to_root="", subtitle="", search_text=none) %}
+<div class="image-wrapper image-card"{% if search_text is not none %}
+     data-search-text="{{ search_text }}"{% endif %}
+     data-width="{{ project.image_wrapper_width }}"
+     data-height="{{ project.image_wrapper_height }}">
+  <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}{% if subtitle %}&#10;{{ subtitle }}{% endif %}">
+    <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
+    {{ media_badges.media_badges(project.media_counts, site_labels) }}
+    <div class=image-caption>
+      <span>{{ project.title }}</span>{% if subtitle %}<br>
+      <span><small>{{ subtitle }}</small></span>{% endif %}
+    </div>
+  </a>
+</div>
+{% endmacro %}

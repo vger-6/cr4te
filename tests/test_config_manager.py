@@ -59,7 +59,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.controls.show_more, "Show more")
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
             self.assertEqual(config.site_rendering.document_language, "en-US")
-            self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 5)
+            self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 2)
             self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines, 8)
             self.assertEqual(config.site_rendering.creator_page.about_collapsed_lines_mobile, 2)
             self.assertEqual(config.site_rendering.project_page.description_collapsed_lines, 8)
@@ -306,7 +306,7 @@ class ConfigManagerTests(unittest.TestCase):
                             "search_placeholder_format": "{tags}; {projects}; {creators}: search",
                         },
                         "pages": {
-                            "creator_collaboration_projects_title_format": "{collaborator}: {projects}",
+                            "creator_collaboration_project_subtitle_format": "together with {collaborator}",
                         },
                         "accessibility": {
                             "creator_portrait_description_format": "{creator}, portrait",
@@ -333,11 +333,10 @@ class ConfigManagerTests(unittest.TestCase):
                 "Tags; Works; Artists: search",
             )
             self.assertEqual(
-                labels.pages.creator_collaboration_projects_title_format.format(
+                labels.pages.creator_collaboration_project_subtitle_format.format(
                     collaborator="Ada",
-                    projects="Works",
                 ),
-                "Ada: Works",
+                "together with Ada",
             )
             self.assertEqual(
                 labels.accessibility.creator_portrait_description_format.format(creator="Ada"),
@@ -355,7 +354,7 @@ class ConfigManagerTests(unittest.TestCase):
     def test_complete_phrase_formats_reject_missing_or_unknown_placeholders(self):
         invalid_formats = (
             ("controls", "search_placeholder_format", "Search {creators}"),
-            ("pages", "creator_collaboration_projects_title_format", "{projects}"),
+            ("pages", "creator_collaboration_project_subtitle_format", "{projects}"),
             ("accessibility", "creator_portrait_description_format", "Portrait"),
             ("accessibility", "project_preview_description_format", "Preview of {creator}"),
             ("empty_states", "no_creators_format", "No creators"),
@@ -380,18 +379,16 @@ class ConfigManagerTests(unittest.TestCase):
         art = apply_cli_overrides(load_config(), domain=Domain.ART).site_labels
 
         self.assertEqual(
-            film.pages.creator_collaboration_projects_title_format.format(
-                projects=film.entity.projects,
+            film.pages.creator_collaboration_project_subtitle_format.format(
                 collaborator="Ada",
             ),
-            "Codirected with Ada",
+            "with Ada",
         )
         self.assertEqual(
-            model.pages.creator_collaboration_projects_title_format.format(
-                projects=model.entity.projects,
+            model.pages.creator_collaboration_project_subtitle_format.format(
                 collaborator="Ada",
             ),
-            "Scenes with Ada",
+            "with Ada",
         )
         self.assertEqual(
             art.controls.search_placeholder_format.format(

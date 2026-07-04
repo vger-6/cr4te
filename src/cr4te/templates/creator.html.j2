@@ -1,7 +1,7 @@
 {% import "partials/_media_sections.html.j2" as media_macros %}
 {% import "partials/_utils.html.j2" as utils %}
-{% import "partials/_media_badges.html.j2" as media_badges %}
 {% import "partials/_empty_state.html.j2" as empty_states %}
+{% import "partials/_project_cards.html.j2" as project_cards %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -99,7 +99,7 @@
       {% set collaboration_project_groups = creator.collaborations | selectattr('projects') | list %}
 
       {% if creator.has_right_column_content %}
-      {% if creator.projects %}
+      {% if creator.projects or collaboration_project_groups %}
       <div class="section-box">
         <div class="section-title">{{ site_labels.entity.projects }}</div>
         <hr>
@@ -110,46 +110,18 @@
                data-page-rows="{{ site_rendering.creator_page.project_card_gallery_page_rows }}"
                data-aspect-ratio="{{ aspect_ratio }}">
             {% for project in creator.projects %}
-            <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
-              <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
-                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
-                {{ media_badges.media_badges(project.media_counts, site_labels) }}
-                <div class=image-caption>
-                  <span>{{ project.title }}</span>
-                </div>
-              </a>
-            </div>
+              {{ project_cards.render_project_card(project, site_labels, path_to_root=path_to_root) }}
             {% endfor %}
-          </div>  
-        </div>
-      </div>
-      {% endif %}
-
-      {% for collab in collaboration_project_groups %}
-      <div class="section-box">
-        <div class="section-title">{{ site_labels.pages.creator_collaboration_projects_title_format | format_phrase(projects=site_labels.entity.projects, collaborator=collab.label) }}</div>
-        <hr>
-        <div class="section-content">
-          <div class="{{ image_gallery_class }} card-gallery"
-               data-lightbox="false"
-               data-image-max-height="{{ project_image_max_height }}"
-               data-page-rows="{{ site_rendering.creator_page.project_card_gallery_page_rows }}"
-               data-aspect-ratio="{{ aspect_ratio }}">
+            {% for collab in collaboration_project_groups %}
+            {% set collaboration_project_subtitle = site_labels.pages.creator_collaboration_project_subtitle_format | format_phrase(collaborator=collab.label) %}
             {% for project in collab.projects %}
-            <div class="image-wrapper image-card" data-width="{{ project.image_wrapper_width }}" data-height="{{ project.image_wrapper_height }}">
-              <a href="{{ path_to_root }}{{ project.rel_html_path }}" title="{{ project.title }}">
-                <img class="card-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_thumbnail_description_format | format_phrase(project=project.title) }}" loading="lazy">
-                {{ media_badges.media_badges(project.media_counts, site_labels) }}
-                <div class=image-caption>
-                  <span>{{ project.title }}</span>
-                </div>
-              </a>
-            </div>
+              {{ project_cards.render_project_card(project, site_labels, path_to_root=path_to_root, subtitle=collaboration_project_subtitle) }}
+            {% endfor %}
             {% endfor %}
           </div>
         </div>
       </div>
-      {% endfor %}
+      {% endif %}
         
       {{ media_macros.render_media_groups(path_to_root, creator.media_groups, gallery_image_max_height, site_rendering.creator_page.media_gallery_page_rows, site_labels) }}
       {% else %}

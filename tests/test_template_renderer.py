@@ -336,6 +336,7 @@ class TemplateRendererTests(unittest.TestCase):
                     self.assertIn("No results match your search", rendered)
                     self.assertNotIn("No Artists available", rendered)
                     self.assertNotIn("No Works available", rendered)
+            self.assertIn('title="Displayed Landscapes&#10;Displayed Noomi"', project_rendered)
 
     def test_gallery_class_macro_supports_justified_strategy(self):
         macro = env.get_template("partials/_utils.html.j2").module.get_image_gallery_class
@@ -863,7 +864,7 @@ class TemplateRendererTests(unittest.TestCase):
                 rendered,
             )
 
-    def test_creator_template_resolves_domain_specific_collaboration_title_format(self):
+    def test_creator_template_renders_collaboration_project_context_as_card_subtitle(self):
         with tempfile.TemporaryDirectory() as tmp:
             config = apply_cli_overrides(load_config(), domain=Domain.FILM)
             ctx = HtmlBuildContext(Path(tmp) / "input", Path(tmp) / "site", config.site_labels, config.site_rendering)
@@ -898,7 +899,11 @@ class TemplateRendererTests(unittest.TestCase):
                 ),
             )
 
-            self.assertIn('<div class="section-title">Codirected with Ada</div>', rendered)
+            self.assertIn('<div class="section-title">Movies</div>', rendered)
+            self.assertIn('title="Displayed Landscapes&#10;with Ada"', rendered)
+            self.assertIn("<span><small>with Ada</small></span>", rendered)
+            self.assertNotIn("Codirected with Ada", rendered)
+            self.assertNotIn('<div class="section-title">Codirected with Ada</div>', rendered)
             self.assertNotIn("Movies with Ada", rendered)
 
     def test_page_templates_use_shared_document_head_and_page_header(self):
@@ -934,7 +939,7 @@ class TemplateRendererTests(unittest.TestCase):
         tags_source = (template_dir / "tags.html.j2").read_text(encoding="utf-8")
 
         self.assertIn("utils.render_meta_entries(member.meta_entries, path_to_root)", creator_source)
-        self.assertIn("creator_collaboration_projects_title_format | format_phrase", creator_source)
+        self.assertIn("creator_collaboration_project_subtitle_format | format_phrase", creator_source)
         self.assertNotIn("site_labels.entity.projects }} with {{ collab.label", creator_source)
         self.assertNotIn('<div class="info-block__meta">', creator_source)
         for source in (creator_source, project_source, tags_source):

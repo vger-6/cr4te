@@ -78,18 +78,18 @@ class ControlLabels(StrictConfigModel):
 class PageLabels(StrictConfigModel):
     creator_profile_title: str
     creator_about_title: str
-    creator_collaboration_projects_title_format: str
+    creator_collaboration_project_subtitle_format: str
     project_overview_title: str
     project_description_title: str
     audio_section_default_title: str
     image_section_default_title: str
 
-    @field_validator("creator_collaboration_projects_title_format")
+    @field_validator("creator_collaboration_project_subtitle_format")
     @classmethod
-    def validate_creator_collaboration_projects_title_format(cls, value: str) -> str:
+    def validate_creator_collaboration_project_subtitle_format(cls, value: str) -> str:
         return validate_named_format(
             value,
-            allowed_fields=frozenset({"collaborator", "projects"}),
+            allowed_fields=frozenset({"collaborator"}),
             required_fields=frozenset({"collaborator"}),
         )
 
