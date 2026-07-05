@@ -304,6 +304,10 @@ class ConfigManagerTests(unittest.TestCase):
                     "site_labels": {
                         "controls": {
                             "search_placeholder_format": "{tags}; {projects}; {creators}: search",
+                            "tag_actions_label_format": "Use {tag}",
+                            "find_in_creators_format": "Browse {creators}",
+                            "find_in_projects_format": "Browse {projects}",
+                            "find_in_creator_projects_format": "{creator}: {projects}",
                         },
                         "pages": {
                             "creator_collaboration_project_subtitle_format": "together with {collaborator}",
@@ -332,6 +336,13 @@ class ConfigManagerTests(unittest.TestCase):
                 ),
                 "Tags; Works; Artists: search",
             )
+            self.assertEqual(labels.controls.tag_actions_label_format.format(tag="Calm"), "Use Calm")
+            self.assertEqual(labels.controls.find_in_creators_format.format(creators="artists"), "Browse artists")
+            self.assertEqual(labels.controls.find_in_projects_format.format(projects="works"), "Browse works")
+            self.assertEqual(
+                labels.controls.find_in_creator_projects_format.format(creator="Ada", projects="works"),
+                "Ada: works",
+            )
             self.assertEqual(
                 labels.pages.creator_collaboration_project_subtitle_format.format(
                     collaborator="Ada",
@@ -354,6 +365,10 @@ class ConfigManagerTests(unittest.TestCase):
     def test_complete_phrase_formats_reject_missing_or_unknown_placeholders(self):
         invalid_formats = (
             ("controls", "search_placeholder_format", "Search {creators}"),
+            ("controls", "tag_actions_label_format", "Actions"),
+            ("controls", "find_in_creators_format", "Find"),
+            ("controls", "find_in_projects_format", "Find in {creators}"),
+            ("controls", "find_in_creator_projects_format", "Find in {projects}"),
             ("pages", "creator_collaboration_project_subtitle_format", "{projects}"),
             ("accessibility", "creator_portrait_description_format", "Portrait"),
             ("accessibility", "project_preview_description_format", "Preview of {creator}"),

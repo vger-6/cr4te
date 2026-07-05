@@ -63,6 +63,7 @@ class JavaScriptContractTests(unittest.TestCase):
         project_source = (TEMPLATE_DIR / "project.html.j2").read_text(encoding="utf-8")
         search_source = (TEMPLATE_DIR / "partials" / "_search_bar.html.j2").read_text(encoding="utf-8")
         theme_source = (TEMPLATE_DIR / "partials" / "_theme_dropdown.html.j2").read_text(encoding="utf-8")
+        tag_source = (TEMPLATE_DIR / "partials" / "_tag_actions.html.j2").read_text(encoding="utf-8")
 
         self.assertIn('data-expandable-text-toggle', creator_source)
         self.assertIn('data-expandable-text-toggle', project_source)
@@ -71,6 +72,9 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn('<button type="button" id="clear-search"', search_source)
         self.assertIn('role="menu"', theme_source)
         self.assertIn('role="menuitemradio"', theme_source)
+        self.assertIn('data-menu-toggle', tag_source)
+        self.assertIn('role="menu"', tag_source)
+        self.assertIn('role="menuitem"', tag_source)
 
     def test_only_utils_owns_dom_ready_listener(self):
         owners = []
@@ -91,6 +95,7 @@ class JavaScriptContractTests(unittest.TestCase):
             "overflow_tooltips.js",
             "pagination.js",
             "search_filter.js",
+            "tag_actions.js",
             "theme_selector.js",
             "video_player.js",
         ]
@@ -145,10 +150,12 @@ class JavaScriptContractTests(unittest.TestCase):
             "image_captions_toggle.js",
             "justified_gallery_builder.js",
             "lightbox.js",
+            "menu_controller.js",
             "overflow_tooltips.js",
             "pagination.js",
             "playback_coordinator.js",
             "search_filter.js",
+            "tag_actions.js",
             "theme_selector.js",
             "video_player.js",
         }
@@ -173,6 +180,20 @@ class JavaScriptContractTests(unittest.TestCase):
                 scripts = script_pattern.findall((TEMPLATE_DIR / template_name).read_text(encoding="utf-8"))
 
                 self.assertLess(scripts.index("pagination.js"), scripts.index("search_filter.js"))
+
+    def test_theme_and_tag_menus_use_shared_menu_controller(self):
+        menu_controller = (ASSET_JS_DIR / "menu_controller.js").read_text(encoding="utf-8")
+        tag_actions = (ASSET_JS_DIR / "tag_actions.js").read_text(encoding="utf-8")
+        theme_selector = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
+        base = (ASSET_CSS_DIR / "base.css").read_text(encoding="utf-8")
+
+        self.assertIn("cr4te.menus.bindMenu = bindMenu", menu_controller)
+        self.assertIn("cr4te.menus.bindMenu({ toggle, panel })", tag_actions)
+        self.assertIn("cr4te.menus.bindMenu({", theme_selector)
+        self.assertIn(".menu-panel", base)
+        self.assertIn(".menu-option", base)
+        self.assertIn(".tag-action-toggle", base)
+        self.assertIn(".tag-action-separator", base)
 
     def test_overflow_tooltips_are_added_only_for_overflowing_items(self):
         source = (ASSET_JS_DIR / "overflow_tooltips.js").read_text(encoding="utf-8")
@@ -299,13 +320,15 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn("setAttribute('aria-pressed'", utils_source)
 
     def test_theme_selector_supports_keyboard_menu_navigation(self):
-        source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
+        menu_source = (ASSET_JS_DIR / "menu_controller.js").read_text(encoding="utf-8")
+        theme_source = (ASSET_JS_DIR / "theme_selector.js").read_text(encoding="utf-8")
 
         for key in ("ArrowDown", "ArrowUp", "Home", "End", "Escape"):
             with self.subTest(key=key):
-                self.assertIn(key, source)
-        self.assertIn("aria-expanded", source)
-        self.assertIn("aria-checked", source)
+                self.assertIn(key, menu_source)
+        self.assertIn("aria-expanded", menu_source)
+        self.assertIn("aria-checked", theme_source)
+        self.assertIn("initialFocusIndex: selectedIndex", theme_source)
 
     def test_media_players_support_scoped_keyboard_shortcuts(self):
         audio_source = (ASSET_JS_DIR / "audio_player.js").read_text(encoding="utf-8")

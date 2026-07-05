@@ -48,6 +48,10 @@ class CountLabels(StrictConfigModel):
 class ControlLabels(StrictConfigModel):
     search_placeholder_format: str
     clear_search: str
+    tag_actions_label_format: str
+    find_in_creators_format: str
+    find_in_projects_format: str
+    find_in_creator_projects_format: str
     themes: str
     fullscreen: str
     open_in_new_tab: str
@@ -72,6 +76,42 @@ class ControlLabels(StrictConfigModel):
             value,
             allowed_fields=frozenset({"creators", "projects", "tags"}),
             required_fields=frozenset({"creators", "projects", "tags"}),
+        )
+
+    @field_validator("tag_actions_label_format")
+    @classmethod
+    def validate_tag_actions_label_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"tag"}),
+            required_fields=frozenset({"tag"}),
+        )
+
+    @field_validator("find_in_creators_format")
+    @classmethod
+    def validate_find_in_creators_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"creators"}),
+            required_fields=frozenset({"creators"}),
+        )
+
+    @field_validator("find_in_projects_format")
+    @classmethod
+    def validate_find_in_projects_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"projects"}),
+            required_fields=frozenset({"projects"}),
+        )
+
+    @field_validator("find_in_creator_projects_format")
+    @classmethod
+    def validate_find_in_creator_projects_format(cls, value: str) -> str:
+        return validate_named_format(
+            value,
+            allowed_fields=frozenset({"creator", "projects"}),
+            required_fields=frozenset({"creator", "projects"}),
         )
 
 

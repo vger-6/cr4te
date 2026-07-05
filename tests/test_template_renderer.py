@@ -33,6 +33,7 @@ from cr4te.render_models import (
     ProjectOverviewEntry,
     ProjectPageContext,
     TagCollection,
+    TagGroup,
     TrackContext,
     VideoContext,
 )
@@ -547,6 +548,91 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertIn('class="empty-state"', rendered)
             self.assertNotIn("tag-list", rendered)
             self.assertNotIn("tag-category", rendered)
+
+    def test_tag_sections_render_action_menus_with_contextual_destinations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            tags = TagCollection((TagGroup("Genres", ("Reggae",)),))
+            creator_page = CreatorPageContext(
+                type=CreatorType.PERSON.value,
+                name="Bob Marley",
+                rel_portrait_path="",
+                portrait_orientation=None,
+                info_html="",
+                tags=tags,
+                projects=[],
+                media_groups=[],
+                collaborations=[],
+                creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
+                meta_entries=[],
+                project_tag_terms=frozenset({"Genres:Reggae"}),
+            )
+            project_page = ProjectPageContext(
+                title="Catch a Fire",
+                release_date="",
+                meta_entries=[],
+                rel_thumbnail_path="cover.jpg",
+                thumbnail_orientation=Orientation.LANDSCAPE,
+                info_html="",
+                tags=tags,
+                media_groups=[],
+            )
+
+            creator_rendered = env.get_template("creator.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                creator=creator_page,
+                project_image_max_height=450,
+                gallery_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title=creator_page.name,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            )
+            project_rendered = env.get_template("project.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                project=project_page,
+                gallery_image_max_height=450,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                path_to_root="../",
+                page_shell=PageShellContext(
+                    title=project_page.title,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+            )
+            tags_rendered = env.get_template("tags.html.j2").render(
+                site_labels=ctx.site_labels,
+                site_rendering=ctx.site_rendering,
+                tags=tags,
+                themes=ctx.themes,
+                default_theme=ctx.default_theme,
+                page_shell=overview_shell(ctx, ctx.site_labels.entity.tags),
+            )
+
+            for rendered in (creator_rendered, project_rendered, tags_rendered):
+                with self.subTest():
+                    self.assertIn('class="tag-menu"', rendered)
+                    self.assertIn('<span class="tag">Reggae</span>', rendered)
+                    self.assertIn('class="tag-action-separator" aria-hidden="true">|</span>', rendered)
+                    self.assertIn('class="tag-action-toggle"', rendered)
+                    self.assertIn('role="menu"', rendered)
+                    self.assertIn("Find in artists", rendered)
+                    self.assertIn("Find in works", rendered)
+                    self.assertNotIn('<a class="tag"', rendered)
+
+            self.assertIn('../projects.html?tag=%22Bob%20Marley%22%20Genres%3AReggae', creator_rendered)
+            self.assertIn("Find in works of Bob Marley", creator_rendered)
+            self.assertNotIn("Find in works of Catch a Fire", project_rendered)
+            self.assertNotIn("%22Catch%20a%20Fire%22", project_rendered)
+            self.assertNotIn("Find in works of", tags_rendered)
 
     def test_overview_template_renders_registry_stylesheets_and_visible_default_body(self):
         with tempfile.TemporaryDirectory() as tmp:

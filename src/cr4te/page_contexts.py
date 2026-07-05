@@ -32,10 +32,12 @@ from .render_models import (
     MetaEntry,
     ProjectCardContext,
     ProjectPageContext,
+    TagCollection,
     ThumbnailContext,
 )
 from .schemas.library_schema import Creator as CreatorModel, Project as ProjectModel
 from .tag_contexts import (
+    build_tag_search_terms,
     collect_project_metadata_tags,
     collect_tags_from_creator,
     merge_tag_maps,
@@ -125,6 +127,7 @@ def build_creator_page_context(
         rel_portrait_path = thumbnail.rel_thumbnail_path
         portrait_orientation = get_image_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
 
+    project_metadata_tags = collect_project_metadata_tags(ctx, creator)
     base_context = CreatorPageContext(
         type=creator.type.value,
         name=creator.display_name,
@@ -133,8 +136,9 @@ def build_creator_page_context(
         info_html=text_utils.markdown_to_html(creator.info),
         tags=merge_tag_maps(
             collect_tags_from_creator(creator),
-            collect_project_metadata_tags(ctx, creator),
+            project_metadata_tags,
         ),
+        project_tag_terms=_build_project_tag_terms(creator, project_metadata_tags),
         projects=_build_project_cards(ctx, creator),
         media_groups=build_media_group_contexts(ctx, creator.media_groups),
         collaborations=_build_collaboration_entries(ctx, creator, get_creator),
@@ -180,6 +184,17 @@ def _collect_participant_entries(
             continue
         participants.append(_collect_creator_entry(ctx, participant, project))
     return participants
+
+
+def _build_project_tag_terms(creator: CreatorModel, project_metadata_tags: TagCollection) -> frozenset[str]:
+    return frozenset(
+        build_tag_search_terms(
+            merge_tag_maps(
+                *(project.tags for project in creator.projects),
+                project_metadata_tags,
+            )
+        )
+    )
 
 
 def _collect_creator_base_entry(ctx: HtmlBuildContext, creator: CreatorModel) -> CreatorProfileContext:

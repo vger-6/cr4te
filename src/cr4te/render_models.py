@@ -200,6 +200,7 @@ class CreatorPageContext:
     creator_stats: CreatorStats
     meta_entries: list[MetaEntry]
     members: list[CreatorLinkContext] = field(default_factory=list)
+    project_tag_terms: frozenset[str] = field(default_factory=frozenset)
 
     @property
     def has_right_column_content(self) -> bool:
