@@ -196,9 +196,16 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn(".menu-option", base)
         self.assertNotIn(".theme-button::after", base)
         self.assertIn(".theme-button__icon", base)
+        self.assertNotIn(".theme-button:focus {", base)
+        self.assertRegex(base, r"\.theme-button\[aria-expanded=\"true\"\]")
         self.assertIn(".tag-action-toggle", base)
         self.assertIn(".tag-action-icon", base)
         self.assertIn(".tag-action-count", base)
+        self.assertNotIn(".tag-menu:focus-within .tag-action-toggle", base)
+        self.assertRegex(base, r"\.tag-action-toggle\[aria-expanded=\"true\"\]")
+        self.assertNotIn("min-width: 13rem", base)
+        self.assertNotIn("min-width: 11rem", base)
+        self.assertRegex(base, r"\.menu-panel\s*\{[\s\S]*?width:\s*max-content;")
         for selector in (r"\.theme-button__icon \.icon", r"\.tag-action-icon \.icon"):
             with self.subTest(selector=selector):
                 self.assertRegex(

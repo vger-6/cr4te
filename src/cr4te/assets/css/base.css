@@ -366,7 +366,8 @@ img {
 }
 
 .theme-button:hover,
-.theme-button:focus {
+.theme-button:focus-visible,
+.theme-button[aria-expanded="true"] {
   color: var(--theme-link-hover);
   text-decoration: none;
 }
@@ -383,7 +384,6 @@ img {
   overflow: hidden;
   box-shadow: var(--theme-panel-shadow);
   width: max-content;
-  min-width: 11rem;
   max-width: min(24rem, calc(100vw - 2rem));
 }
 
@@ -1057,14 +1057,14 @@ a:focus img {
 }
 
 .tag-action-toggle:hover,
-.tag-menu:focus-within .tag-action-toggle {
+.tag-action-toggle:focus-visible,
+.tag-action-toggle[aria-expanded="true"] {
   background-color: var(--theme-tag-hover-bg);
   color: var(--theme-tag-hover-text);
 }
 
 .tag-action-panel {
   left: 0;
-  min-width: 13rem;
   z-index: 1000;
 }
 
