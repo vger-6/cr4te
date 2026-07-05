@@ -32,7 +32,6 @@ from cr4te.render_models import (
     ProjectCardContext,
     ProjectOverviewEntry,
     ProjectPageContext,
-    TagActionCounts,
     TagCollection,
     TagGroup,
     TrackContext,
@@ -554,10 +553,6 @@ class TemplateRendererTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
             tags = TagCollection((TagGroup("Genres", ("Reggae",)),))
-            tag_action_counts = TagActionCounts(
-                creators={"Genres:Reggae": 4},
-                projects={"Genres:Reggae": 2},
-            )
             creator_page = CreatorPageContext(
                 type=CreatorType.PERSON.value,
                 name="Bob Marley",
@@ -571,7 +566,6 @@ class TemplateRendererTests(unittest.TestCase):
                 creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
                 meta_entries=[],
                 project_tag_terms=frozenset({"Genres:Reggae"}),
-                creator_project_tag_counts={"Genres:Reggae": 1},
             )
             project_page = ProjectPageContext(
                 title="Catch a Fire",
@@ -594,7 +588,6 @@ class TemplateRendererTests(unittest.TestCase):
                 themes=ctx.themes,
                 default_theme=ctx.default_theme,
                 path_to_root="../",
-                tag_action_counts=tag_action_counts,
                 page_shell=PageShellContext(
                     title=creator_page.name,
                     layout_stylesheet="two-column-layout.css",
@@ -609,7 +602,6 @@ class TemplateRendererTests(unittest.TestCase):
                 themes=ctx.themes,
                 default_theme=ctx.default_theme,
                 path_to_root="../",
-                tag_action_counts=tag_action_counts,
                 page_shell=PageShellContext(
                     title=project_page.title,
                     layout_stylesheet="two-column-layout.css",
@@ -622,7 +614,6 @@ class TemplateRendererTests(unittest.TestCase):
                 tags=tags,
                 themes=ctx.themes,
                 default_theme=ctx.default_theme,
-                tag_action_counts=tag_action_counts,
                 page_shell=overview_shell(ctx, ctx.site_labels.entity.tags),
             )
 
@@ -636,13 +627,11 @@ class TemplateRendererTests(unittest.TestCase):
                     self.assertIn('role="menu"', rendered)
                     self.assertIn("Find in artists", rendered)
                     self.assertIn("Find in works", rendered)
-                    self.assertIn('<span class="tag-action-count">(4)</span>', rendered)
-                    self.assertIn('<span class="tag-action-count">(2)</span>', rendered)
+                    self.assertNotIn("tag-action-count", rendered)
                     self.assertNotIn('<a class="tag"', rendered)
 
             self.assertIn('../projects.html?tag=%22Bob%20Marley%22%20Genres%3AReggae', creator_rendered)
             self.assertIn("Find in works of Bob Marley", creator_rendered)
-            self.assertIn('<span class="tag-action-count">(1)</span>', creator_rendered)
             self.assertNotIn("Find in works of Catch a Fire", project_rendered)
             self.assertNotIn("%22Catch%20a%20Fire%22", project_rendered)
             self.assertNotIn("Find in works of", tags_rendered)

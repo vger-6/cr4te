@@ -1068,18 +1068,6 @@ a:focus img {
   z-index: 1000;
 }
 
-.tag-action-count {
-  color: var(--theme-text-muted);
-  font-size: 0.85em;
-  margin-left: 0.25em;
-}
-
-.menu-option:hover .tag-action-count,
-.menu-option:focus-visible .tag-action-count {
-  color: inherit;
-  opacity: 0.85;
-}
-
 .nav-current {
   font-weight: bold;
   color: var(--theme-text-strong);

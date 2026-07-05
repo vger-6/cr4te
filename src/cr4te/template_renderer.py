@@ -22,7 +22,6 @@ from .render_models import (
     PageShellContext,
     ProjectOverviewEntry,
     ProjectPageContext,
-    TagActionCounts,
 )
 from .schemas.library_schema import Creator as CreatorModel, Project as ProjectModel
 from .tag_contexts import TagSource, merge_tag_maps
@@ -110,7 +109,7 @@ def render_project_overview_page(ctx: HtmlBuildContext, project_entries: list[Pr
         file.write(rendered)
 
 
-def render_tags_page(ctx: HtmlBuildContext, tags: TagSource, tag_action_counts: TagActionCounts | None = None) -> None:
+def render_tags_page(ctx: HtmlBuildContext, tags: TagSource) -> None:
     logger.info("Generating tags page...")
 
     template = env.get_template("tags.html.j2")
@@ -118,7 +117,6 @@ def render_tags_page(ctx: HtmlBuildContext, tags: TagSource, tag_action_counts: 
         site_labels=ctx.site_labels,
         site_rendering=ctx.site_rendering,
         tags=merge_tag_maps(tags),
-        tag_action_counts=tag_action_counts or TagActionCounts(),
         page_shell=_page_shell_context(
             ctx,
             ctx.site_labels.entity.tags,
@@ -137,7 +135,6 @@ def render_project_page(
     creator: CreatorModel,
     project: ProjectModel,
     page_context: ProjectPageContext,
-    tag_action_counts: TagActionCounts | None = None,
 ) -> None:
     page_path = ctx.html_dir / build_rel_project_html_path(creator, project)
     path_to_root = build_path_to_root(page_path, ctx.output_dir)
@@ -160,7 +157,6 @@ def render_project_page(
         site_labels=ctx.site_labels,
         site_rendering=ctx.site_rendering,
         project=page_context,
-        tag_action_counts=tag_action_counts or TagActionCounts(),
         gallery_image_max_height=ctx.get_display_image_max_height(ThumbType.GALLERY),
         path_to_root=path_to_root,
         page_shell=_page_shell_context(
@@ -182,7 +178,6 @@ def render_creator_page(
     ctx: HtmlBuildContext,
     creator: CreatorModel,
     page_context: CreatorPageContext,
-    tag_action_counts: TagActionCounts | None = None,
 ) -> None:
     page_path = ctx.html_dir / build_rel_creator_html_path(creator)
     path_to_root = build_path_to_root(page_path, ctx.output_dir)
@@ -191,7 +186,6 @@ def render_creator_page(
         site_labels=ctx.site_labels,
         site_rendering=ctx.site_rendering,
         creator=page_context,
-        tag_action_counts=tag_action_counts or TagActionCounts(),
         project_image_max_height=ctx.get_display_image_max_height(ThumbType.CREATOR_PAGE_PROJECT),
         gallery_image_max_height=ctx.get_display_image_max_height(ThumbType.GALLERY),
         path_to_root=path_to_root,

@@ -118,7 +118,6 @@ def build_creator_page_context(
     creator: CreatorModel,
     get_creator: CreatorLoader,
     creator_stats: CreatorStats,
-    creator_project_tag_counts: dict[str, int] | None = None,
 ) -> CreatorPageContext:
     thumbnail = _build_portrait_thumbnail(ctx, creator.portrait)
     if thumbnail is None:
@@ -140,7 +139,6 @@ def build_creator_page_context(
             project_metadata_tags,
         ),
         project_tag_terms=_build_project_tag_terms(creator, project_metadata_tags),
-        creator_project_tag_counts=creator_project_tag_counts or {},
         projects=_build_project_cards(ctx, creator),
         media_groups=build_media_group_contexts(ctx, creator.media_groups),
         collaborations=_build_collaboration_entries(ctx, creator, get_creator),

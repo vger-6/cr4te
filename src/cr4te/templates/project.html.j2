@@ -118,7 +118,7 @@
               <div class="tag-category">
                 <span class="tag-category-label data-label">{{ group.category }}</span>
                 {% for tag in group.tags %}
-                  {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "project-tag-menu-" ~ group_index ~ "-" ~ loop.index0, path_to_root=path_to_root, tag_action_counts=tag_action_counts | default(none)) }}
+                  {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "project-tag-menu-" ~ group_index ~ "-" ~ loop.index0, path_to_root=path_to_root) }}
                 {% endfor %}
               </div>
             {% endfor %}

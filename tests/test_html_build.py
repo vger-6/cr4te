@@ -648,9 +648,10 @@ class HtmlBuildTests(unittest.TestCase):
                 path.read_text(encoding="utf-8")
                 for path in (output_dir / "tags.html", *html_pages)
             )
-            self.assertIn('Find in artists <span class="tag-action-count">(1)</span>', rendered)
-            self.assertIn('Find in works <span class="tag-action-count">(1)</span>', rendered)
-            self.assertIn('Find in works of Noomi <span class="tag-action-count">(1)</span>', rendered)
+            self.assertIn("Find in artists", rendered)
+            self.assertIn("Find in works", rendered)
+            self.assertIn("Find in works of Noomi", rendered)
+            self.assertNotIn("tag-action-count", rendered)
 
     def test_streaming_html_build_copies_and_renders_custom_theme(self):
         with tempfile.TemporaryDirectory() as tmp:

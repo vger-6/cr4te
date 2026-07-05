@@ -200,7 +200,7 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertRegex(base, r"\.theme-button\[aria-expanded=\"true\"\]")
         self.assertIn(".tag-action-toggle", base)
         self.assertIn(".tag-action-icon", base)
-        self.assertIn(".tag-action-count", base)
+        self.assertNotIn(".tag-action-count", base)
         self.assertNotIn(".tag-menu:focus-within .tag-action-toggle", base)
         self.assertRegex(base, r"\.tag-action-toggle\[aria-expanded=\"true\"\]")
         self.assertNotIn("min-width: 13rem", base)
