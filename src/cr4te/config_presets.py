@@ -89,6 +89,10 @@ DEFAULT_COUNT_LABELS = {
 DEFAULT_CONTROL_LABELS = {
     "search_placeholder_format": "Search {creators}, {projects}, {tags}...",
     "clear_search": "Clear search",
+    "tag_actions_label_format": "Actions for {tag}",
+    "find_in_creators_format": "Find in {creators}",
+    "find_in_projects_format": "Find in {projects}",
+    "find_in_creator_projects_format": "Find in {projects} of {creator}",
     "themes": "Themes",
     "fullscreen": "Fullscreen",
     "open_in_new_tab": "Open in new tab",

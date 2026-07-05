@@ -569,11 +569,11 @@ class HtmlBuildTests(unittest.TestCase):
         )
         config = apply_cli_overrides(load_config(), domain=Domain.ART)
 
-        def creator_context(*args):
+        def creator_context(*args, **kwargs):
             events.append("creator-context")
             return object()
 
-        def project_context(*args):
+        def project_context(*args, **kwargs):
             events.append("project-context")
             return object()
 
@@ -619,7 +619,7 @@ class HtmlBuildTests(unittest.TestCase):
                 creator_dir / "cr4te.json",
                 {},
             )
-            write_json(project_dir / "cr4te.json", {})
+            write_json(project_dir / "cr4te.json", {"tags": {"Mood": ["Calm"]}})
 
             config = apply_cli_overrides(load_config(), domain=Domain.ART)
             index = build_library_index(root, config.media_rules)
@@ -644,6 +644,14 @@ class HtmlBuildTests(unittest.TestCase):
             self.assertTrue((output_dir / "projects.html").exists())
             html_pages = list((output_dir / "html").rglob("*.html"))
             self.assertEqual(len(html_pages), 2)
+            rendered = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (output_dir / "tags.html", *html_pages)
+            )
+            self.assertIn("Find in artists", rendered)
+            self.assertIn("Find in works", rendered)
+            self.assertIn("Find in works of Noomi", rendered)
+            self.assertNotIn("tag-action-count", rendered)
 
     def test_streaming_html_build_copies_and_renders_custom_theme(self):
         with tempfile.TemporaryDirectory() as tmp:

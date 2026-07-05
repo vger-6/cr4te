@@ -2,6 +2,7 @@
 {% import "partials/_utils.html.j2" as utils %}
 {% import "partials/_empty_state.html.j2" as empty_states %}
 {% import "partials/_project_cards.html.j2" as project_cards %}
+{% import "partials/_tag_actions.html.j2" as tag_actions %}
 
 <!DOCTYPE html>
 {% include "partials/_document_open.html.j2" %}
@@ -79,10 +80,11 @@
           <hr>
           <div class="section-content tag-list">
             {% for group in creator.tags.groups %}
+              {% set group_index = loop.index0 %}
               <div class="tag-category">
                 <span class="tag-category-label data-label">{{ group.category }}</span>
                 {% for tag in group.tags %}
-                  <a class="tag" href="{{ path_to_root }}index.html?tag={{ (group.category ~ ':' ~ tag) | urlencode }}">{{ tag }}</a>
+                  {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "creator-tag-menu-" ~ group_index ~ "-" ~ loop.index0, path_to_root=path_to_root, creator_name=creator.name, include_creator_projects=((group.category ~ ":" ~ tag) in creator.project_tag_terms)) }}
                 {% endfor %}
               </div>
             {% endfor %}
@@ -144,6 +146,8 @@
 <script src="{{ path_to_root }}assets/js/expandable_text.js" defer></script>
 <script src="{{ path_to_root }}assets/js/overflow_tooltips.js" defer></script>
 <script src="{{ path_to_root }}assets/js/playback_coordinator.js" defer></script>
+<script src="{{ path_to_root }}assets/js/menu_controller.js" defer></script>
+<script src="{{ path_to_root }}assets/js/tag_actions.js" defer></script>
 <script src="{{ path_to_root }}assets/js/theme_selector.js" defer></script>
 <script src="{{ path_to_root }}assets/js/justified_gallery_builder.js" defer></script>
 <script src="{{ path_to_root }}assets/js/aspect_gallery_builder.js" defer></script>

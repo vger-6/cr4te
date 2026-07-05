@@ -72,7 +72,10 @@ REQUIREMENT_TESTS = {
     "SITE-015": ("tests/test_page_contexts.py::PageContextTests.test_details_portraits_render_discovered_portrait_without_missing_default",),
     "SITE-016": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts",),
     "SITE-017": ("tests/test_render_metadata.py::RenderMetadataTests.test_creator_event_entries_combine_visible_date_and_place",),
-    "SITE-018": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_tags_page_renders_and_initializes_theme",),
+    "SITE-018": (
+        "tests/test_template_renderer.py::TemplateRendererTests.test_tag_sections_render_action_menus_with_contextual_destinations",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_tags_page_renders_and_initializes_theme",
+    ),
     "SITE-019": ("tests/test_library_scan.py::LibraryScanTests.test_media_groups_prioritize_root_then_configured_metadata_folder",),
     "SITE-020": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_reduced_motion_disables_shared_transitions_and_smooth_pagination_scroll",),
     "SITE-021": ("tests/test_config_manager.py::ConfigManagerTests.test_complete_phrase_formats_are_configurable_and_reorder_named_values",),

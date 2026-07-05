@@ -69,37 +69,17 @@ function initThemeDropdown() {
 
   const toggle = document.getElementById("theme-toggle");
   const panel = document.getElementById("theme-panel");
+  if (!toggle || !panel) return;
+  if (typeof cr4te.menus?.bindMenu !== "function") return;
+
   const options = [...panel.querySelectorAll(".theme-option")];
-
-  function isOpen() {
-    return toggle.getAttribute("aria-expanded") === "true";
-  }
-
-  function focusOption(index) {
-    if (!options.length) return;
-    options[(index + options.length) % options.length].focus();
-  }
 
   function selectedIndex() {
     const index = options.findIndex(option => option.getAttribute("aria-checked") === "true");
     return index >= 0 ? index : 0;
   }
 
-  function openMenu(focusIndex = null) {
-    panel.style.display = "block";
-    toggle.setAttribute("aria-expanded", "true");
-    if (focusIndex !== null) {
-      focusOption(focusIndex);
-    }
-  }
-
-  function closeMenu(returnFocus = false) {
-    panel.style.display = "none";
-    toggle.setAttribute("aria-expanded", "false");
-    if (returnFocus) {
-      toggle.focus();
-    }
-  }
+  let menu = null;
 
   function selectOption(option) {
     const theme = option.dataset.theme;
@@ -107,64 +87,16 @@ function initThemeDropdown() {
       saveTheme(theme);
       applyTheme(theme);
       refreshThemeSensitiveLayout();
-      closeMenu(true);
+      menu?.close(true);
     }
   }
 
-  toggle.addEventListener("click", () => {
-    if (isOpen()) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-  });
-
-  toggle.addEventListener("keydown", event => {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      openMenu(selectedIndex());
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      openMenu(options.length - 1);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      closeMenu(true);
-    }
-  });
-
-  panel.addEventListener("keydown", event => {
-    const currentIndex = options.indexOf(document.activeElement);
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      focusOption(currentIndex + 1);
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      focusOption(currentIndex - 1);
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      focusOption(0);
-    } else if (event.key === "End") {
-      event.preventDefault();
-      focusOption(options.length - 1);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      closeMenu(true);
-    } else if (event.key === "Tab") {
-      closeMenu();
-    }
-  });
-
-  document.addEventListener("click", event => {
-    if (!toggle.contains(event.target) && !panel.contains(event.target)) {
-      closeMenu();
-    }
-  });
-
-  options.forEach(option => {
-    option.addEventListener("click", () => {
-      selectOption(option);
-    });
+  menu = cr4te.menus.bindMenu({
+    toggle,
+    panel,
+    options,
+    initialFocusIndex: selectedIndex,
+    onOptionSelected: selectOption,
   });
 }
 
