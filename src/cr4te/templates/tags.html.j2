@@ -22,7 +22,7 @@
         <div class="tag-category" id="{{ group.category | lower | replace(' ', '-') }}">
           <span class="tag-category-label data-label">{{ group.category }}</span>
           {% for tag in group.tags %}
-            {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "tags-page-tag-menu-" ~ group_index ~ "-" ~ loop.index0) }}
+            {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "tags-page-tag-menu-" ~ group_index ~ "-" ~ loop.index0, tag_action_counts=tag_action_counts | default(none)) }}
           {% endfor %}
         </div>
         {% endfor %}

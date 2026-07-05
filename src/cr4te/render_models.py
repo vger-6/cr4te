@@ -24,6 +24,7 @@ __all__ = [
     "ProjectCardContext",
     "ProjectOverviewEntry",
     "ProjectPageContext",
+    "TagActionCounts",
     "TagCollection",
     "TagGroup",
     "TextContext",
@@ -57,6 +58,12 @@ class TagCollection:
             group.category: list(group.tags)
             for group in self.groups
         }
+
+
+@dataclass(frozen=True)
+class TagActionCounts:
+    creators: dict[str, int] = field(default_factory=dict)
+    projects: dict[str, int] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -201,6 +208,7 @@ class CreatorPageContext:
     meta_entries: list[MetaEntry]
     members: list[CreatorLinkContext] = field(default_factory=list)
     project_tag_terms: frozenset[str] = field(default_factory=frozenset)
+    creator_project_tag_counts: dict[str, int] = field(default_factory=dict)
 
     @property
     def has_right_column_content(self) -> bool:

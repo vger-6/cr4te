@@ -1,6 +1,8 @@
+{% import "partials/_icons.html.j2" as icons %}
+
 <div class="theme-dropdown-container">
   <div class="theme-dropdown" data-menu>
-    <button type="button" class="theme-button" id="theme-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="theme-panel" data-menu-toggle>{{ site_labels.controls.themes }}</button>
+    <button type="button" class="theme-button" id="theme-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="theme-panel" data-menu-toggle>{{ site_labels.controls.themes }}<span class="theme-button__icon" aria-hidden="true">{{ icons.chevron_down_icon() }}</span></button>
     <div class="theme-panel menu-panel" id="theme-panel" role="menu" aria-labelledby="theme-toggle" data-menu-panel>
       {% for theme in themes %}
       <button type="button" class="theme-option menu-option" role="menuitemradio" aria-checked="false" tabindex="-1" data-theme="{{ theme.css_class }}">{{ theme.display_name }}</button>

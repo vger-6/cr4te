@@ -84,7 +84,7 @@
               <div class="tag-category">
                 <span class="tag-category-label data-label">{{ group.category }}</span>
                 {% for tag in group.tags %}
-                  {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "creator-tag-menu-" ~ group_index ~ "-" ~ loop.index0, path_to_root=path_to_root, creator_name=creator.name, include_creator_projects=((group.category ~ ":" ~ tag) in creator.project_tag_terms)) }}
+                  {{ tag_actions.render_tag_action_menu(tag, group.category, site_labels, "creator-tag-menu-" ~ group_index ~ "-" ~ loop.index0, path_to_root=path_to_root, creator_name=creator.name, include_creator_projects=((group.category ~ ":" ~ tag) in creator.project_tag_terms), tag_action_counts=tag_action_counts | default(none), creator_project_tag_counts=creator.creator_project_tag_counts) }}
                 {% endfor %}
               </div>
             {% endfor %}

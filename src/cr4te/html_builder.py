@@ -24,7 +24,14 @@ from .render_assets import prepare_default_thumbnails
 from .render_models import CreatorOverviewEntry, ProjectOverviewEntry, TagCollection
 from .schemas.config_schema import SiteLabels, SiteRendering
 from .schemas.library_schema import Creator as CreatorModel
-from .tag_contexts import collect_project_metadata_tags_from_summary, collect_tags_from_creator_summary, merge_tag_maps
+from .tag_contexts import (
+    build_creator_project_tag_counts,
+    build_tag_action_counts,
+    build_tag_search_terms,
+    collect_project_metadata_tags_from_summary,
+    collect_tags_from_creator_summary,
+    merge_tag_maps,
+)
 from .template_renderer import (
     render_creator_overview_page,
     render_creator_page,
@@ -74,22 +81,12 @@ def build_html_pages_streaming(
         summary = summary_by_name.get(name)
         return load_creator(summary) if summary else None
 
+    sorted_summaries = sorted(index.creators, key=lambda c: c.display_name.lower())
     creator_entries: list[CreatorOverviewEntry] = []
     project_entries: list[ProjectOverviewEntry] = []
     all_tags = TagCollection()
 
-    for summary in sorted(index.creators, key=lambda c: c.display_name.lower()):
-        creator = load_creator(summary)
-        logger.info(f"Building creator page: {creator.name}")
-        creator_stats = compute_creator_stats(creator)
-        creator_context = build_creator_page_context(ctx, creator, get_creator, creator_stats)
-        render_creator_page(ctx, creator, creator_context)
-
-        for project in sorted(creator.projects, key=sort_project):
-            logger.info(f"Building project page: {creator.name} - {project.title}")
-            project_context = build_project_page_context(ctx, creator, project, get_creator)
-            render_project_page(ctx, creator, project, project_context)
-
+    for summary in sorted_summaries:
         creator_entries.append(build_creator_overview_entry_from_index(ctx, summary))
         for project in sorted(summary.projects, key=sort_project_summary):
             project_entries.append(build_project_overview_entry_from_index(ctx, summary, project))
@@ -105,8 +102,47 @@ def build_html_pages_streaming(
     creator_entries.sort(key=lambda e: e.name.lower())
     project_entries.sort(key=lambda e: (e.title.lower(), e.creator_name.lower()))
 
+    creator_search_texts = tuple(getattr(entry, "search_text", "") for entry in creator_entries)
+    project_search_texts = tuple(getattr(entry, "search_text", "") for entry in project_entries)
+    tag_action_counts = build_tag_action_counts(
+        all_tags,
+        creator_search_texts,
+        project_search_texts,
+    )
+    creator_project_tag_counts_by_name = {
+        summary.name: build_creator_project_tag_counts(
+            build_tag_search_terms(
+                merge_tag_maps(
+                    *(project.tags for project in summary.projects),
+                    collect_project_metadata_tags_from_summary(ctx, summary),
+                )
+            ),
+            summary.display_name,
+            project_search_texts,
+        )
+        for summary in sorted_summaries
+    }
+
+    for summary in sorted_summaries:
+        creator = load_creator(summary)
+        logger.info(f"Building creator page: {creator.name}")
+        creator_stats = compute_creator_stats(creator)
+        creator_context = build_creator_page_context(
+            ctx,
+            creator,
+            get_creator,
+            creator_stats,
+            creator_project_tag_counts=creator_project_tag_counts_by_name.get(creator.name),
+        )
+        render_creator_page(ctx, creator, creator_context, tag_action_counts)
+
+        for project in sorted(creator.projects, key=sort_project):
+            logger.info(f"Building project page: {creator.name} - {project.title}")
+            project_context = build_project_page_context(ctx, creator, project, get_creator)
+            render_project_page(ctx, creator, project, project_context, tag_action_counts)
+
     render_creator_overview_page(ctx, creator_entries)
     render_project_overview_page(ctx, project_entries)
-    render_tags_page(ctx, all_tags)
+    render_tags_page(ctx, all_tags, tag_action_counts)
 
     return HtmlBuildResult(ctx.index_html_path, ctx.issues, ctx.asset_statistics)

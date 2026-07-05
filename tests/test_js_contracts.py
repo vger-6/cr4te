@@ -72,7 +72,9 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn('<button type="button" id="clear-search"', search_source)
         self.assertIn('role="menu"', theme_source)
         self.assertIn('role="menuitemradio"', theme_source)
+        self.assertIn("icons.chevron_down_icon()", theme_source)
         self.assertIn('data-menu-toggle', tag_source)
+        self.assertIn("icons.chevron_down_icon()", tag_source)
         self.assertIn('role="menu"', tag_source)
         self.assertIn('role="menuitem"', tag_source)
 
@@ -192,8 +194,17 @@ class JavaScriptContractTests(unittest.TestCase):
         self.assertIn("cr4te.menus.bindMenu({", theme_selector)
         self.assertIn(".menu-panel", base)
         self.assertIn(".menu-option", base)
+        self.assertNotIn(".theme-button::after", base)
+        self.assertIn(".theme-button__icon", base)
         self.assertIn(".tag-action-toggle", base)
-        self.assertIn(".tag-action-separator", base)
+        self.assertIn(".tag-action-icon", base)
+        self.assertIn(".tag-action-count", base)
+        for selector in (r"\.theme-button__icon \.icon", r"\.tag-action-icon \.icon"):
+            with self.subTest(selector=selector):
+                self.assertRegex(
+                    base,
+                    rf"{selector}\s*\{{[\s\S]*?color:\s*currentColor;[\s\S]*?fill:\s*currentColor;",
+                )
 
     def test_overflow_tooltips_are_added_only_for_overflowing_items(self):
         source = (ASSET_JS_DIR / "overflow_tooltips.js").read_text(encoding="utf-8")

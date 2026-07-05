@@ -11,6 +11,8 @@ from cr4te.library_index import ProjectSummary
 from cr4te.media_counts import MediaCounts
 from cr4te.schemas.library_schema import Creator, Project
 from cr4te.tag_contexts import (
+    build_creator_project_tag_counts,
+    build_tag_action_counts,
     build_tag_search_terms,
     collect_tags_from_creator,
     merge_tag_maps,
@@ -69,6 +71,41 @@ class TagContextTests(unittest.TestCase):
             build_tag_search_terms({"Mood": ["Calm", "Bright"]}),
             ["Mood:Bright", "Mood:Calm"],
         )
+
+    def test_build_tag_action_counts_matches_overview_search_semantics(self):
+        counts = build_tag_action_counts(
+            {"Genres": ["Reggae", "Synth Pop", "No Hits"]},
+            (
+                "bob marley genres:reggae",
+                "air genres:synth pop",
+                "plain creator",
+            ),
+            (
+                "catch a fire bob marley genres:reggae",
+                "moon safari air genres:synth pop",
+                "another album genres:reggae",
+            ),
+        )
+
+        self.assertEqual(counts.creators["Genres:Reggae"], 1)
+        self.assertEqual(counts.projects["Genres:Reggae"], 2)
+        self.assertEqual(counts.creators["Genres:Synth Pop"], 1)
+        self.assertEqual(counts.projects["Genres:Synth Pop"], 1)
+        self.assertEqual(counts.creators["Genres:No Hits"], 0)
+        self.assertEqual(counts.projects["Genres:No Hits"], 0)
+
+    def test_build_creator_project_tag_counts_matches_exact_creator_query(self):
+        counts = build_creator_project_tag_counts(
+            ("Genres:Reggae", "Genres:Rock"),
+            "Bob Marley",
+            (
+                "catch a fire bob marley genres:reggae",
+                "desire bob dylan genres:reggae",
+                "survival bob marley genres:rock",
+            ),
+        )
+
+        self.assertEqual(counts, {"Genres:Reggae": 1, "Genres:Rock": 1})
 
     def test_project_summary_values_ignores_string_facet_keys(self):
         summary = ProjectSummary(

@@ -1,12 +1,13 @@
 {% import "partials/_icons.html.j2" as icons %}
 
-{% macro render_tag_action_menu(tag, category, site_labels, menu_id, path_to_root="", creator_name="", include_creator_projects=false) %}
+{% macro render_tag_action_menu(tag, category, site_labels, menu_id, path_to_root="", creator_name="", include_creator_projects=false, tag_action_counts=none, creator_project_tag_counts=none) %}
 {% set tag_query = category ~ ':' ~ tag %}
 {% set creators_label = site_labels.entity.creators | lower %}
 {% set projects_label = site_labels.entity.projects | lower %}
+{% set creator_hit_count = tag_action_counts.creators.get(tag_query, 0) if tag_action_counts else 0 %}
+{% set project_hit_count = tag_action_counts.projects.get(tag_query, 0) if tag_action_counts else 0 %}
+{% set creator_project_hit_count = creator_project_tag_counts.get(tag_query, 0) if creator_project_tag_counts else 0 %}
 <span class="tag-menu" data-menu>
-  <span class="tag">{{ tag }}</span>
-  <span class="tag-action-separator" aria-hidden="true">|</span>
   <button type="button"
           class="tag-action-toggle"
           aria-label="{{ site_labels.controls.tag_actions_label_format | format_phrase(tag=tag) }}"
@@ -14,13 +15,14 @@
           aria-expanded="false"
           aria-controls="{{ menu_id }}"
           data-menu-toggle>
-    {{ icons.chevron_down_icon() }}
+    <span class="tag">{{ tag }}</span>
+    <span class="tag-action-icon" aria-hidden="true">{{ icons.chevron_down_icon() }}</span>
   </button>
   <span class="tag-action-panel menu-panel" id="{{ menu_id }}" role="menu" data-menu-panel>
-    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}index.html?tag={{ tag_query | urlencode }}">{{ site_labels.controls.find_in_creators_format | format_phrase(creators=creators_label) }}</a>
-    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}projects.html?tag={{ tag_query | urlencode }}">{{ site_labels.controls.find_in_projects_format | format_phrase(projects=projects_label) }}</a>
+    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}index.html?tag={{ tag_query | urlencode }}">{{ site_labels.controls.find_in_creators_format | format_phrase(creators=creators_label) }} <span class="tag-action-count">({{ creator_hit_count }})</span></a>
+    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}projects.html?tag={{ tag_query | urlencode }}">{{ site_labels.controls.find_in_projects_format | format_phrase(projects=projects_label) }} <span class="tag-action-count">({{ project_hit_count }})</span></a>
     {% if include_creator_projects %}
-    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}projects.html?tag={{ ('\"' ~ creator_name ~ '\" ' ~ tag_query) | urlencode }}">{{ site_labels.controls.find_in_creator_projects_format | format_phrase(projects=projects_label, creator=creator_name) }}</a>
+    <a class="tag-action-option menu-option" role="menuitem" tabindex="-1" href="{{ path_to_root }}projects.html?tag={{ ('\"' ~ creator_name ~ '\" ' ~ tag_query) | urlencode }}">{{ site_labels.controls.find_in_creator_projects_format | format_phrase(projects=projects_label, creator=creator_name) }} <span class="tag-action-count">({{ creator_project_hit_count }})</span></a>
     {% endif %}
   </span>
 </span>
