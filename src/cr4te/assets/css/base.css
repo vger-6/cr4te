@@ -423,11 +423,11 @@ img {
 .section-box {
   border: var(--theme-section-border-width) solid var(--theme-section-border);
   border-radius: var(--theme-section-radius);
-  background-color: var(--theme-section-bg);
+  background-color: transparent;
 }
 
 .section-title {
-  background-color: var(--theme-section-title-bg);
+  background-color: transparent;
   color: var(--theme-section-title-text);
   padding-top: var(--theme-section-title-padding-top);
   padding-bottom: var(--theme-section-title-padding-bottom);
@@ -860,8 +860,9 @@ a:focus img {
 }
 
 .pagination-controls {
-  background: var(--theme-pagination-bg);
+  background: transparent;
   padding-top: var(--space-md);
+  padding-bottom: var(--space-md);
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -992,6 +993,16 @@ a:focus img {
   margin-bottom: 1rem;
 }
 
+.tag-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-md);
+}
+
+.tag-list > .tag-category {
+  margin-bottom: 0;
+}
+
 .tag-category-label {
   display: block;
   margin-bottom: 0.4rem;
@@ -1080,7 +1091,7 @@ a:focus img {
   align-items: center;
   gap: var(--space-sm);
   flex-wrap: wrap;
-  background: var(--theme-audio-controls-bg);
+  background: transparent;
   padding: var(--space-xs) var(--space-sm);
   border: var(--theme-audio-controls-border-width) solid var(--theme-audio-controls-border);
   border-radius: var(--theme-audio-controls-radius);
@@ -1098,14 +1109,14 @@ a:focus img {
   position: sticky;
   bottom: 0rem;
   padding-top: var(--space-sm);
-  background: var(--theme-audio-controls-wrapper-bg);
-  box-shadow: 0 1rem 0 var(--theme-audio-controls-wrapper-bg);
+  background: transparent;
+  box-shadow: none;
   z-index: 3; /* Above track list, below sticky controls */
   transition: opacity var(--motion-visibility);
 }
 
 .pagination-controls-wrapper  {
-  background: var(--theme-pagination-wrapper-bg);
+  background: transparent;
   z-index: 3;
 }
 

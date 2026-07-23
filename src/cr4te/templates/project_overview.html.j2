@@ -12,12 +12,12 @@
 
   <main class="page-content" aria-labelledby="page-title">
   <h1 id="page-title" class="visually-hidden">{{ page_shell.title }}</h1>
-  {% if projects %}
-    {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
-    {% include "partials/_search_bar.html.j2" %}
-  {% endif %}
 
   <div class="overview-layout">
+    {% if projects %}
+      {% set search_text_placeholder = site_labels.controls.search_placeholder_format | format_phrase(creators=site_labels.entity.creators, projects=site_labels.entity.projects, tags=site_labels.entity.tags) %}
+      {% include "partials/_search_bar.html.j2" %}
+    {% endif %}
 
     {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.project_cards.building_strategy) %}
     {% set aspect_ratio = site_rendering.galleries.project_cards.aspect_ratio or '1/1' %}
