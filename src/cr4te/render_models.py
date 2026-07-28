@@ -217,7 +217,7 @@ class ProjectPageContext:
     release_date: str
     meta_entries: list[MetaEntry]
     rel_thumbnail_path: str
-    thumbnail_orientation: Orientation
+    thumbnail_orientation: Orientation | None
     info_html: str
     tags: TagCollection
     media_groups: list[MediaGroupContext]

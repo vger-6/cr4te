@@ -10,8 +10,9 @@ sys.path.insert(0, str(ROOT / "src"))
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.config_presets import DEFAULT_CONFIG, get_domain_preset
 from cr4te.enums.domain import Domain
+from cr4te.enums.image_visibility import ImageVisibility
+from cr4te.enums.overview_card_display_mode import OverviewCardDisplayMode
 from cr4te.enums.portrait_discovery import PortraitDiscovery
-from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from cr4te.schemas.config_schema import GalleryLayoutRendering
 
@@ -21,6 +22,26 @@ def write_json(path: Path, data: dict) -> None:
 
 
 class ConfigManagerTests(unittest.TestCase):
+    def assert_image_rendering_defaults(
+        self,
+        config,
+        *,
+        creator_overview,
+        creator_profile,
+        creator_members,
+        project_cover,
+        project_creator,
+        project_collaboration,
+        project_participants,
+    ):
+        self.assertEqual(config.site_rendering.galleries.creator_cards.display_mode, creator_overview)
+        self.assertEqual(config.site_rendering.creator_page.show_profile_image, creator_profile)
+        self.assertEqual(config.site_rendering.creator_page.show_member_profile_images, creator_members)
+        self.assertEqual(config.site_rendering.project_page.show_cover_image, project_cover)
+        self.assertEqual(config.site_rendering.project_page.show_creator_profile_image, project_creator)
+        self.assertEqual(config.site_rendering.project_page.show_collaboration_profile_image, project_collaboration)
+        self.assertEqual(config.site_rendering.project_page.show_participant_profile_images, project_participants)
+
     def test_default_config_and_domain_presets_validate(self):
         base = load_config()
 
@@ -132,21 +153,103 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.counts.project, "record")
             self.assertEqual(config.site_labels.counts.projects, "records")
 
-    def test_portrait_discovery_and_visibility_resolve_in_owned_sections(self):
+    def test_portrait_discovery_and_rendering_resolve_in_owned_sections(self):
         config = load_config()
 
         self.assertEqual(config.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
         self.assertEqual(config.media_rules.portrait_basename, "portrait")
-        self.assertEqual(config.site_rendering.portraits.visibility, PortraitVisibility.ALL)
+        self.assertEqual(config.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.IMAGE)
+        self.assertEqual(config.site_rendering.creator_page.show_profile_image, ImageVisibility.SHOW)
+        self.assertEqual(config.site_rendering.creator_page.show_member_profile_images, ImageVisibility.SHOW)
+        self.assertEqual(config.site_rendering.project_page.show_cover_image, ImageVisibility.SHOW)
+        self.assertEqual(config.site_rendering.project_page.show_creator_profile_image, ImageVisibility.SHOW)
+        self.assertEqual(config.site_rendering.project_page.show_collaboration_profile_image, ImageVisibility.SHOW)
+        self.assertEqual(config.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
 
-    def test_portrait_overrides_do_not_reset_when_omitted(self):
+    def test_domain_presets_resolve_image_rendering_defaults(self):
+        base = load_config()
+
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.CREATOR),
+            creator_overview=OverviewCardDisplayMode.IMAGE,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.ART),
+            creator_overview=OverviewCardDisplayMode.IMAGE,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.MUSIC),
+            creator_overview=OverviewCardDisplayMode.IMAGE,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.FILM),
+            creator_overview=OverviewCardDisplayMode.TEXT,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.BOOK),
+            creator_overview=OverviewCardDisplayMode.TEXT,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+        self.assert_image_rendering_defaults(
+            apply_cli_overrides(base, domain=Domain.MODEL),
+            creator_overview=OverviewCardDisplayMode.IMAGE,
+            creator_profile=ImageVisibility.SHOW,
+            creator_members=ImageVisibility.SHOW,
+            project_cover=ImageVisibility.HIDE,
+            project_creator=ImageVisibility.SHOW,
+            project_collaboration=ImageVisibility.SHOW,
+            project_participants=ImageVisibility.SHOW,
+        )
+
+    def test_portrait_discovery_cli_override_preserves_configured_rendering(self):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"
             write_json(
                 config_path,
                 {
                     "media_rules": {"portrait_discovery": "auto"},
-                    "site_rendering": {"portraits": {"visibility": "details"}},
+                    "site_rendering": {
+                        "galleries": {"creator_cards": {"display_mode": "text"}},
+                        "creator_page": {
+                            "show_profile_image": "hide",
+                            "show_member_profile_images": "show",
+                        },
+                        "project_page": {
+                            "show_cover_image": "hide",
+                            "show_creator_profile_image": "hide",
+                            "show_collaboration_profile_image": "show",
+                            "show_participant_profile_images": "show",
+                        },
+                    },
                 },
             )
 
@@ -155,23 +258,50 @@ class ConfigManagerTests(unittest.TestCase):
             overridden = apply_cli_overrides(
                 configured,
                 portrait_discovery=PortraitDiscovery.NAMED,
-                portrait_visibility=PortraitVisibility.DISABLED,
             )
 
             self.assertEqual(preserved.media_rules.portrait_discovery, PortraitDiscovery.AUTO)
-            self.assertEqual(preserved.site_rendering.portraits.visibility, PortraitVisibility.DETAILS)
+            self.assertEqual(preserved.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.TEXT)
+            self.assertEqual(preserved.site_rendering.creator_page.show_profile_image, ImageVisibility.HIDE)
+            self.assertEqual(preserved.site_rendering.creator_page.show_member_profile_images, ImageVisibility.SHOW)
+            self.assertEqual(preserved.site_rendering.project_page.show_cover_image, ImageVisibility.HIDE)
+            self.assertEqual(preserved.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
             self.assertEqual(overridden.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
-            self.assertEqual(overridden.site_rendering.portraits.visibility, PortraitVisibility.DISABLED)
+            self.assertEqual(overridden.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.TEXT)
+            self.assertEqual(overridden.site_rendering.creator_page.show_profile_image, ImageVisibility.HIDE)
+            self.assertEqual(overridden.site_rendering.creator_page.show_member_profile_images, ImageVisibility.SHOW)
+            self.assertEqual(overridden.site_rendering.project_page.show_cover_image, ImageVisibility.HIDE)
+            self.assertEqual(overridden.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
 
     def test_removed_portrait_configuration_fields_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"
-            write_json(config_path, {"portraits": {"mode": "named"}})
+            write_json(config_path, {"site_rendering": {"portraits": {"visibility": "details"}}})
 
             with self.assertRaises(ValueError) as caught:
                 load_config(config_path)
 
             self.assertIn("portraits", str(caught.exception))
+
+    def test_legacy_boolean_detail_image_visibility_values_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(config_path, {"site_rendering": {"creator_page": {"show_profile_image": True}}})
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("show_profile_image", str(caught.exception))
+
+    def test_removed_if_available_detail_image_visibility_value_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            write_json(config_path, {"site_rendering": {"creator_page": {"show_profile_image": "if_available"}}})
+
+            with self.assertRaises(ValueError) as caught:
+                load_config(config_path)
+
+            self.assertIn("show_profile_image", str(caught.exception))
 
     def test_load_config_accepts_project_facet_label_overrides(self):
         with tempfile.TemporaryDirectory() as tmp:

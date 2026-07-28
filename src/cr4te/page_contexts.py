@@ -8,13 +8,17 @@ from typing import Callable, Optional
 from .constants import INDEX_HTML_FILE_NAME
 from .html_context import HtmlBuildContext
 from .enums.creator_type import CreatorType
-from .enums.portrait_visibility import PortraitVisibility
+from .enums.image_visibility import ImageVisibility
 from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CreatorField, ProjectField
 from .html_paths import build_rel_creator_html_path, build_rel_project_html_path
 from .library_issues import invalid_collaboration_reference_issue
 from .media_counts import count_media_groups
-from .render_assets import build_thumbnail_context, get_image_orientation
+from .render_assets import (
+    build_source_thumbnail_context,
+    build_thumbnail_context,
+    get_image_orientation,
+)
 from .render_media import build_media_group_contexts
 from .render_metadata import (
     build_collaboration_meta_entries,
@@ -70,13 +74,15 @@ def compute_creator_stats(creator: CreatorModel) -> CreatorStats:
     return CreatorStats(project_count=project_count, media_counts=total_media_counts)
 
 
-def _build_portrait_thumbnail(ctx: HtmlBuildContext, portrait: str) -> ThumbnailContext | None:
-    visibility = ctx.site_rendering.portraits.visibility
-    if visibility == PortraitVisibility.DISABLED:
+def _build_optional_thumbnail(
+    ctx: HtmlBuildContext,
+    rel_image_path: str,
+    thumb_type: ThumbType,
+    visibility: ImageVisibility,
+) -> ThumbnailContext | None:
+    if visibility == ImageVisibility.HIDE:
         return None
-    if visibility == PortraitVisibility.DETAILS and not portrait:
-        return None
-    return build_thumbnail_context(ctx, portrait, ThumbType.PORTRAIT)
+    return build_source_thumbnail_context(ctx, rel_image_path, thumb_type)
 
 
 def build_project_page_context(
@@ -86,15 +92,25 @@ def build_project_page_context(
     get_creator: CreatorLoader,
 ) -> ProjectPageContext:
     visible = ctx.visible_project_fields
-    thumbnail = build_thumbnail_context(ctx, project.cover, ThumbType.COVER)
-    thumb_path = ctx.output_dir / thumbnail.rel_thumbnail_path
+    thumbnail = _build_optional_thumbnail(
+        ctx,
+        project.cover,
+        ThumbType.COVER,
+        ctx.site_rendering.project_page.show_cover_image,
+    )
+    if thumbnail is None:
+        rel_thumbnail_path = ""
+        thumbnail_orientation = None
+    else:
+        rel_thumbnail_path = thumbnail.rel_thumbnail_path
+        thumbnail_orientation = get_image_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
 
     base_context = ProjectPageContext(
         title=project.display_title,
         release_date=date_utils.format_nice_date(project.release_date) if ProjectField.RELEASE_DATE in visible else "",
         meta_entries=build_project_meta_entries(ctx, project),
-        rel_thumbnail_path=thumbnail.rel_thumbnail_path,
-        thumbnail_orientation=get_image_orientation(ctx, thumb_path),
+        rel_thumbnail_path=rel_thumbnail_path,
+        thumbnail_orientation=thumbnail_orientation,
         info_html=text_utils.markdown_to_html(project.info),
         tags=merge_tag_maps(project.tags),
         media_groups=build_media_group_contexts(ctx, project.media_groups),
@@ -109,7 +125,12 @@ def build_project_page_context(
 
     return replace(
         base_context,
-        creator=_collect_creator_entry(ctx, creator, project),
+        creator=_collect_creator_entry(
+            ctx,
+            creator,
+            project,
+            ctx.site_rendering.project_page.show_creator_profile_image,
+        ),
     )
 
 
@@ -119,7 +140,12 @@ def build_creator_page_context(
     get_creator: CreatorLoader,
     creator_stats: CreatorStats,
 ) -> CreatorPageContext:
-    thumbnail = _build_portrait_thumbnail(ctx, creator.portrait)
+    thumbnail = _build_optional_thumbnail(
+        ctx,
+        creator.portrait,
+        ThumbType.PORTRAIT,
+        ctx.site_rendering.creator_page.show_profile_image,
+    )
     if thumbnail is None:
         rel_portrait_path = ""
         portrait_orientation = None
@@ -182,7 +208,14 @@ def _collect_participant_entries(
         if not participant:
             logger.debug(f"Missing creator reference: {name}")
             continue
-        participants.append(_collect_creator_entry(ctx, participant, project))
+        participants.append(
+            _collect_creator_entry(
+                ctx,
+                participant,
+                project,
+                ctx.site_rendering.project_page.show_participant_profile_images,
+            )
+        )
     return participants
 
 
@@ -197,8 +230,17 @@ def _build_project_tag_terms(creator: CreatorModel, project_metadata_tags: TagCo
     )
 
 
-def _collect_creator_base_entry(ctx: HtmlBuildContext, creator: CreatorModel) -> CreatorProfileContext:
-    thumbnail = _build_portrait_thumbnail(ctx, creator.portrait)
+def _collect_creator_base_entry(
+    ctx: HtmlBuildContext,
+    creator: CreatorModel,
+    profile_image_visibility: ImageVisibility,
+) -> CreatorProfileContext:
+    thumbnail = _build_optional_thumbnail(
+        ctx,
+        creator.portrait,
+        ThumbType.PORTRAIT,
+        profile_image_visibility,
+    )
 
     return CreatorProfileContext(
         name=creator.display_name,
@@ -211,8 +253,9 @@ def _collect_creator_entry(
     ctx: HtmlBuildContext,
     creator: CreatorModel,
     project: ProjectModel,
+    profile_image_visibility: ImageVisibility,
 ) -> CreatorProfileContext:
-    base = _collect_creator_base_entry(ctx, creator)
+    base = _collect_creator_base_entry(ctx, creator, profile_image_visibility)
     return replace(
         base,
         age_at_release=calculate_age_at_release(creator, project),
@@ -232,7 +275,11 @@ def _collect_collaborator_entry(
     creator: CreatorModel,
     get_creator: CreatorLoader,
 ) -> CreatorProfileContext:
-    base = _collect_creator_base_entry(ctx, creator)
+    base = _collect_creator_base_entry(
+        ctx,
+        creator,
+        ctx.site_rendering.project_page.show_collaboration_profile_image,
+    )
     return replace(
         base,
         meta_entries=build_collaboration_meta_entries(
@@ -326,7 +373,12 @@ def _collect_member_links(
             logger.debug(f"Missing creator reference: {member_name}")
             continue
 
-        thumbnail = _build_portrait_thumbnail(ctx, member.portrait)
+        thumbnail = _build_optional_thumbnail(
+            ctx,
+            member.portrait,
+            ThumbType.PORTRAIT,
+            ctx.site_rendering.creator_page.show_member_profile_images,
+        )
         rel_html_path = (Path(ctx.html_dir.name) / build_rel_creator_html_path(member)).as_posix()
         member_links.append(
             CreatorLinkContext(

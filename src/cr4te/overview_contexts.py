@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .html_context import HtmlBuildContext
-from .enums.portrait_visibility import PortraitVisibility
+from .enums.overview_card_display_mode import OverviewCardDisplayMode
 from .enums.thumb_type import ThumbType
 from .enums.visible_fields import CreatorField
 from .html_paths import build_rel_creator_html_path, build_rel_project_html_path
@@ -27,7 +27,7 @@ def sort_project_summary(project: ProjectSummary) -> tuple:
 
 
 def build_creator_overview_entry_from_index(ctx: HtmlBuildContext, creator: CreatorSummary) -> CreatorOverviewEntry:
-    if ctx.site_rendering.portraits.visibility != PortraitVisibility.ALL:
+    if ctx.site_rendering.galleries.creator_cards.display_mode != OverviewCardDisplayMode.IMAGE:
         rel_thumbnail_path = ""
         image_wrapper_width = 0
         image_wrapper_height = 0

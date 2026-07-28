@@ -22,7 +22,6 @@ from cr4te.cr4te import ExitCode, _apply_cli_overrides_from_args, _build_cmd_han
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
 from cr4te.enums.portrait_discovery import PortraitDiscovery
-from cr4te.enums.portrait_visibility import PortraitVisibility
 from cr4te.html_builder import build_html_pages_streaming
 from cr4te.library_builder import build_library_index, load_indexed_creator
 from cr4te.library_index import CreatorSummary, LibraryIndex, ProjectSummary
@@ -55,6 +54,7 @@ class HtmlBuildTests(unittest.TestCase):
         self.assertIn("Reconcile library metadata and generate a static HTML site", build_help.getvalue())
         self.assertIn("--clear-thumbnail-cache", build_help.getvalue())
         self.assertIn("Remove cached thumbnails before building", build_help.getvalue())
+        self.assertNotIn("--portrait-visibility", build_help.getvalue())
         self.assertNotIn("--clean", build_help.getvalue())
 
         delete_help = io.StringIO()
@@ -117,7 +117,6 @@ class HtmlBuildTests(unittest.TestCase):
                         domain=Domain.ART.value,
                         image_sample_strategy=None,
                         portrait_discovery=None,
-                        portrait_visibility=None,
                         open=False,
                         force=True,
                         clear_thumbnail_cache=clear_thumbnail_cache,
@@ -127,21 +126,19 @@ class HtmlBuildTests(unittest.TestCase):
 
                     self.assertEqual(cached_thumbnail.exists(), not clear_thumbnail_cache)
 
-    def test_cli_accepts_portrait_overrides_and_rejects_removed_portrait_options(self):
+    def test_cli_accepts_portrait_discovery_override_and_rejects_removed_portrait_rendering_options(self):
         parser = _create_parser()
         args = parser.parse_args([
             "print-config",
             "--portrait-discovery",
             "auto",
-            "--portrait-visibility",
-            "details",
         ])
 
         config = _apply_cli_overrides_from_args(load_config(), args)
 
         self.assertEqual(config.media_rules.portrait_discovery, PortraitDiscovery.AUTO)
-        self.assertEqual(config.site_rendering.portraits.visibility, PortraitVisibility.DETAILS)
         for option, value in (
+            ("--portrait-visibility", "details"),
             ("--portrait-mode", "disabled"),
             ("--portrait-strategy", "none"),
         ):
@@ -172,7 +169,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -213,7 +209,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -240,7 +235,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -274,7 +268,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -321,7 +314,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -352,7 +344,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -426,7 +417,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=False,
                 clear_thumbnail_cache=False,
@@ -457,7 +447,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=None,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,
@@ -501,7 +490,6 @@ class HtmlBuildTests(unittest.TestCase):
                 domain=Domain.ART.value,
                 image_sample_strategy=None,
                 portrait_discovery=None,
-                portrait_visibility=None,
                 open=False,
                 force=True,
                 clear_thumbnail_cache=False,

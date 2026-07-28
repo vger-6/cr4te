@@ -14,7 +14,6 @@ from .config_manager import load_config, apply_cli_overrides
 from .schemas.config_schema import AppConfig
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.portrait_discovery import PortraitDiscovery
-from .enums.portrait_visibility import PortraitVisibility
 from .enums.domain import Domain
 from .metadata_manager import delete_metadata_files
 
@@ -76,7 +75,6 @@ def _apply_cli_overrides_from_args(config: AppConfig, args) -> AppConfig:
             config,
             image_sample_strategy=ImageSampleStrategy(args.image_sample_strategy) if args.image_sample_strategy else None,
             portrait_discovery=PortraitDiscovery(args.portrait_discovery) if args.portrait_discovery else None,
-            portrait_visibility=PortraitVisibility(args.portrait_visibility) if args.portrait_visibility else None,
             domain=_domain_from_args(args)
         )
     except ValueError as exc:
@@ -142,12 +140,6 @@ def _create_parser() -> argparse.ArgumentParser:
             choices=[mode.value for mode in PortraitDiscovery],
             help="Override portrait discovery: named uses basename matches; auto also permits orientation fallback",
         )
-        p.add_argument(
-            "--portrait-visibility",
-            choices=[mode.value for mode in PortraitVisibility],
-            help="Override portrait rendering: disabled hides portraits, details limits them to detail pages, and all includes overview cards",
-        )
-
     # Build subcommand
     build_parser = subparsers.add_parser(
         "build",

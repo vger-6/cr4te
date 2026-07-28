@@ -11,7 +11,7 @@ from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
-from cr4te.enums.portrait_visibility import PortraitVisibility
+from cr4te.enums.overview_card_display_mode import OverviewCardDisplayMode
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_index import CreatorSummary, ProjectSummary
 from cr4te.media_counts import MediaCounts
@@ -23,9 +23,10 @@ from cr4te.render_assets import prepare_default_thumbnails
 def context_for(
     input_dir: Path,
     output_dir: Path,
-    portrait_visibility: PortraitVisibility = PortraitVisibility.ALL,
+    creator_card_display_mode: OverviewCardDisplayMode = OverviewCardDisplayMode.IMAGE,
 ) -> HtmlBuildContext:
-    config = apply_cli_overrides(load_config(), domain=Domain.ART, portrait_visibility=portrait_visibility)
+    config = apply_cli_overrides(load_config(), domain=Domain.ART)
+    config.site_rendering.galleries.creator_cards.display_mode = creator_card_display_mode
     ctx = HtmlBuildContext(input_dir, output_dir, config.site_labels, config.site_rendering)
     prepare_output_dirs(ctx)
     prepare_default_thumbnails(ctx)
@@ -33,12 +34,12 @@ def context_for(
 
 
 class OverviewContextTests(unittest.TestCase):
-    def test_disabled_portraits_build_text_summary_without_thumbnail_work(self):
+    def test_text_creator_overview_builds_summary_without_thumbnail_work(self):
         """Covers SITE-014 and SITE-029."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
-            ctx = context_for(input_dir, output_dir, PortraitVisibility.DISABLED)
+            ctx = context_for(input_dir, output_dir, OverviewCardDisplayMode.TEXT)
             creator = CreatorSummary(
                 path=input_dir / "Noomi",
                 name="Noomi",
@@ -92,12 +93,12 @@ class OverviewContextTests(unittest.TestCase):
             self.assertEqual(empty_entry.project_count_summary, "")
             self.assertEqual(empty_entry.media_count_summary, "")
 
-    def test_details_portraits_use_text_overview_without_thumbnail_work(self):
+    def test_text_creator_overview_ignores_discovered_portraits(self):
         """Covers SITE-028."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
-            ctx = context_for(input_dir, output_dir, PortraitVisibility.DETAILS)
+            ctx = context_for(input_dir, output_dir, OverviewCardDisplayMode.TEXT)
             creator = CreatorSummary(
                 path=input_dir / "Noomi",
                 name="Noomi",
@@ -118,11 +119,11 @@ class OverviewContextTests(unittest.TestCase):
             build_thumbnail.assert_not_called()
             self.assertEqual(entry.rel_thumbnail_path, "")
 
-    def test_all_portraits_use_image_overview_default_when_discovery_is_empty(self):
+    def test_image_creator_overview_uses_default_when_discovery_is_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
-            ctx = context_for(input_dir, output_dir, PortraitVisibility.ALL)
+            ctx = context_for(input_dir, output_dir, OverviewCardDisplayMode.IMAGE)
             creator = CreatorSummary(
                 path=input_dir / "Noomi",
                 name="Noomi",

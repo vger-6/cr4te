@@ -37,12 +37,12 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         cls.site_dir = Path(cls._tmp.name) / "site"
         cls.paginated_site_dir = Path(cls._tmp.name) / "paginated-site"
-        cls.details_site_dir = Path(cls._tmp.name) / "details-site"
-        cls.disabled_portraits_site_dir = Path(cls._tmp.name) / "disabled-portraits-site"
+        cls.text_cards_site_dir = Path(cls._tmp.name) / "text-cards-site"
+        cls.image_less_site_dir = Path(cls._tmp.name) / "image-less-site"
         cls._build_example_site(cls.site_dir)
         cls._build_example_site(cls.paginated_site_dir, cls._write_paginated_config(), domain=None)
-        cls._build_example_site(cls.details_site_dir, cls._write_details_config(), domain=None)
-        cls._build_example_site(cls.disabled_portraits_site_dir, cls._write_disabled_portraits_config(), domain=None)
+        cls._build_example_site(cls.text_cards_site_dir, cls._write_text_cards_config(), domain=None)
+        cls._build_example_site(cls.image_less_site_dir, cls._write_image_less_config(), domain=None)
         cls.audio_project_path = cls._find_audio_project_page()
         cls.video_project_path = cls._find_video_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
@@ -120,13 +120,15 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         return config_path
 
     @classmethod
-    def _write_details_config(cls):
-        config_path = Path(cls._tmp.name) / "details_config.json"
+    def _write_text_cards_config(cls):
+        config_path = Path(cls._tmp.name) / "text_cards_config.json"
         config_path.write_text(
             json.dumps(
                 {
                     "site_rendering": {
-                        "portraits": {"visibility": "details"},
+                        "galleries": {
+                            "creator_cards": {"display_mode": "text"},
+                        },
                     }
                 }
             ),
@@ -135,13 +137,25 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         return config_path
 
     @classmethod
-    def _write_disabled_portraits_config(cls):
-        config_path = Path(cls._tmp.name) / "disabled_portraits_config.json"
+    def _write_image_less_config(cls):
+        config_path = Path(cls._tmp.name) / "image_less_config.json"
         config_path.write_text(
             json.dumps(
                 {
                     "site_rendering": {
-                        "portraits": {"visibility": "disabled"},
+                        "galleries": {
+                            "creator_cards": {"display_mode": "text"},
+                        },
+                        "creator_page": {
+                            "show_profile_image": "hide",
+                            "show_member_profile_images": "hide",
+                        },
+                        "project_page": {
+                            "show_cover_image": "hide",
+                            "show_creator_profile_image": "hide",
+                            "show_collaboration_profile_image": "hide",
+                            "show_participant_profile_images": "hide",
+                        },
                     }
                 }
             ),
@@ -249,13 +263,13 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(250)
 
-    def open_details_page(self, rel_path: str):
-        self.page.goto(f"{self.base_url}/details-site/{rel_path}")
+    def open_text_cards_page(self, rel_path: str):
+        self.page.goto(f"{self.base_url}/text-cards-site/{rel_path}")
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(250)
 
-    def open_disabled_portraits_page(self, rel_path: str):
-        self.page.goto(f"{self.base_url}/disabled-portraits-site/{rel_path}")
+    def open_image_less_page(self, rel_path: str):
+        self.page.goto(f"{self.base_url}/image-less-site/{rel_path}")
         self.page.wait_for_load_state("load")
         self.page.wait_for_timeout(250)
 
@@ -323,9 +337,9 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
-    def test_details_portrait_visibility_uses_text_overview_and_detail_portraits(self):
+    def test_text_creator_overview_preserves_detail_profile_images(self):
         """Covers SITE-028 and SITE-029."""
-        self.open_details_page("index.html")
+        self.open_text_cards_page("index.html")
 
         cards = self.page.locator("#imageGallery .creator-text-card")
         self.assertEqual(cards.count(), 3)
@@ -352,7 +366,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         filtered_card_width = self.page.locator("#imageGallery .creator-text-card").first.bounding_box()["width"]
         self.assertAlmostEqual(filtered_card_width, unfiltered_card_width, delta=1)
 
-        self.open_details_page(self.creator_path)
+        self.open_text_cards_page(self.creator_path)
         self.assertGreater(self.page.locator(".info-block__media img[alt^='Portrait of']").count(), 0)
         self.assertNoBrowserErrors()
 
@@ -657,7 +671,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertNoBrowserErrors()
 
     def test_image_less_detail_metadata_uses_responsive_equal_columns(self):
-        self.open_disabled_portraits_page(self.creator_path)
+        self.open_image_less_page(self.creator_path)
 
         wide_layout = self.page.evaluate(
             """
@@ -1277,7 +1291,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             "A long image caption that should wrap naturally but stop after two displayed lines",
         )
 
-        self.open_disabled_portraits_page("index.html")
+        self.open_text_cards_page("index.html")
         text_card = self.page.evaluate(
             """
             async () => {

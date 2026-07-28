@@ -14,7 +14,7 @@ from cr4te.build_issues import IssueCode
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
-from cr4te.enums.portrait_visibility import PortraitVisibility
+from cr4te.enums.image_visibility import ImageVisibility
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_index import CreatorSummary, ProjectSummary
@@ -40,9 +40,11 @@ def context_for(
     input_dir: Path,
     output_dir: Path,
     domain: Domain = Domain.ART,
-    portrait_visibility: PortraitVisibility = PortraitVisibility.ALL,
+    configure=None,
 ) -> HtmlBuildContext:
-    config = apply_cli_overrides(load_config(), domain=domain, portrait_visibility=portrait_visibility)
+    config = apply_cli_overrides(load_config(), domain=domain)
+    if configure:
+        configure(config)
     ctx = HtmlBuildContext(input_dir, output_dir, config.site_labels, config.site_rendering)
     prepare_output_dirs(ctx)
     prepare_default_thumbnails(ctx)
@@ -85,12 +87,21 @@ def person(name: str = "Noomi", **overrides) -> Creator:
 
 
 class PageContextTests(unittest.TestCase):
-    def test_disabled_portraits_build_creator_context_without_thumbnail_work(self):
+    def test_creator_page_profile_image_flag_omits_thumbnail_work(self):
+        """Covers SITE-015."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             creator = person(portrait="Noomi/portrait.jpg")
-            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.DISABLED)
+            ctx = context_for(
+                input_dir,
+                output_dir,
+                configure=lambda config: setattr(
+                    config.site_rendering.creator_page,
+                    "show_profile_image",
+                    ImageVisibility.HIDE,
+                ),
+            )
 
             with patch("cr4te.page_contexts.build_thumbnail_context") as build_thumbnail:
                 page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
@@ -99,13 +110,13 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(page.rel_portrait_path, "")
             self.assertIsNone(page.portrait_orientation)
 
-    def test_details_portraits_render_discovered_portrait_without_missing_default(self):
+    def test_visible_detail_profile_images_use_source_thumbnails_only(self):
         """Covers SITE-015 and SITE-028."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
-            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.DETAILS)
+            ctx = context_for(input_dir, output_dir)
 
             discovered_page = build_creator_page_context(
                 ctx,
@@ -123,18 +134,77 @@ class PageContextTests(unittest.TestCase):
             self.assertTrue(discovered_page.rel_portrait_path)
             self.assertEqual(missing_page.rel_portrait_path, "")
             self.assertIsNone(missing_page.portrait_orientation)
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 0)
 
-    def test_all_portraits_use_default_when_discovery_is_empty(self):
+    def test_visible_detail_profile_image_omits_missing_source_without_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(portrait="Noomi/missing.jpg")
+            ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            self.assertEqual(page.rel_portrait_path, "")
+            self.assertIsNone(page.portrait_orientation)
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 0)
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.MISSING_MEDIA)
+
+    def test_creator_page_profile_image_omits_empty_discovery(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             creator = person(portrait="")
-            ctx = context_for(input_dir, output_dir, portrait_visibility=PortraitVisibility.ALL)
+            ctx = context_for(input_dir, output_dir)
 
             page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
-            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
-            self.assertIsNotNone(page.portrait_orientation)
+            self.assertEqual(page.rel_portrait_path, "")
+            self.assertIsNone(page.portrait_orientation)
+
+    def test_project_page_image_flags_are_independent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
+            write_image(input_dir / "Collab" / "portrait.jpg", (80, 160))
+            write_image(input_dir / "Landscapes" / "cover.jpg")
+
+            def configure(config):
+                config.site_rendering.project_page.show_cover_image = ImageVisibility.HIDE
+                config.site_rendering.project_page.show_creator_profile_image = ImageVisibility.HIDE
+                config.site_rendering.project_page.show_collaboration_profile_image = ImageVisibility.HIDE
+                config.site_rendering.project_page.show_participant_profile_images = ImageVisibility.SHOW
+
+            member = person(display_name="Displayed Noomi", portrait="Noomi/portrait.jpg")
+            collab_project = project()
+            collaboration = Creator(
+                name="Noomi & Ada",
+                display_name="The Duo",
+                type=CreatorType.COLLABORATION,
+                active_since="2021",
+                members=["Noomi"],
+                portrait="Collab/portrait.jpg",
+                info="",
+                projects=[collab_project],
+                media_groups=[],
+            )
+            ctx = context_for(input_dir, output_dir, configure=configure)
+
+            collaboration_page = build_project_page_context(
+                ctx,
+                collaboration,
+                collab_project,
+                lambda name: member if name == "Noomi" else None,
+            )
+            creator_page = build_project_page_context(ctx, member, collab_project, lambda name: None)
+
+            self.assertEqual(collaboration_page.rel_thumbnail_path, "")
+            self.assertIsNone(collaboration_page.thumbnail_orientation)
+            self.assertEqual(collaboration_page.collaboration.rel_portrait_path, "")
+            self.assertTrue(collaboration_page.participants[0].rel_portrait_path)
+            self.assertEqual(creator_page.creator.rel_portrait_path, "")
 
     def test_creator_page_context_uses_typed_project_cards_and_tags(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -155,7 +225,7 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(page.projects[0].title, "Displayed Landscapes")
             self.assertEqual(page.projects[0].media_counts.values(), (0, 0, 0, 0, 0))
 
-    def test_creator_page_uses_default_for_unreadable_cached_portrait_thumbnail(self):
+    def test_creator_page_omits_unreadable_cached_portrait_thumbnail(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
@@ -167,7 +237,7 @@ class PageContextTests(unittest.TestCase):
 
             page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
-            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertEqual(page.rel_portrait_path, "")
             self.assertEqual(len(ctx.issues), 1)
             self.assertEqual(ctx.issues[0].code, IssueCode.MEDIA_INSPECTION_FAILURE)
 

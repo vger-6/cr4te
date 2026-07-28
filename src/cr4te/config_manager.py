@@ -9,7 +9,6 @@ from .config_presets import DEFAULT_CONFIG, get_domain_preset
 from .enums.domain import Domain
 from .enums.image_sample_strategy import ImageSampleStrategy
 from .enums.portrait_discovery import PortraitDiscovery
-from .enums.portrait_visibility import PortraitVisibility
 from .schemas.config_schema import AppConfig
 from .utils.json_utils import load_json
 
@@ -83,7 +82,6 @@ def apply_cli_overrides(
     config: AppConfig,
     image_sample_strategy: Optional[ImageSampleStrategy] = None,
     portrait_discovery: Optional[PortraitDiscovery] = None,
-    portrait_visibility: Optional[PortraitVisibility] = None,
     domain: Optional[Domain] = None,
 ) -> AppConfig:
     config_data = config.model_dump(mode="python")
@@ -96,8 +94,5 @@ def apply_cli_overrides(
 
     if portrait_discovery is not None:
         config_data["media_rules"]["portrait_discovery"] = portrait_discovery
-
-    if portrait_visibility is not None:
-        config_data["site_rendering"]["portraits"]["visibility"] = portrait_visibility
 
     return _validate_config(config_data)

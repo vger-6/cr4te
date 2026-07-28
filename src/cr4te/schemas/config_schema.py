@@ -4,8 +4,9 @@ from pydantic import BaseModel, ConfigDict, conint, field_validator
 from ..enums.image_sample_strategy import ImageSampleStrategy
 from ..enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from ..enums.media_type import MediaType
+from ..enums.image_visibility import ImageVisibility
+from ..enums.overview_card_display_mode import OverviewCardDisplayMode
 from ..enums.portrait_discovery import PortraitDiscovery
-from ..enums.portrait_visibility import PortraitVisibility
 from ..enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from ..utils.format_utils import validate_named_format
 from ..utils.image_utils import parse_aspect_ratio
@@ -284,6 +285,10 @@ class OverviewCardGalleryRendering(GalleryLayoutRendering):
     image_max_height: conint(gt=0)
 
 
+class CreatorCardGalleryRendering(OverviewCardGalleryRendering):
+    display_mode: OverviewCardDisplayMode
+
+
 class ProjectCardGalleryRendering(OverviewCardGalleryRendering):
     creator_page_image_max_height: conint(gt=0)
 
@@ -293,7 +298,7 @@ class MediaGroupGalleryRendering(StrictConfigModel):
 
 
 class GalleryRendering(StrictConfigModel):
-    creator_cards: OverviewCardGalleryRendering
+    creator_cards: CreatorCardGalleryRendering
     project_cards: ProjectCardGalleryRendering
     media_groups: MediaGroupGalleryRendering
 
@@ -305,6 +310,8 @@ class MediaRendering(StrictConfigModel):
 class CreatorPageRendering(StrictConfigModel):
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
+    show_profile_image: ImageVisibility
+    show_member_profile_images: ImageVisibility
     project_card_gallery_page_rows: conint(gt=0)
     media_gallery_page_rows: conint(gt=0)
     about_collapsed_lines: conint(gt=0)
@@ -315,6 +322,10 @@ class ProjectPageRendering(StrictConfigModel):
     visible_fields: List[ProjectField]
     visible_creator_fields: List[CreatorField]
     visible_collaboration_fields: List[CollaborationField]
+    show_cover_image: ImageVisibility
+    show_creator_profile_image: ImageVisibility
+    show_collaboration_profile_image: ImageVisibility
+    show_participant_profile_images: ImageVisibility
     media_gallery_page_rows: conint(gt=0)
     description_collapsed_lines: conint(gt=0)
     description_collapsed_lines_mobile: conint(gt=0)
@@ -337,10 +348,6 @@ class ProjectMetadataRendering(StrictConfigModel):
         return list(self.fields)
 
 
-class PortraitRendering(StrictConfigModel):
-    visibility: PortraitVisibility
-
-
 class SiteRendering(StrictConfigModel):
     document_language: str
     media: MediaRendering
@@ -348,7 +355,6 @@ class SiteRendering(StrictConfigModel):
     creator_page: CreatorPageRendering
     project_page: ProjectPageRendering
     project_metadata: ProjectMetadataRendering
-    portraits: PortraitRendering
 
     @field_validator("document_language")
     @classmethod

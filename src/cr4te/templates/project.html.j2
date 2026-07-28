@@ -23,10 +23,12 @@
         <div class="section-title">{{ site_labels.pages.project_overview_title }}</div>
         <hr>
         <div class="section-content markdown">
-          <div class="info-block info-block--{{ project.thumbnail_orientation.value }}">
-            <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ project.title }}">
-              <img class="primary-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_preview_description_format | format_phrase(project=project.title) }}">
-            </a>
+          <div class="info-block{% if project.rel_thumbnail_path and project.thumbnail_orientation %} info-block--{{ project.thumbnail_orientation.value }}{% endif %}">
+            {% if project.rel_thumbnail_path %}
+              <a href="{{ path_to_root }}{{ project.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ project.title }}">
+                <img class="primary-image" src="{{ path_to_root }}{{ project.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.project_preview_description_format | format_phrase(project=project.title) }}">
+              </a>
+            {% endif %}
             {{ utils.render_meta_entries(project.meta_entries, path_to_root) }}
           </div>
         </div>

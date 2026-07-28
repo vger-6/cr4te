@@ -17,8 +17,8 @@
     {% include "partials/_search_bar.html.j2" %}
   {% endif %}
 
-  {% set portrait_image_cards = site_rendering.portraits.visibility == PortraitVisibility.ALL %}
-  {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) if portrait_image_cards else 'creator-card-grid' %}
+  {% set creator_image_cards = site_rendering.galleries.creator_cards.display_mode.value == 'image' %}
+  {% set image_gallery_class = utils.get_image_gallery_class(ImageGalleryBuildingStrategy, site_rendering.galleries.creator_cards.building_strategy) if creator_image_cards else 'creator-card-grid' %}
   {% set aspect_ratio = site_rendering.galleries.creator_cards.aspect_ratio or '1/1' %}
 
   <div class="overview-layout">
@@ -34,7 +34,7 @@
              data-next-label="{{ site_labels.controls.next }}"
              data-aspect-ratio="{{ aspect_ratio }}">
           {% for creator in creator_entries %}
-            {% if not portrait_image_cards %}
+            {% if not creator_image_cards %}
           <div class="image-wrapper image-card creator-text-card"
                data-search-text="{{ creator.search_text }}">
             <a href="{{ creator.rel_html_path }}" title="{{ creator.name }}" class="creator-text-card__content">

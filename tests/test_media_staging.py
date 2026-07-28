@@ -15,7 +15,8 @@ from cr4te.build_issues import BuildIssueError, BuildIssuePolicy, IssueCode
 from cr4te.config_manager import apply_cli_overrides, load_config
 from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.domain import Domain
-from cr4te.enums.portrait_visibility import PortraitVisibility
+from cr4te.enums.image_visibility import ImageVisibility
+from cr4te.enums.overview_card_display_mode import OverviewCardDisplayMode
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.output_preparation import copy_static_assets, prepare_output_dirs
 from cr4te.render_assets import (
@@ -35,10 +36,17 @@ def read_freshness_metadata(thumb_path: Path) -> dict[str, object]:
 
 
 class MediaStagingTests(unittest.TestCase):
-    def test_disabled_portraits_omit_portrait_default_thumbnails(self):
+    def test_hidden_creator_card_and_detail_images_omit_unused_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            config = apply_cli_overrides(load_config(), portrait_visibility=PortraitVisibility.DISABLED)
+            config = apply_cli_overrides(load_config())
+            config.site_rendering.galleries.creator_cards.display_mode = OverviewCardDisplayMode.TEXT
+            config.site_rendering.creator_page.show_profile_image = ImageVisibility.HIDE
+            config.site_rendering.creator_page.show_member_profile_images = ImageVisibility.HIDE
+            config.site_rendering.project_page.show_cover_image = ImageVisibility.HIDE
+            config.site_rendering.project_page.show_creator_profile_image = ImageVisibility.HIDE
+            config.site_rendering.project_page.show_collaboration_profile_image = ImageVisibility.HIDE
+            config.site_rendering.project_page.show_participant_profile_images = ImageVisibility.HIDE
             ctx = HtmlBuildContext(
                 root / "input",
                 root / "output",
@@ -50,18 +58,39 @@ class MediaStagingTests(unittest.TestCase):
 
             self.assertNotIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
             self.assertNotIn(ThumbType.PORTRAIT, thumb_types)
-            self.assertIn(ThumbType.COVER, thumb_types)
+            self.assertNotIn(ThumbType.COVER, thumb_types)
+            self.assertIn(ThumbType.PROJECT_OVERVIEW, thumb_types)
+            self.assertIn(ThumbType.CREATOR_PAGE_PROJECT, thumb_types)
 
-    def test_details_portraits_prepare_detail_default_but_not_overview_default(self):
+    def test_visible_detail_images_omit_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            config = apply_cli_overrides(load_config(), portrait_visibility=PortraitVisibility.DETAILS)
+            config = apply_cli_overrides(load_config())
+            ctx = HtmlBuildContext(
+                root / "input",
+                root / "output",
+                config.site_labels,
+                config.site_rendering,
+            )
+
+            thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
+
+            self.assertIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
+            self.assertNotIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertNotIn(ThumbType.COVER, thumb_types)
+
+    def test_text_creator_overview_omits_creator_overview_and_detail_image_defaults(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config())
+            config.site_rendering.galleries.creator_cards.display_mode = OverviewCardDisplayMode.TEXT
             ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
 
             thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
 
             self.assertNotIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
-            self.assertIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertNotIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertNotIn(ThumbType.COVER, thumb_types)
 
     def test_stage_media_file_uses_hardlink_when_symlink_is_unavailable(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -428,12 +457,12 @@ class MediaStagingTests(unittest.TestCase):
             self.assertTrue((ctx.themes_dir / "frozen-aurora.css").exists())
 
             specs = build_default_thumbnail_specs(ctx)
-            self.assertEqual(len(specs), 6)
+            self.assertEqual(len(specs), 4)
             specs_by_type = {spec.thumb_type: spec for spec in specs}
+            self.assertNotIn(ThumbType.PORTRAIT, specs_by_type)
+            self.assertNotIn(ThumbType.COVER, specs_by_type)
             self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].width_ratio, 7)
             self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].height_ratio, 5)
-            self.assertEqual(specs_by_type[ThumbType.COVER].width_ratio, 7)
-            self.assertEqual(specs_by_type[ThumbType.COVER].height_ratio, 5)
             for spec in specs:
                 expected_height = ctx.get_generated_thumb_height(spec.thumb_type)
                 with Image.open(ctx.get_default_thumb_path(spec.thumb_type)) as image:

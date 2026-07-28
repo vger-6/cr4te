@@ -7,9 +7,10 @@ from typing import Any
 from .enums.domain import Domain
 from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from .enums.image_sample_strategy import ImageSampleStrategy
+from .enums.image_visibility import ImageVisibility
 from .enums.media_type import MediaType
+from .enums.overview_card_display_mode import OverviewCardDisplayMode
 from .enums.portrait_discovery import PortraitDiscovery
-from .enums.portrait_visibility import PortraitVisibility
 from .enums.visible_fields import CollaborationField, CreatorField, ProjectField
 from .taxonomy import get_domain_project_visible_metadata, get_project_facet_label_defaults
 
@@ -185,6 +186,7 @@ DEFAULT_CONFIG = {
         },
         "galleries": {
             "creator_cards": {
+                "display_mode": OverviewCardDisplayMode.IMAGE,
                 "building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                 "aspect_ratio": "2/3",
                 "page_rows": 5,
@@ -204,6 +206,8 @@ DEFAULT_CONFIG = {
         "creator_page": {
             "visible_creator_fields": CREATOR_VISIBLE_FIELDS,
             "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS,
+            "show_profile_image": ImageVisibility.SHOW,
+            "show_member_profile_images": ImageVisibility.SHOW,
             "project_card_gallery_page_rows": 2,
             "media_gallery_page_rows": 4,
             "about_collapsed_lines": 8,
@@ -213,6 +217,10 @@ DEFAULT_CONFIG = {
             "visible_fields": [ProjectField.TITLE, ProjectField.RELEASE_DATE],
             "visible_creator_fields": CREATOR_VISIBLE_FIELDS,
             "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS,
+            "show_cover_image": ImageVisibility.SHOW,
+            "show_creator_profile_image": ImageVisibility.SHOW,
+            "show_collaboration_profile_image": ImageVisibility.SHOW,
+            "show_participant_profile_images": ImageVisibility.SHOW,
             "media_gallery_page_rows": 4,
             "description_collapsed_lines": 8,
             "description_collapsed_lines_mobile": 2,
@@ -220,9 +228,6 @@ DEFAULT_CONFIG = {
         "project_metadata": {
             "defaults": PROJECT_VISIBLE_METADATA_DEFAULTS,
             "fields": {},
-        },
-        "portraits": {
-            "visibility": PortraitVisibility.ALL,
         },
     },
     "media_rules": {
@@ -276,7 +281,10 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     "creator_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
                     },
-                    "galleries": {"project_cards": {"aspect_ratio": "2/3"}},
+                    "galleries": {
+                        "creator_cards": {"display_mode": OverviewCardDisplayMode.TEXT},
+                        "project_cards": {"aspect_ratio": "2/3"},
+                    },
                     "project_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
                     },
@@ -370,6 +378,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                         ],
                     },
                     "galleries": {
+                        "creator_cards": {"display_mode": OverviewCardDisplayMode.TEXT},
                         "project_cards": {
                             "building_strategy": ImageGalleryBuildingStrategy.ASPECT,
                             "aspect_ratio": "1000/1414",
@@ -411,6 +420,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     },
                     "project_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                        "show_cover_image": ImageVisibility.HIDE,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.MODEL)},
                 },

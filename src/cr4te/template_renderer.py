@@ -8,7 +8,6 @@ from .constants import CR4TE_TEMPLATES_DIR
 from .html_context import HtmlBuildContext
 from .enums.image_gallery_building_strategy import ImageGalleryBuildingStrategy
 from .enums.media_type import MediaType
-from .enums.portrait_visibility import PortraitVisibility
 from .enums.thumb_type import ThumbType
 from .html_paths import (
     build_path_to_root,
@@ -42,7 +41,6 @@ env = Environment(
     autoescape=select_autoescape(["html", "xml"]),
 )
 env.globals["MediaType"] = MediaType
-env.globals["PortraitVisibility"] = PortraitVisibility
 env.filters["format_phrase"] = format_named
 
 
