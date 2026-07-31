@@ -62,7 +62,7 @@ class MediaStagingTests(unittest.TestCase):
             self.assertIn(ThumbType.PROJECT_OVERVIEW, thumb_types)
             self.assertIn(ThumbType.CREATOR_PAGE_PROJECT, thumb_types)
 
-    def test_visible_detail_images_omit_default_thumbnails(self):
+    def test_show_detail_images_include_fallback_default_thumbnails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             config = apply_cli_overrides(load_config())
@@ -76,14 +76,33 @@ class MediaStagingTests(unittest.TestCase):
             thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
 
             self.assertIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
-            self.assertNotIn(ThumbType.PORTRAIT, thumb_types)
-            self.assertNotIn(ThumbType.COVER, thumb_types)
+            self.assertIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertIn(ThumbType.COVER, thumb_types)
 
-    def test_text_creator_overview_omits_creator_overview_and_detail_image_defaults(self):
+    def test_text_creator_overview_preserves_show_detail_image_defaults(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             config = apply_cli_overrides(load_config())
             config.site_rendering.galleries.creator_cards.display_mode = OverviewCardDisplayMode.TEXT
+            ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
+
+            thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
+
+            self.assertNotIn(ThumbType.CREATOR_OVERVIEW, thumb_types)
+            self.assertIn(ThumbType.PORTRAIT, thumb_types)
+            self.assertIn(ThumbType.COVER, thumb_types)
+
+    def test_if_available_detail_images_omit_fallback_default_thumbnails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = apply_cli_overrides(load_config())
+            config.site_rendering.galleries.creator_cards.display_mode = OverviewCardDisplayMode.TEXT
+            config.site_rendering.creator_page.show_profile_image = ImageVisibility.IF_AVAILABLE
+            config.site_rendering.creator_page.show_member_profile_images = ImageVisibility.IF_AVAILABLE
+            config.site_rendering.project_page.show_cover_image = ImageVisibility.IF_AVAILABLE
+            config.site_rendering.project_page.show_creator_profile_image = ImageVisibility.IF_AVAILABLE
+            config.site_rendering.project_page.show_collaboration_profile_image = ImageVisibility.IF_AVAILABLE
+            config.site_rendering.project_page.show_participant_profile_images = ImageVisibility.IF_AVAILABLE
             ctx = HtmlBuildContext(root / "input", root / "output", config.site_labels, config.site_rendering)
 
             thumb_types = {spec.thumb_type for spec in build_default_thumbnail_specs(ctx)}
@@ -457,12 +476,14 @@ class MediaStagingTests(unittest.TestCase):
             self.assertTrue((ctx.themes_dir / "frozen-aurora.css").exists())
 
             specs = build_default_thumbnail_specs(ctx)
-            self.assertEqual(len(specs), 4)
+            self.assertEqual(len(specs), 6)
             specs_by_type = {spec.thumb_type: spec for spec in specs}
-            self.assertNotIn(ThumbType.PORTRAIT, specs_by_type)
-            self.assertNotIn(ThumbType.COVER, specs_by_type)
             self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].width_ratio, 7)
             self.assertEqual(specs_by_type[ThumbType.PROJECT_OVERVIEW].height_ratio, 5)
+            self.assertEqual(specs_by_type[ThumbType.PORTRAIT].width_ratio, 3)
+            self.assertEqual(specs_by_type[ThumbType.PORTRAIT].height_ratio, 4)
+            self.assertEqual(specs_by_type[ThumbType.COVER].width_ratio, 4)
+            self.assertEqual(specs_by_type[ThumbType.COVER].height_ratio, 3)
             for spec in specs:
                 expected_height = ctx.get_generated_thumb_height(spec.thumb_type)
                 with Image.open(ctx.get_default_thumb_path(spec.thumb_type)) as image:

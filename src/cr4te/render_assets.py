@@ -14,6 +14,7 @@ from .asset_issues import (
 )
 from .build_issues import BuildIssueError
 from .html_context import HtmlBuildContext
+from .enums.image_visibility import ImageVisibility
 from .enums.orientation import Orientation
 from .enums.overview_card_display_mode import OverviewCardDisplayMode
 from .enums.thumb_type import ThumbType
@@ -70,7 +71,24 @@ def build_default_thumbnail_specs(ctx: HtmlBuildContext) -> tuple[DefaultThumbna
 
     if ctx.site_rendering.galleries.creator_cards.display_mode == OverviewCardDisplayMode.IMAGE:
         specs.insert(0, DefaultThumbnailSpec(ThumbType.CREATOR_OVERVIEW, ctx.site_labels.entity.creator, 3, 4))
+    if _detail_portrait_defaults_are_used(ctx):
+        specs.append(DefaultThumbnailSpec(ThumbType.PORTRAIT, ctx.site_labels.entity.portrait, 3, 4))
+    if ctx.site_rendering.project_page.show_cover_image == ImageVisibility.SHOW:
+        specs.append(DefaultThumbnailSpec(ThumbType.COVER, ctx.site_labels.entity.cover, 4, 3))
     return tuple(specs)
+
+
+def _detail_portrait_defaults_are_used(ctx: HtmlBuildContext) -> bool:
+    return any(
+        visibility == ImageVisibility.SHOW
+        for visibility in (
+            ctx.site_rendering.creator_page.show_profile_image,
+            ctx.site_rendering.creator_page.show_member_profile_images,
+            ctx.site_rendering.project_page.show_creator_profile_image,
+            ctx.site_rendering.project_page.show_collaboration_profile_image,
+            ctx.site_rendering.project_page.show_participant_profile_images,
+        )
+    )
 
 
 def stage_media_file(ctx: HtmlBuildContext, rel_source_path: Path) -> Path | None:

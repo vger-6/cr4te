@@ -103,20 +103,32 @@ class PageContextTests(unittest.TestCase):
                 ),
             )
 
-            with patch("cr4te.page_contexts.build_thumbnail_context") as build_thumbnail:
+            with (
+                patch("cr4te.page_contexts.build_source_thumbnail_context") as build_source_thumbnail,
+                patch("cr4te.page_contexts.build_thumbnail_context") as build_thumbnail,
+            ):
                 page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
+            build_source_thumbnail.assert_not_called()
             build_thumbnail.assert_not_called()
             self.assertEqual(page.rel_portrait_path, "")
             self.assertIsNone(page.portrait_orientation)
 
-    def test_visible_detail_profile_images_use_source_thumbnails_only(self):
+    def test_if_available_detail_profile_images_use_source_thumbnails_only(self):
         """Covers SITE-015 and SITE-028."""
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
-            ctx = context_for(input_dir, output_dir)
+            ctx = context_for(
+                input_dir,
+                output_dir,
+                configure=lambda config: setattr(
+                    config.site_rendering.creator_page,
+                    "show_profile_image",
+                    ImageVisibility.IF_AVAILABLE,
+                ),
+            )
 
             discovered_page = build_creator_page_context(
                 ctx,
@@ -136,12 +148,35 @@ class PageContextTests(unittest.TestCase):
             self.assertIsNone(missing_page.portrait_orientation)
             self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 0)
 
-    def test_visible_detail_profile_image_omits_missing_source_without_default(self):
+    def test_show_detail_profile_image_uses_default_when_source_is_missing(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             creator = person(portrait="Noomi/missing.jpg")
             ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertIsNotNone(page.portrait_orientation)
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.MISSING_MEDIA)
+
+    def test_if_available_detail_profile_image_omits_missing_source_without_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(portrait="Noomi/missing.jpg")
+            ctx = context_for(
+                input_dir,
+                output_dir,
+                configure=lambda config: setattr(
+                    config.site_rendering.creator_page,
+                    "show_profile_image",
+                    ImageVisibility.IF_AVAILABLE,
+                ),
+            )
 
             page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
@@ -151,12 +186,33 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(len(ctx.issues), 1)
             self.assertEqual(ctx.issues[0].code, IssueCode.MISSING_MEDIA)
 
-    def test_creator_page_profile_image_omits_empty_discovery(self):
+    def test_show_creator_page_profile_image_uses_default_for_empty_discovery(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
             creator = person(portrait="")
             ctx = context_for(input_dir, output_dir)
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
+            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertIsNotNone(page.portrait_orientation)
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
+
+    def test_if_available_creator_page_profile_image_omits_empty_discovery(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            creator = person(portrait="")
+            ctx = context_for(
+                input_dir,
+                output_dir,
+                configure=lambda config: setattr(
+                    config.site_rendering.creator_page,
+                    "show_profile_image",
+                    ImageVisibility.IF_AVAILABLE,
+                ),
+            )
 
             page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
@@ -225,7 +281,7 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(page.projects[0].title, "Displayed Landscapes")
             self.assertEqual(page.projects[0].media_counts.values(), (0, 0, 0, 0, 0))
 
-    def test_creator_page_omits_unreadable_cached_portrait_thumbnail(self):
+    def test_show_creator_page_uses_default_for_unreadable_cached_portrait_thumbnail(self):
         with tempfile.TemporaryDirectory() as tmp:
             input_dir = Path(tmp) / "input"
             output_dir = Path(tmp) / "site"
@@ -237,7 +293,33 @@ class PageContextTests(unittest.TestCase):
 
             page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
 
+            self.assertEqual(page.rel_portrait_path, "assets/defaults/portrait.png")
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 1)
+            self.assertEqual(len(ctx.issues), 1)
+            self.assertEqual(ctx.issues[0].code, IssueCode.MEDIA_INSPECTION_FAILURE)
+
+    def test_if_available_creator_page_omits_unreadable_cached_portrait_thumbnail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            write_image(input_dir / "Noomi" / "portrait.jpg", (80, 160))
+            creator = person(portrait="Noomi/portrait.jpg")
+            ctx = context_for(
+                input_dir,
+                output_dir,
+                configure=lambda config: setattr(
+                    config.site_rendering.creator_page,
+                    "show_profile_image",
+                    ImageVisibility.IF_AVAILABLE,
+                ),
+            )
+            thumb_path = resolve_thumbnail_or_default(ctx, creator.portrait, ThumbType.PORTRAIT)
+            thumb_path.write_bytes(b"not an image")
+
+            page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+
             self.assertEqual(page.rel_portrait_path, "")
+            self.assertEqual(ctx.asset_statistics.default_thumbnail_uses, 0)
             self.assertEqual(len(ctx.issues), 1)
             self.assertEqual(ctx.issues[0].code, IssueCode.MEDIA_INSPECTION_FAILURE)
 

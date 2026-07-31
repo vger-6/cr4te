@@ -280,6 +280,8 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                 site_rendering={
                     "creator_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                        "show_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_member_profile_images": ImageVisibility.IF_AVAILABLE,
                     },
                     "galleries": {
                         "creator_cards": {"display_mode": OverviewCardDisplayMode.TEXT},
@@ -287,6 +289,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     },
                     "project_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                        "show_creator_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_collaboration_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_participant_profile_images": ImageVisibility.IF_AVAILABLE,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.FILM)},
                 },
@@ -367,6 +372,8 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                 site_rendering={
                     "creator_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                        "show_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_member_profile_images": ImageVisibility.IF_AVAILABLE,
                     },
                     "media": {
                         "type_order": [
@@ -386,6 +393,9 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     },
                     "project_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
+                        "show_creator_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_collaboration_profile_image": ImageVisibility.IF_AVAILABLE,
+                        "show_participant_profile_images": ImageVisibility.IF_AVAILABLE,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.BOOK)},
                 },

@@ -76,13 +76,17 @@ def compute_creator_stats(creator: CreatorModel) -> CreatorStats:
 
 def _build_optional_thumbnail(
     ctx: HtmlBuildContext,
-    rel_image_path: str,
+    rel_image_path: str | None,
     thumb_type: ThumbType,
     visibility: ImageVisibility,
 ) -> ThumbnailContext | None:
-    if visibility == ImageVisibility.HIDE:
-        return None
-    return build_source_thumbnail_context(ctx, rel_image_path, thumb_type)
+    match visibility:
+        case ImageVisibility.HIDE:
+            return None
+        case ImageVisibility.IF_AVAILABLE:
+            return build_source_thumbnail_context(ctx, rel_image_path, thumb_type)
+        case ImageVisibility.SHOW:
+            return build_thumbnail_context(ctx, rel_image_path, thumb_type)
 
 
 def build_project_page_context(

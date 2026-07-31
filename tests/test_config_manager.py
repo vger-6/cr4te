@@ -202,22 +202,22 @@ class ConfigManagerTests(unittest.TestCase):
         self.assert_image_rendering_defaults(
             apply_cli_overrides(base, domain=Domain.FILM),
             creator_overview=OverviewCardDisplayMode.TEXT,
-            creator_profile=ImageVisibility.SHOW,
-            creator_members=ImageVisibility.SHOW,
+            creator_profile=ImageVisibility.IF_AVAILABLE,
+            creator_members=ImageVisibility.IF_AVAILABLE,
             project_cover=ImageVisibility.SHOW,
-            project_creator=ImageVisibility.SHOW,
-            project_collaboration=ImageVisibility.SHOW,
-            project_participants=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.IF_AVAILABLE,
+            project_collaboration=ImageVisibility.IF_AVAILABLE,
+            project_participants=ImageVisibility.IF_AVAILABLE,
         )
         self.assert_image_rendering_defaults(
             apply_cli_overrides(base, domain=Domain.BOOK),
             creator_overview=OverviewCardDisplayMode.TEXT,
-            creator_profile=ImageVisibility.SHOW,
-            creator_members=ImageVisibility.SHOW,
+            creator_profile=ImageVisibility.IF_AVAILABLE,
+            creator_members=ImageVisibility.IF_AVAILABLE,
             project_cover=ImageVisibility.SHOW,
-            project_creator=ImageVisibility.SHOW,
-            project_collaboration=ImageVisibility.SHOW,
-            project_participants=ImageVisibility.SHOW,
+            project_creator=ImageVisibility.IF_AVAILABLE,
+            project_collaboration=ImageVisibility.IF_AVAILABLE,
+            project_participants=ImageVisibility.IF_AVAILABLE,
         )
         self.assert_image_rendering_defaults(
             apply_cli_overrides(base, domain=Domain.MODEL),
@@ -241,12 +241,12 @@ class ConfigManagerTests(unittest.TestCase):
                         "galleries": {"creator_cards": {"display_mode": "text"}},
                         "creator_page": {
                             "show_profile_image": "hide",
-                            "show_member_profile_images": "show",
+                            "show_member_profile_images": "if_available",
                         },
                         "project_page": {
                             "show_cover_image": "hide",
                             "show_creator_profile_image": "hide",
-                            "show_collaboration_profile_image": "show",
+                            "show_collaboration_profile_image": "if_available",
                             "show_participant_profile_images": "show",
                         },
                     },
@@ -263,14 +263,16 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(preserved.media_rules.portrait_discovery, PortraitDiscovery.AUTO)
             self.assertEqual(preserved.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.TEXT)
             self.assertEqual(preserved.site_rendering.creator_page.show_profile_image, ImageVisibility.HIDE)
-            self.assertEqual(preserved.site_rendering.creator_page.show_member_profile_images, ImageVisibility.SHOW)
+            self.assertEqual(preserved.site_rendering.creator_page.show_member_profile_images, ImageVisibility.IF_AVAILABLE)
             self.assertEqual(preserved.site_rendering.project_page.show_cover_image, ImageVisibility.HIDE)
+            self.assertEqual(preserved.site_rendering.project_page.show_collaboration_profile_image, ImageVisibility.IF_AVAILABLE)
             self.assertEqual(preserved.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
             self.assertEqual(overridden.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
             self.assertEqual(overridden.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.TEXT)
             self.assertEqual(overridden.site_rendering.creator_page.show_profile_image, ImageVisibility.HIDE)
-            self.assertEqual(overridden.site_rendering.creator_page.show_member_profile_images, ImageVisibility.SHOW)
+            self.assertEqual(overridden.site_rendering.creator_page.show_member_profile_images, ImageVisibility.IF_AVAILABLE)
             self.assertEqual(overridden.site_rendering.project_page.show_cover_image, ImageVisibility.HIDE)
+            self.assertEqual(overridden.site_rendering.project_page.show_collaboration_profile_image, ImageVisibility.IF_AVAILABLE)
             self.assertEqual(overridden.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
 
     def test_removed_portrait_configuration_fields_are_rejected(self):
@@ -293,15 +295,14 @@ class ConfigManagerTests(unittest.TestCase):
 
             self.assertIn("show_profile_image", str(caught.exception))
 
-    def test_removed_if_available_detail_image_visibility_value_is_rejected(self):
+    def test_if_available_detail_image_visibility_value_is_accepted(self):
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "config.json"
             write_json(config_path, {"site_rendering": {"creator_page": {"show_profile_image": "if_available"}}})
 
-            with self.assertRaises(ValueError) as caught:
-                load_config(config_path)
+            config = load_config(config_path)
 
-            self.assertIn("show_profile_image", str(caught.exception))
+            self.assertEqual(config.site_rendering.creator_page.show_profile_image, ImageVisibility.IF_AVAILABLE)
 
     def test_load_config_accepts_project_facet_label_overrides(self):
         with tempfile.TemporaryDirectory() as tmp:

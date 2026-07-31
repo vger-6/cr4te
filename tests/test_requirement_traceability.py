@@ -42,7 +42,8 @@ REQUIREMENT_TESTS = {
     "ASSET-001": ("tests/test_render_media.py::RenderMediaTests.test_missing_media_is_omitted_and_reported",),
     "ASSET-002": (
         "tests/test_media_staging.py::MediaStagingTests.test_thumbnail_failure_uses_default_and_reports_issue",
-        "tests/test_page_contexts.py::PageContextTests.test_visible_detail_profile_image_omits_missing_source_without_default",
+        "tests/test_page_contexts.py::PageContextTests.test_show_detail_profile_image_uses_default_when_source_is_missing",
+        "tests/test_page_contexts.py::PageContextTests.test_if_available_detail_profile_image_omits_missing_source_without_default",
     ),
     "ASSET-003": ("tests/test_render_media.py::RenderMediaTests.test_unreadable_gallery_image_is_omitted_and_reported",),
     "ASSET-004": ("tests/test_render_media.py::RenderMediaTests.test_audio_inspection_failure_uses_zero_and_reports_warning",),
@@ -73,8 +74,9 @@ REQUIREMENT_TESTS = {
     "SITE-013": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_gallery_lightbox_uses_native_navigation_and_traps_focus",),
     "SITE-014": ("tests/test_overview_contexts.py::OverviewContextTests.test_text_creator_overview_builds_summary_without_thumbnail_work",),
     "SITE-015": (
-        "tests/test_page_contexts.py::PageContextTests.test_visible_detail_profile_image_omits_missing_source_without_default",
-        "tests/test_page_contexts.py::PageContextTests.test_visible_detail_profile_images_use_source_thumbnails_only",
+        "tests/test_page_contexts.py::PageContextTests.test_show_detail_profile_image_uses_default_when_source_is_missing",
+        "tests/test_page_contexts.py::PageContextTests.test_if_available_detail_profile_image_omits_missing_source_without_default",
+        "tests/test_page_contexts.py::PageContextTests.test_if_available_detail_profile_images_use_source_thumbnails_only",
         "tests/test_page_contexts.py::PageContextTests.test_project_page_image_flags_are_independent",
     ),
     "SITE-016": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts",),
