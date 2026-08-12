@@ -57,22 +57,26 @@
         </div>
       {% endif %}
 
-      {% for member in creator.members%}
+      {% if creator.members %}
         <div class="section-box">
-          <div class="section-title">{{ member.name }}</div>
+          <div class="section-title">{{ site_labels.pages.member_profiles_title }}</div>
           <hr>
           <div class="section-content">
-            <div class="info-block{% if member.rel_thumbnail_path %} info-block--portrait{% endif %}">
-              {% if member.rel_thumbnail_path %}
-                <a href="{{ path_to_root }}{{ member.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ member.name }}">
-                  <img class="primary-image" src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=member.name) }}">
-                </a>
-              {% endif %}
-              {{ utils.render_meta_entries(member.meta_entries, path_to_root) }}
+            <div class="profile-list">
+              {% for member in creator.members %}
+                <div class="info-block{% if member.rel_thumbnail_path %} info-block--portrait{% endif %}">
+                  {% if member.rel_thumbnail_path %}
+                    <a href="{{ path_to_root }}{{ member.rel_thumbnail_path }}" class="single-lightbox info-block__media" data-lightbox-single="true" data-lightbox-title="{{ member.name }}">
+                      <img class="primary-image" src="{{ path_to_root }}{{ member.rel_thumbnail_path }}" alt="{{ site_labels.accessibility.creator_portrait_description_format | format_phrase(creator=member.name) }}">
+                    </a>
+                  {% endif %}
+                  {{ utils.render_meta_entries(member.meta_entries, path_to_root) }}
+                </div>
+              {% endfor %}
             </div>
           </div>
         </div>
-      {% endfor %}
+      {% endif %}
 
       {% if creator.tags %}
         <div class="section-box">

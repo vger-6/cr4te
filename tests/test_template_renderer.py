@@ -18,6 +18,7 @@ from cr4te.enums.orientation import Orientation
 from cr4te.media_counts import MediaCounts
 from cr4te.render_models import (
     CollaborationProjectsContext,
+    CreatorLinkContext,
     CreatorOverviewEntry,
     CreatorPageContext,
     CreatorProfileContext,
@@ -1021,6 +1022,89 @@ class TemplateRendererTests(unittest.TestCase):
             self.assertNotIn("Codirected with Ada", rendered)
             self.assertNotIn('<div class="section-title">Codirected with Ada</div>', rendered)
             self.assertNotIn("Movies with Ada", rendered)
+
+    def test_detail_templates_group_profile_sections_under_role_titles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ctx = context_for(Path(tmp) / "input", Path(tmp) / "site")
+            member_meta = [MetaEntry(label="Name", values=["Displayed Ada"], hrefs=["ada.html"])]
+            creator_page = CreatorPageContext(
+                type=CreatorType.COLLABORATION.value,
+                name="The Duo",
+                rel_portrait_path="",
+                portrait_orientation=None,
+                info_html="",
+                tags=TagCollection(),
+                projects=[],
+                media_groups=[],
+                collaborations=[],
+                creator_stats=CreatorStats(project_count=0, media_counts=MediaCounts()),
+                meta_entries=[],
+                members=[
+                    CreatorLinkContext(name="Displayed Ada", rel_thumbnail_path="ada.jpg", meta_entries=member_meta),
+                    CreatorLinkContext(name="Displayed Bob", rel_thumbnail_path="", meta_entries=[]),
+                ],
+            )
+            project_page = ProjectPageContext(
+                title="Landscapes",
+                release_date="",
+                meta_entries=[],
+                rel_thumbnail_path="",
+                thumbnail_orientation=None,
+                info_html="",
+                tags=TagCollection(),
+                media_groups=[],
+                collaboration=CreatorProfileContext(
+                    name="The Duo",
+                    rel_html_path="duo.html",
+                    rel_portrait_path="duo.jpg",
+                ),
+                participants=[
+                    CreatorProfileContext(name="Displayed Ada", rel_html_path="ada.html", rel_portrait_path="ada.jpg"),
+                    CreatorProfileContext(name="Displayed Bob", rel_html_path="bob.html", rel_portrait_path=""),
+                ],
+            )
+            render_data = {
+                "site_labels": ctx.site_labels,
+                "site_rendering": ctx.site_rendering,
+                "gallery_image_max_height": 450,
+                "themes": ctx.themes,
+                "default_theme": ctx.default_theme,
+                "path_to_root": "../",
+            }
+
+            creator_rendered = env.get_template("creator.html.j2").render(
+                creator=creator_page,
+                project_image_max_height=450,
+                ImageGalleryBuildingStrategy=ImageGalleryBuildingStrategy,
+                page_shell=PageShellContext(
+                    title=creator_page.name,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+                **render_data,
+            )
+            project_rendered = env.get_template("project.html.j2").render(
+                project=project_page,
+                page_shell=PageShellContext(
+                    title=project_page.title,
+                    layout_stylesheet="two-column-layout.css",
+                    navigation_items=(NavigationItem(ctx.site_labels.entity.creators, "../index.html"),),
+                ),
+                **render_data,
+            )
+
+            self.assertIn('<div class="section-title">Members</div>', creator_rendered)
+            self.assertEqual(creator_rendered.count('class="profile-list"'), 1)
+            self.assertEqual(creator_rendered.count('class="info-block'), 3)
+            self.assertNotIn('<div class="section-title">Displayed Ada</div>', creator_rendered)
+            self.assertNotIn('<div class="section-title">Displayed Bob</div>', creator_rendered)
+
+            self.assertIn('<div class="section-title">Profile</div>', project_rendered)
+            self.assertIn('<div class="section-title">Members</div>', project_rendered)
+            self.assertEqual(project_rendered.count('class="profile-list"'), 1)
+            self.assertNotIn('<div class="section-title">The Duo</div>', project_rendered)
+            self.assertNotIn('<div class="section-title">Displayed Ada</div>', project_rendered)
+            self.assertNotIn('<div class="section-title">Displayed Bob</div>', project_rendered)
 
     def test_page_templates_use_shared_document_head_and_page_header(self):
         template_dir = ROOT / "src" / "cr4te" / "templates"

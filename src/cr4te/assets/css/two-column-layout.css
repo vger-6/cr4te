@@ -4,8 +4,15 @@
   gap: var(--space-md);
 }
 
-.section-content:has(> .info-block) {
+.section-content:has(> .info-block),
+.section-content:has(> .profile-list) {
   container: info-block-section / inline-size;
+}
+
+.profile-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-section-gap);
 }
 
 .info-block__media,

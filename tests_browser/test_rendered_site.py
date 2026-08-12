@@ -205,7 +205,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
     @classmethod
     def _find_creator_page(cls):
         for path in sorted((cls.site_dir / "html").rglob("*.html")):
-            if '<div class="section-title">Profile</div>' in path.read_text(encoding="utf-8"):
+            content = path.read_text(encoding="utf-8")
+            if (
+                '<div class="section-title">Profile</div>' in content
+                and "expandable-text--creator-about" in content
+            ):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain a creator page")
 

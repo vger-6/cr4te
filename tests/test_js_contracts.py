@@ -428,6 +428,8 @@ class JavaScriptContractTests(unittest.TestCase):
         )
         self.assertRegex(base, r"\.track-title-text\s*\{[^}]*text-overflow:\s*ellipsis")
         self.assertRegex(base, r"\.tag\s*\{[^}]*text-overflow:\s*ellipsis")
+        two_column = (ASSET_CSS_DIR / "two-column-layout.css").read_text(encoding="utf-8")
+        self.assertRegex(two_column, r"\.profile-list\s*\{[^}]*gap:\s*var\(--layout-section-gap\)")
         self.assertRegex(base, r"\.creator-text-card__name,\s*[\s\S]*?\.creator-text-card__summary\s*\{[^}]*-webkit-line-clamp:\s*2")
         self.assertRegex(base, r"\.image-caption\s*\{[^}]*-webkit-line-clamp:\s*2")
         self.assertNotRegex(base, r"\.meta-value\s*\{[^}]*text-overflow:\s*ellipsis")

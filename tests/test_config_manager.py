@@ -78,6 +78,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.counts.project, "project")
             self.assertEqual(config.site_labels.controls.play, "Play")
             self.assertEqual(config.site_labels.controls.show_more, "Show more")
+            self.assertEqual(config.site_labels.pages.member_profiles_title, "Members")
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
             self.assertEqual(config.site_rendering.document_language, "en-US")
             self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 2)

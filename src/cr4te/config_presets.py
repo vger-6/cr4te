@@ -116,6 +116,7 @@ DEFAULT_PAGE_LABELS = {
     "creator_profile_title": "Profile",
     "creator_about_title": "About",
     "creator_collaboration_project_subtitle_format": "with {collaborator}",
+    "member_profiles_title": "Members",
     "project_overview_title": "Overview",
     "project_description_title": "Description",
     "audio_section_default_title": "Audio",

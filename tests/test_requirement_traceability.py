@@ -79,7 +79,10 @@ REQUIREMENT_TESTS = {
         "tests/test_page_contexts.py::PageContextTests.test_if_available_detail_profile_images_use_source_thumbnails_only",
         "tests/test_page_contexts.py::PageContextTests.test_project_page_image_flags_are_independent",
     ),
-    "SITE-016": ("tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts",),
+    "SITE-016": (
+        "tests/test_template_renderer.py::TemplateRendererTests.test_detail_templates_group_profile_sections_under_role_titles",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts",
+    ),
     "SITE-017": ("tests/test_render_metadata.py::RenderMetadataTests.test_creator_event_entries_combine_visible_date_and_place",),
     "SITE-018": (
         "tests/test_template_renderer.py::TemplateRendererTests.test_tag_sections_render_action_menus_with_contextual_destinations",
