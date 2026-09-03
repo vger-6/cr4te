@@ -18,14 +18,66 @@
       ?.map(term => term.replace(/"/g, "").toLowerCase()) || [];
   }
 
-  function filterAndPaginate(gallery, wrappers) {
+  function parsePositivePage(value) {
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+  }
+
+  function overviewUrlState() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      query: params.get("q") || params.get("tag") || "",
+      page: parsePositivePage(params.get("page"))
+    };
+  }
+
+  function cloneHistoryState() {
+    const state = window.history.state;
+    return state && typeof state === "object" && !Array.isArray(state) ? { ...state } : {};
+  }
+
+  function writeOverviewUrl(query, page, mode = "replace") {
+    const params = new URLSearchParams(window.location.search);
+    const normalizedPage = parsePositivePage(page);
+
+    params.delete("tag");
+
+    if (query.trim()) {
+      params.set("q", query);
+    } else {
+      params.delete("q");
+    }
+
+    if (normalizedPage > 1) {
+      params.set("page", String(normalizedPage));
+    } else {
+      params.delete("page");
+    }
+
+    const nextUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}${window.location.hash}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (nextUrl === currentUrl) return;
+
+    try {
+      const method = mode === "push" ? "pushState" : "replaceState";
+      window.history[method](cloneHistoryState(), "", nextUrl);
+    } catch (error) {
+      // Filtering and pagination should continue even when browser history mutation is restricted.
+    }
+  }
+
+  function filterAndPaginate(gallery, wrappers, page, onPageChange) {
     if (!gallery) return;
 
     const pageRows = parseInt(gallery.dataset.pageRows || "0", 10);
     const noPagination = gallery.dataset.noPagination === "true";
 
     if (!noPagination && pageRows > 0 && typeof cr4te.pagination.mount === "function") {
-      cr4te.pagination.mount(gallery, wrappers, pageRows);
+      return cr4te.pagination.mount(gallery, wrappers, pageRows, {
+        stateMode: "url",
+        initialPage: page,
+        onPageChange,
+      });
     } else {
       gallery.innerHTML = '';
       wrappers.forEach(wrapper => gallery.appendChild(wrapper));
@@ -43,6 +95,9 @@
 
     if (!input || !clearBtn || !gallery) return;
 
+    const initialState = overviewUrlState();
+    input.value = initialState.query;
+
     function setNoResultsState(show) {
       if (noResults) {
         const shouldBeHidden = !show;
@@ -53,7 +108,7 @@
       gallery.hidden = show;
     }
 
-    function filter() {
+    function filter({ page = 1, updateUrl = false, urlMode = "replace" } = {}) {
       const terms = extractTerms(input.value);
       const visible = allWrappers.filter(entry => {
         const searchText = entry.dataset.searchText?.toLowerCase() || "";
@@ -64,23 +119,22 @@
 
       clearBtn.style.display = input.value ? "block" : "none";
       gallery.hidden = false;
-      filterAndPaginate(gallery, visible);
+      const pagination = filterAndPaginate(gallery, visible, page, nextPage => {
+        writeOverviewUrl(input.value, nextPage, "push");
+      });
       setNoResultsState(showNoResults);
+
+      if (updateUrl) {
+        writeOverviewUrl(input.value, pagination?.getCurrentPage?.() || 1, urlMode);
+      }
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const tag = params.get('tag');
-    if (tag && input) {
-      input.value = tag;
-      window.utils.clearUrlParam('tag');
-    }
-
-    input.addEventListener("input", filter);
+    input.addEventListener("input", () => filter({ page: 1, updateUrl: true }));
 
     clearBtn.addEventListener("click", () => {
       input.value = "";
       input.focus();
-      filter();
+      filter({ page: 1, updateUrl: true });
     });
     
     input.addEventListener("keydown", (event) => {
@@ -89,13 +143,21 @@
         input.dispatchEvent(new Event("input")); // re-trigger filtering
       }
     });
+
+    window.addEventListener("popstate", () => {
+      const state = overviewUrlState();
+      input.value = state.query;
+      filter({ page: state.page });
+    });
     
     window.addEventListener("pageshow", () => {
-      input.dispatchEvent(new Event("input")); // re-trigger filtering
+      const state = overviewUrlState();
+      input.value = state.query;
+      filter({ page: state.page });
     });
 
     // Initial run
-    filter();
+    filter({ page: initialState.page, updateUrl: true });
   });
 })();
 

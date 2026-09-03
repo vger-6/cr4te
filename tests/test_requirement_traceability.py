@@ -117,6 +117,12 @@ REQUIREMENT_TESTS = {
         "tests/test_template_renderer.py::TemplateRendererTests.test_creator_project_card_gallery_rows_are_configurable_independently",
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_paginated_galleries_use_configured_row_count_for_aspect_and_justified_layouts",
     ),
+    "SITE-036": (
+        "tests/test_js_contracts.py::JavaScriptContractTests.test_pagination_state_uses_url_for_overviews_and_history_state_for_galleries",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_overview_pagination_state_is_stored_in_url_and_restored_from_history",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_overview_search_state_uses_query_param_and_resets_page",
+        "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_image_gallery_pagination_restores_from_history_state_without_url_params",
+    ),
     "THEME-001": ("tests/test_html_build.py::HtmlBuildTests.test_streaming_html_build_copies_and_renders_custom_theme",),
     "THEME-002": ("tests/test_themes.py::ThemeTests.test_custom_theme_is_discovered_from_explicit_directory",),
     "THEME-003": ("tests/test_themes.py::ThemeTests.test_invalid_custom_themes_are_reported_and_skipped",),

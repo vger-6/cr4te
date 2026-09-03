@@ -288,10 +288,3 @@ if (!window.utils.mediaVolumeSyncInitialized) {
   window.utils.mediaVolumeSyncInitialized = true;
 }
 
-window.utils.clearUrlParam = function (paramName) {
-  const params = new URLSearchParams(window.location.search);
-  params.delete(paramName);
-  const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-  window.history.replaceState({}, '', newUrl);
-};
-

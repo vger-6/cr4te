@@ -13,6 +13,63 @@
     return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
   }
 
+  function clampPage(page, totalPages) {
+    const maxPage = Math.max(totalPages, 1);
+    return Math.min(parsePositiveInt(page, 1), maxPage);
+  }
+
+  function cloneHistoryState() {
+    const state = window.history.state;
+    return state && typeof state === 'object' && !Array.isArray(state) ? { ...state } : {};
+  }
+
+  function replaceHistoryState(state) {
+    try {
+      window.history.replaceState(state, '', window.location.href);
+    } catch (error) {
+      // Some browsers restrict history mutation on unusual origins. Pagination still works for the current page.
+    }
+  }
+
+  function galleryPageStateKey(gallery) {
+    if (gallery.dataset.paginationKey) return gallery.dataset.paginationKey;
+    if (gallery.id) return `id:${gallery.id}`;
+
+    const galleries = Array.from(document.querySelectorAll('.image-gallery--justified, .image-gallery--aspect, .creator-card-grid'));
+    const index = galleries.indexOf(gallery);
+    const sectionTitle = gallery.closest('.section-box')?.querySelector('.section-title')?.textContent?.trim() || 'gallery';
+    return `gallery:${index}:${sectionTitle}`;
+  }
+
+  function getStoredGalleryPage(gallery) {
+    const pages = window.history.state?.cr4teGalleryPages;
+    if (!pages || typeof pages !== 'object') return 1;
+    return parsePositiveInt(pages[galleryPageStateKey(gallery)], 1);
+  }
+
+  function storeGalleryPage(gallery, page, totalPages) {
+    const state = cloneHistoryState();
+    const pages = {
+      ...(state.cr4teGalleryPages && typeof state.cr4teGalleryPages === 'object' ? state.cr4teGalleryPages : {})
+    };
+    const key = galleryPageStateKey(gallery);
+
+    if (page > 1 && totalPages > 1) {
+      pages[key] = page;
+    } else {
+      delete pages[key];
+    }
+
+    const nextState = { ...state };
+    if (Object.keys(pages).length > 0) {
+      nextState.cr4teGalleryPages = pages;
+    } else {
+      delete nextState.cr4teGalleryPages;
+    }
+
+    replaceHistoryState(nextState);
+  }
+
   function rebuildGallery(gallery) {
     if (gallery.classList.contains('image-gallery--justified')) {
       cr4te.galleries.rebuildJustified?.(gallery);
@@ -158,7 +215,7 @@
     return pages;
   }
 
-  function createPagination(gallery, initialWrappers, initialPageRows) {
+  function createPagination(gallery, initialWrappers, initialPageRows, options = {}) {
     let wrapper = gallery.parentElement.querySelector('.pagination-controls-wrapper');
     let controls = wrapper ? wrapper.querySelector('.pagination-controls') : null;
 
@@ -177,13 +234,54 @@
 
     let allWrappers = initialWrappers;
     let pageRows = parsePositiveInt(initialPageRows, PAGE_ROWS_DEFAULT);
-    let currentPage = 1;
+    let stateMode = options.stateMode || 'history';
+    let onPageChange = typeof options.onPageChange === 'function' ? options.onPageChange : null;
 
     function buildPages() {
       return chunkRowsIntoPages(buildRowsForGallery(gallery, allWrappers), pageRows);
     }
 
     let pages = buildPages();
+    let currentPage = clampPage(
+      Object.prototype.hasOwnProperty.call(options, 'initialPage')
+        ? options.initialPage
+        : stateMode === 'history'
+          ? getStoredGalleryPage(gallery)
+          : 1,
+      pages.length
+    );
+
+    function applyOptions(nextOptions = {}) {
+      if (nextOptions.stateMode) {
+        stateMode = nextOptions.stateMode;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(nextOptions, 'onPageChange')) {
+        onPageChange = typeof nextOptions.onPageChange === 'function' ? nextOptions.onPageChange : null;
+      }
+    }
+
+    function requestedPage(nextOptions = {}) {
+      if (Object.prototype.hasOwnProperty.call(nextOptions, 'initialPage')) {
+        return nextOptions.initialPage;
+      }
+
+      if (nextOptions.resetPage) {
+        return 1;
+      }
+
+      if (stateMode === 'history') {
+        return getStoredGalleryPage(gallery);
+      }
+
+      return currentPage;
+    }
+
+    function persistPage() {
+      if (stateMode === 'history') {
+        storeGalleryPage(gallery, currentPage, pages.length);
+      }
+    }
 
     function renderPage(page, autoScroll = false) {
       const visibleWrappers = pages[page - 1] || [];
@@ -212,10 +310,7 @@
           prevBtn.classList.add('in-active');
         } else {
           prevBtn.title = previousLabel;
-          prevBtn.onclick = () => {
-            currentPage = page - 1;
-            renderPage(currentPage, true);
-          };
+          prevBtn.onclick = () => goToPage(page - 1, true, true);
         }
         controls.appendChild(prevBtn);
 
@@ -228,10 +323,7 @@
             btn.disabled = true;
             btn.setAttribute('aria-current', 'page');
           } else {
-            btn.onclick = () => {
-              currentPage = i;
-              renderPage(currentPage, true);
-            };
+            btn.onclick = () => goToPage(i, true, true);
           }
           controls.appendChild(btn);
         }
@@ -246,10 +338,7 @@
           nextBtn.classList.add('in-active');
         } else {
           nextBtn.title = nextLabel;
-          nextBtn.onclick = () => {
-            currentPage = page + 1;
-            renderPage(currentPage, true);
-          };
+          nextBtn.onclick = () => goToPage(page + 1, true, true);
         }
         controls.appendChild(nextBtn);
       }
@@ -270,21 +359,34 @@
       }
     }
 
-    function handleResize() {
-      pages = buildPages();
+    function goToPage(page, autoScroll = false, notify = false) {
+      currentPage = clampPage(page, pages.length);
+      renderPage(currentPage, autoScroll);
 
-      if (currentPage > pages.length) {
-        currentPage = Math.max(pages.length, 1);
+      if (notify) {
+        persistPage();
+        onPageChange?.(currentPage, pages.length);
       }
-
-      renderPage(currentPage);
     }
 
-    function update(nextWrappers, nextPageRows) {
+    function handleResize() {
+      pages = buildPages();
+      const previousPage = currentPage;
+
+      currentPage = clampPage(currentPage, pages.length);
+      renderPage(currentPage);
+
+      if (currentPage !== previousPage) {
+        persistPage();
+      }
+    }
+
+    function update(nextWrappers, nextPageRows, nextOptions = {}) {
+      applyOptions(nextOptions);
       allWrappers = nextWrappers;
       pageRows = parsePositiveInt(nextPageRows, PAGE_ROWS_DEFAULT);
-      currentPage = 1;
       pages = buildPages();
+      currentPage = clampPage(requestedPage(nextOptions), pages.length);
       renderPage(currentPage);
     }
 
@@ -293,24 +395,32 @@
 
     return {
       update,
+      getCurrentPage() {
+        return currentPage;
+      },
+      getTotalPages() {
+        return pages.length;
+      },
       destroy() {
         window.removeEventListener('resize', handleResize);
       }
     };
   }
 
-  function setupPagination(gallery, allWrappers, pageRows = PAGE_ROWS_DEFAULT) {
+  function setupPagination(gallery, allWrappers, pageRows = PAGE_ROWS_DEFAULT, options = {}) {
     if (!gallery) return;
 
     pageRows = parsePositiveInt(pageRows, PAGE_ROWS_DEFAULT);
 
     const instance = instances.get(gallery);
     if (instance) {
-      instance.update(allWrappers, pageRows);
-      return;
+      instance.update(allWrappers, pageRows, options);
+      return instance;
     }
 
-    instances.set(gallery, createPagination(gallery, allWrappers, pageRows));
+    const nextInstance = createPagination(gallery, allWrappers, pageRows, options);
+    instances.set(gallery, nextInstance);
+    return nextInstance;
   }
 
   cr4te.pagination.mount = setupPagination;

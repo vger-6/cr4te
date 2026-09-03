@@ -46,6 +46,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls.audio_project_path = cls._find_audio_project_page()
         cls.video_project_path = cls._find_video_project_page()
         cls.caption_project_path = cls._find_caption_project_page()
+        cls.paginated_image_gallery_path = cls._find_paginated_image_gallery_page()
         cls.description_project_path = cls._find_project_page_with_description()
         cls.landscape_project_path = cls._find_landscape_project_page_with_metadata()
         cls.creator_path = cls._find_creator_page()
@@ -183,6 +184,14 @@ class RenderedSiteBrowserTests(unittest.TestCase):
             if "image-caption-section" in path.read_text(encoding="utf-8"):
                 return path.relative_to(cls.site_dir).as_posix()
         raise AssertionError("Generated example site does not contain an image-caption project page")
+
+    @classmethod
+    def _find_paginated_image_gallery_page(cls):
+        for path in sorted((cls.paginated_site_dir / "html").rglob("*.html")):
+            content = path.read_text(encoding="utf-8")
+            if "image-caption-section" in content and content.count('class="image-wrapper"') > 1:
+                return path.relative_to(cls.paginated_site_dir).as_posix()
+        raise AssertionError("Generated paginated example site does not contain a multi-image gallery page")
 
     @classmethod
     def _find_project_page_with_description(cls):
@@ -339,6 +348,71 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertTrue(self.page.locator(".empty-state--search").is_hidden())
         self.assertFalse(self.page.locator("#imageGallery").is_hidden())
         self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
+    def test_overview_pagination_state_is_stored_in_url_and_restored_from_history(self):
+        """Covers SITE-036."""
+        self.open_paginated_page("index.html")
+
+        first_page_text = self.page.locator("#imageGallery").inner_text()
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "1")
+
+        self.page.click(".pagination-next")
+        self.page.wait_for_timeout(150)
+
+        second_page_text = self.page.locator("#imageGallery").inner_text()
+        self.assertNotEqual(second_page_text, first_page_text)
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "2")
+        self.assertEqual(self.page.evaluate("new URLSearchParams(window.location.search).get('page')"), "2")
+
+        self.page.go_back()
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "1")
+        self.assertIsNone(self.page.evaluate("new URLSearchParams(window.location.search).get('page')"))
+
+        self.page.go_forward()
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "2")
+        self.assertEqual(self.page.evaluate("new URLSearchParams(window.location.search).get('page')"), "2")
+
+        self.page.locator("#imageGallery .image-wrapper a").first.click()
+        self.page.wait_for_load_state("load")
+        self.page.go_back()
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "2")
+        self.assertEqual(self.page.evaluate("new URLSearchParams(window.location.search).get('page')"), "2")
+        self.assertNoBrowserErrors()
+
+    def test_overview_search_state_uses_query_param_and_resets_page(self):
+        """Covers SITE-036."""
+        self.open_paginated_page("index.html?page=2")
+
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "2")
+
+        self.page.fill("#search-input", "nia")
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator("#search-input").input_value(), "nia")
+        self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
+        self.assertEqual(self.page.evaluate("new URLSearchParams(window.location.search).get('q')"), "nia")
+        self.assertIsNone(self.page.evaluate("new URLSearchParams(window.location.search).get('page')"))
+
+        self.page.reload()
+        self.page.wait_for_load_state("load")
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator("#search-input").input_value(), "nia")
+        self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
+
+        self.page.click("#clear-search")
+        self.page.wait_for_timeout(150)
+
+        self.assertEqual(self.page.locator("#search-input").input_value(), "")
+        self.assertEqual(self.page.evaluate("window.location.search"), "")
+        self.assertEqual(self.page.locator(".pagination-controls [aria-current='page']").inner_text(), "1")
         self.assertNoBrowserErrors()
 
     def test_text_creator_overview_preserves_detail_profile_images(self):
@@ -1756,14 +1830,15 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         self.assertAspectGalleryBuilt()
         self.assertNoBrowserErrors()
 
-    def test_project_overview_tag_query_filters_and_clears_url(self):
+    def test_project_overview_tag_query_filters_and_normalizes_url(self):
         self.open_page("projects.html?tag=labels:orbit")
 
         cards = self.page.locator("#imageGallery .image-wrapper")
         self.assertEqual(cards.count(), 1)
         self.assertIn("Glass Circuit", self.page.locator("#imageGallery").inner_text())
         self.assertAspectGalleryBuilt()
-        self.assertEqual(self.page.evaluate("window.location.search"), "")
+        self.assertEqual(self.page.evaluate("new URLSearchParams(window.location.search).get('q')"), "labels:orbit")
+        self.assertIsNone(self.page.evaluate("new URLSearchParams(window.location.search).get('tag')"))
         self.assertNoBrowserErrors()
 
     def test_gallery_builder_runs_before_images_load_and_prevents_vertical_stack(self):
@@ -1899,6 +1974,44 @@ class RenderedSiteBrowserTests(unittest.TestCase):
 
         self.assertEqual(self.page.locator("#imageGallery .image-wrapper").count(), 1)
         self.assertAspectGalleryBuilt()
+        self.assertNoBrowserErrors()
+
+    def test_detail_image_gallery_pagination_restores_from_history_state_without_url_params(self):
+        """Covers SITE-036."""
+        self.open_paginated_page(self.paginated_image_gallery_path)
+
+        section = self.page.locator(".image-caption-section").first
+        self.assertGreater(section.locator(".pagination-controls button").count(), 0)
+        self.assertEqual(section.locator(".pagination-controls [aria-current='page']").inner_text(), "1")
+
+        first_image = section.locator(".image-wrapper img").first.get_attribute("alt")
+        section.locator(".pagination-next").click()
+        self.page.wait_for_timeout(150)
+
+        second_image = section.locator(".image-wrapper img").first.get_attribute("alt")
+        stored_state = self.page.evaluate(
+            """
+            () => ({
+                search: window.location.search,
+                pages: Object.values(window.history.state?.cr4teGalleryPages || {}),
+                currentPage: document.querySelector(".image-caption-section .pagination-controls [aria-current='page']")?.textContent,
+            })
+            """
+        )
+
+        self.assertNotEqual(second_image, first_image)
+        self.assertEqual(stored_state["search"], "")
+        self.assertIn(2, stored_state["pages"])
+        self.assertEqual(stored_state["currentPage"], "2")
+
+        self.page.reload()
+        self.page.wait_for_load_state("load")
+        self.page.wait_for_timeout(150)
+
+        section = self.page.locator(".image-caption-section").first
+        self.assertEqual(section.locator(".pagination-controls [aria-current='page']").inner_text(), "2")
+        self.assertEqual(section.locator(".image-wrapper img").first.get_attribute("alt"), second_image)
+        self.assertEqual(self.page.evaluate("window.location.search"), "")
         self.assertNoBrowserErrors()
 
     def test_paginated_galleries_use_configured_row_count_for_aspect_and_justified_layouts(self):

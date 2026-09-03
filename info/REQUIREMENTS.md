@@ -111,6 +111,7 @@ These are durable product and design requirements for cr4te. They must hold unle
 - **SITE-033:** Empty tag pages and empty major detail-page regions must show configured contextual empty states. Absent optional sections must remain omitted rather than each receiving an empty state, and static empty states must not require JavaScript.
 - **SITE-034:** Tag overview categories must use a responsive grid that adapts its column count to the available width while keeping each category comfortably scannable.
 - **SITE-035:** JavaScript-enhanced image-gallery pagination must be configured by positive maximum row counts rather than raw image counts. Pagination must keep visual rows intact for aspect and justified galleries, recalculate page contents when responsive layout or search filtering changes the available rows, and allow creator-page project-card galleries to use a row setting independent from regular media image galleries.
+- **SITE-036:** Creator and project overview pages must keep active search and pagination state in the URL using `q` and `page` parameters so reloads, bookmarks, and browser history restore the same filtered result page. Incoming `tag` parameters must normalize into the overview search state. Detail-page image-gallery pagination must restore per browser-history entry without adding visible URL parameters.
 
 ## Themes
 
