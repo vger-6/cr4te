@@ -1093,14 +1093,14 @@ class TemplateRendererTests(unittest.TestCase):
                 **render_data,
             )
 
-            self.assertIn('<div class="section-title">Members</div>', creator_rendered)
+            self.assertIn(f'<div class="section-title">{ctx.site_labels.entity.creators}</div>', creator_rendered)
             self.assertEqual(creator_rendered.count('class="profile-list"'), 1)
             self.assertEqual(creator_rendered.count('class="info-block'), 3)
             self.assertNotIn('<div class="section-title">Displayed Ada</div>', creator_rendered)
             self.assertNotIn('<div class="section-title">Displayed Bob</div>', creator_rendered)
 
             self.assertIn('<div class="section-title">Profile</div>', project_rendered)
-            self.assertIn('<div class="section-title">Members</div>', project_rendered)
+            self.assertIn(f'<div class="section-title">{ctx.site_labels.entity.creators}</div>', project_rendered)
             self.assertEqual(project_rendered.count('class="profile-list"'), 1)
             self.assertNotIn('<div class="section-title">The Duo</div>', project_rendered)
             self.assertNotIn('<div class="section-title">Displayed Ada</div>', project_rendered)

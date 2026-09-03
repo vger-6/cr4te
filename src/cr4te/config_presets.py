@@ -116,7 +116,6 @@ DEFAULT_PAGE_LABELS = {
     "creator_profile_title": "Profile",
     "creator_about_title": "About",
     "creator_collaboration_project_subtitle_format": "with {collaborator}",
-    "member_profiles_title": "Members",
     "project_overview_title": "Overview",
     "project_description_title": "Description",
     "audio_section_default_title": "Audio",
@@ -431,7 +430,7 @@ def get_domain_preset(domain: Domain) -> ConfigPreset:
                     },
                     "project_page": {
                         "visible_collaboration_fields": COLLABORATION_VISIBLE_FIELDS_WITHOUT_NAME,
-                        "show_cover_image": ImageVisibility.HIDE,
+                        "show_cover_image": ImageVisibility.SHOW,
                     },
                     "project_metadata": {"fields": get_domain_project_visible_metadata(Domain.MODEL)},
                 },

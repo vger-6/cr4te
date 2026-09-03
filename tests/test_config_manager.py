@@ -78,7 +78,6 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(config.site_labels.counts.project, "project")
             self.assertEqual(config.site_labels.controls.play, "Play")
             self.assertEqual(config.site_labels.controls.show_more, "Show more")
-            self.assertEqual(config.site_labels.pages.member_profiles_title, "Members")
             self.assertEqual(config.site_labels.empty_states.no_media, "No media available")
             self.assertEqual(config.site_rendering.document_language, "en-US")
             self.assertEqual(config.site_rendering.creator_page.project_card_gallery_page_rows, 2)
@@ -225,7 +224,7 @@ class ConfigManagerTests(unittest.TestCase):
             creator_overview=OverviewCardDisplayMode.IMAGE,
             creator_profile=ImageVisibility.SHOW,
             creator_members=ImageVisibility.SHOW,
-            project_cover=ImageVisibility.HIDE,
+            project_cover=ImageVisibility.SHOW,
             project_creator=ImageVisibility.SHOW,
             project_collaboration=ImageVisibility.SHOW,
             project_participants=ImageVisibility.SHOW,
@@ -256,6 +255,7 @@ class ConfigManagerTests(unittest.TestCase):
 
             configured = load_config(config_path)
             preserved = apply_cli_overrides(configured, domain=Domain.ART)
+            model_enforced = apply_cli_overrides(configured, domain=Domain.MODEL)
             overridden = apply_cli_overrides(
                 configured,
                 portrait_discovery=PortraitDiscovery.NAMED,
@@ -268,6 +268,7 @@ class ConfigManagerTests(unittest.TestCase):
             self.assertEqual(preserved.site_rendering.project_page.show_cover_image, ImageVisibility.HIDE)
             self.assertEqual(preserved.site_rendering.project_page.show_collaboration_profile_image, ImageVisibility.IF_AVAILABLE)
             self.assertEqual(preserved.site_rendering.project_page.show_participant_profile_images, ImageVisibility.SHOW)
+            self.assertEqual(model_enforced.site_rendering.project_page.show_cover_image, ImageVisibility.SHOW)
             self.assertEqual(overridden.media_rules.portrait_discovery, PortraitDiscovery.NAMED)
             self.assertEqual(overridden.site_rendering.galleries.creator_cards.display_mode, OverviewCardDisplayMode.TEXT)
             self.assertEqual(overridden.site_rendering.creator_page.show_profile_image, ImageVisibility.HIDE)
@@ -596,6 +597,7 @@ class ConfigManagerTests(unittest.TestCase):
         old_fields = (
             ("controls", "search_placeholder", "Search creators, projects, tags..."),
             ("pages", "creator_collabs_title_prefix", "With"),
+            ("pages", "member_profiles_title", "Members"),
         )
 
         for section, key, value in old_fields:

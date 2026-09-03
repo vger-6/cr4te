@@ -263,6 +263,9 @@ class JavaScriptContractTests(unittest.TestCase):
         )
         self.assertRegex(base, r"\.expandable-text__content\s*\{[^}]*hyphens:\s*auto")
         self.assertRegex(base, r"\.expandable-text__content\s*\{[^}]*overflow-wrap:\s*break-word")
+        self.assertRegex(base, r"\.expandable-text\s*\{[^}]*display:\s*flex")
+        self.assertRegex(base, r"\.expandable-text\s*\{[^}]*flex-direction:\s*column")
+        self.assertRegex(base, r"\.expandable-text__toggle\s*\{[^}]*align-self:\s*flex-end")
         self.assertRegex(base, r"@media \(max-width:\s*48rem\)\s*\{[\s\S]*--expandable-text-current-lines")
 
     def test_pagination_reuses_per_gallery_instance_and_can_remove_resize_listener(self):

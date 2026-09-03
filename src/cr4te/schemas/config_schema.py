@@ -120,7 +120,6 @@ class PageLabels(StrictConfigModel):
     creator_profile_title: str
     creator_about_title: str
     creator_collaboration_project_subtitle_format: str
-    member_profiles_title: str
     project_overview_title: str
     project_description_title: str
     audio_section_default_title: str
