@@ -80,6 +80,7 @@ REQUIREMENT_TESTS = {
         "tests/test_page_contexts.py::PageContextTests.test_project_page_image_flags_are_independent",
     ),
     "SITE-016": (
+        "tests/test_page_contexts.py::PageContextTests.test_main_detail_images_use_side_by_side_layout_unless_clearly_landscape",
         "tests/test_template_renderer.py::TemplateRendererTests.test_detail_templates_group_profile_sections_under_role_titles",
         "tests_browser/test_rendered_site.py::RenderedSiteBrowserTests.test_detail_metadata_uses_stacked_semantic_presentation_and_preserves_image_layouts",
     ),

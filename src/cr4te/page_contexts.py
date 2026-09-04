@@ -17,7 +17,7 @@ from .media_counts import count_media_groups
 from .render_assets import (
     build_source_thumbnail_context,
     build_thumbnail_context,
-    get_image_orientation,
+    get_detail_image_layout_orientation,
 )
 from .render_media import build_media_group_contexts
 from .render_metadata import (
@@ -107,7 +107,7 @@ def build_project_page_context(
         thumbnail_orientation = None
     else:
         rel_thumbnail_path = thumbnail.rel_thumbnail_path
-        thumbnail_orientation = get_image_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
+        thumbnail_orientation = get_detail_image_layout_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
 
     base_context = ProjectPageContext(
         title=project.display_title,
@@ -155,7 +155,7 @@ def build_creator_page_context(
         portrait_orientation = None
     else:
         rel_portrait_path = thumbnail.rel_thumbnail_path
-        portrait_orientation = get_image_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
+        portrait_orientation = get_detail_image_layout_orientation(ctx, ctx.output_dir / thumbnail.rel_thumbnail_path)
 
     project_metadata_tags = collect_project_metadata_tags(ctx, creator)
     base_context = CreatorPageContext(

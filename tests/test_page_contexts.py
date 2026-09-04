@@ -15,6 +15,7 @@ from cr4te.html_context import HtmlBuildContext
 from cr4te.enums.creator_type import CreatorType
 from cr4te.enums.domain import Domain
 from cr4te.enums.image_visibility import ImageVisibility
+from cr4te.enums.orientation import Orientation
 from cr4te.enums.thumb_type import ThumbType
 from cr4te.enums.visible_fields import ProjectField
 from cr4te.library_index import CreatorSummary, ProjectSummary
@@ -261,6 +262,35 @@ class PageContextTests(unittest.TestCase):
             self.assertEqual(collaboration_page.collaboration.rel_portrait_path, "")
             self.assertTrue(collaboration_page.participants[0].rel_portrait_path)
             self.assertEqual(creator_page.creator.rel_portrait_path, "")
+
+    def test_main_detail_images_use_side_by_side_layout_unless_clearly_landscape(self):
+        """Covers SITE-016."""
+        with tempfile.TemporaryDirectory() as tmp:
+            input_dir = Path(tmp) / "input"
+            output_dir = Path(tmp) / "site"
+            write_image(input_dir / "Noomi" / "portrait.jpg", (100, 100))
+            write_image(input_dir / "Landscapes" / "nearly-square-cover.jpg", (125, 100))
+            write_image(input_dir / "Landscapes" / "landscape-cover.jpg", (400, 300))
+            creator = person(portrait="Noomi/portrait.jpg")
+            ctx = context_for(input_dir, output_dir)
+
+            creator_page = build_creator_page_context(ctx, creator, lambda name: None, compute_creator_stats(creator))
+            nearly_square_project_page = build_project_page_context(
+                ctx,
+                creator,
+                project(cover="Landscapes/nearly-square-cover.jpg"),
+                lambda name: None,
+            )
+            landscape_project_page = build_project_page_context(
+                ctx,
+                creator,
+                project(cover="Landscapes/landscape-cover.jpg"),
+                lambda name: None,
+            )
+
+            self.assertEqual(creator_page.portrait_orientation, Orientation.PORTRAIT)
+            self.assertEqual(nearly_square_project_page.thumbnail_orientation, Orientation.PORTRAIT)
+            self.assertEqual(landscape_project_page.thumbnail_orientation, Orientation.LANDSCAPE)
 
     def test_creator_page_context_uses_typed_project_cards_and_tags(self):
         with tempfile.TemporaryDirectory() as tmp:

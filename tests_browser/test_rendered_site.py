@@ -10,6 +10,8 @@ import threading
 import unittest
 from pathlib import Path
 
+from PIL import Image
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
@@ -28,6 +30,7 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         cls._tmp = tempfile.TemporaryDirectory()
         cls.input_dir = Path(cls._tmp.name) / "Musicians"
         shutil.copytree(ROOT / "data" / "example" / "Musicians", cls.input_dir)
+        cls._write_true_landscape_cover()
         cls.themes_dir = Path(cls._tmp.name) / "themes"
         shutil.copytree(ROOT / "data" / "example" / "themes", cls.themes_dir)
         custom_theme = cls.themes_dir / "custom-night.css"
@@ -99,6 +102,11 @@ class RenderedSiteBrowserTests(unittest.TestCase):
         )
         if result.returncode != 0:
             raise AssertionError(f"Example site build failed:\n{result.stdout}\n{result.stderr}")
+
+    @classmethod
+    def _write_true_landscape_cover(cls):
+        cover_path = cls.input_dir / "Astra Vey" / "Glass Circuit" / "extras" / "cover.png"
+        Image.new("RGB", (400, 300), color=(80, 120, 160)).save(cover_path)
 
     @classmethod
     def _write_paginated_config(cls):

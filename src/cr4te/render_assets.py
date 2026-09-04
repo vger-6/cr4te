@@ -27,6 +27,7 @@ __all__ = [
     "build_thumbnail_context",
     "build_default_thumbnail_specs",
     "DefaultThumbnailSpec",
+    "get_detail_image_layout_orientation",
     "get_image_dimensions",
     "get_image_orientation",
     "prepare_default_thumbnails",
@@ -35,6 +36,7 @@ __all__ = [
 ]
 
 THUMBNAIL_FRESHNESS_VERSION = 1
+DETAIL_IMAGE_LANDSCAPE_LAYOUT_MIN_RATIO = 1.3
 
 @dataclass(frozen=True)
 class DefaultThumbnailSpec:
@@ -199,6 +201,14 @@ def get_image_dimensions(ctx: HtmlBuildContext, path: Path, issue_path: Path | N
 
 def get_image_orientation(ctx: HtmlBuildContext, path: Path) -> Orientation:
     return get_image_dimensions(ctx, path).orientation
+
+
+def get_detail_image_layout_orientation(ctx: HtmlBuildContext, path: Path) -> Orientation:
+    dimensions = get_image_dimensions(ctx, path)
+    if dimensions.width > 0 and dimensions.height > 0:
+        if dimensions.width / dimensions.height >= DETAIL_IMAGE_LANDSCAPE_LAYOUT_MIN_RATIO:
+            return Orientation.LANDSCAPE
+    return Orientation.PORTRAIT
 
 
 def _freshness_sidecar_path(thumb_path: Path) -> Path:
